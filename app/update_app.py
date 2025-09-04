@@ -23,7 +23,7 @@ def update():
         "--path",
         path
     ]
-    print(f"更新を確認します。引数：{args.__str__()}")
+    print(f"更新を確認します。：{app}")
 
     if not os.path.exists(app):
         print("アプリケーションの自動更新処理は未対応です。")
