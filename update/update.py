@@ -299,10 +299,8 @@ def create_path(path: Optional[str], latest: Latest):
     target = path
     if not target:
         target = latest.name
-    
-    if latest.type == "app":
-        if is_win():
-            target = target + WIN_EXT 
+        if latest.type == "app" and is_win():
+            target = target + WIN_EXT
     
     if not os.path.exists(target):
         raise ValueError(f"更新対象が存在しません。： {target}")
