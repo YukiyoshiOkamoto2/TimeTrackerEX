@@ -1,0 +1,12 @@
+**/__pycache__/*
+.vscode/*
+.desk/*
+.data/settings.json
+.data/ignore.json
+.data/history
+.data/message_handler.py
+.data/__pycache__/*
+dist/*
+build/*
+*.pdf*
+*.ics*

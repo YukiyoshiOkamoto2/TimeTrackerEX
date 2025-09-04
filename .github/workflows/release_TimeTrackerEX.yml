@@ -1,0 +1,244 @@
+name: Release TimeTrackerEX
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
+    outputs:
+      win_asset: ${{ steps.upload.outputs.artifact-path }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: |
+          uv sync
+
+      - name: Update app_info.py with version and token
+        shell: pwsh
+        run: |
+          $version = uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+          $content = Get-Content app\app_info.py -Raw
+          $content = $content -replace '#version', $version
+          $content = $content -replace '#token', '${{ secrets.OKAMOTO_TOKEN }}'
+          Set-Content app\app_info.py -Value $content
+
+      - name: Build Windows executable
+        shell: pwsh
+        run: |
+          Write-Host "Building at3..."
+          uv run pyinstaller --onefile --name=at3 app\__main__.py
+          Write-Host "Building at3-update..."
+          uv run pyinstaller --onefile --name=at3-update update\__main__.py
+          Write-Host "Contents of dist directory:"
+          Get-ChildItem dist
+          # Copy for single app distribution
+          New-Item -ItemType File -Force -Path ..\app-win | Out-Null
+          Copy-Item dist\at3.exe ..\app-win
+
+      - name: Create Windows ZIP package
+        shell: pwsh
+        run: |
+          # Create package directory
+          New-Item -ItemType Directory -Force -Path package-win | Out-Null
+          Copy-Item dist\at3.exe package-win\at3.exe
+          Copy-Item dist\at3-update.exe package-win\at3-update.exe
+          # Copy .data directory if it exists
+          if (Test-Path ".data") {
+            Copy-Item -Recurse .data package-win\.data
+          }
+          # Create ZIP
+          Compress-Archive -Path package-win\* -DestinationPath ..\at3-win.zip -Force
+
+      - name: Upload artifact (app-win)
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-win
+          path: app-win
+
+      - name: Upload artifact (at3-win.zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: at3-win-zip
+          path: at3-win.zip
+
+  build-macos:
+    name: Build (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: |
+          uv sync
+
+      - name: Update app_info.py with version and token
+        run: |
+          version=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          sed -i '' "s/#version/$version/g" app/app_info.py
+          sed -i '' "s/#token/${{ secrets.GH_PAT }}/g" app/app_info.py
+
+      - name: Build macOS executable
+        run: |
+          echo "Building at3..."
+          uv run pyinstaller --onefile --name=at3 app/__main__.py
+          echo "Building at3-update..."
+          uv run pyinstaller --onefile --name=at3-update update/__main__.py
+          echo "Contents of dist directory:"
+          ls -la dist/
+          # Copy for single app distribution
+          touch ../app-mac
+          cp dist/at3 ../app-mac
+
+      - name: Create macOS ZIP package
+        run: |
+          # Create package directory
+          mkdir -p package-mac
+          cp dist/at3 package-mac/at3
+          cp dist/at3-update package-mac/at3-update
+          # Copy .data directory if it exists
+          if [ -d ".data" ]; then
+            cp -r .data package-mac/.data
+          fi
+          # Create ZIP
+          cd package-mac
+          zip -r ../../at3-mac.zip *
+
+      - name: Upload artifact (app-mac)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-mac
+          path: app-mac
+
+      - name: Upload artifact (at3-mac.zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: at3-mac-zip
+          path: at3-mac.zip
+
+  release:
+    name: Create release and upload assets
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-macos]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-win
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-mac
+
+      - name: Download Windows ZIP artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: at3-win-zip
+
+      - name: Download macOS ZIP artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: at3-mac-zip
+
+      - name: Install uv for version extraction
+        uses: astral-sh/setup-uv@v3
+
+      - name: Get version from pyproject.toml
+        id: get_version
+        run: |
+          version=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "tag=TimeTrackerEX-$version" >> $GITHUB_OUTPUT
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create git tag
+        env:
+          TAG: ${{ steps.get_version.outputs.tag }}
+        run: |
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists on remote"; exit 1
+          fi
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          release_name: ${{ steps.get_version.outputs.tag }}
+          body: "Release ${{ steps.get_version.outputs.tag }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows asset to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./app-win
+          asset_name: app-win
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS asset to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./app-mac
+          asset_name: app-mac
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows ZIP to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./at3-win.zip
+          asset_name: at3-win.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS ZIP to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./at3-mac.zip
+          asset_name: at3-mac.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Create and upload latest.json to fixed TimeTrackerEX Release
+      #   run: |
+      #     python3 .github/scripts/create_latest_json.py
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

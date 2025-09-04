@@ -1,0 +1,30 @@
+{
+    "user_name": "abi01566",
+    "base_url": "http://10.148.28.156/TimeTrackerNX/api",
+    "base_project_id": 62368,
+    "is_history_auto_input": true,
+    "rounding_time_type_of_event": "nonduplicate",
+    "time_off_event": {
+        "name_of_event": [
+            "休暇",
+            "有給",
+            "離席",
+            "私用"
+        ],
+        "work_item_id": 62393
+    },
+    "event_duplicate_priority": {
+        "time_compare": "small"
+    },
+    "schedule_auto_input_info": {
+        "start_end_type": "both",
+        "rounding_time_type_of_schedule": "half",
+        "start_end_time": 30,
+        "work_item_id": 62418
+    },
+    "paid_leave_input_info": {
+        "work_item_id": 62393,
+        "start_time": "09:00",
+        "end_time": "17:30"
+    }
+}

@@ -1,0 +1,7 @@
+[
+  {
+    "type": "event",
+    "name": "定時退社日",
+    "matchType": "contains"
+  }
+]
