@@ -20,7 +20,7 @@ def update_file_name() -> str:
     return "at3-update.exe" if is_win() else "at3-update"
 
 def latest_url() -> str:
-    return f"https://github.com/askul/trylion-customer-tools/releases/download/TimeTrackerEX/latest.json"
+    return f"https://github.com/YukiyoshiOkamoto2/TimeTrackerEX/releases/download/TimeTrackerEX/latest.json"
 
 def token() -> Optional[str]:
     return "#token"
