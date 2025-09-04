@@ -43,8 +43,8 @@ jobs:
           Write-Host "Contents of dist directory:"
           Get-ChildItem dist
           # Copy for single app distribution
-          New-Item -ItemType File -Force -Path ..\app-win | Out-Null
-          Copy-Item dist\at3.exe ..\app-win
+          New-Item -ItemType File -Force -Path app-win | Out-Null
+          Copy-Item dist\at3.exe app-win
 
       - name: Create Windows ZIP package
         shell: pwsh
@@ -58,7 +58,7 @@ jobs:
             Copy-Item -Recurse .data package-win\.data
           }
           # Create ZIP
-          Compress-Archive -Path package-win\* -DestinationPath ..\at3-win.zip -Force
+          Compress-Archive -Path package-win\* -DestinationPath at3-win.zip -Force
 
       - name: Upload artifact (app-win)
         id: upload
@@ -103,8 +103,8 @@ jobs:
           echo "Contents of dist directory:"
           ls -la dist/
           # Copy for single app distribution
-          touch ../app-mac
-          cp dist/at3 ../app-mac
+          touch app-mac
+          cp dist/at3 app-mac
 
       - name: Create macOS ZIP package
         run: |
@@ -118,7 +118,7 @@ jobs:
           fi
           # Create ZIP
           cd package-mac
-          zip -r ../../at3-mac.zip *
+          zip -r ../at3-mac.zip *
 
       - name: Upload artifact (app-mac)
         uses: actions/upload-artifact@v4
