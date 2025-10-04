@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TimeTracker EX</title>
+    <style>
+      :root {
+        font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.5;
+        font-weight: 400;
+
+        color-scheme: dark;
+        
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+
+        /* Windows 11 Dark Theme Colors */
+        --bg-primary: #202020;
+        --bg-secondary: #2b2b2b;
+        --bg-hover: #373737;
+        --bg-active: #404040;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+        --accent: #0078d4;
+        --accent-hover: #106ebe;
+        --border-color: #373737;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      #root {
+        width: 100%;
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
