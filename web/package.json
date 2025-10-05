@@ -11,7 +11,8 @@
     "prettier:check": "prettier --check -- src/**/*.{ts,tsx}",
     "preview": "vite preview",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fluentui/react-components": "^9.47.0",
@@ -21,7 +22,8 @@
     "pdfjs-dist": "^5.4.149",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "zod": "^4.1.11"
+    "zod": "^4.1.11",
+    "monaco-editor": "^0.53.0"
   },
   "devDependencies": {
     "@types/node": "^24.6.2",

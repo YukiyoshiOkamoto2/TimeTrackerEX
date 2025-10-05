@@ -9,6 +9,12 @@ import {
 import { useRef } from "react";
 import { ActionButton } from "../../../components/action-button";
 import { Card } from "../../../components/card";
+import { Schedule, Event } from "@/types";
+import { parsePDF } from "@/core/pdf";
+import { parseICS } from "@/core/ics";
+import { getLogger } from "@/lib";
+
+const logger = getLogger("FileUploadView");
 
 const useStyles = makeStyles({
     uploadSection: {
@@ -138,34 +144,77 @@ const useStyles = makeStyles({
     },
 });
 
-type FileData = {
+export type FileData = {
     name: string;
     size: number;
     type: string;
 };
 
+export type PDF = {
+    schedule: Schedule[]
+} & FileData
+
+export type ICS = {
+    event: Event[]
+} & FileData
+
 export type FileUploadViewProps = {
-    pdfFile: FileData | null;
-    icsFile: FileData | null;
-    onPdfUpload: (file: File) => void;
-    onIcsUpload: (file: File) => void;
-    onPdfClear: () => void;
-    onIcsClear: () => void;
+    pdf?: PDF;
+    ics?: ICS;
+    onPdfUpdate: (pdf?: PDF) => void;
+    onIcsUpdate: (ics?: ICS) => void;
     onProcess: () => void;
 };
 
 export function FileUploadView({
-    pdfFile,
-    icsFile,
-    onPdfUpload,
-    onIcsUpload,
-    onPdfClear,
-    onIcsClear,
+    pdf,
+    ics,
+    onPdfUpdate,
+    onIcsUpdate,
     onProcess,
 }: FileUploadViewProps) {
     const styles = useStyles();
     const pdfInputRef = useRef<HTMLInputElement>(null);
     const icsInputRef = useRef<HTMLInputElement>(null);
+
+    const onPdfUpload = async (file: File) => {
+        try {
+            const result = await parsePDF(file);
+            const pdfData: PDF = {
+                schedule: result.schedule,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+            };
+            onPdfUpdate(pdfData);
+        } catch (error) {
+            logger.error("PDFのパースに失敗しました:", error);
+        }
+    };
+
+    const onIcsUpload = async (file: File) => {
+        try {
+            const text = await file.text();
+            const result = parseICS(text);
+            const icsData: ICS = {
+                event: result.events,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+            };
+            onIcsUpdate(icsData);
+        } catch (error) {
+            logger.error("ICSのパースに失敗しました:", error);
+        }
+    };
+
+    const onPdfClear = () => {
+        onPdfUpdate(undefined);
+    };
+
+    const onIcsClear = () => {
+        onIcsUpdate(undefined);
+    };
 
     const handlePdfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -228,8 +277,7 @@ export function FileUploadView({
         }
     };
 
-    const canProcess = pdfFile !== null || icsFile !== null;
-
+    const canProcess = pdf !== undefined || ics !== undefined;
     return (
         <>
             <div className={styles.uploadSection}>
@@ -261,7 +309,7 @@ export function FileUploadView({
                                         <span>クリックまたはドラッグ&ドロップ</span>
                                     </div>
                                 </div>
-                                {pdfFile && (
+                                {pdf && (
                                     <Button
                                         appearance="subtle"
                                         icon={<Dismiss24Regular />}
@@ -272,13 +320,13 @@ export function FileUploadView({
                                     />
                                 )}
                             </div>
-                            {pdfFile && (
+                            {pdf && (
                                 <div className={styles.fileInfo}>
                                     <div>
-                                        <strong>ファイル名:</strong> {pdfFile.name}
+                                        <strong>ファイル名:</strong> {pdf.name}
                                     </div>
                                     <div>
-                                        <strong>サイズ:</strong> {(pdfFile.size / 1024).toFixed(2)} KB
+                                        <strong>サイズ:</strong> {(pdf.size / 1024).toFixed(2)} KB
                                     </div>
                                 </div>
                             )}
@@ -316,7 +364,7 @@ export function FileUploadView({
                                         <span>クリックまたはドラッグ&ドロップ</span>
                                     </div>
                                 </div>
-                                {icsFile && (
+                                {ics && (
                                     <Button
                                         appearance="subtle"
                                         icon={<Dismiss24Regular />}
@@ -327,13 +375,13 @@ export function FileUploadView({
                                     />
                                 )}
                             </div>
-                            {icsFile && (
+                            {ics && (
                                 <div className={styles.fileInfo}>
                                     <div>
-                                        <strong>ファイル名:</strong> {icsFile.name}
+                                        <strong>ファイル名:</strong> {ics.name}
                                     </div>
                                     <div>
-                                        <strong>サイズ:</strong> {(icsFile.size / 1024).toFixed(2)} KB
+                                        <strong>サイズ:</strong> {(ics.size / 1024).toFixed(2)} KB
                                     </div>
                                 </div>
                             )}
@@ -348,7 +396,7 @@ export function FileUploadView({
                     {/* 処理対象日時 */}
                     <div className={styles.infoSection}>
                         <div className={styles.infoSectionHeader}>📋 処理対象日時</div>
-                        {pdfFile && (
+                        {pdf && (
                             <Card className={styles.infoCard}>
                                 <ul className={styles.infoList}>
                                     <li className={styles.infoListItem}>2025年7月10日　10:00～18:00</li>
@@ -365,7 +413,7 @@ export function FileUploadView({
                     {/* スケジュール情報 */}
                     <div className={styles.infoSection}>
                         <div className={styles.infoSectionHeader}>📅 スケジュール情報</div>
-                        {icsFile && (
+                        {ics && (
                             <Card className={styles.infoCard}>
                                 <ul className={styles.infoList}>
                                     <li className={styles.infoListItem}>勤務時間内スケジュール: 59件</li>

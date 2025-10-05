@@ -19,6 +19,7 @@ const useStyles = makeStyles({
         animationDuration: tokens.durationNormal,
         animationTimingFunction: tokens.curveEasyEase,
         animationFillMode: "both",
+        overflow: "hidden",
     },
     header: {
         paddingTop: tokens.spacingVerticalXXL,

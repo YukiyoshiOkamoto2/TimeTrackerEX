@@ -53,7 +53,15 @@ export type ScheduleItem = {
     time: string;
     name: string;
     organizer: string;
+    itemCode?: string;
 };
+
+const e = (a: ScheduleItem, b: ScheduleItem) => {
+    return a.date === b.date &&
+        a.time === b.time &&
+        a.name === b.name &&
+        a.organizer === b.organizer
+}
 
 export type ItemCodeOption = {
     code: string;
@@ -64,32 +72,30 @@ export type ItemCodeDisplayMode = "editable" | "readonly";
 
 export type ScheduleTableProps = {
     schedules: ScheduleItem[];
-    itemCodes: string[];
     itemCodeOptions: ItemCodeOption[];
     itemCodeMode?: ItemCodeDisplayMode;
-    onItemCodeChange?: (rowIndex: number, value: string) => void;
+    onScheduleChange?: (schedules: ScheduleItem[]) => void;
 };
 
-type ScheduleItemWithCode = ScheduleItem & { itemCode?: string };
 
-const columns: TableColumnDefinition<ScheduleItemWithCode>[] = [
-    createTableColumn<ScheduleItemWithCode>({
+const columns: TableColumnDefinition<ScheduleItem>[] = [
+    createTableColumn<ScheduleItem>({
         columnId: "date",
         compare: (a, b) => a.date.localeCompare(b.date),
     }),
-    createTableColumn<ScheduleItemWithCode>({
+    createTableColumn<ScheduleItem>({
         columnId: "time",
         compare: (a, b) => a.time.localeCompare(b.time),
     }),
-    createTableColumn<ScheduleItemWithCode>({
+    createTableColumn<ScheduleItem>({
         columnId: "name",
         compare: (a, b) => a.name.localeCompare(b.name),
     }),
-    createTableColumn<ScheduleItemWithCode>({
+    createTableColumn<ScheduleItem>({
         columnId: "organizer",
         compare: (a, b) => a.organizer.localeCompare(b.organizer),
     }),
-    createTableColumn<ScheduleItemWithCode>({
+    createTableColumn<ScheduleItem>({
         columnId: "itemCode",
         compare: (a, b) => (a.itemCode || "").localeCompare(b.itemCode || ""),
     }),
@@ -97,22 +103,11 @@ const columns: TableColumnDefinition<ScheduleItemWithCode>[] = [
 
 export function ScheduleTable({
     schedules,
-    itemCodes,
     itemCodeOptions,
     itemCodeMode = "editable",
-    onItemCodeChange,
+    onScheduleChange,
 }: ScheduleTableProps) {
     const styles = useStyles();
-
-    // Merge schedules with itemCodes for sorting
-    const schedulesWithCodes = useMemo<ScheduleItemWithCode[]>(
-        () =>
-            schedules.map((schedule, index) => ({
-                ...schedule,
-                itemCode: itemCodes[index] || "",
-            })),
-        [schedules, itemCodes],
-    );
 
     const columnSizingOptions = useMemo<TableColumnSizingOptions>(
         () => ({
@@ -150,7 +145,7 @@ export function ScheduleTable({
     } = useTableFeatures(
         {
             columns,
-            items: schedulesWithCodes,
+            items: schedules,
         },
         [
             useTableColumnSizing_unstable({ columnSizingOptions }),
@@ -166,27 +161,24 @@ export function ScheduleTable({
         return option ? option.name : "";
     };
 
-    const handleItemCodeSelect = (rowIndex: number, value: string) => {
-        if (onItemCodeChange) {
-            onItemCodeChange(rowIndex, value);
-        }
-    };
-
-    const handleItemCodeInputChange = (rowIndex: number, value: string) => {
-        if (onItemCodeChange) {
-            onItemCodeChange(rowIndex, value);
+    const handleItemCodeChange = (rowIndex: number, value: string) => {
+        if (onScheduleChange) {
+            const newSchedules = schedules.map((schedule, index) =>
+                index === rowIndex ? { ...schedule, itemCode: value } : schedule
+            );
+            onScheduleChange(newSchedules);
         }
     };
 
     const rows = sort(getRows());
 
-    const renderItemCodeCell = (index: number) => {
+    const renderItemCodeCell = (item: ScheduleItem, originalIndex: number) => {
         if (itemCodeMode === "readonly") {
             return (
                 <div className={styles.inputWithLabel}>
-                    <span className={styles.readonlyLabel}>{itemCodes[index] || "-"}</span>
-                    {getCodeName(itemCodes[index]) && (
-                        <span className={styles.codeNameLabel}>({getCodeName(itemCodes[index])})</span>
+                    <span className={styles.readonlyLabel}>{item.itemCode || "-"}</span>
+                    {getCodeName(item.itemCode || "") && (
+                        <span className={styles.codeNameLabel}>({getCodeName(item.itemCode || "")})</span>
                     )}
                 </div>
             );
@@ -196,9 +188,9 @@ export function ScheduleTable({
             <div className={styles.inputWithLabel}>
                 <Combobox
                     placeholder="選択または入力"
-                    value={itemCodes[index] || ""}
-                    onOptionSelect={(_, data) => handleItemCodeSelect(index, data.optionValue || "")}
-                    onChange={(e) => handleItemCodeInputChange(index, e.target.value)}
+                    value={item.itemCode || ""}
+                    onOptionSelect={(_, data) => handleItemCodeChange(originalIndex, data.optionValue || "")}
+                    onChange={(e) => handleItemCodeChange(originalIndex, e.target.value)}
                     className={styles.comboboxInput}
                 >
                     {itemCodeOptions.map((option) => (
@@ -207,8 +199,8 @@ export function ScheduleTable({
                         </Option>
                     ))}
                 </Combobox>
-                {getCodeName(itemCodes[index]) && (
-                    <span className={styles.codeNameLabel}>{getCodeName(itemCodes[index])}</span>
+                {getCodeName(item.itemCode || "") && (
+                    <span className={styles.codeNameLabel}>{getCodeName(item.itemCode || "")}</span>
                 )}
             </div>
         );
@@ -245,40 +237,44 @@ export function ScheduleTable({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {rows.map(({ item }, index) => (
-                        <TableRow key={index}>
-                            <TableCell
-                                className={styles.tableCell}
-                                {...columnSizing_unstable.getTableCellProps("date")}
-                            >
-                                <TableCellLayout>{item.date}</TableCellLayout>
-                            </TableCell>
-                            <TableCell
-                                className={styles.tableCell}
-                                {...columnSizing_unstable.getTableCellProps("time")}
-                            >
-                                <TableCellLayout>{item.time}</TableCellLayout>
-                            </TableCell>
-                            <TableCell
-                                className={styles.tableCell}
-                                {...columnSizing_unstable.getTableCellProps("name")}
-                            >
-                                <TableCellLayout>{item.name}</TableCellLayout>
-                            </TableCell>
-                            <TableCell
-                                className={styles.tableCell}
-                                {...columnSizing_unstable.getTableCellProps("organizer")}
-                            >
-                                <TableCellLayout>{item.organizer}</TableCellLayout>
-                            </TableCell>
-                            <TableCell
-                                className={styles.tableCell}
-                                {...columnSizing_unstable.getTableCellProps("itemCode")}
-                            >
-                                {renderItemCodeCell(index)}
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                    {rows.map(({ item }) => {
+                        // Find original index in schedules array
+                        const originalIndex = schedules.findIndex((s) => e(s, item));
+                        return (
+                            <TableRow key={originalIndex}>
+                                <TableCell
+                                    className={styles.tableCell}
+                                    {...columnSizing_unstable.getTableCellProps("date")}
+                                >
+                                    <TableCellLayout>{item.date}</TableCellLayout>
+                                </TableCell>
+                                <TableCell
+                                    className={styles.tableCell}
+                                    {...columnSizing_unstable.getTableCellProps("time")}
+                                >
+                                    <TableCellLayout>{item.time}</TableCellLayout>
+                                </TableCell>
+                                <TableCell
+                                    className={styles.tableCell}
+                                    {...columnSizing_unstable.getTableCellProps("name")}
+                                >
+                                    <TableCellLayout>{item.name}</TableCellLayout>
+                                </TableCell>
+                                <TableCell
+                                    className={styles.tableCell}
+                                    {...columnSizing_unstable.getTableCellProps("organizer")}
+                                >
+                                    <TableCellLayout>{item.organizer}</TableCellLayout>
+                                </TableCell>
+                                <TableCell
+                                    className={styles.tableCell}
+                                    {...columnSizing_unstable.getTableCellProps("itemCode")}
+                                >
+                                    {renderItemCodeCell(item, originalIndex)}
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </div>

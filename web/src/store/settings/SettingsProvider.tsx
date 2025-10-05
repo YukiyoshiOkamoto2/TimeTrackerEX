@@ -10,8 +10,10 @@ import { getStorage } from "../../lib/storage";
 import type { AppSettings } from "../../schema/settings/settings";
 import {
     DEFAULT_SETTINGS,
+    formatZodError,
     isSettingsComplete,
     SettingsValidationError,
+    validatePartialSettingsWithZod,
     validateSettings,
 } from "../../schema/settings/settings";
 
@@ -86,6 +88,49 @@ function saveSettings(settings: Partial<AppSettings>): void {
 }
 
 /**
+ * 設定のバリデーションとエラー修正
+ * バリデーションエラーがある項目だけデフォルト値に置き換えます
+ *
+ * @param settings - 検証する設定
+ * @returns 修正された設定
+ */
+function validateAndCorrectSettings(settings: Partial<AppSettings>): Partial<AppSettings> {
+    const validationResult = validatePartialSettingsWithZod(settings);
+
+    if (!validationResult.success) {
+        // バリデーションエラーがある項目だけデフォルト値に置き換え
+        const errorMessages = formatZodError(validationResult.error);
+        console.warn(
+            `ローカルストレージの設定に無効な項目があります。該当項目をデフォルト値に置き換えます: ${errorMessages.join(", ")}`,
+        );
+
+        // エラーのあるキーを抽出
+        const errorPaths = validationResult.error.issues.map((issue) => issue.path[0] as string);
+        const uniqueErrorKeys = [...new Set(errorPaths)];
+
+        // エラーのある項目だけデフォルト値で上書き
+        const correctedSettings = { ...settings };
+        for (const key of uniqueErrorKeys) {
+            if (key in DEFAULT_SETTINGS) {
+                correctedSettings[key as keyof AppSettings] = DEFAULT_SETTINGS[key as keyof AppSettings];
+            }
+        }
+
+        // 修正後に再検証
+        const lastValidationResult = validatePartialSettingsWithZod(correctedSettings);
+        if (lastValidationResult.success) {
+            return correctedSettings;
+        } else {
+            // 修正後もエラーが残る場合はデフォルト設定を返す
+            console.error("設定の修正に失敗しました。デフォルト設定を使用します。");
+            return DEFAULT_SETTINGS;
+        }
+    }
+
+    return settings;
+}
+
+/**
  * 設定Providerのプロパティ
  */
 interface SettingsProviderProps {
@@ -102,7 +147,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     // 初回ロード
     useEffect(() => {
         const loaded = loadSettings();
-        setSettings(loaded);
+        const validated = validateAndCorrectSettings(loaded);
+        setSettings(validated);
         setIsLoading(false);
     }, []);
 
@@ -119,6 +165,15 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
     // 設定の更新
     const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
+        // Zodスキーマによるバリデーション
+        const validationResult = validatePartialSettingsWithZod(newSettings);
+
+        if (!validationResult.success) {
+            // バリデーションエラーをわかりやすい形式に変換
+            const errorMessages = formatZodError(validationResult.error);
+            throw new SettingsValidationError(`設定の更新に失敗しました: ${errorMessages.join(", ")}`);
+        }
+
         setSettings((prev) => ({ ...prev, ...newSettings }));
     }, []);
 

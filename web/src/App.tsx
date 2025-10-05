@@ -1,10 +1,10 @@
 import type { SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Button, makeStyles, Persona, SearchBox, Tab, TabList, tokens } from "@fluentui/react-components";
 import { Clock24Regular, Home24Regular, Search20Regular, SettingsRegular } from "@fluentui/react-icons";
-import { useState } from "react";
 import { HomePage } from "./pages/home";
 import { SettingPage } from "./pages/setting";
 import { TimeTrackerPage } from "./pages/timetracker";
+import { useNavigation } from "./store/navigation";
 
 const useStyles = makeStyles({
     container: {
@@ -57,10 +57,10 @@ const navItems: NavItem[] = [
 
 function App() {
     const styles = useStyles();
-    const [selectedTab, setSelectedTab] = useState<string>("Home");
+    const { currentPageName, navigate } = useNavigation();
 
     const onTabSelect = (_event: SelectTabEvent, data: SelectTabData) => {
-        setSelectedTab(data.value as string);
+        navigate(data.value as string);
     };
 
     return (
@@ -81,7 +81,7 @@ function App() {
                 </div>
 
                 <nav className={styles.navList}>
-                    <TabList vertical selectedValue={selectedTab} onTabSelect={onTabSelect} size="large">
+                    <TabList vertical selectedValue={currentPageName} onTabSelect={onTabSelect} size="large">
                         {navItems.map((item) => (
                             <Tab key={item.id} value={item.id} icon={item.icon}>
                                 {item.label}
@@ -95,7 +95,7 @@ function App() {
                         appearance="subtle"
                         icon={<SettingsRegular />}
                         style={{ width: "100%", justifyContent: "flex-start" }}
-                        onClick={() => setSelectedTab("Settings")}
+                        onClick={() => navigate("Settings")}
                     >
                         Settings
                     </Button>
@@ -104,9 +104,9 @@ function App() {
 
             {/* Main Content */}
             <main className={styles.mainContent}>
-                {selectedTab === "Home" && <HomePage />}
-                {selectedTab === "TimeTracker" && <TimeTrackerPage />}
-                {selectedTab === "Settings" && <SettingPage />}
+                {currentPageName === "Home" && <HomePage />}
+                {currentPageName === "TimeTracker" && <TimeTrackerPage />}
+                {currentPageName === "Settings" && <SettingPage />}
             </main>
         </div>
     );

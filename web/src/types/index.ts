@@ -57,7 +57,7 @@ export interface Schedule {
     /** スケジュールの開始時間 */
     start: Date;
     /** スケジュールの終了時間 */
-    end: Date | null;
+    end?: Date;
     /** 休日であるかどうか */
     isHoliday?: boolean;
     /** 有給休暇であるかどうか */

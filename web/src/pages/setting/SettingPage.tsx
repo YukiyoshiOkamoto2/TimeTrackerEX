@@ -1,83 +1,106 @@
-import { makeStyles, tokens } from "@fluentui/react-components";
-import { Card } from "../../components/card";
+import { useNavigation } from "@/store/navigation";
+import { Button, makeStyles, SelectTabData, SelectTabEvent, Tab, TabList, tokens } from "@fluentui/react-components";
+import { CodeRegular } from "@fluentui/react-icons";
+import { useEffect, useState } from "react";
 import { Page } from "../../components/page";
+import { AppearanceSettings, GeneralSettings, JsonEditorView, TimeTrackerSettings } from "./components";
 
 const useStyles = makeStyles({
-    settingSection: {
+    pageContainer: {
+        position: "relative",
+    },
+    headerActions: {
+        position: "absolute",
+        top: 0,
+        right: 0,
+        zIndex: 10,
+    },
+    contentContainer: {
+        display: "flex",
+        gap: tokens.spacingHorizontalXXL,
+    },
+    sidebar: {
+        minWidth: "240px",
+        width: "240px",
+    },
+    sidebarNav: {
+        position: "sticky",
+        top: tokens.spacingVerticalL,
+    },
+    mainContent: {
+        flex: 1,
         display: "flex",
         flexDirection: "column",
-        gap: tokens.spacingVerticalL,
-    },
-    sectionTitle: {
-        fontSize: tokens.fontSizeBase500,
-        fontWeight: tokens.fontWeightSemibold,
-        color: tokens.colorNeutralForeground1,
-        marginBottom: tokens.spacingVerticalXS,
-    },
-    settingItem: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingTop: tokens.spacingVerticalL,
-        paddingBottom: tokens.spacingVerticalL,
-        borderBottomWidth: tokens.strokeWidthThin,
-        borderBottomStyle: "solid",
-        borderBottomColor: tokens.colorNeutralStroke2,
-        "&:last-child": {
-            borderBottomWidth: "0",
-        },
-    },
-    settingLabel: {
-        fontSize: tokens.fontSizeBase400,
-        fontWeight: tokens.fontWeightMedium,
-        color: tokens.colorNeutralForeground1,
-    },
-    settingDescription: {
-        fontSize: tokens.fontSizeBase200,
-        color: tokens.colorNeutralForeground3,
-        marginTop: tokens.spacingVerticalXXS,
+        gap: tokens.spacingVerticalXXL,
+        minWidth: "0",
     },
 });
 
+type SettingCategory = "general" | "appearance" | "timetracker";
+
 export function SettingPage() {
     const styles = useStyles();
+    const { link } = useNavigation();
+    const [selectedCategory, setSelectedCategory] = useState<SettingCategory>("general");
+    const [showJsonEditor, setShowJsonEditor] = useState(false);
+
+    const handleCategoryChange = (_event: SelectTabEvent, data: SelectTabData) => {
+        setSelectedCategory(data.value as SettingCategory);
+    };
+
+    const renderContent = () => {
+        if (showJsonEditor) {
+            return <JsonEditorView onBack={() => setShowJsonEditor(false)} />;
+        }
+
+        switch (selectedCategory) {
+            case "general":
+                return <GeneralSettings />;
+            case "appearance":
+                return <AppearanceSettings />;
+            case "timetracker":
+                return <TimeTrackerSettings />;
+            default:
+                return <GeneralSettings />;
+        }
+    };
+
+    useEffect(() => {
+        if (link === "timetracker") {
+            setSelectedCategory("timetracker");
+        }
+    }, [link]);
 
     return (
-        <Page title="設定">
-            <div className={styles.settingSection}>
-                <div className={styles.sectionTitle}>一般設定</div>
-                <Card>
-                    <div className={styles.settingItem}>
-                        <div>
-                            <div className={styles.settingLabel}>アプリケーション設定</div>
-                            <div className={styles.settingDescription}>TimeTracker EXの基本設定を管理します</div>
-                        </div>
+        <Page title="設定" subtitle="アプリケーションの設定をカスタマイズ">
+            <div className={styles.pageContainer}>
+                {!showJsonEditor && (
+                    <div className={styles.headerActions}>
+                        <Button appearance="secondary" icon={<CodeRegular />} onClick={() => setShowJsonEditor(true)}>
+                            設定のJSON表示
+                        </Button>
                     </div>
-                </Card>
-            </div>
-
-            <div className={styles.settingSection}>
-                <div className={styles.sectionTitle}>データ設定</div>
-                <Card>
-                    <div className={styles.settingItem}>
-                        <div>
-                            <div className={styles.settingLabel}>インポート/エクスポート</div>
-                            <div className={styles.settingDescription}>データのバックアップと復元を行います</div>
+                )}
+                {!showJsonEditor && (
+                    <div className={styles.contentContainer}>
+                        <div className={styles.sidebar}>
+                            <nav className={styles.sidebarNav}>
+                                <TabList
+                                    vertical
+                                    selectedValue={selectedCategory}
+                                    onTabSelect={handleCategoryChange}
+                                    size="large"
+                                >
+                                    <Tab value="general">一般</Tab>
+                                    <Tab value="appearance">外観設定</Tab>
+                                    <Tab value="timetracker">TimeTracker</Tab>
+                                </TabList>
+                            </nav>
                         </div>
+                        <div className={styles.mainContent}>{renderContent()}</div>
                     </div>
-                </Card>
-            </div>
-
-            <div className={styles.settingSection}>
-                <div className={styles.sectionTitle}>情報</div>
-                <Card>
-                    <div className={styles.settingItem}>
-                        <div>
-                            <div className={styles.settingLabel}>バージョン情報</div>
-                            <div className={styles.settingDescription}>TimeTracker EX v1.0.0</div>
-                        </div>
-                    </div>
-                </Card>
+                )}
+                {showJsonEditor && renderContent()}
             </div>
         </Page>
     );

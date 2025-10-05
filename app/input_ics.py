@@ -206,12 +206,25 @@ def execute(file_path) -> InputICSResult:
 
 if __name__ == "__main__":
     # Execute the ICS parsing
-    result = execute("dist\岡本 行欽 の予定表.ics")
+    result = execute(r"web\src\core\ics\岡本 行欽 の予定表.ics")
+    
+    print(f"=== Python ICS解析結果 ===")
+    print(f"総イベント数: {len(result.events) if result.events else 0}")
+    
     if result.error_message:
+        error_lines = result.error_message.split("\n")
+        print(f"エラーメッセージ数: {len(error_lines)}")
         # print(result.error_message)
         pass
 
     if result.events:
-        for event in result.events:
-            if not event.is_cancelled and not event.is_private:
-                print(event.get_text())
+        visible_events = [e for e in result.events if not e.is_cancelled and not e.is_private]
+        print(f"表示イベント数: {len(visible_events)}")
+        print(f"\n最初のイベント: {result.events[0].name}")
+        print(f"  開始: {result.events[0].schedule.start.isoformat()}")
+        print(f"  終了: {result.events[0].schedule.end.isoformat()}")
+        print(f"  繰り返し: {len(result.events[0].recurrence) if result.events[0].recurrence else 0}回")
+        
+        print(f"\n=== 全イベントリスト（非キャンセル・非プライベート） ===")
+        for i, event in enumerate(visible_events, 1):
+            print(f"{i}. {event.get_text()}")

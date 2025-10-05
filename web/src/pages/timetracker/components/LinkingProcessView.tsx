@@ -164,7 +164,7 @@ export type LinkingProcessViewProps = {
     onBack: () => void;
     pdfFileName?: string;
     icsFileName?: string;
-    onSubmit?: (itemCodes: string[]) => void;
+    onSubmit?: (schedules: ScheduleItem[]) => void;
     onAutoLink?: () => void;
 };
 
@@ -203,10 +203,10 @@ const itemCodeOptions: ItemCodeOption[] = [
 
 // Mock schedule data
 const schedules: ScheduleItem[] = [
-    { date: "10月20日", time: "10:00 30分", name: "スケジュール名", organizer: "" },
-    { date: "10月21日", time: "10:00 30分", name: "スケジュール名", organizer: "" },
-    { date: "10月22日", time: "10:00 30分", name: "スケジュール名", organizer: "" },
-    { date: "10月23日", time: "10:00 30分", name: "スケジュール名", organizer: "" },
+    { date: "10月20日", time: "10:00 30分", name: "スケジュール名", organizer: "a" },
+    { date: "10月21日", time: "10:00 30分", name: "スケジュール名", organizer: "b" },
+    { date: "10月22日", time: "10:00 30分", name: "スケジュール名", organizer: "c" },
+    { date: "10月23日", time: "10:00 30分", name: "スケジュール名", organizer: "d" },
 ];
 
 export function LinkingProcessView({
@@ -220,18 +220,15 @@ export function LinkingProcessView({
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [option1Value, setOption1Value] = useState("");
     const [option2Enabled, setOption2Enabled] = useState(true);
+    const [currentSchedules, setCurrentSchedules] = useState<ScheduleItem[]>(schedules);
 
-    const [itemCodes, setItemCodes] = useState<string[]>(new Array(schedules.length).fill(""));
-
-    const handleItemCodeChange = (rowIndex: number, value: string) => {
-        const newCodes = [...itemCodes];
-        newCodes[rowIndex] = value;
-        setItemCodes(newCodes);
+    const handleScheduleChange = (updatedSchedules: ScheduleItem[]) => {
+        setCurrentSchedules(updatedSchedules);
     };
 
     const handleSubmit = () => {
         if (onSubmit) {
-            onSubmit(itemCodes);
+            onSubmit(currentSchedules);
         }
     };
 
@@ -317,11 +314,10 @@ export function LinkingProcessView({
                 </div>
 
                 <ScheduleTable
-                    schedules={schedules}
-                    itemCodes={itemCodes}
+                    schedules={currentSchedules}
                     itemCodeOptions={itemCodeOptions}
                     itemCodeMode="editable"
-                    onItemCodeChange={handleItemCodeChange}
+                    onScheduleChange={handleScheduleChange}
                 />
             </div>
 

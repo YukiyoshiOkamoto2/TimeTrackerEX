@@ -1,3 +1,4 @@
+import { useNavigation } from "@/store/navigation";
 import {
     Button,
     Dialog,
@@ -59,6 +60,13 @@ type FileData = {
     type: string;
 };
 
+type Content = {
+    shedule: ScheduleItem[],
+    pdfFile?: FileData,
+    icsFile?: FileData,
+    currentView: "upload" | "linking" | "completion"
+}
+
 export function TimeTrackerPage() {
     const styles = useStyles();
     const [pdfFile, setPdfFile] = useState<FileData | null>(null);
@@ -115,12 +123,12 @@ export function TimeTrackerPage() {
         setCurrentView("upload");
     };
 
-    const handleSubmit = async (itemCodes: string[]) => {
+    const handleSubmit = async (schedules: ScheduleItem[]) => {
         setIsLoading(true);
         try {
             // Mock API call - 実際の処理に置き換えてください
             await new Promise((resolve) => setTimeout(resolve, 2000));
-            console.log("登録実行", itemCodes);
+            console.log("登録実行", schedules);
             setSlideDirection("right");
             setCurrentView("completion");
         } catch (error) {
@@ -129,8 +137,9 @@ export function TimeTrackerPage() {
             setIsLoading(false);
         }
     };
-
+    const { navigate } = useNavigation();
     const handleExport = async () => {
+        navigate("Settings", null, "timetracker");
         setIsLoading(true);
         try {
             // Mock export process
@@ -164,7 +173,6 @@ export function TimeTrackerPage() {
             await new Promise((resolve) => setTimeout(resolve, 3000));
             console.log("AIによる自動紐づけ完了");
             // ここで自動紐づけされたデータを更新する処理を追加
-            setDialogOpen(true);
         } catch (error) {
             console.error("自動紐づけエラー", error);
         } finally {

@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+const prefix = `monaco-editor/esm/vs`;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -13,6 +15,17 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          jsonWorker: [`${prefix}/language/json/json.worker`],
+          cssWorker: [`${prefix}/language/css/css.worker`],
+          htmlWorker: [`${prefix}/language/html/html.worker`],
+          tsWorker: [`${prefix}/language/typescript/ts.worker`],
+          editorWorker: [`${prefix}/editor/editor.worker`],
+        },
+      },
+    },
   },
   server: {
     port: 5173,
@@ -21,5 +34,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
   },
 })

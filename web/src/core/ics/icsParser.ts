@@ -1,39 +1,16 @@
 import { getLogger } from "@/lib";
 import ICAL from "ical.js";
 
-const logger = getLogger("ICSParser");
+import { Event } from "@/types";
 
-/**
- * ICSイベント
- */
-export interface ICSEvent {
-    /** イベント名 */
-    name: string;
-    /** UUID */
-    uuid: string;
-    /** 主催者 */
-    organizer: string;
-    /** 場所 */
-    location: string;
-    /** プライベートイベントか */
-    isPrivate: boolean;
-    /** キャンセルされたイベントか */
-    isCancelled: boolean;
-    /** スケジュール */
-    schedule: {
-        start: Date;
-        end: Date;
-    };
-    /** 繰り返しイベントの発生日時 */
-    recurrence?: Date[];
-}
+const logger = getLogger("ICSParser");
 
 /**
  * ICSファイルのパース結果
  */
 export interface InputICSResult {
     /** パースされたイベントリスト */
-    events: ICSEvent[];
+    events: Event[];
     /** エラーメッセージリスト */
     errorMessages: string[];
 }
@@ -81,8 +58,8 @@ export function parseICS(fileContent: string): InputICSResult {
             const startCompare = a.schedule.start.getTime() - b.schedule.start.getTime();
             if (startCompare !== 0) return startCompare;
             // 開始時刻が同じ場合は期間の長さでソート
-            const durationA = a.schedule.end.getTime() - a.schedule.start.getTime();
-            const durationB = b.schedule.end.getTime() - b.schedule.start.getTime();
+            const durationA = (a.schedule.end?.getTime() ?? 0) - a.schedule.start.getTime();
+            const durationB = (b.schedule.end?.getTime() ?? 0) - b.schedule.start.getTime();
             return durationA - durationB;
         });
     } catch (e) {
@@ -98,7 +75,7 @@ export function parseICS(fileContent: string): InputICSResult {
 /**
  * 個別のイベントをパースする
  */
-function parseEvent(vevent: ICAL.Component, startDate: Date, now: Date): ICSEvent | null {
+function parseEvent(vevent: ICAL.Component, startDate: Date, now: Date): Event | null {
     // 必須フィールドの取得
     const summaryValue = vevent.getFirstPropertyValue("summary");
     const dtstartValue = vevent.getFirstPropertyValue("dtstart");

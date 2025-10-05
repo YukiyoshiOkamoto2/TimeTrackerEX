@@ -100,7 +100,6 @@ export type CompletionViewProps = {
 
 export function CompletionView({
     schedules,
-    itemCodes,
     itemCodeOptions,
     onExport,
     onBack,
@@ -164,10 +163,8 @@ export function CompletionView({
                     </div>
                     <ScheduleTable
                         schedules={schedules}
-                        itemCodes={itemCodes}
                         itemCodeOptions={itemCodeOptions}
                         itemCodeMode="readonly"
-                        onItemCodeChange={() => {}}
                     />
                 </div>
             </div>

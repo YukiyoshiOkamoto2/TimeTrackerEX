@@ -110,9 +110,11 @@ describe("IgnoreManager", () => {
             uuid: "test-uuid",
             name: "休憩時間",
             organizer: "test@example.com",
-            start: new Date("2025-10-04T10:00:00"),
-            end: new Date("2025-10-04T11:00:00"),
-            isAllDay: false,
+            location: "",
+            schedule: {
+                start: new Date("2025-10-04T10:00:00"),
+                end: new Date("2025-10-04T11:00:00"),
+            },
             isCancelled: false,
             isPrivate: false,
         };
