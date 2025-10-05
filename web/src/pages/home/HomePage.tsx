@@ -55,104 +55,79 @@ const useStyles = makeStyles({
     },
 });
 
+// カード情報の定義
+const CARDS = [
+    {
+        icon: Calendar24Regular,
+        title: "スケジュール管理",
+        description: "カレンダーイベントから勤務時間を自動計算し、効率的に実績入力を行えます。",
+        features: [
+            "イベントの丸め処理に対応",
+            "開始・終了時刻の自動調整",
+            "プロジェクトごとの時間集計",
+        ],
+        buttonText: "スケジュールを開く",
+        buttonAppearance: "primary" as const,
+    },
+    {
+        icon: Clock24Regular,
+        title: "時間計算アルゴリズム",
+        description: "Pythonから移行したアルゴリズムをブラウザで実行し、動作を確認できます。",
+        features: [
+            "高精度な時間計算",
+            "包括的なテストスイート",
+            "リアルタイムプレビュー",
+        ],
+        buttonText: "テストを実行",
+        buttonAppearance: "secondary" as const,
+    },
+    {
+        icon: Settings24Regular,
+        title: "設定",
+        description: "丸め処理のタイプや時間間隔など、アプリケーションの動作をカスタマイズできます。",
+        features: [
+            "柔軟な丸め処理設定",
+            "プロジェクト管理",
+            "イベント設定",
+        ],
+        buttonText: "設定を開く",
+        buttonAppearance: "secondary" as const,
+    },
+];
+
 export function HomePage() {
     const styles = useStyles();
 
     return (
         <Page title="TimeTracker EX" subtitle="勤務実績入力を効率化するWebアプリケーション">
             <div className={styles.cards}>
-                <Card hoverable>
-                    <div className={styles.cardContent}>
-                        <div className={styles.cardHeader}>
-                            <div className={styles.cardIcon}>
-                                <Calendar24Regular />
+                {CARDS.map((card, index) => {
+                    const Icon = card.icon;
+                    return (
+                        <Card key={index} hoverable>
+                            <div className={styles.cardContent}>
+                                <div className={styles.cardHeader}>
+                                    <div className={styles.cardIcon}>
+                                        <Icon />
+                                    </div>
+                                    <div className={styles.cardTitle}>{card.title}</div>
+                                </div>
+                                <div className={styles.cardDescription}>{card.description}</div>
+                                <div className={styles.features}>
+                                    {card.features.map((feature, featureIndex) => (
+                                        <div key={featureIndex} className={styles.feature}>
+                                            <span className={styles.featureIcon}>✓</span>
+                                            <span>{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className={styles.cardActions}>
+                                    <Button appearance={card.buttonAppearance}>{card.buttonText}</Button>
+                                </div>
                             </div>
-                            <div className={styles.cardTitle}>スケジュール管理</div>
-                        </div>
-                        <div className={styles.cardDescription}>
-                            カレンダーイベントから勤務時間を自動計算し、効率的に実績入力を行えます。
-                        </div>
-                        <div className={styles.features}>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>イベントの丸め処理に対応</span>
-                            </div>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>開始・終了時刻の自動調整</span>
-                            </div>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>プロジェクトごとの時間集計</span>
-                            </div>
-                        </div>
-                        <div className={styles.cardActions}>
-                            <Button appearance="primary">スケジュールを開く</Button>
-                        </div>
-                    </div>
-                </Card>
-
-                <Card hoverable>
-                    <div className={styles.cardContent}>
-                        <div className={styles.cardHeader}>
-                            <div className={styles.cardIcon}>
-                                <Clock24Regular />
-                            </div>
-                            <div className={styles.cardTitle}>時間計算アルゴリズム</div>
-                        </div>
-                        <div className={styles.cardDescription}>
-                            Pythonから移行したアルゴリズムをブラウザで実行し、動作を確認できます。
-                        </div>
-                        <div className={styles.features}>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>高精度な時間計算</span>
-                            </div>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>包括的なテストスイート</span>
-                            </div>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>リアルタイムプレビュー</span>
-                            </div>
-                        </div>
-                        <div className={styles.cardActions}>
-                            <Button appearance="secondary">テストを実行</Button>
-                        </div>
-                    </div>
-                </Card>
-
-                <Card hoverable>
-                    <div className={styles.cardContent}>
-                        <div className={styles.cardHeader}>
-                            <div className={styles.cardIcon}>
-                                <Settings24Regular />
-                            </div>
-                            <div className={styles.cardTitle}>設定</div>
-                        </div>
-                        <div className={styles.cardDescription}>
-                            丸め処理のタイプや時間間隔など、アプリケーションの動作をカスタマイズできます。
-                        </div>
-                        <div className={styles.features}>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>柔軟な丸め処理設定</span>
-                            </div>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>プロジェクト管理</span>
-                            </div>
-                            <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
-                                <span>イベント設定</span>
-                            </div>
-                        </div>
-                        <div className={styles.cardActions}>
-                            <Button appearance="secondary">設定を開く</Button>
-                        </div>
-                    </div>
-                </Card>
+                        </Card>
+                    );
+                })}
             </div>
         </Page>
     );

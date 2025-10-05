@@ -5,4 +5,4 @@
  */
 
 export { extractRecentEvents, parseICS } from "./icsParser";
-export type { ICSEvent, InputICSResult } from "./icsParser";
+export type { InputICSResult } from "./icsParser";

@@ -38,38 +38,40 @@ const useStyles = makeStyles({
 
 type SettingCategory = "general" | "appearance" | "timetracker";
 
+// カテゴリーに対応するコンポーネントマップ
+const CATEGORY_COMPONENTS: Record<SettingCategory, React.ComponentType> = {
+    general: GeneralSettings,
+    appearance: AppearanceSettings,
+    timetracker: TimeTrackerSettings,
+};
+
 export function SettingPage() {
     const styles = useStyles();
     const { link } = useNavigation();
     const [selectedCategory, setSelectedCategory] = useState<SettingCategory>("general");
     const [showJsonEditor, setShowJsonEditor] = useState(false);
 
-    const handleCategoryChange = (_event: SelectTabEvent, data: SelectTabData) => {
-        setSelectedCategory(data.value as SettingCategory);
-    };
-
-    const renderContent = () => {
-        if (showJsonEditor) {
-            return <JsonEditorView onBack={() => setShowJsonEditor(false)} />;
-        }
-
-        switch (selectedCategory) {
-            case "general":
-                return <GeneralSettings />;
-            case "appearance":
-                return <AppearanceSettings />;
-            case "timetracker":
-                return <TimeTrackerSettings />;
-            default:
-                return <GeneralSettings />;
-        }
-    };
-
+    // リンクに基づいてカテゴリーを設定
     useEffect(() => {
         if (link === "timetracker") {
             setSelectedCategory("timetracker");
         }
     }, [link]);
+
+    // カテゴリー変更ハンドラー
+    const handleCategoryChange = (_event: SelectTabEvent, data: SelectTabData) => {
+        setSelectedCategory(data.value as SettingCategory);
+    };
+
+    // コンテンツをレンダリング
+    const renderContent = () => {
+        if (showJsonEditor) {
+            return <JsonEditorView onBack={() => setShowJsonEditor(false)} />;
+        }
+
+        const Component = CATEGORY_COMPONENTS[selectedCategory];
+        return <Component />;
+    };
 
     return (
         <Page title="設定" subtitle="アプリケーションの設定をカスタマイズ">

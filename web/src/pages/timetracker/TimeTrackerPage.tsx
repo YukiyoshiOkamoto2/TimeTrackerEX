@@ -13,7 +13,8 @@ import {
 } from "@fluentui/react-components";
 import { useState } from "react";
 import { Page } from "../../components/page";
-import { CompletionView, FileUploadView, ItemCodeOption, LinkingProcessView, ScheduleItem } from "./components";
+import { CompletionView, FileUploadView, LinkingProcessView, ScheduleItem, PDF, ICS } from "./components";
+import { appMessageDialogRef } from "@/components/message-dialog";
 
 const useStyles = makeStyles({
     viewContainer: {
@@ -54,137 +55,89 @@ const useStyles = makeStyles({
     },
 });
 
-type FileData = {
-    name: string;
-    size: number;
-    type: string;
+// Mock data
+const MOCK_DATA = {
+    completedSchedules: [
+        { date: "2025/10/04", time: "09:00-10:00", name: "朝会", organizer: "田中太郎" },
+        { date: "2025/10/04", time: "13:00-14:30", name: "プロジェクト会議", organizer: "佐藤花子" },
+        { date: "2025/10/05", time: "10:00-12:00", name: "開発作業", organizer: "山田次郎" },
+    ],
+    completedItemCodes: ["PROJ-001", "PROJ-002", "PROJ-003"],
+    itemCodeOptions: [
+        { code: "PROJ-001", name: "プロジェクトA" },
+        { code: "PROJ-002", name: "プロジェクトB" },
+        { code: "PROJ-003", name: "プロジェクトC" },
+    ],
 };
-
-type Content = {
-    shedule: ScheduleItem[],
-    pdfFile?: FileData,
-    icsFile?: FileData,
-    currentView: "upload" | "linking" | "completion"
-}
 
 export function TimeTrackerPage() {
     const styles = useStyles();
-    const [pdfFile, setPdfFile] = useState<FileData | null>(null);
-    const [icsFile, setIcsFile] = useState<FileData | null>(null);
+    const { navigate } = useNavigation();
+    const [pdf, setPdf] = useState<PDF | undefined>(undefined);
+    const [ics, setIcs] = useState<ICS | undefined>(undefined);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [currentView, setCurrentView] = useState<"upload" | "linking" | "completion">("upload");
     const [isLoading, setIsLoading] = useState(false);
     const [slideDirection, setSlideDirection] = useState<"left" | "right" | "none">("none");
 
-    // Mock data for completion view
-    const [completedSchedules] = useState<ScheduleItem[]>([
-        { date: "2025/10/04", time: "09:00-10:00", name: "朝会", organizer: "田中太郎" },
-        { date: "2025/10/04", time: "13:00-14:30", name: "プロジェクト会議", organizer: "佐藤花子" },
-        { date: "2025/10/05", time: "10:00-12:00", name: "開発作業", organizer: "山田次郎" },
-    ]);
-    const [completedItemCodes] = useState<string[]>(["PROJ-001", "PROJ-002", "PROJ-003"]);
-    const [itemCodeOptions] = useState<ItemCodeOption[]>([
-        { code: "PROJ-001", name: "プロジェクトA" },
-        { code: "PROJ-002", name: "プロジェクトB" },
-        { code: "PROJ-003", name: "プロジェクトC" },
-    ]);
-
-    const handlePdfUpload = (file: File) => {
-        setPdfFile({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-        });
+    // ビュー遷移ヘルパー
+    const transitionToView = (view: typeof currentView, direction: "left" | "right") => {
+        setSlideDirection(direction);
+        setCurrentView(view);
     };
 
-    const handleIcsUpload = (file: File) => {
-        setIcsFile({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-        });
-    };
-
-    const handlePdfClear = () => {
-        setPdfFile(null);
-    };
-
-    const handleIcsClear = () => {
-        setIcsFile(null);
-    };
-
-    const handleProcess = () => {
-        setSlideDirection("right");
-        setCurrentView("linking");
-    };
-
-    const handleBackToUpload = () => {
-        setSlideDirection("left");
-        setCurrentView("upload");
-    };
-
-    const handleSubmit = async (schedules: ScheduleItem[]) => {
+    // 非同期処理ヘルパー
+    const withLoading = async (fn: () => Promise<void>) => {
         setIsLoading(true);
         try {
-            // Mock API call - 実際の処理に置き換えてください
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            console.log("登録実行", schedules);
-            setSlideDirection("right");
-            setCurrentView("completion");
+            await fn();
         } catch (error) {
-            console.error("登録エラー", error);
+            console.error("処理エラー:", error);
+            await appMessageDialogRef?.showMessageAsync(
+                "処理エラー",
+                `処理中にエラーが発生しました。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
+                "ERROR"
+            );
         } finally {
             setIsLoading(false);
         }
     };
-    const { navigate } = useNavigation();
-    const handleExport = async () => {
-        navigate("Settings", null, "timetracker");
-        setIsLoading(true);
-        try {
-            // Mock export process
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            console.log("エクスポート実行");
-            setDialogOpen(true);
-        } catch (error) {
-            console.error("エクスポートエラー", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+
+    // アニメーションクラス取得
+    const getAnimationClass = () =>
+        slideDirection === "right" ? styles.slideInRight :
+        slideDirection === "left" ? styles.slideInLeft : "";
+
+    // イベントハンドラー
+    const handleProcess = () => transitionToView("linking", "right");
+
+    const handleBackToUpload = () => transitionToView("upload", "left");
 
     const handleBackToUploadFromCompletion = () => {
-        setSlideDirection("left");
-        setCurrentView("upload");
-        // Reset files and data
-        setPdfFile(null);
-        setIcsFile(null);
+        transitionToView("upload", "left");
+        setPdf(undefined);
+        setIcs(undefined);
     };
 
-    const handleBackToLinkingFromCompletion = () => {
-        setSlideDirection("left");
-        setCurrentView("linking");
-    };
+    const handleBackToLinking = () => transitionToView("linking", "left");
 
-    const handleAutoLink = async () => {
-        setIsLoading(true);
-        try {
-            // Mock AI auto-linking process
-            await new Promise((resolve) => setTimeout(resolve, 3000));
-            console.log("AIによる自動紐づけ完了");
-            // ここで自動紐づけされたデータを更新する処理を追加
-        } catch (error) {
-            console.error("自動紐づけエラー", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const handleSubmit = (schedules: ScheduleItem[]) => withLoading(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        console.log("登録実行", schedules);
+        transitionToView("completion", "right");
+    });
 
-    const getAnimationClass = () => {
-        if (slideDirection === "right") return styles.slideInRight;
-        if (slideDirection === "left") return styles.slideInLeft;
-        return "";
-    };
+    const handleExport = () => withLoading(async () => {
+        navigate("Settings", null, "timetracker");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log("エクスポート実行");
+        setDialogOpen(true);
+    });
+
+    const handleAutoLink = () => withLoading(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        console.log("AIによる自動紐づけ完了");
+    });
 
     return (
         <Page
@@ -196,29 +149,27 @@ export function TimeTrackerPage() {
             <div className={`${styles.viewContainer} ${getAnimationClass()}`} key={currentView}>
                 {currentView === "completion" ? (
                     <CompletionView
-                        schedules={completedSchedules}
-                        itemCodes={completedItemCodes}
-                        itemCodeOptions={itemCodeOptions}
+                        schedules={MOCK_DATA.completedSchedules}
+                        itemCodes={MOCK_DATA.completedItemCodes}
+                        itemCodeOptions={MOCK_DATA.itemCodeOptions}
                         onExport={handleExport}
                         onBack={handleBackToUploadFromCompletion}
-                        onBackToLinking={handleBackToLinkingFromCompletion}
+                        onBackToLinking={handleBackToLinking}
                     />
                 ) : currentView === "linking" ? (
                     <LinkingProcessView
                         onBack={handleBackToUpload}
-                        pdfFileName={pdfFile?.name}
-                        icsFileName={icsFile?.name}
+                        pdfFileName={pdf?.name}
+                        icsFileName={ics?.name}
                         onSubmit={handleSubmit}
                         onAutoLink={handleAutoLink}
                     />
                 ) : (
                     <FileUploadView
-                        pdfFile={pdfFile}
-                        icsFile={icsFile}
-                        onPdfUpload={handlePdfUpload}
-                        onIcsUpload={handleIcsUpload}
-                        onPdfClear={handlePdfClear}
-                        onIcsClear={handleIcsClear}
+                        pdf={pdf}
+                        ics={ics}
+                        onPdfUpdate={setPdf}
+                        onIcsUpdate={setIcs}
                         onProcess={handleProcess}
                     />
                 )}

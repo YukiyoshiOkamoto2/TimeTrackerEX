@@ -7,15 +7,16 @@
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { getStorage } from "../../lib/storage";
-import type { AppSettings } from "../../schema/settings/settings";
+import type { AppSettings } from "../../types";
 import {
-    DEFAULT_SETTINGS,
-    formatZodError,
-    isSettingsComplete,
-    SettingsValidationError,
-    validatePartialSettingsWithZod,
-    validateSettings,
-} from "../../schema/settings/settings";
+    getDefaultTimeTrackerSettings,
+    isTimeTrackerSettingsComplete,
+    parseAndFixTimeTrackerSettings,
+    parseTimeTrackerSettings,
+    stringifyTimeTrackerSettings,
+    validateTimeTrackerSettings,
+} from "../../schema/settings/settingsDefinition";
+import { appMessageDialogRef } from "@/components/message-dialog";
 
 /**
  * ローカルストレージのキー
@@ -52,23 +53,53 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
 /**
+ * デフォルト設定を取得
+ */
+function getDefaultAppSettings(): Partial<AppSettings> {
+    return {
+        timetracker: getDefaultTimeTrackerSettings() as any,
+    };
+}
+
+/**
  * 設定をローカルストレージから読み込み
  */
 function loadSettings(): Partial<AppSettings> {
     try {
-        const stored = storage.getValue<Partial<AppSettings>>(STORAGE_KEY);
+        const stored = storage.getValue<string>(STORAGE_KEY);
         if (!stored) {
-            return DEFAULT_SETTINGS;
+            return getDefaultAppSettings();
         }
 
-        // デフォルト値とマージ
+        // JSON文字列をパース
+        const parseResult = parseTimeTrackerSettings(stored);
+        if (parseResult.isError) {
+            console.warn("Failed to parse settings:", parseResult.errorMessage);
+            appMessageDialogRef.showMessageAsync(
+                "設定読み込みエラー",
+                `設定の読み込みに失敗しました。デフォルト設定を使用します。\n\nエラー: ${parseResult.errorMessage}`,
+                "WARN"
+            );
+            return getDefaultAppSettings();
+        }
+
+        // バリデーションと修正
+        const fixResult = parseAndFixTimeTrackerSettings(parseResult.value as any);
+        if (fixResult.isError) {
+            console.warn("Settings validation failed:", fixResult.errorMessage);
+        }
+
         return {
-            ...DEFAULT_SETTINGS,
-            ...stored,
+            timetracker: parseResult.value,
         };
     } catch (error) {
         console.error("Failed to load settings from localStorage:", error);
-        return DEFAULT_SETTINGS;
+        appMessageDialogRef.showMessageAsync(
+            "設定読み込みエラー",
+            `設定の読み込みに失敗しました。デフォルト設定を使用します。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
+            "WARN"
+        );
+        return getDefaultAppSettings();
     }
 }
 
@@ -77,12 +108,23 @@ function loadSettings(): Partial<AppSettings> {
  */
 function saveSettings(settings: Partial<AppSettings>): void {
     try {
-        const success = storage.setValue(STORAGE_KEY, settings);
+        if (!settings.timetracker) {
+            throw new Error("timetracker設定が存在しません");
+        }
+
+        // JSON文字列に変換
+        const jsonString = stringifyTimeTrackerSettings(settings.timetracker, true);
+        const success = storage.setValue(STORAGE_KEY, jsonString);
         if (!success) {
             throw new Error("設定の保存に失敗しました");
         }
     } catch (error) {
         console.error("Failed to save settings to localStorage:", error);
+        appMessageDialogRef.showMessageAsync(
+            "設定保存エラー",
+            `設定の保存に失敗しました。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
+            "ERROR"
+        );
         throw new Error("設定の保存に失敗しました");
     }
 }
@@ -95,36 +137,23 @@ function saveSettings(settings: Partial<AppSettings>): void {
  * @returns 修正された設定
  */
 function validateAndCorrectSettings(settings: Partial<AppSettings>): Partial<AppSettings> {
-    const validationResult = validatePartialSettingsWithZod(settings);
+    if (!settings.timetracker) {
+        return getDefaultAppSettings();
+    }
 
-    if (!validationResult.success) {
-        // バリデーションエラーがある項目だけデフォルト値に置き換え
-        const errorMessages = formatZodError(validationResult.error);
+    // バリデーションと自動修正
+    const fixResult = parseAndFixTimeTrackerSettings(settings.timetracker as any);
+    
+    if (fixResult.isError) {
         console.warn(
-            `ローカルストレージの設定に無効な項目があります。該当項目をデフォルト値に置き換えます: ${errorMessages.join(", ")}`,
+            `ローカルストレージの設定に無効な項目があります: ${fixResult.errorMessage}`,
         );
-
-        // エラーのあるキーを抽出
-        const errorPaths = validationResult.error.issues.map((issue) => issue.path[0] as string);
-        const uniqueErrorKeys = [...new Set(errorPaths)];
-
-        // エラーのある項目だけデフォルト値で上書き
-        const correctedSettings = { ...settings };
-        for (const key of uniqueErrorKeys) {
-            if (key in DEFAULT_SETTINGS) {
-                correctedSettings[key as keyof AppSettings] = DEFAULT_SETTINGS[key as keyof AppSettings];
-            }
-        }
-
-        // 修正後に再検証
-        const lastValidationResult = validatePartialSettingsWithZod(correctedSettings);
-        if (lastValidationResult.success) {
-            return correctedSettings;
-        } else {
-            // 修正後もエラーが残る場合はデフォルト設定を返す
-            console.error("設定の修正に失敗しました。デフォルト設定を使用します。");
-            return DEFAULT_SETTINGS;
-        }
+        appMessageDialogRef.showMessageAsync(
+            "設定検証エラー",
+            `設定の検証に失敗しました。デフォルト設定を使用します。\n\nエラー: ${fixResult.errorMessage}`,
+            "WARN"
+        );
+        return getDefaultAppSettings();
     }
 
     return settings;
@@ -141,7 +170,7 @@ interface SettingsProviderProps {
  * 設定Provider
  */
 export function SettingsProvider({ children }: SettingsProviderProps) {
-    const [settings, setSettings] = useState<Partial<AppSettings>>(DEFAULT_SETTINGS);
+    const [settings, setSettings] = useState<Partial<AppSettings>>(getDefaultAppSettings());
     const [isLoading, setIsLoading] = useState(true);
 
     // 初回ロード
@@ -160,18 +189,18 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }, [settings, isLoading]);
 
     // 検証
-    const validationErrors = validateSettings(settings);
-    const isComplete = isSettingsComplete(settings);
+    const validationResult = settings.timetracker ? validateTimeTrackerSettings(settings.timetracker) : { isError: true, errorMessage: "timetracker設定が存在しません" };
+    const validationErrors = validationResult.isError ? [validationResult.errorMessage] : [];
+    const isComplete = settings.timetracker ? isTimeTrackerSettingsComplete(settings.timetracker) : false;
 
     // 設定の更新
     const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
-        // Zodスキーマによるバリデーション
-        const validationResult = validatePartialSettingsWithZod(newSettings);
-
-        if (!validationResult.success) {
-            // バリデーションエラーをわかりやすい形式に変換
-            const errorMessages = formatZodError(validationResult.error);
-            throw new SettingsValidationError(`設定の更新に失敗しました: ${errorMessages.join(", ")}`);
+        // バリデーション
+        if (newSettings.timetracker) {
+            const validationResult = validateTimeTrackerSettings(newSettings.timetracker);
+            if (validationResult.isError) {
+                throw new Error(`設定の更新に失敗しました: ${validationResult.errorMessage}`);
+            }
         }
 
         setSettings((prev) => ({ ...prev, ...newSettings }));
@@ -179,7 +208,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
     // 設定のリセット
     const resetSettings = useCallback(() => {
-        setSettings(DEFAULT_SETTINGS);
+        setSettings(getDefaultAppSettings());
     }, []);
 
     const value: SettingsContextType = {
@@ -210,13 +239,13 @@ export function useSettings(): SettingsContextType {
 /**
  * 設定が完全な場合のみ取得するカスタムフック
  *
- * @throws {SettingsValidationError} 設定が不完全な場合
+ * @throws {Error} 設定が不完全な場合
  */
 export function useCompleteSettings(): AppSettings {
     const { settings, isComplete, validationErrors } = useSettings();
 
     if (!isComplete) {
-        throw new SettingsValidationError(`設定が不完全です: ${validationErrors.join(", ")}`);
+        throw new Error(`設定が不完全です: ${validationErrors.join(", ")}`);
     }
 
     return settings as AppSettings;

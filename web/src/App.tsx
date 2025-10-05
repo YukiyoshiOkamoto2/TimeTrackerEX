@@ -1,6 +1,8 @@
 import type { SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Button, makeStyles, Persona, SearchBox, Tab, TabList, tokens } from "@fluentui/react-components";
 import { Clock24Regular, Home24Regular, Search20Regular, SettingsRegular } from "@fluentui/react-icons";
+import { useRef } from "react";
+import { MessageDialog, type AppMessageDialogRef } from "./components/message-dialog";
 import { HomePage } from "./pages/home";
 import { SettingPage } from "./pages/setting";
 import { TimeTrackerPage } from "./pages/timetracker";
@@ -108,6 +110,9 @@ function App() {
                 {currentPageName === "TimeTracker" && <TimeTrackerPage />}
                 {currentPageName === "Settings" && <SettingPage />}
             </main>
+
+            {/* Global Message Dialog */}
+            <MessageDialog />
         </div>
     );
 }

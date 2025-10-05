@@ -5,4 +5,4 @@
  */
 
 export { parsePDF } from "./pdfParser";
-export type { InputPDFResult, PDFSchedule } from "./pdfParser";
+export type { InputPDFResult } from "./pdfParser";

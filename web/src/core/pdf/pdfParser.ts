@@ -10,7 +10,16 @@ try {
         pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
     }
 } catch {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+    // ワーカーファイルが見つからない場合はフォールバック
+    try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+    } catch {
+        // 開発環境では相対パス、本番環境では絶対パスにフォールバック
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+            'pdfjs-dist/build/pdf.worker.min.js',
+            import.meta.url
+        ).toString();
+    }
  }
 
 /**
@@ -75,20 +84,8 @@ function analyzePDFText(text: string): { schedule: Schedule[]; scheduleStamp: Sc
 
         const currentYear = new Date().getFullYear();
 
-        // 打刻情報なしの場合
-        if (/（打刻情報なし）/.test(entryContent)) {
-            schedule.push({
-                start: new Date(currentYear, month - 1, day),
-                isHoliday,
-                isPaidLeave,
-            });
-            scheduleStamp.push({
-                start: new Date(currentYear, month - 1, day),
-                isHoliday,
-                isPaidLeave,
-            });
-            continue;
-        }
+        // 打刻情報なしかどうかをチェック
+        const hasNoStampInfo = /（打刻情報なし）/.test(entryContent);
 
         // 打刻時間のパターン: "09:01 -- 18:47" or "09 : 01   --   18 : 47"
         const stampTimePattern = /(\d{2})\s*:\s*(\d{2})\s*--\s*(\d{2})\s*:\s*(\d{2})/;
@@ -99,7 +96,7 @@ function analyzePDFText(text: string): { schedule: Schedule[]; scheduleStamp: Sc
         const workMatch = entryContent.match(workTimePattern);
 
         // 打刻時間スケジュールの追加
-        if (stampMatch) {
+        if (stampMatch && !hasNoStampInfo) {
             const startHour = parseInt(stampMatch[1]);
             const startMinute = parseInt(stampMatch[2]);
             const endHour = parseInt(stampMatch[3]);
@@ -116,7 +113,7 @@ function analyzePDFText(text: string): { schedule: Schedule[]; scheduleStamp: Sc
                 start: new Date(currentYear, month - 1, day),
                 isHoliday,
                 isPaidLeave,
-                errorMessage: "打刻時間が見つかりません。",
+                errorMessage: hasNoStampInfo ? "打刻情報なし" : "打刻時間が見つかりません。",
             });
         }
 

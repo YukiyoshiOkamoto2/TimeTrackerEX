@@ -1,4 +1,8 @@
-import { Button, makeStyles, tokens } from "@fluentui/react-components";
+import {
+    Button,
+    makeStyles,
+    tokens,
+} from "@fluentui/react-components";
 import {
     ArrowUpload20Regular,
     Calendar24Regular,
@@ -6,13 +10,15 @@ import {
     Document24Regular,
     Link24Regular,
 } from "@fluentui/react-icons";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActionButton } from "../../../components/action-button";
 import { Card } from "../../../components/card";
 import { Schedule, Event } from "@/types";
 import { parsePDF } from "@/core/pdf";
 import { parseICS } from "@/core/ics";
 import { getLogger } from "@/lib";
+import { appMessageDialogRef } from "@/components/message-dialog";
+import { CheckedTable, CheckedTableItem } from "./CheckedTable";
 
 const logger = getLogger("FileUploadView");
 
@@ -111,6 +117,7 @@ const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalM,
+        maxHeight: "320px",
     },
     infoSectionHeader: {
         fontSize: tokens.fontSizeBase400,
@@ -119,25 +126,6 @@ const useStyles = makeStyles({
         display: "flex",
         alignItems: "center",
         gap: tokens.spacingHorizontalXS,
-    },
-    infoCard: {
-        paddingTop: tokens.spacingVerticalL,
-        paddingBottom: tokens.spacingVerticalL,
-        paddingLeft: tokens.spacingHorizontalXL,
-        paddingRight: tokens.spacingHorizontalXL,
-    },
-    infoList: {
-        display: "flex",
-        flexDirection: "column",
-        gap: tokens.spacingVerticalXS,
-        listStyle: "none",
-        margin: "0",
-        padding: "0",
-    },
-    infoListItem: {
-        fontSize: tokens.fontSizeBase300,
-        color: tokens.colorNeutralForeground1,
-        lineHeight: tokens.lineHeightBase300,
     },
     hiddenInput: {
         display: "none",
@@ -166,6 +154,81 @@ export type FileUploadViewProps = {
     onProcess: () => void;
 };
 
+// ファイルバリデータ
+const isPdfFile = (file: File) => file.type === "application/pdf";
+const isIcsFile = (file: File) => file.name.endsWith(".ics") || file.type === "text/calendar";
+
+// 日付フォーマット用ヘルパー
+const formatDateTime = (start: Date, end: Date | null) => {
+    const dateStr = start.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        weekday: "short",
+    });
+
+    const timeStr = end
+        ? `${start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}～${end.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`
+        : start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+
+    return { dateStr, timeStr };
+};
+
+const getScheduleAsync = async (file: File) => {
+    let result;
+    try {
+        result = await parsePDF(file);
+    } catch (error) {
+        logger.error("PDFのパースに失敗しました:", error);
+        await appMessageDialogRef?.showMessageAsync(
+            "PDFファイルエラー",
+            `PDFファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
+            "ERROR"
+        );
+        return undefined;
+    }
+
+    if (result.errorMessage) {
+        await appMessageDialogRef?.showMessageAsync(
+            "PDFファイルエラー",
+            `PDFファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${result.errorMessage}`,
+            "ERROR"
+        );
+
+        return undefined;
+    }
+
+    return result.schedule.filter(s => !s.errorMessage)
+}
+
+const getEventAsync = async (file: File) => {
+    let result;
+    try {
+        const text = await file.text();
+        result = parseICS(text);
+
+    } catch (error) {
+        logger.error("ICSのパースに失敗しました:", error);
+        await appMessageDialogRef?.showMessageAsync(
+            "ICSファイルエラー",
+            `ICSファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
+            "ERROR"
+        );
+        return undefined;
+    }
+
+    if (result.errorMessages) {
+        await appMessageDialogRef?.showMessageAsync(
+            "ICSファイルエラー",
+            `ICSファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${result.errorMessages}`,
+            "ERROR"
+        );
+        return undefined;
+    }
+
+    return result.events.filter(e => !e.isCancelled && !e.isPrivate)
+}
+
 export function FileUploadView({
     pdf,
     ics,
@@ -177,116 +240,120 @@ export function FileUploadView({
     const pdfInputRef = useRef<HTMLInputElement>(null);
     const icsInputRef = useRef<HTMLInputElement>(null);
 
-    const onPdfUpload = async (file: File) => {
-        try {
-            const result = await parsePDF(file);
-            const pdfData: PDF = {
-                schedule: result.schedule,
-                name: file.name,
-                size: file.size,
-                type: file.type,
-            };
-            onPdfUpdate(pdfData);
-        } catch (error) {
-            logger.error("PDFのパースに失敗しました:", error);
+    // テーブルデータの状態管理
+    const [scheduleTableItems, setScheduleTableItems] = useState<CheckedTableItem[]>([]);
+    const [eventTableItems, setEventTableItems] = useState<CheckedTableItem[]>([]);
+
+    // PDFファイルアップロード処理
+    const uploadPdfFile = async (file: File) => {
+        const schedule = await getScheduleAsync(file);
+        if (schedule) {
+            onPdfUpdate({
+                schedule,
+                ...file
+            })
         }
     };
 
-    const onIcsUpload = async (file: File) => {
-        try {
-            const text = await file.text();
-            const result = parseICS(text);
-            const icsData: ICS = {
-                event: result.events,
-                name: file.name,
-                size: file.size,
-                type: file.type,
-            };
-            onIcsUpdate(icsData);
-        } catch (error) {
-            logger.error("ICSのパースに失敗しました:", error);
+    // ICSファイルアップロード処理
+    const uploadIcsFile = async (file: File) => {
+        const event = await getEventAsync(file);
+        if (event) {
+            onIcsUpdate({
+                event,
+                ...file
+            });
         }
     };
 
-    const onPdfClear = () => {
-        onPdfUpdate(undefined);
-    };
+    // 汎用イベントハンドラー
+    const createFileHandler = (
+        uploadFn: (file: File) => Promise<void>,
+        validator: (file: File) => boolean
+    ) => ({
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+            const file = event.target.files?.[0];
+            if (file && validator(file)) uploadFn(file);
+        },
+        onDrop: (event: React.DragEvent<HTMLDivElement>) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const file = event.dataTransfer.files?.[0];
+            if (file && validator(file)) uploadFn(file);
+        },
+        onClick: (ref: React.RefObject<HTMLInputElement>) => () => ref.current?.click(),
+        onClear: (ref: React.RefObject<HTMLInputElement>, clearFn: () => void) => (e: React.MouseEvent) => {
+            e.stopPropagation();
+            clearFn();
+            if (ref.current) ref.current.value = "";
+        },
+    });
 
-    const onIcsClear = () => {
-        onIcsUpdate(undefined);
-    };
-
-    const handlePdfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file && file.type === "application/pdf") {
-            onPdfUpload(file);
-        }
-    };
-
-    const handleIcsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file && (file.name.endsWith(".ics") || file.type === "text/calendar")) {
-            onIcsUpload(file);
-        }
-    };
-
-    const handlePdfDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const file = event.dataTransfer.files?.[0];
-        if (file && file.type === "application/pdf") {
-            onPdfUpload(file);
-        }
-    };
-
-    const handleIcsDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const file = event.dataTransfer.files?.[0];
-        if (file && (file.name.endsWith(".ics") || file.type === "text/calendar")) {
-            onIcsUpload(file);
-        }
-    };
+    const pdfHandlers = createFileHandler(uploadPdfFile, isPdfFile);
+    const icsHandlers = createFileHandler(uploadIcsFile, isIcsFile);
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
     };
 
-    const handlePdfCardClick = () => {
-        pdfInputRef.current?.click();
-    };
-
-    const handleIcsCardClick = () => {
-        icsInputRef.current?.click();
-    };
-
-    const handleClearPdf = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onPdfClear();
-        if (pdfInputRef.current) {
-            pdfInputRef.current.value = "";
-        }
-    };
-
-    const handleClearIcs = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onIcsClear();
-        if (icsInputRef.current) {
-            icsInputRef.current.value = "";
-        }
-    };
-
     const canProcess = pdf !== undefined || ics !== undefined;
+
+    // PDFデータが変更されたらテーブルデータを更新
+    useEffect(() => {
+        if (pdf?.schedule && pdf.schedule.length > 0) {
+            const items: CheckedTableItem[] = pdf.schedule.map((schedule) => {
+                const { dateStr, timeStr } = formatDateTime(
+                    new Date(schedule.start),
+                    schedule.end ? new Date(schedule.end) : null
+                );
+
+                const status = schedule.isHoliday
+                    ? schedule.isPaidLeave
+                        ? "（有給休暇）"
+                        : "（休日）"
+                    : "";
+
+                return {
+                    content: `${dateStr}　${timeStr} ${status}`,
+                    checked: true,
+                };
+            });
+            setScheduleTableItems(items);
+        } else {
+            setScheduleTableItems([]);
+        }
+    }, [pdf]);
+
+    // ICSデータが変更されたらテーブルデータを更新
+    useEffect(() => {
+        if (ics?.event && ics.event.length > 0) {
+            const items: CheckedTableItem[] = ics.event.map((event) => {
+                const { dateStr, timeStr } = formatDateTime(
+                    new Date(event.schedule.start),
+                    event.schedule.end ? new Date(event.schedule.end) : null
+                );
+
+                return {
+                    content: `${dateStr}　${timeStr}　${event.name}`,
+                    checked: true,
+                };
+            });
+            setEventTableItems(items);
+        } else {
+            setEventTableItems([]);
+        }
+    }, [ics]);
+
     return (
         <>
             <div className={styles.uploadSection}>
                 {/* PDF Upload Card */}
                 <div
                     className={styles.dropZone}
-                    onDrop={handlePdfDrop}
+                    onDrop={pdfHandlers.onDrop}
                     onDragOver={handleDragOver}
-                    onClick={handlePdfCardClick}
+                    onClick={pdfHandlers.onClick(pdfInputRef)}
                 >
                     <Card hoverable>
                         <div className={styles.uploadCardContent}>
@@ -294,7 +361,7 @@ export function FileUploadView({
                                 ref={pdfInputRef}
                                 type="file"
                                 accept=".pdf"
-                                onChange={handlePdfChange}
+                                onChange={pdfHandlers.onChange}
                                 className={styles.hiddenInput}
                             />
                             <div className={styles.uploadCardHeader}>
@@ -313,7 +380,7 @@ export function FileUploadView({
                                     <Button
                                         appearance="subtle"
                                         icon={<Dismiss24Regular />}
-                                        onClick={handleClearPdf}
+                                        onClick={pdfHandlers.onClear(pdfInputRef, () => onPdfUpdate(undefined))}
                                         size="medium"
                                         aria-label="PDFファイルを削除"
                                         title="PDFファイルを削除"
@@ -337,9 +404,9 @@ export function FileUploadView({
                 {/* ICS Upload Card */}
                 <div
                     className={styles.dropZone}
-                    onDrop={handleIcsDrop}
+                    onDrop={icsHandlers.onDrop}
                     onDragOver={handleDragOver}
-                    onClick={handleIcsCardClick}
+                    onClick={icsHandlers.onClick(icsInputRef)}
                 >
                     <Card hoverable>
                         <div className={styles.uploadCardContent}>
@@ -347,7 +414,7 @@ export function FileUploadView({
                                 ref={icsInputRef}
                                 type="file"
                                 accept=".ics"
-                                onChange={handleIcsChange}
+                                onChange={icsHandlers.onChange}
                                 className={styles.hiddenInput}
                             />
                             <div className={styles.uploadCardHeader}>
@@ -368,7 +435,7 @@ export function FileUploadView({
                                     <Button
                                         appearance="subtle"
                                         icon={<Dismiss24Regular />}
-                                        onClick={handleClearIcs}
+                                        onClick={icsHandlers.onClear(icsInputRef, () => onIcsUpdate(undefined))}
                                         size="medium"
                                         aria-label="ICSファイルを削除"
                                         title="ICSファイルを削除"
@@ -396,30 +463,16 @@ export function FileUploadView({
                     {/* 処理対象日時 */}
                     <div className={styles.infoSection}>
                         <div className={styles.infoSectionHeader}>📋 処理対象日時</div>
-                        {pdf && (
-                            <Card className={styles.infoCard}>
-                                <ul className={styles.infoList}>
-                                    <li className={styles.infoListItem}>2025年7月10日　10:00～18:00</li>
-                                    <li className={styles.infoListItem}>2025年7月10日　10:00～18:00</li>
-                                    <li className={styles.infoListItem}>2025年7月10日　10:00～18:00</li>
-                                    <li className={styles.infoListItem}>2025年7月10日　10:00～18:00</li>
-                                    <li className={styles.infoListItem}>2025年7月10日　10:00～18:00</li>
-                                    <li className={styles.infoListItem}>2025年7月10日　10:00～18:00</li>
-                                </ul>
-                            </Card>
+                        {scheduleTableItems.length > 0 && (
+                            <CheckedTable items={scheduleTableItems} onItemUpdate={setScheduleTableItems} />
                         )}
                     </div>
 
                     {/* スケジュール情報 */}
                     <div className={styles.infoSection}>
                         <div className={styles.infoSectionHeader}>📅 スケジュール情報</div>
-                        {ics && (
-                            <Card className={styles.infoCard}>
-                                <ul className={styles.infoList}>
-                                    <li className={styles.infoListItem}>勤務時間内スケジュール: 59件</li>
-                                    <li className={styles.infoListItem}>重複スケジュール: 10件</li>
-                                </ul>
-                            </Card>
+                        {eventTableItems.length > 0 && (
+                            <CheckedTable items={eventTableItems} onItemUpdate={setEventTableItems} />
                         )}
                     </div>
                 </div>
