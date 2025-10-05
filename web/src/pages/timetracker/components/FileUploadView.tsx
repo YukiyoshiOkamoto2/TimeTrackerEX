@@ -1,8 +1,9 @@
-import {
-    Button,
-    makeStyles,
-    tokens,
-} from "@fluentui/react-components";
+import { appMessageDialogRef } from "@/components/message-dialog";
+import { parseICS } from "@/core/ics";
+import { parsePDF } from "@/core/pdf";
+import { getLogger } from "@/lib";
+import { Event, EventUtils, Schedule, ScheduleUtils } from "@/types";
+import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import {
     ArrowUpload20Regular,
     Calendar24Regular,
@@ -13,11 +14,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { ActionButton } from "../../../components/action-button";
 import { Card } from "../../../components/card";
-import { Schedule, Event } from "@/types";
-import { parsePDF } from "@/core/pdf";
-import { parseICS } from "@/core/ics";
-import { getLogger } from "@/lib";
-import { appMessageDialogRef } from "@/components/message-dialog";
+import { ICS, PDF, UploadInfo } from "../models";
 import { CheckedTable, CheckedTableItem } from "./CheckedTable";
 
 const logger = getLogger("FileUploadView");
@@ -132,26 +129,12 @@ const useStyles = makeStyles({
     },
 });
 
-export type FileData = {
-    name: string;
-    size: number;
-    type: string;
-};
-
-export type PDF = {
-    schedule: Schedule[]
-} & FileData
-
-export type ICS = {
-    event: Event[]
-} & FileData
-
 export type FileUploadViewProps = {
     pdf?: PDF;
     ics?: ICS;
     onPdfUpdate: (pdf?: PDF) => void;
     onIcsUpdate: (ics?: ICS) => void;
-    onProcess: () => void;
+    onSubmit: (info: UploadInfo) => void;
 };
 
 // ファイルバリデータ
@@ -183,7 +166,7 @@ const getScheduleAsync = async (file: File) => {
         await appMessageDialogRef?.showMessageAsync(
             "PDFファイルエラー",
             `PDFファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-            "ERROR"
+            "ERROR",
         );
         return undefined;
     }
@@ -192,50 +175,73 @@ const getScheduleAsync = async (file: File) => {
         await appMessageDialogRef?.showMessageAsync(
             "PDFファイルエラー",
             `PDFファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${result.errorMessage}`,
-            "ERROR"
+            "ERROR",
         );
 
         return undefined;
     }
 
-    return result.schedule.filter(s => !s.errorMessage)
-}
+    return result.schedule.filter((s) => !s.errorMessage);
+};
 
 const getEventAsync = async (file: File) => {
     let result;
     try {
         const text = await file.text();
         result = parseICS(text);
-
     } catch (error) {
         logger.error("ICSのパースに失敗しました:", error);
         await appMessageDialogRef?.showMessageAsync(
             "ICSファイルエラー",
             `ICSファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-            "ERROR"
+            "ERROR",
         );
         return undefined;
     }
 
-    if (result.errorMessages) {
+    const ev = result.events.filter((e) => !e.isCancelled && !e.isPrivate);
+    if (ev.length === 0 && result.errorMessages) {
         await appMessageDialogRef?.showMessageAsync(
             "ICSファイルエラー",
             `ICSファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${result.errorMessages}`,
-            "ERROR"
+            "ERROR",
         );
         return undefined;
     }
 
-    return result.events.filter(e => !e.isCancelled && !e.isPrivate)
-}
+    return ev;
+};
 
-export function FileUploadView({
-    pdf,
-    ics,
-    onPdfUpdate,
-    onIcsUpdate,
-    onProcess,
-}: FileUploadViewProps) {
+const scheduleToCheckItem = (schedule: Schedule[]) => {
+    return schedule.map((s) => {
+        const { dateStr, timeStr } = formatDateTime(new Date(s.start), s.end ? new Date(s.end) : null);
+
+        const status = s.isHoliday ? (s.isPaidLeave ? "（有給休暇）" : "（休日）") : "";
+
+        return {
+            key: ScheduleUtils.getText(s),
+            content: `${dateStr}　${timeStr} ${status}`,
+            checked: status === "",
+        };
+    });
+};
+
+const eventToCheckItem = (event: Event[]) => {
+    return event.map((e) => {
+        const { dateStr, timeStr } = formatDateTime(
+            new Date(e.schedule.start),
+            e.schedule.end ? new Date(e.schedule.end) : null,
+        );
+
+        return {
+            key: EventUtils.getKey(e),
+            content: `${dateStr}　${timeStr}　${e.name}`,
+            checked: true,
+        };
+    });
+};
+
+export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }: FileUploadViewProps) {
     const styles = useStyles();
     const pdfInputRef = useRef<HTMLInputElement>(null);
     const icsInputRef = useRef<HTMLInputElement>(null);
@@ -244,14 +250,32 @@ export function FileUploadView({
     const [scheduleTableItems, setScheduleTableItems] = useState<CheckedTableItem[]>([]);
     const [eventTableItems, setEventTableItems] = useState<CheckedTableItem[]>([]);
 
+    const canProcess =
+        scheduleTableItems.filter((s) => s.checked).length > 0 || eventTableItems.filter((e) => e.checked).length > 0;
+
+    const clearPdfFile = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (pdfInputRef.current) pdfInputRef.current.value = "";
+        onPdfUpdate(undefined);
+    };
+
+    const clearIcsFile = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (icsInputRef.current) icsInputRef.current.value = "";
+        onIcsUpdate(undefined);
+    };
     // PDFファイルアップロード処理
     const uploadPdfFile = async (file: File) => {
         const schedule = await getScheduleAsync(file);
         if (schedule) {
             onPdfUpdate({
                 schedule,
-                ...file
-            })
+                name: file.name,
+                type: file.type,
+                size: file.size,
+            });
+        } else {
+            clearPdfFile();
         }
     };
 
@@ -261,16 +285,17 @@ export function FileUploadView({
         if (event) {
             onIcsUpdate({
                 event,
-                ...file
+                name: file.name,
+                type: file.type,
+                size: file.size,
             });
+        } else {
+            clearIcsFile();
         }
     };
 
     // 汎用イベントハンドラー
-    const createFileHandler = (
-        uploadFn: (file: File) => Promise<void>,
-        validator: (file: File) => boolean
-    ) => ({
+    const createFileHandler = (uploadFn: (file: File) => Promise<void>, validator: (file: File) => boolean) => ({
         onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
             const file = event.target.files?.[0];
             if (file && validator(file)) uploadFn(file);
@@ -280,12 +305,6 @@ export function FileUploadView({
             event.stopPropagation();
             const file = event.dataTransfer.files?.[0];
             if (file && validator(file)) uploadFn(file);
-        },
-        onClick: (ref: React.RefObject<HTMLInputElement>) => () => ref.current?.click(),
-        onClear: (ref: React.RefObject<HTMLInputElement>, clearFn: () => void) => (e: React.MouseEvent) => {
-            e.stopPropagation();
-            clearFn();
-            if (ref.current) ref.current.value = "";
         },
     });
 
@@ -297,29 +316,42 @@ export function FileUploadView({
         event.stopPropagation();
     };
 
-    const canProcess = pdf !== undefined || ics !== undefined;
+    const handleLinkedClick = () => {
+        let newPdf;
+        if (pdf && scheduleTableItems) {
+            const enableKeys = scheduleTableItems.filter((s) => s.checked).map((s) => s.key);
+            const enable = pdf.schedule.filter((s) => enableKeys.includes(ScheduleUtils.getText(s)));
+            if (enable && enable.length > 0) {
+                newPdf = {
+                    ...pdf,
+                    schedule: enable,
+                };
+            }
+        }
+        let newIcs;
+        if (ics && eventTableItems) {
+            const enableKeys = eventTableItems.filter((e) => e.checked).map((e) => e.key);
+            const enable = ics.event.filter((e) => enableKeys.includes(EventUtils.getKey(e)));
+            if (enable && enable.length > 0) {
+                newIcs = {
+                    ...ics,
+                    event: enable,
+                };
+            }
+        }
+
+        if (newPdf || newIcs) {
+            onSubmit({
+                pdf: newPdf,
+                ics: newIcs,
+            });
+        }
+    };
 
     // PDFデータが変更されたらテーブルデータを更新
     useEffect(() => {
         if (pdf?.schedule && pdf.schedule.length > 0) {
-            const items: CheckedTableItem[] = pdf.schedule.map((schedule) => {
-                const { dateStr, timeStr } = formatDateTime(
-                    new Date(schedule.start),
-                    schedule.end ? new Date(schedule.end) : null
-                );
-
-                const status = schedule.isHoliday
-                    ? schedule.isPaidLeave
-                        ? "（有給休暇）"
-                        : "（休日）"
-                    : "";
-
-                return {
-                    content: `${dateStr}　${timeStr} ${status}`,
-                    checked: true,
-                };
-            });
-            setScheduleTableItems(items);
+            setScheduleTableItems(scheduleToCheckItem(pdf.schedule));
         } else {
             setScheduleTableItems([]);
         }
@@ -328,18 +360,7 @@ export function FileUploadView({
     // ICSデータが変更されたらテーブルデータを更新
     useEffect(() => {
         if (ics?.event && ics.event.length > 0) {
-            const items: CheckedTableItem[] = ics.event.map((event) => {
-                const { dateStr, timeStr } = formatDateTime(
-                    new Date(event.schedule.start),
-                    event.schedule.end ? new Date(event.schedule.end) : null
-                );
-
-                return {
-                    content: `${dateStr}　${timeStr}　${event.name}`,
-                    checked: true,
-                };
-            });
-            setEventTableItems(items);
+            setEventTableItems(eventToCheckItem(ics.event));
         } else {
             setEventTableItems([]);
         }
@@ -353,7 +374,7 @@ export function FileUploadView({
                     className={styles.dropZone}
                     onDrop={pdfHandlers.onDrop}
                     onDragOver={handleDragOver}
-                    onClick={pdfHandlers.onClick(pdfInputRef)}
+                    onClick={() => pdfInputRef.current?.click()}
                 >
                     <Card hoverable>
                         <div className={styles.uploadCardContent}>
@@ -380,7 +401,7 @@ export function FileUploadView({
                                     <Button
                                         appearance="subtle"
                                         icon={<Dismiss24Regular />}
-                                        onClick={pdfHandlers.onClear(pdfInputRef, () => onPdfUpdate(undefined))}
+                                        onClick={clearPdfFile}
                                         size="medium"
                                         aria-label="PDFファイルを削除"
                                         title="PDFファイルを削除"
@@ -406,7 +427,7 @@ export function FileUploadView({
                     className={styles.dropZone}
                     onDrop={icsHandlers.onDrop}
                     onDragOver={handleDragOver}
-                    onClick={icsHandlers.onClick(icsInputRef)}
+                    onClick={() => icsInputRef.current?.click()}
                 >
                     <Card hoverable>
                         <div className={styles.uploadCardContent}>
@@ -435,7 +456,7 @@ export function FileUploadView({
                                     <Button
                                         appearance="subtle"
                                         icon={<Dismiss24Regular />}
-                                        onClick={icsHandlers.onClear(icsInputRef, () => onIcsUpdate(undefined))}
+                                        onClick={clearIcsFile}
                                         size="medium"
                                         aria-label="ICSファイルを削除"
                                         title="ICSファイルを削除"
@@ -480,7 +501,7 @@ export function FileUploadView({
                     title="紐づけ開始"
                     description="アップロードしたファイルを基に勤怠情報とスケジュールを紐づけます"
                     disabled={!canProcess}
-                    onClick={onProcess}
+                    onClick={handleLinkedClick}
                     icon={<Link24Regular />}
                 />
             </div>

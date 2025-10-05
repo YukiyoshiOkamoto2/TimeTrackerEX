@@ -57,11 +57,8 @@ export type ScheduleItem = {
 };
 
 const e = (a: ScheduleItem, b: ScheduleItem) => {
-    return a.date === b.date &&
-        a.time === b.time &&
-        a.name === b.name &&
-        a.organizer === b.organizer
-}
+    return a.date === b.date && a.time === b.time && a.name === b.name && a.organizer === b.organizer;
+};
 
 export type ItemCodeOption = {
     code: string;
@@ -76,7 +73,6 @@ export type ScheduleTableProps = {
     itemCodeMode?: ItemCodeDisplayMode;
     onScheduleChange?: (schedules: ScheduleItem[]) => void;
 };
-
 
 const columns: TableColumnDefinition<ScheduleItem>[] = [
     createTableColumn<ScheduleItem>({
@@ -164,7 +160,7 @@ export function ScheduleTable({
     const handleItemCodeChange = (rowIndex: number, value: string) => {
         if (onScheduleChange) {
             const newSchedules = schedules.map((schedule, index) =>
-                index === rowIndex ? { ...schedule, itemCode: value } : schedule
+                index === rowIndex ? { ...schedule, itemCode: value } : schedule,
             );
             onScheduleChange(newSchedules);
         }

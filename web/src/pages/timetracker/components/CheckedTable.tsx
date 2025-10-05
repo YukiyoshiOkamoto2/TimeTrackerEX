@@ -33,6 +33,7 @@ const useStyles = makeStyles({
 });
 
 export type CheckedTableItem = {
+    key: string;
     content: string;
     checked: boolean;
 };
@@ -61,30 +62,26 @@ export function CheckedTable({ items, onItemUpdate }: CheckedTableProps) {
                 defaultWidth: 500,
             },
             checked: {
-                minWidth: 100,
-                defaultWidth: 100,
-                idealWidth: 100,
+                minWidth: 64,
+                defaultWidth: 64,
+                idealWidth: 64,
             },
         }),
-        []
+        [],
     );
 
-    const { getRows, columnSizing_unstable, tableRef } = useTableFeatures(
+    const { columnSizing_unstable, tableRef } = useTableFeatures(
         {
             columns,
             items,
         },
-        [useTableColumnSizing_unstable({ columnSizingOptions })]
+        [useTableColumnSizing_unstable({ columnSizingOptions })],
     );
 
-    const handleCheckChange = (index: number, checked: boolean) => {
-        const newItems = items.map((item, i) =>
-            i === index ? { ...item, checked } : item
-        );
+    const handleCheckChange = (key: string, checked: boolean) => {
+        const newItems = items.map((item) => (item.key === key ? { ...item, checked } : item));
         onItemUpdate(newItems);
     };
-
-    const rows = getRows();
 
     return (
         <div className={styles.tableContainer}>
@@ -103,7 +100,7 @@ export function CheckedTable({ items, onItemUpdate }: CheckedTableProps) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {rows.map(({ item }, index) => (
+                    {items.map((item, index) => (
                         <TableRow key={index}>
                             <TableCell
                                 className={styles.tableCell}
@@ -118,9 +115,7 @@ export function CheckedTable({ items, onItemUpdate }: CheckedTableProps) {
                                 <TableCellLayout className={styles.checkboxCell}>
                                     <Checkbox
                                         checked={item.checked}
-                                        onChange={(_, data) =>
-                                            handleCheckChange(index, data.checked as boolean)
-                                        }
+                                        onChange={(_, data) => handleCheckChange(item.key, data.checked as boolean)}
                                     />
                                 </TableCellLayout>
                             </TableCell>

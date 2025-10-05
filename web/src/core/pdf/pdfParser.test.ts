@@ -1,11 +1,10 @@
+import { ScheduleUtils } from "@/types";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parsePDF } from "./pdfParser";
-import { ScheduleUtils } from "@/types";
 
 describe("pdfParser", () => {
-
     describe("parsePDF", () => {
         it("parsePDF関数が存在する", () => {
             expect(parsePDF).toBeDefined();
@@ -38,7 +37,7 @@ describe("pdfParser", () => {
             }
 
             const result = await parsePDF(file);
-            console.log(result.schedule.map(s => ScheduleUtils.getText(s)).join("\n"))
+            console.log(result.schedule.map((s) => ScheduleUtils.getText(s)).join("\n"));
             // 結果の構造を確認
             expect(result).toHaveProperty("schedule");
             expect(result).toHaveProperty("scheduleStamp");

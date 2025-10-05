@@ -496,10 +496,10 @@ function validateValue(value: unknown, info: SettingValueInfo, fieldPath: string
 
 /**
  * TimeTracker設定のバリデーション
- * 
+ *
  * @param settings - 検証する設定（部分的な設定も可）
  * @returns バリデーション結果
- * 
+ *
  * @example
  * ```typescript
  * const result = validateTimeTrackerSettings({ userName: "test", baseUrl: "https://example.com", ... });
@@ -511,10 +511,10 @@ function validateValue(value: unknown, info: SettingValueInfo, fieldPath: string
  * ```
  */
 export function validateTimeTrackerSettings(
-    settings: Partial<TimeTrackerSettings>
+    settings: Partial<TimeTrackerSettings>,
 ): ValidationResult<TimeTrackerSettings> {
     const timetrackerDef = SETTINGS_DEFINITION.timetracker;
-    
+
     if (timetrackerDef.type !== "object") {
         return {
             isError: true,
@@ -523,7 +523,7 @@ export function validateTimeTrackerSettings(
     }
 
     const result = validateValue(settings, timetrackerDef, "timetracker");
-    
+
     if (result.isError) {
         return result as ValidationFailure;
     }
@@ -533,10 +533,10 @@ export function validateTimeTrackerSettings(
 
 /**
  * JSON文字列をパースし、不正な項目はデフォルト値で補完
- * 
+ *
  * @param jsonString - パースするJSON文字列
  * @returns パース結果（エラー時はデフォルト値で補完された設定）
- * 
+ *
  * @example
  * ```typescript
  * const result = parseTimeTrackerSettings('{"userName":"test",...}');
@@ -550,7 +550,7 @@ export function validateTimeTrackerSettings(
  */
 export function parseTimeTrackerSettings(jsonString: string): ValidationResult<TimeTrackerSettings> {
     let parsed: unknown;
-    
+
     try {
         parsed = JSON.parse(jsonString);
     } catch (error) {
@@ -572,10 +572,10 @@ export function parseTimeTrackerSettings(jsonString: string): ValidationResult<T
 
 /**
  * オブジェクトを検証し、不正な項目はデフォルト値で補完
- * 
+ *
  * @param obj - 検証するオブジェクト
  * @returns 補完された設定
- * 
+ *
  * @example
  * ```typescript
  * const result = parseAndFixTimeTrackerSettings({ userName: "test", invalidField: "bad" });
@@ -583,10 +583,10 @@ export function parseTimeTrackerSettings(jsonString: string): ValidationResult<T
  * ```
  */
 export function parseAndFixTimeTrackerSettings(
-    obj: Partial<Record<string, unknown>>
+    obj: Partial<Record<string, unknown>>,
 ): ValidationResult<TimeTrackerSettings> {
     const timetrackerDef = SETTINGS_DEFINITION.timetracker;
-    
+
     if (timetrackerDef.type !== "object") {
         return {
             isError: true,
@@ -601,17 +601,17 @@ export function parseAndFixTimeTrackerSettings(
     for (const [key, fieldInfo] of Object.entries(timetrackerDef.children)) {
         const value = obj[key];
         const fieldPath = `timetracker.${key}`;
-        
+
         // まず検証を試みる
         const result = validateValue(value, fieldInfo, fieldPath);
-        
+
         if (!result.isError) {
             // 検証成功
             fixed[key] = result.value;
         } else {
             // 検証失敗 - デフォルト値を使用
             const defaultValue = getFieldDefaultValue(fieldInfo);
-            
+
             if (defaultValue !== undefined) {
                 fixed[key] = defaultValue;
                 errors.push(`${result.errorMessage} (デフォルト値を使用: ${JSON.stringify(defaultValue)})`);
@@ -666,7 +666,7 @@ function getFieldDefaultValue(info: SettingValueInfo): unknown {
 
 /**
  * TimeTracker設定をJSON文字列に変換
- * 
+ *
  * @param settings - 変換する設定
  * @param pretty - インデントを付けるか（デフォルト: false）
  * @returns JSON文字列
@@ -717,12 +717,12 @@ export function generateHelpText(): string {
 
 /**
  * TimeTracker設定のデフォルト値を取得
- * 
+ *
  * @returns デフォルト値を持つ全フィールド
  */
 export function getDefaultTimeTrackerSettings(): Partial<TimeTrackerSettings> {
     const timetrackerDef = SETTINGS_DEFINITION.timetracker;
-    
+
     if (timetrackerDef.type !== "object") {
         return {};
     }
@@ -743,7 +743,7 @@ export function getDefaultTimeTrackerSettings(): Partial<TimeTrackerSettings> {
 
 /**
  * 設定が完全かどうかをチェック
- * 
+ *
  * @param settings - チェックする設定
  * @returns 全ての必須フィールドが存在すればtrue
  */

@@ -5,17 +5,17 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { RoundingMethod, TimeTrackerSettings } from "../../types";
 import {
-    SETTINGS_DEFINITION,
-    validateTimeTrackerSettings,
-    parseTimeTrackerSettings,
-    parseAndFixTimeTrackerSettings,
-    stringifyTimeTrackerSettings,
+    generateHelpText,
     getDefaultTimeTrackerSettings,
     isTimeTrackerSettingsComplete,
-    generateHelpText,
+    parseAndFixTimeTrackerSettings,
+    parseTimeTrackerSettings,
+    SETTINGS_DEFINITION,
+    stringifyTimeTrackerSettings,
+    validateTimeTrackerSettings,
 } from "./settingsDefinition";
-import type { TimeTrackerSettings, RoundingMethod } from "../../types";
 
 describe("settingsDefinition", () => {
     describe("SETTINGS_DEFINITION", () => {

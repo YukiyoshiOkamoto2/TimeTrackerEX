@@ -1,4 +1,4 @@
-import { useNavigation } from "@/store/navigation";
+import { appMessageDialogRef } from "@/components/message-dialog";
 import {
     Button,
     Dialog,
@@ -13,8 +13,8 @@ import {
 } from "@fluentui/react-components";
 import { useState } from "react";
 import { Page } from "../../components/page";
-import { CompletionView, FileUploadView, LinkingProcessView, ScheduleItem, PDF, ICS } from "./components";
-import { appMessageDialogRef } from "@/components/message-dialog";
+import { CompletionView, FileUploadView, LinkingProcessView, ScheduleItem } from "./components";
+import { ICS, PDF, UploadInfo } from "./models";
 
 const useStyles = makeStyles({
     viewContainer: {
@@ -72,9 +72,11 @@ const MOCK_DATA = {
 
 export function TimeTrackerPage() {
     const styles = useStyles();
-    const { navigate } = useNavigation();
+
     const [pdf, setPdf] = useState<PDF | undefined>(undefined);
     const [ics, setIcs] = useState<ICS | undefined>(undefined);
+    const [uploadInfo, setUploadInfo] = useState<UploadInfo | undefined>(undefined);
+
     const [dialogOpen, setDialogOpen] = useState(false);
     const [currentView, setCurrentView] = useState<"upload" | "linking" | "completion">("upload");
     const [isLoading, setIsLoading] = useState(false);
@@ -96,7 +98,7 @@ export function TimeTrackerPage() {
             await appMessageDialogRef?.showMessageAsync(
                 "処理エラー",
                 `処理中にエラーが発生しました。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-                "ERROR"
+                "ERROR",
             );
         } finally {
             setIsLoading(false);
@@ -105,39 +107,25 @@ export function TimeTrackerPage() {
 
     // アニメーションクラス取得
     const getAnimationClass = () =>
-        slideDirection === "right" ? styles.slideInRight :
-        slideDirection === "left" ? styles.slideInLeft : "";
+        slideDirection === "right" ? styles.slideInRight : slideDirection === "left" ? styles.slideInLeft : "";
 
     // イベントハンドラー
-    const handleProcess = () => transitionToView("linking", "right");
-
-    const handleBackToUpload = () => transitionToView("upload", "left");
+    const handleFileUploadViewSubmit = (uploadInfo: UploadInfo) => {
+        setUploadInfo(uploadInfo);
+        transitionToView("linking", "right");
+    };
 
     const handleBackToUploadFromCompletion = () => {
         transitionToView("upload", "left");
-        setPdf(undefined);
-        setIcs(undefined);
+        setUploadInfo(undefined);
     };
 
-    const handleBackToLinking = () => transitionToView("linking", "left");
-
-    const handleSubmit = (schedules: ScheduleItem[]) => withLoading(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        console.log("登録実行", schedules);
-        transitionToView("completion", "right");
-    });
-
-    const handleExport = () => withLoading(async () => {
-        navigate("Settings", null, "timetracker");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log("エクスポート実行");
-        setDialogOpen(true);
-    });
-
-    const handleAutoLink = () => withLoading(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        console.log("AIによる自動紐づけ完了");
-    });
+    const handleLinkingProcessSubmit = (schedules: ScheduleItem[]) =>
+        withLoading(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            console.log("登録実行", schedules);
+            transitionToView("completion", "right");
+        });
 
     return (
         <Page
@@ -152,17 +140,15 @@ export function TimeTrackerPage() {
                         schedules={MOCK_DATA.completedSchedules}
                         itemCodes={MOCK_DATA.completedItemCodes}
                         itemCodeOptions={MOCK_DATA.itemCodeOptions}
-                        onExport={handleExport}
                         onBack={handleBackToUploadFromCompletion}
-                        onBackToLinking={handleBackToLinking}
+                        onBackToLinking={() => transitionToView("linking", "left")}
                     />
                 ) : currentView === "linking" ? (
                     <LinkingProcessView
-                        onBack={handleBackToUpload}
-                        pdfFileName={pdf?.name}
-                        icsFileName={ics?.name}
-                        onSubmit={handleSubmit}
-                        onAutoLink={handleAutoLink}
+                        uploadInfo={uploadInfo}
+                        setIsLoading={setIsLoading}
+                        onBack={() => transitionToView("upload", "left")}
+                        onSubmit={handleLinkingProcessSubmit}
                     />
                 ) : (
                     <FileUploadView
@@ -170,7 +156,7 @@ export function TimeTrackerPage() {
                         ics={ics}
                         onPdfUpdate={setPdf}
                         onIcsUpdate={setIcs}
-                        onProcess={handleProcess}
+                        onSubmit={handleFileUploadViewSubmit}
                     />
                 )}
             </div>

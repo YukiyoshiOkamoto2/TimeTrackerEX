@@ -1,8 +1,8 @@
+import { EventUtils } from "@/types";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { extractRecentEvents, parseICS } from "./icsParser";
-import { EventUtils } from "@/types";
 
 describe("icsParser", () => {
     // テスト用に現在時刻を固定
@@ -263,7 +263,7 @@ END:VCALENDAR`;
             const icsContent = readFileSync(icsPath, "utf-8");
 
             const result = parseICS(icsContent);
-            console.log(result.events.map(e => EventUtils.getText(e)).join(""))
+            console.log(result.events.map((e) => EventUtils.getText(e)).join(""));
 
             // 結果の基本検証
             expect(result).toHaveProperty("events");
@@ -347,10 +347,8 @@ END:VCALENDAR`;
 
                 if (prevStart === currStart) {
                     // 開始時刻が同じ場合、期間の短い順
-                    const prevDuration =
-                        (prev.schedule.end?.getTime() ?? 0) - prev.schedule.start.getTime();
-                    const currDuration =
-                        (curr.schedule.end?.getTime() ?? 0) - curr.schedule.start.getTime();
+                    const prevDuration = (prev.schedule.end?.getTime() ?? 0) - prev.schedule.start.getTime();
+                    const currDuration = (curr.schedule.end?.getTime() ?? 0) - curr.schedule.start.getTime();
                     expect(prevDuration).toBeLessThanOrEqual(currDuration);
                 } else {
                     // 開始時刻でソート

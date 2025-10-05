@@ -100,7 +100,7 @@ export function TimeTrackerSettings() {
 
             <SettingSection
                 title={ttDef.roundingTimeTypeOfEvent.name}
-                description={ttDef.roundingTimeTypeOfEvent.description?.split('\n')[0]}
+                description={ttDef.roundingTimeTypeOfEvent.description?.split("\n")[0]}
             >
                 <SettingItem
                     label={ttDef.roundingTimeTypeOfEvent.name}
@@ -123,10 +123,7 @@ export function TimeTrackerSettings() {
                 />
             </SettingSection>
 
-            <SettingSection
-                title={ttDef.timeOffEvent.name}
-                description={ttDef.timeOffEvent.description}
-            >
+            <SettingSection title={ttDef.timeOffEvent.name} description={ttDef.timeOffEvent.description}>
                 <SettingItem
                     label={ttDef.timeOffEvent.children.nameOfEvent.name}
                     description={ttDef.timeOffEvent.children.nameOfEvent.description}
@@ -216,7 +213,11 @@ export function TimeTrackerSettings() {
                             value={tt?.scheduleAutoInputInfo?.roundingTimeTypeOfSchedule || "half"}
                             selectedOptions={[tt?.scheduleAutoInputInfo?.roundingTimeTypeOfSchedule || "half"]}
                             onOptionSelect={(_, data) =>
-                                handleNestedUpdate("scheduleAutoInputInfo", "roundingTimeTypeOfSchedule", data.optionValue)
+                                handleNestedUpdate(
+                                    "scheduleAutoInputInfo",
+                                    "roundingTimeTypeOfSchedule",
+                                    data.optionValue,
+                                )
                             }
                             style={{ minWidth: "200px" }}
                         >
@@ -259,10 +260,7 @@ export function TimeTrackerSettings() {
                 />
             </SettingSection>
 
-            <SettingSection
-                title={ttDef.paidLeaveInputInfo.name}
-                description={ttDef.paidLeaveInputInfo.description}
-            >
+            <SettingSection title={ttDef.paidLeaveInputInfo.name} description={ttDef.paidLeaveInputInfo.description}>
                 <SettingItem
                     label={ttDef.paidLeaveInputInfo.children.workItemId.name}
                     description={ttDef.paidLeaveInputInfo.children.workItemId.description}

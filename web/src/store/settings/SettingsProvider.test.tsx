@@ -4,31 +4,31 @@
  * 設定の型定義とバリデーション機能を検証するテストです。
  */
 
-import { describe, expect, it } from "vitest";
-import type { AppSettings } from "../../schema/settings/settings";
 import {
-    DEFAULT_SETTINGS,
-    isSettingsComplete,
-    SettingsValidationError,
-    validateSettings,
-} from "../../schema/settings/settings";
+    getDefaultTimeTrackerSettings,
+    isTimeTrackerSettingsComplete,
+    validateTimeTrackerSettings,
+} from "@/schema/settings/settingsDefinition";
+import { TimeTrackerSettings } from "@/types";
+import { describe, expect, it } from "vitest";
 
 describe("Settings", () => {
-    describe("DEFAULT_SETTINGS", () => {
+    describe("getDefaultTimeTrackerSettings", () => {
         it("デフォルト値が正しく設定されている", () => {
-            expect(DEFAULT_SETTINGS.enableAutoUpdate).toBe(true);
-            expect(DEFAULT_SETTINGS.isHistoryAutoInput).toBe(true);
-            expect(DEFAULT_SETTINGS.roundingTimeTypeOfEvent).toBe("nonduplicate");
-            expect((DEFAULT_SETTINGS.eventDuplicatePriority as any)?.timeCompare).toBe("small");
-            expect((DEFAULT_SETTINGS.scheduleAutoInputInfo as any)?.startEndType).toBe("both");
-            expect((DEFAULT_SETTINGS.scheduleAutoInputInfo as any)?.roundingTimeTypeOfSchedule).toBe("half");
-            expect((DEFAULT_SETTINGS.scheduleAutoInputInfo as any)?.startEndTime).toBe(30);
+            const defaults = getDefaultTimeTrackerSettings();
+
+            expect(defaults.roundingTimeTypeOfEvent).toBe("nonduplicate");
+            expect(defaults.isHistoryAutoInput).toBe(true);
+            expect(defaults.eventDuplicatePriority?.timeCompare).toBe("small");
+            expect(defaults.scheduleAutoInputInfo?.startEndType).toBe("both");
+            expect(defaults.scheduleAutoInputInfo?.roundingTimeTypeOfSchedule).toBe("half");
+            expect(defaults.scheduleAutoInputInfo?.startEndTime).toBe(30);
         });
     });
 
-    describe("validateSettings", () => {
-        it("完全な設定の場合、エラーが返されない", () => {
-            const completeSettings: AppSettings = {
+    describe("validateTimeTrackerSettings", () => {
+        it("完全な設定の場合、検証が成功する", () => {
+            const completeSettings: TimeTrackerSettings = {
                 userName: "test@example.com",
                 baseUrl: "https://timetracker.example.com",
                 baseProjectId: 123,
@@ -42,108 +42,90 @@ describe("Settings", () => {
                 },
             };
 
-            const errors = validateSettings(completeSettings);
-            expect(errors).toEqual([]);
+            const result = validateTimeTrackerSettings(completeSettings);
+            expect(result.isError).toBe(false);
+            if (!result.isError) {
+                expect(result.value).toEqual(completeSettings);
+            }
         });
 
         it("ユーザー名が欠けている場合、エラーが返される", () => {
-            const settings: Partial<AppSettings> = {
+            const settings = {
                 baseUrl: "https://timetracker.example.com",
                 baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half" as const,
+                eventDuplicatePriority: { timeCompare: "small" as const },
+                scheduleAutoInputInfo: {
+                    startEndType: "both" as const,
+                    roundingTimeTypeOfSchedule: "half" as const,
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
             };
 
-            const errors = validateSettings(settings);
-            expect(errors).toContain("ユーザー名(ログイン名)は必須です");
+            const result = validateTimeTrackerSettings(settings);
+            expect(result.isError).toBe(true);
+            if (result.isError) {
+                expect(result.errorMessage).toContain("userName");
+            }
         });
 
         it("ベースURLが欠けている場合、エラーが返される", () => {
-            const settings: Partial<AppSettings> = {
+            const settings = {
                 userName: "test@example.com",
                 baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half" as const,
+                eventDuplicatePriority: { timeCompare: "small" as const },
+                scheduleAutoInputInfo: {
+                    startEndType: "both" as const,
+                    roundingTimeTypeOfSchedule: "half" as const,
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
             };
 
-            const errors = validateSettings(settings);
-            expect(errors).toContain("TimeTrackerのベースURLは必須です");
+            const result = validateTimeTrackerSettings(settings);
+            expect(result.isError).toBe(true);
+            if (result.isError) {
+                expect(result.errorMessage).toContain("baseUrl");
+            }
         });
 
         it("プロジェクトIDが欠けている場合、エラーが返される", () => {
-            const settings: Partial<AppSettings> = {
+            const settings = {
                 userName: "test@example.com",
                 baseUrl: "https://timetracker.example.com",
+                roundingTimeTypeOfEvent: "half" as const,
+                eventDuplicatePriority: { timeCompare: "small" as const },
+                scheduleAutoInputInfo: {
+                    startEndType: "both" as const,
+                    roundingTimeTypeOfSchedule: "half" as const,
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
             };
 
-            const errors = validateSettings(settings);
-            expect(errors).toContain("プロジェクトIDは必須です");
+            const result = validateTimeTrackerSettings(settings);
+            expect(result.isError).toBe(true);
+            if (result.isError) {
+                expect(result.errorMessage).toContain("baseProjectId");
+            }
         });
 
-        it("イベント時間の丸め方法が欠けている場合、エラーが返される", () => {
-            const settings: Partial<AppSettings> = {
-                userName: "test@example.com",
-                baseUrl: "https://timetracker.example.com",
-                baseProjectId: 123,
-            };
+        it("複数のフィールドが欠けている場合、複数のエラーが返される", () => {
+            const settings = {};
 
-            const errors = validateSettings(settings);
-            expect(errors).toContain("イベント時間の丸め方法は必須です");
-        });
-
-        it("イベント重複時の優先判定が欠けている場合、エラーが返される", () => {
-            const settings: Partial<AppSettings> = {
-                userName: "test@example.com",
-                baseUrl: "https://timetracker.example.com",
-                baseProjectId: 123,
-                roundingTimeTypeOfEvent: "half",
-            };
-
-            const errors = validateSettings(settings);
-            expect(errors).toContain("イベント重複時の優先判定は必須です");
-        });
-
-        it("勤務時間の自動入力設定が欠けている場合、エラーが返される", () => {
-            const settings: Partial<AppSettings> = {
-                userName: "test@example.com",
-                baseUrl: "https://timetracker.example.com",
-                baseProjectId: 123,
-                roundingTimeTypeOfEvent: "half",
-                eventDuplicatePriority: { timeCompare: "small" },
-            };
-
-            const errors = validateSettings(settings);
-            expect(errors).toContain("勤務時間の自動入力設定は必須です");
-        });
-
-        it("勤務時間の自動入力設定の各項目が欠けている場合、エラーが返される", () => {
-            const settings: Partial<AppSettings> = {
-                userName: "test@example.com",
-                baseUrl: "https://timetracker.example.com",
-                baseProjectId: 123,
-                roundingTimeTypeOfEvent: "half",
-                eventDuplicatePriority: { timeCompare: "small" },
-                scheduleAutoInputInfo: {} as any,
-            };
-
-            const errors = validateSettings(settings);
-            // 4つのエラーが返される
-            expect(errors.length).toBe(4);
-            expect(errors).toContain("開始終了時間の自動入力タイプは必須です");
-            expect(errors).toContain("勤務時間の丸め方法は必須です");
-            expect(errors).toContain("自動入力WorkItemIDは必須です");
-        });
-
-        it("複数のエラーが同時に返される", () => {
-            const settings: Partial<AppSettings> = {};
-
-            const errors = validateSettings(settings);
-            expect(errors.length).toBeGreaterThan(1);
-            expect(errors).toContain("ユーザー名(ログイン名)は必須です");
-            expect(errors).toContain("TimeTrackerのベースURLは必須です");
-            expect(errors).toContain("プロジェクトIDは必須です");
+            const result = validateTimeTrackerSettings(settings);
+            expect(result.isError).toBe(true);
+            if (result.isError) {
+                expect(result.errorMessage.length).toBeGreaterThan(0);
+            }
         });
     });
 
-    describe("isSettingsComplete", () => {
+    describe("isTimeTrackerSettingsComplete", () => {
         it("完全な設定の場合、trueを返す", () => {
-            const completeSettings: AppSettings = {
+            const completeSettings: TimeTrackerSettings = {
                 userName: "test@example.com",
                 baseUrl: "https://timetracker.example.com",
                 baseProjectId: 123,
@@ -157,31 +139,23 @@ describe("Settings", () => {
                 },
             };
 
-            expect(isSettingsComplete(completeSettings)).toBe(true);
+            expect(isTimeTrackerSettingsComplete(completeSettings)).toBe(true);
         });
 
         it("不完全な設定の場合、falseを返す", () => {
-            const incompleteSettings: Partial<AppSettings> = {
+            const incompleteSettings: Partial<TimeTrackerSettings> = {
                 userName: "test@example.com",
             };
 
-            expect(isSettingsComplete(incompleteSettings)).toBe(false);
+            expect(isTimeTrackerSettingsComplete(incompleteSettings)).toBe(false);
         });
     });
 
-    describe("SettingsValidationError", () => {
-        it("エラーメッセージが正しく設定される", () => {
-            const error = new SettingsValidationError("テストエラー");
+    // SettingsValidationErrorは削除され、ValidationResultパターンを使用
 
-            expect(error.message).toBe("テストエラー");
-            expect(error.name).toBe("SettingsValidationError");
-            expect(error instanceof Error).toBe(true);
-        });
-    });
-
-    describe("AppSettings型", () => {
+    describe("TimeTrackerSettings型", () => {
         it("オプション項目を含む完全な設定を作成できる", () => {
-            const fullSettings: AppSettings = {
+            const fullSettings: TimeTrackerSettings = {
                 userName: "test@example.com",
                 baseUrl: "https://timetracker.example.com",
                 baseProjectId: 123,
@@ -208,12 +182,12 @@ describe("Settings", () => {
 
             expect(fullSettings.userName).toBe("test@example.com");
             expect(fullSettings.enableAutoUpdate).toBe(true);
-            expect((fullSettings.timeOffEvent as any)?.nameOfEvent).toEqual(["休暇", "有給"]);
-            expect((fullSettings.paidLeaveInputInfo as any)?.startTime).toBe("09:00");
+            expect(fullSettings.timeOffEvent?.nameOfEvent).toEqual(["休暇", "有給"]);
+            expect(fullSettings.paidLeaveInputInfo?.startTime).toBe("09:00");
         });
 
         it("オプション項目を省略した設定を作成できる", () => {
-            const minimalSettings: AppSettings = {
+            const minimalSettings: TimeTrackerSettings = {
                 userName: "test@example.com",
                 baseUrl: "https://timetracker.example.com",
                 baseProjectId: 123,

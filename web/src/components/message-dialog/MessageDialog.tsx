@@ -10,11 +10,7 @@ import {
     mergeClasses,
     tokens,
 } from "@fluentui/react-components";
-import {
-    Info24Filled,
-    Warning24Filled,
-    ErrorCircle24Filled,
-} from "@fluentui/react-icons";
+import { ErrorCircle24Filled, Info24Filled, Warning24Filled } from "@fluentui/react-icons";
 import { useState } from "react";
 
 const useStyles = makeStyles({
@@ -56,10 +52,9 @@ type MessageState = {
 
 export interface AppMessageDialogRef {
     showMessageAsync: (title: string, message: string, level?: MessageLevel) => Promise<void>;
-};
+}
 
 class AppMessageDialogRefImpl implements AppMessageDialogRef {
-
     private resolve?: () => void;
     private close?: () => void;
     private show?: (title: string, message: string, level?: MessageLevel) => void;
@@ -117,13 +112,13 @@ export const MessageDialog = () => {
                 title,
                 message,
                 level: level ?? "INFO",
-            })
+            });
         },
-        () => setState((prev) => ({ ...prev, open: false }))
-    )
+        () => setState((prev) => ({ ...prev, open: false })),
+    );
 
     const handleClose = () => {
-        setState((prev) => ({ ...prev, open: false }));
+        _appMessageDialogRef.closed();
     };
 
     const config = LEVEL_CONFIG[state.level];
@@ -135,9 +130,7 @@ export const MessageDialog = () => {
                 <DialogBody>
                     <DialogTitle>
                         <div className={styles.titleContainer}>
-                            <IconComponent
-                                className={mergeClasses(styles.icon, styles[config.className])}
-                            />
+                            <IconComponent className={mergeClasses(styles.icon, styles[config.className])} />
                             {state.title}
                         </div>
                     </DialogTitle>

@@ -93,18 +93,11 @@ export type CompletionViewProps = {
     schedules: ScheduleItem[];
     itemCodes: string[];
     itemCodeOptions: ItemCodeOption[];
-    onExport: () => void;
     onBack: () => void;
     onBackToLinking: () => void;
 };
 
-export function CompletionView({
-    schedules,
-    itemCodeOptions,
-    onExport,
-    onBack,
-    onBackToLinking,
-}: CompletionViewProps) {
+export function CompletionView({ schedules, itemCodeOptions, onBack, onBackToLinking }: CompletionViewProps) {
     const styles = useStyles();
 
     const breadcrumbs = ["TimeTracker", "紐づけ処理", "登録済みスケジュール"];
@@ -117,6 +110,8 @@ export function CompletionView({
         }
     };
 
+    const handleExport = () => {};
+
     return (
         <>
             <div className={styles.headerContainer}>
@@ -126,7 +121,7 @@ export function CompletionView({
                 <Button
                     appearance="primary"
                     icon={<ArrowDownload24Regular />}
-                    onClick={onExport}
+                    onClick={handleExport}
                     className={styles.exportButton}
                 >
                     エクスポート
@@ -161,11 +156,7 @@ export function CompletionView({
                         <DocumentBulletList24Regular className={styles.sectionIcon} />
                         <span>スケジュール一覧</span>
                     </div>
-                    <ScheduleTable
-                        schedules={schedules}
-                        itemCodeOptions={itemCodeOptions}
-                        itemCodeMode="readonly"
-                    />
+                    <ScheduleTable schedules={schedules} itemCodeOptions={itemCodeOptions} itemCodeMode="readonly" />
                 </div>
             </div>
         </>

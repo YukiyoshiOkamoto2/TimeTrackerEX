@@ -3,8 +3,8 @@ import { editor } from "monaco-editor";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { NavigationProvider } from "./store/navigation";
 import { ContentProvider, SettingsProvider } from "./store";
+import { NavigationProvider } from "./store/navigation";
 
 const myNewTheme: BrandVariants = {
     10: "#040204",
@@ -47,7 +47,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 <SettingsProvider>
                     <ContentProvider>
                         <App />
-                    </ContentProvider >
+                    </ContentProvider>
                 </SettingsProvider>
             </NavigationProvider>
         </FluentProvider>

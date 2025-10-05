@@ -5,9 +5,9 @@
  * Pythonのsetting.py (Settings class with singleton pattern)を移植しました。
  */
 
+import { appMessageDialogRef } from "@/components/message-dialog";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { getStorage } from "../../lib/storage";
-import type { AppSettings } from "../../types";
 import {
     getDefaultTimeTrackerSettings,
     isTimeTrackerSettingsComplete,
@@ -16,7 +16,7 @@ import {
     stringifyTimeTrackerSettings,
     validateTimeTrackerSettings,
 } from "../../schema/settings/settingsDefinition";
-import { appMessageDialogRef } from "@/components/message-dialog";
+import type { AppSettings } from "../../types";
 
 /**
  * ローカルストレージのキー
@@ -78,7 +78,7 @@ function loadSettings(): Partial<AppSettings> {
             appMessageDialogRef.showMessageAsync(
                 "設定読み込みエラー",
                 `設定の読み込みに失敗しました。デフォルト設定を使用します。\n\nエラー: ${parseResult.errorMessage}`,
-                "WARN"
+                "WARN",
             );
             return getDefaultAppSettings();
         }
@@ -97,7 +97,7 @@ function loadSettings(): Partial<AppSettings> {
         appMessageDialogRef.showMessageAsync(
             "設定読み込みエラー",
             `設定の読み込みに失敗しました。デフォルト設定を使用します。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-            "WARN"
+            "WARN",
         );
         return getDefaultAppSettings();
     }
@@ -123,7 +123,7 @@ function saveSettings(settings: Partial<AppSettings>): void {
         appMessageDialogRef.showMessageAsync(
             "設定保存エラー",
             `設定の保存に失敗しました。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-            "ERROR"
+            "ERROR",
         );
         throw new Error("設定の保存に失敗しました");
     }
@@ -143,15 +143,13 @@ function validateAndCorrectSettings(settings: Partial<AppSettings>): Partial<App
 
     // バリデーションと自動修正
     const fixResult = parseAndFixTimeTrackerSettings(settings.timetracker as any);
-    
+
     if (fixResult.isError) {
-        console.warn(
-            `ローカルストレージの設定に無効な項目があります: ${fixResult.errorMessage}`,
-        );
+        console.warn(`ローカルストレージの設定に無効な項目があります: ${fixResult.errorMessage}`);
         appMessageDialogRef.showMessageAsync(
             "設定検証エラー",
             `設定の検証に失敗しました。デフォルト設定を使用します。\n\nエラー: ${fixResult.errorMessage}`,
-            "WARN"
+            "WARN",
         );
         return getDefaultAppSettings();
     }
@@ -189,7 +187,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }, [settings, isLoading]);
 
     // 検証
-    const validationResult = settings.timetracker ? validateTimeTrackerSettings(settings.timetracker) : { isError: true, errorMessage: "timetracker設定が存在しません" };
+    const validationResult = settings.timetracker
+        ? validateTimeTrackerSettings(settings.timetracker)
+        : { isError: true, errorMessage: "timetracker設定が存在しません" };
     const validationErrors = validationResult.isError ? [validationResult.errorMessage] : [];
     const isComplete = settings.timetracker ? isTimeTrackerSettingsComplete(settings.timetracker) : false;
 

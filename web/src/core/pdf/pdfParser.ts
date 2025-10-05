@@ -16,11 +16,11 @@ try {
     } catch {
         // 開発環境では相対パス、本番環境では絶対パスにフォールバック
         pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-            'pdfjs-dist/build/pdf.worker.min.js',
-            import.meta.url
+            "pdfjs-dist/build/pdf.worker.min.js",
+            import.meta.url,
         ).toString();
     }
- }
+}
 
 /**
  * PDFパース結果

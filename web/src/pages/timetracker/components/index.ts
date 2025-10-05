@@ -2,7 +2,7 @@ export { ScheduleTable } from "./ScheduleTable";
 export type { ItemCodeDisplayMode, ItemCodeOption, ScheduleItem, ScheduleTableProps } from "./ScheduleTable";
 
 export { FileUploadView } from "./FileUploadView";
-export type { FileUploadViewProps, PDF, ICS, FileData } from "./FileUploadView";
+export type { FileUploadViewProps } from "./FileUploadView";
 
 export { LinkingProcessView } from "./LinkingProcessView";
 export type { LinkingProcessViewProps } from "./LinkingProcessView";

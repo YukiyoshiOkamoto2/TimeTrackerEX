@@ -1,3 +1,4 @@
+import { appMessageDialogRef } from "@/components/message-dialog";
 import {
     Button,
     Drawer,
@@ -20,6 +21,7 @@ import {
 import { useState } from "react";
 import { Card } from "../../../components/card";
 import { ExpandableSection } from "../../../components/expandable-section";
+import { UploadInfo } from "../models/index";
 import { PageHeader } from "./PageHeader";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "./index";
 
@@ -161,11 +163,10 @@ const useStyles = makeStyles({
 });
 
 export type LinkingProcessViewProps = {
+    uploadInfo?: UploadInfo;
+    setIsLoading: (isLoading: boolean) => void;
     onBack: () => void;
-    pdfFileName?: string;
-    icsFileName?: string;
     onSubmit?: (schedules: ScheduleItem[]) => void;
-    onAutoLink?: () => void;
 };
 
 // Mock history data
@@ -209,13 +210,7 @@ const schedules: ScheduleItem[] = [
     { date: "10月23日", time: "10:00 30分", name: "スケジュール名", organizer: "d" },
 ];
 
-export function LinkingProcessView({
-    onBack,
-    pdfFileName,
-    icsFileName,
-    onSubmit,
-    onAutoLink,
-}: LinkingProcessViewProps) {
+export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading }: LinkingProcessViewProps) {
     const styles = useStyles();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [option1Value, setOption1Value] = useState("");
@@ -224,6 +219,12 @@ export function LinkingProcessView({
 
     const handleScheduleChange = (updatedSchedules: ScheduleItem[]) => {
         setCurrentSchedules(updatedSchedules);
+    };
+
+    const handleApplyAI = async () => {
+        setIsLoading(true);
+        await appMessageDialogRef.showMessageAsync("AI", "AI", "WARN");
+        setIsLoading(false);
     };
 
     const handleSubmit = () => {
@@ -254,12 +255,12 @@ export function LinkingProcessView({
                         <div className={styles.infoItem}>
                             <span className={styles.infoIcon}>📄</span>
                             <span className={styles.infoLabel}>勤怠情報:</span>
-                            <span>{pdfFileName || "未選択"}</span>
+                            <span>{uploadInfo?.pdf?.name || "未選択"}</span>
                         </div>
                         <div className={styles.infoItem}>
                             <span className={styles.infoIcon}>📅</span>
                             <span className={styles.infoLabel}>スケジュール情報:</span>
-                            <span>{icsFileName || "未選択"}</span>
+                            <span>{uploadInfo?.ics?.name || "未選択"}</span>
                         </div>
                     </div>
                 </Card>
@@ -299,7 +300,7 @@ export function LinkingProcessView({
                             appearance="primary"
                             icon={<Sparkle24Regular />}
                             className={styles.autoLinkButton}
-                            onClick={onAutoLink}
+                            onClick={handleApplyAI}
                         >
                             適用
                         </Button>
