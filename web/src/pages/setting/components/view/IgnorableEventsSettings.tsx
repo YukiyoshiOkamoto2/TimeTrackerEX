@@ -1,8 +1,8 @@
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { ArrowLeft20Regular } from "@fluentui/react-icons";
-import { IgnorableEventPattern } from "../../../types/settings";
+import { IgnorableEventPattern } from "../../../../types/settings";
 import { SettingContentSection, SettingPageLayout } from "../layout";
-import { IgnorableEventsEditor } from "../layout/IgnorableEventsEditor";
+import { EventPatternEditor } from "../ui";
 
 const useStyles = makeStyles({
     header: {
@@ -50,15 +50,20 @@ export function IgnorableEventsSettings({ patterns, onChange, onBack }: Ignorabl
                     <strong>一致モードについて:</strong>
                     <br />• <strong>部分一致</strong>: パターンがイベント名のどこかに含まれていればマッチ
                     <br />
-                    　例: パターン"MTG" → "朝会MTG", "定例MTG", "MTG資料作成"すべてマッチ
+                    例: パターン"MTG" → "朝会MTG", "定例MTG", "MTG資料作成"すべてマッチ
                     <br />• <strong>前方一致</strong>: イベント名がパターンで始まる場合のみマッチ
                     <br />
-                    　例: パターン"MTG" → "MTG資料作成"はマッチ、"朝会MTG"はマッチしない
+                    例: パターン"MTG" → "MTG資料作成"はマッチ、"朝会MTG"はマッチしない
                     <br />• <strong>後方一致</strong>: イベント名がパターンで終わる場合のみマッチ
                     <br />
-                    　例: パターン"MTG" → "朝会MTG"はマッチ、"MTG資料作成"はマッチしない
+                    例: パターン"MTG" → "朝会MTG"はマッチ、"MTG資料作成"はマッチしない
                 </div>
-                <IgnorableEventsEditor patterns={patterns} onChange={onChange} />
+                <EventPatternEditor
+                    patterns={patterns}
+                    onChange={onChange}
+                    placeholder="パターン（例: MTG, 個人作業）"
+                    addButtonText="パターンを追加"
+                />
             </SettingContentSection>
         </SettingPageLayout>
     );

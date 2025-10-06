@@ -1,6 +1,6 @@
 import { Button, Dropdown, Input, Option, makeStyles, tokens } from "@fluentui/react-components";
 import { Add20Regular, Dismiss20Regular } from "@fluentui/react-icons";
-import { IgnorableEventPattern } from "../../../types/settings";
+import type { EventPattern } from "../../../../types/settings";
 
 const useStyles = makeStyles({
     patternList: {
@@ -26,12 +26,19 @@ const useStyles = makeStyles({
     },
 });
 
-interface IgnorableEventsEditorProps {
-    patterns: IgnorableEventPattern[];
-    onChange: (patterns: IgnorableEventPattern[]) => void;
+interface EventPatternEditorProps {
+    patterns: EventPattern[];
+    onChange: (patterns: EventPattern[]) => void;
+    placeholder?: string;
+    addButtonText?: string;
 }
 
-export function IgnorableEventsEditor({ patterns, onChange }: IgnorableEventsEditorProps) {
+export function EventPatternEditor({
+    patterns,
+    onChange,
+    placeholder = "パターン（例: MTG, 個人作業）",
+    addButtonText = "パターンを追加",
+}: EventPatternEditorProps) {
     const styles = useStyles();
 
     const handlePatternChange = (index: number, pattern: string) => {
@@ -76,7 +83,7 @@ export function IgnorableEventsEditor({ patterns, onChange }: IgnorableEventsEdi
                         className={styles.patternInput}
                         value={item.pattern}
                         onChange={(_, data) => handlePatternChange(index, data.value)}
-                        placeholder="パターン（例: MTG, 個人作業）"
+                        placeholder={placeholder}
                     />
                     <Dropdown
                         className={styles.matchModeDropdown}
@@ -106,7 +113,7 @@ export function IgnorableEventsEditor({ patterns, onChange }: IgnorableEventsEdi
                 onClick={handleAdd}
                 size="small"
             >
-                パターンを追加
+                {addButtonText}
             </Button>
         </div>
     );

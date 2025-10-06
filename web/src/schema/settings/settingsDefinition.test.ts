@@ -70,10 +70,11 @@ describe("settingsDefinition", () => {
                     workItemId: 456,
                 },
                 timeOffEvent: {
-                    nameOfEvent: ["有給"],
+                    namePatterns: [{ pattern: "有給", matchMode: "partial" }],
                     workItemId: 789,
                 },
                 paidLeaveInputInfo: {
+                    enabled: true,
                     startTime: "09:00",
                     endTime: "18:00",
                     workItemId: 1011,
@@ -192,7 +193,7 @@ describe("settingsDefinition", () => {
                     workItemId: 456,
                 },
                 timeOffEvent: {
-                    nameOfEvent: [], // 空配列は不可
+                    namePatterns: [], // 空配列は不可
                     workItemId: 789,
                 },
             };
@@ -267,7 +268,10 @@ describe("settingsDefinition", () => {
                     workItemId: 456,
                 },
                 timeOffEvent: {
-                    nameOfEvent: ["有給", "休暇"],
+                    namePatterns: [
+                        { pattern: "有給", matchMode: "partial" },
+                        { pattern: "休暇", matchMode: "prefix" },
+                    ],
                     workItemId: 789,
                 },
                 paidLeaveInputInfo: {

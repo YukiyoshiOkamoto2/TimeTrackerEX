@@ -1,18 +1,31 @@
 import { Badge, Button, Dropdown, Input, Option, Switch } from "@fluentui/react-components";
 import { useState } from "react";
-import { SETTINGS_DEFINITION } from "../../../schema/settings/settingsDefinition";
-import { useSettings } from "../../../store/settings/SettingsProvider";
-import { SettingItem, SettingNavigationItem, SettingNavigationSection, SettingSection } from "../layout";
+import { SETTINGS_DEFINITION } from "../../../../schema/settings/settingsDefinition";
+import { useSettings } from "../../../../store/settings/SettingsProvider";
+import type { EventPattern, TimeTrackerSettings as TimeTrackerSettingsType } from "../../../../types";
+import { SettingItem, SettingNavigationItem, SettingNavigationSection, SettingSection } from "../ui";
 import { IgnorableEventsSettings } from "./IgnorableEventsSettings";
+import { TimeOffEventsSettings } from "./TimeOffEventsSettings";
+
+type SettingView = "main" | "ignorableEvents" | "timeOffEvents";
 
 export function TimeTrackerSettings() {
-    const [showIgnorableEvents, setShowIgnorableEvents] = useState(false);
+    const [currentView, setCurrentView] = useState<SettingView>("main");
 
-    if (showIgnorableEvents) {
-        return <TimeTrackerSettingsWithIgnorableEvents onBack={() => setShowIgnorableEvents(false)} />;
+    if (currentView === "ignorableEvents") {
+        return <TimeTrackerSettingsWithIgnorableEvents onBack={() => setCurrentView("main")} />;
     }
 
-    return <TimeTrackerSettingsMain onNavigateToIgnorableEvents={() => setShowIgnorableEvents(true)} />;
+    if (currentView === "timeOffEvents") {
+        return <TimeTrackerSettingsWithTimeOffEvents onBack={() => setCurrentView("main")} />;
+    }
+
+    return (
+        <TimeTrackerSettingsMain
+            onNavigateToIgnorableEvents={() => setCurrentView("ignorableEvents")}
+            onNavigateToTimeOffEvents={() => setCurrentView("timeOffEvents")}
+        />
+    );
 }
 
 interface TimeTrackerSettingsWithIgnorableEventsProps {
@@ -21,9 +34,9 @@ interface TimeTrackerSettingsWithIgnorableEventsProps {
 
 function TimeTrackerSettingsWithIgnorableEvents({ onBack }: TimeTrackerSettingsWithIgnorableEventsProps) {
     const { settings, updateSettings } = useSettings();
-    const tt = settings.timetracker as any;
+    const tt = settings.timetracker as TimeTrackerSettingsType;
 
-    const handleUpdate = (patterns: any) => {
+    const handleUpdate = (patterns: EventPattern[]) => {
         updateSettings({
             timetracker: {
                 ...tt,
@@ -35,18 +48,54 @@ function TimeTrackerSettingsWithIgnorableEvents({ onBack }: TimeTrackerSettingsW
     return <IgnorableEventsSettings patterns={tt?.ignorableEvents || []} onChange={handleUpdate} onBack={onBack} />;
 }
 
-interface TimeTrackerSettingsMainProps {
-    onNavigateToIgnorableEvents: () => void;
+interface TimeTrackerSettingsWithTimeOffEventsProps {
+    onBack: () => void;
 }
 
-function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSettingsMainProps) {
+function TimeTrackerSettingsWithTimeOffEvents({ onBack }: TimeTrackerSettingsWithTimeOffEventsProps) {
+    const { settings, updateSettings } = useSettings();
+    const tt = settings.timetracker as TimeTrackerSettingsType;
+
+    const handleUpdate = (patterns: EventPattern[], workItemId: number) => {
+        updateSettings({
+            timetracker: {
+                ...tt,
+                timeOffEvent: {
+                    namePatterns: patterns,
+                    workItemId,
+                },
+            },
+        });
+    };
+
+    return (
+        <TimeOffEventsSettings
+            patterns={tt?.timeOffEvent?.namePatterns || []}
+            workItemId={tt?.timeOffEvent?.workItemId || 0}
+            onChange={handleUpdate}
+            onBack={onBack}
+        />
+    );
+}
+
+interface TimeTrackerSettingsMainProps {
+    onNavigateToIgnorableEvents: () => void;
+    onNavigateToTimeOffEvents: () => void;
+}
+
+function TimeTrackerSettingsMain({
+    onNavigateToIgnorableEvents,
+    onNavigateToTimeOffEvents,
+}: TimeTrackerSettingsMainProps) {
     const { settings, updateSettings } = useSettings();
 
     // timetracker設定を取得（階層構造に対応）
-    const tt = settings.timetracker as any;
+    const tt = settings.timetracker as TimeTrackerSettingsType;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ttDef = SETTINGS_DEFINITION.timetracker.children as any;
 
-    const handleUpdate = (field: string, value: any) => {
+    const handleUpdate = (field: string, value: string | number | boolean | undefined) => {
+        if (value === undefined) return;
         updateSettings({
             timetracker: {
                 ...tt,
@@ -55,12 +104,14 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
         });
     };
 
-    const handleNestedUpdate = (parent: string, field: string, value: any) => {
+    const handleNestedUpdate = (parent: string, field: string, value: string | number | boolean | undefined) => {
+        if (value === undefined) return;
         updateSettings({
             timetracker: {
                 ...tt,
                 [parent]: {
-                    ...tt?.[parent],
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    ...(tt?.[parent as keyof TimeTrackerSettingsType] as any),
                     [field]: value,
                 },
             },
@@ -69,7 +120,8 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
 
     return (
         <>
-            <SettingSection title="基本設定" description={ttDef.userName.description}>
+            {/* 必須設定 */}
+            <SettingSection title="基本設定" description="TimeTrackerに接続するための必須項目" required={true}>
                 <SettingItem
                     label={ttDef.userName.name}
                     description={ttDef.userName.description}
@@ -108,19 +160,6 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                         />
                     }
                 />
-            </SettingSection>
-
-            <SettingSection title="自動更新設定" description="アプリケーションの動作設定">
-                <SettingItem
-                    label={ttDef.enableAutoUpdate.name}
-                    description={ttDef.enableAutoUpdate.description}
-                    control={
-                        <Switch
-                            checked={tt?.enableAutoUpdate ?? true}
-                            onChange={(_, data) => handleUpdate("enableAutoUpdate", data.checked)}
-                        />
-                    }
-                />
                 <SettingItem
                     label={ttDef.isHistoryAutoInput.name}
                     description={ttDef.isHistoryAutoInput.description}
@@ -133,10 +172,7 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                 />
             </SettingSection>
 
-            <SettingSection
-                title={ttDef.roundingTimeTypeOfEvent.name}
-                description={ttDef.roundingTimeTypeOfEvent.description?.split("\n")[0]}
-            >
+            <SettingSection title="イベント処理設定" description="イベントの丸め方法と重複時の優先度" required={true}>
                 <SettingItem
                     label={ttDef.roundingTimeTypeOfEvent.name}
                     description={ttDef.roundingTimeTypeOfEvent.description}
@@ -145,7 +181,7 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                             value={tt?.roundingTimeTypeOfEvent || "nonduplicate"}
                             selectedOptions={[tt?.roundingTimeTypeOfEvent || "nonduplicate"]}
                             onOptionSelect={(_, data) => handleUpdate("roundingTimeTypeOfEvent", data.optionValue)}
-                            style={{ minWidth: "200px" }}
+                            style={{ minWidth: "250px" }}
                         >
                             <Option value="backward">backward（切り上げ）</Option>
                             <Option value="forward">forward（切り捨て）</Option>
@@ -156,71 +192,6 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                         </Dropdown>
                     }
                 />
-            </SettingSection>
-
-            <SettingSection title={ttDef.timeOffEvent.name} description={ttDef.timeOffEvent.description}>
-                <SettingItem
-                    label={ttDef.timeOffEvent.children.nameOfEvent.name}
-                    description={ttDef.timeOffEvent.children.nameOfEvent.description}
-                    control={
-                        <Input
-                            value={tt?.timeOffEvent?.nameOfEvent?.join(", ") || ""}
-                            onChange={(_, data) =>
-                                handleNestedUpdate(
-                                    "timeOffEvent",
-                                    "nameOfEvent",
-                                    data.value
-                                        .split(",")
-                                        .map((s) => s.trim())
-                                        .filter((s) => s.length > 0),
-                                )
-                            }
-                            placeholder="有給, 休暇"
-                            style={{ minWidth: "300px" }}
-                        />
-                    }
-                />
-                <SettingItem
-                    label={ttDef.timeOffEvent.children.workItemId.name}
-                    description={ttDef.timeOffEvent.children.workItemId.description}
-                    control={
-                        <Input
-                            type="number"
-                            value={tt?.timeOffEvent?.workItemId?.toString() || ""}
-                            onChange={(_, data) =>
-                                handleNestedUpdate("timeOffEvent", "workItemId", parseInt(data.value) || 0)
-                            }
-                            placeholder="WorkItemID"
-                            style={{ maxWidth: "150px" }}
-                        />
-                    }
-                />
-            </SettingSection>
-
-            <SettingNavigationSection
-                title={ttDef.ignorableEvents.name}
-                description={ttDef.ignorableEvents.description}
-            >
-                <SettingNavigationItem
-                    title={ttDef.ignorableEvents.name}
-                    description={ttDef.ignorableEvents.description}
-                    badge={
-                        tt?.ignorableEvents && tt.ignorableEvents.length > 0 ? (
-                            <Badge appearance="filled" color="informative">
-                                {tt.ignorableEvents.length}件
-                            </Badge>
-                        ) : (
-                            <span style={{ color: "var(--colorNeutralForeground3)" }}>0件</span>
-                        )
-                    }
-                    onClick={onNavigateToIgnorableEvents}
-                />
-            </SettingNavigationSection>
-
-            <SettingSection
-                title={ttDef.eventDuplicatePriority.name}
-                description={ttDef.eventDuplicatePriority.description}
-            >
                 <SettingItem
                     label={ttDef.eventDuplicatePriority.children.timeCompare.name}
                     description={ttDef.eventDuplicatePriority.children.timeCompare.description}
@@ -231,7 +202,7 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                             onOptionSelect={(_, data) =>
                                 handleNestedUpdate("eventDuplicatePriority", "timeCompare", data.optionValue)
                             }
-                            style={{ minWidth: "200px" }}
+                            style={{ minWidth: "250px" }}
                         >
                             <Option value="small">small（短いイベント優先）</Option>
                             <Option value="large">large（長いイベント優先）</Option>
@@ -241,8 +212,9 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
             </SettingSection>
 
             <SettingSection
-                title={ttDef.scheduleAutoInputInfo.name}
-                description={ttDef.scheduleAutoInputInfo.description}
+                title="勤務時間の自動入力設定"
+                description="勤務開始・終了時間を自動入力する設定"
+                required={true}
             >
                 <SettingItem
                     label={ttDef.scheduleAutoInputInfo.children.startEndType.name}
@@ -254,7 +226,7 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                             onOptionSelect={(_, data) =>
                                 handleNestedUpdate("scheduleAutoInputInfo", "startEndType", data.optionValue)
                             }
-                            style={{ minWidth: "200px" }}
+                            style={{ minWidth: "250px" }}
                         >
                             <Option value="both">both（開始・終了）</Option>
                             <Option value="start">start（開始のみ）</Option>
@@ -277,7 +249,7 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                                     data.optionValue,
                                 )
                             }
-                            style={{ minWidth: "200px" }}
+                            style={{ minWidth: "250px" }}
                         >
                             <Option value="backward">backward（切り上げ）</Option>
                             <Option value="forward">forward（切り捨て）</Option>
@@ -318,7 +290,26 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                 />
             </SettingSection>
 
-            <SettingSection title={ttDef.paidLeaveInputInfo.name} description={ttDef.paidLeaveInputInfo.description}>
+            <SettingSection
+                title={ttDef.paidLeaveInputInfo.name}
+                description={ttDef.paidLeaveInputInfo.description}
+                required={false}
+                collapsible={true}
+                enabled={tt?.paidLeaveInputInfo?.enabled ?? false}
+                onEnabledChange={(enabled: boolean) => {
+                    updateSettings({
+                        timetracker: {
+                            ...tt,
+                            paidLeaveInputInfo: {
+                                workItemId: tt?.paidLeaveInputInfo?.workItemId ?? 0,
+                                startTime: tt?.paidLeaveInputInfo?.startTime ?? "",
+                                endTime: tt?.paidLeaveInputInfo?.endTime ?? "",
+                                enabled,
+                            },
+                        },
+                    });
+                }}
+            >
                 <SettingItem
                     label={ttDef.paidLeaveInputInfo.children.workItemId.name}
                     description={ttDef.paidLeaveInputInfo.children.workItemId.description}
@@ -331,6 +322,7 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                             }
                             placeholder="WorkItemID"
                             style={{ maxWidth: "150px" }}
+                            required={tt?.paidLeaveInputInfo?.enabled ?? false}
                         />
                     }
                 />
@@ -343,6 +335,7 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                             value={tt?.paidLeaveInputInfo?.startTime || "09:00"}
                             onChange={(_, data) => handleNestedUpdate("paidLeaveInputInfo", "startTime", data.value)}
                             style={{ maxWidth: "150px" }}
+                            required={tt?.paidLeaveInputInfo?.enabled ?? false}
                         />
                     }
                 />
@@ -352,15 +345,58 @@ function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSet
                     control={
                         <Input
                             type="time"
-                            value={tt?.paidLeaveInputInfo?.endTime || "18:00"}
+                            value={tt?.paidLeaveInputInfo?.endTime || "17:30"}
                             onChange={(_, data) => handleNestedUpdate("paidLeaveInputInfo", "endTime", data.value)}
                             style={{ maxWidth: "150px" }}
+                            required={tt?.paidLeaveInputInfo?.enabled ?? false}
                         />
                     }
                 />
             </SettingSection>
 
-            <SettingSection title="データ管理">
+            <SettingNavigationSection
+                title="休暇イベント設定"
+                description="休暇イベント名とWorkItemIDの設定"
+                required={false}
+            >
+                <SettingNavigationItem
+                    title={ttDef.timeOffEvent.name}
+                    description={ttDef.timeOffEvent.description}
+                    badge={
+                        tt?.timeOffEvent?.namePatterns && tt.timeOffEvent.namePatterns.length > 0 ? (
+                            <Badge appearance="filled" color="informative">
+                                {tt.timeOffEvent.namePatterns.length}件
+                            </Badge>
+                        ) : (
+                            <span style={{ color: "var(--colorNeutralForeground3)" }}>0件</span>
+                        )
+                    }
+                    onClick={onNavigateToTimeOffEvents}
+                />
+            </SettingNavigationSection>
+
+            <SettingNavigationSection
+                title={ttDef.ignorableEvents.name}
+                description={ttDef.ignorableEvents.description}
+                required={false}
+            >
+                <SettingNavigationItem
+                    title={ttDef.ignorableEvents.name}
+                    description={ttDef.ignorableEvents.description}
+                    badge={
+                        tt?.ignorableEvents && tt.ignorableEvents.length > 0 ? (
+                            <Badge appearance="filled" color="informative">
+                                {tt.ignorableEvents.length}件
+                            </Badge>
+                        ) : (
+                            <span style={{ color: "var(--colorNeutralForeground3)" }}>0件</span>
+                        )
+                    }
+                    onClick={onNavigateToIgnorableEvents}
+                />
+            </SettingNavigationSection>
+
+            <SettingSection title="データ管理" required={false}>
                 <SettingItem
                     label="データをエクスポート"
                     description="すべてのデータをJSONファイルとしてエクスポートします"

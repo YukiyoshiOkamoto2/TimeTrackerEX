@@ -20,7 +20,7 @@ import {
 } from "@fluentui/react-icons";
 import { useState } from "react";
 import { Card } from "../../../components/card";
-import { ExpandableSection } from "../../../components/expandable-section";
+import { InteractiveCard } from "../../../components/interactive-card";
 import { UploadInfo } from "../models/index";
 import { PageHeader } from "./PageHeader";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "./index";
@@ -267,9 +267,10 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
             </div>
 
             <div className={styles.section}>
-                <ExpandableSection
+                <InteractiveCard
                     title="✨ AIによる自動紐づけ"
                     description="スケジュールとItemコードを自動的にマッチング"
+                    variant="expandable"
                     defaultExpanded={false}
                 >
                     <div className={styles.optionRow}>
@@ -305,7 +306,7 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
                             適用
                         </Button>
                     </div>
-                </ExpandableSection>
+                </InteractiveCard>
             </div>
 
             <div className={styles.section}>

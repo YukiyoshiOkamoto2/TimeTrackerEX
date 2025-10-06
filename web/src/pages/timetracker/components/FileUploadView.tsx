@@ -14,8 +14,8 @@ import {
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
-import { ActionButton } from "../../../components/action-button";
 import { Card } from "../../../components/card";
+import { InteractiveCard } from "../../../components/interactive-card";
 import { ICS, PDF, UploadInfo } from "../models";
 
 const logger = getLogger("FileUploadView");
@@ -545,9 +545,10 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                         )}
                     </div>
                 </div>
-                <ActionButton
+                <InteractiveCard
                     title="紐づけ開始"
                     description="アップロードしたファイルを基に勤怠情報とスケジュールを紐づけます"
+                    variant="action"
                     disabled={!canProcess}
                     onClick={handleLinkedClick}
                     icon={<Link24Regular />}

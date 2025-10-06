@@ -1,11 +1,11 @@
 import { themeHandler } from "@/main";
 import { Dropdown, Option, Switch } from "@fluentui/react-components";
-import { SettingItem, SettingSection } from "../layout";
+import { SettingItem, SettingSection } from "../ui";
 
 export function AppearanceSettings() {
     return (
         <>
-            <SettingSection title="テーマ設定" description="アプリケーションの外観をカスタマイズ">
+            <SettingSection title="テーマ設定" description="アプリケーションの外観をカスタマイズ" required={false}>
                 <SettingItem
                     label="テーマ"
                     description="ライト、ダーク、またはシステム設定に従います"
@@ -31,7 +31,7 @@ export function AppearanceSettings() {
                 />
             </SettingSection>
 
-            <SettingSection title="表示設定" description="UI要素の表示に関する設定">
+            <SettingSection title="表示設定" description="UI要素の表示に関する設定" required={false}>
                 <SettingItem
                     label="アニメーションを有効にする"
                     description="画面遷移時のアニメーション効果を表示します"

@@ -1,6 +1,6 @@
 import { makeStyles, tokens } from "@fluentui/react-components";
 import type { ReactNode } from "react";
-import { Page } from "../../../components/page";
+import { Page } from "../../../../components/page";
 
 const useStyles = makeStyles({
     container: {

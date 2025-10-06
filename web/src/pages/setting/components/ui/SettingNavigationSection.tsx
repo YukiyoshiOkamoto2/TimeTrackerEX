@@ -27,6 +27,7 @@ const useStyles = makeStyles({
 export type SettingNavigationSectionProps = {
     title: string;
     description?: string;
+    required?: boolean;
     children: ReactNode;
 };
 
@@ -34,13 +35,33 @@ export type SettingNavigationSectionProps = {
  * ナビゲーション項目用のセクション
  * タイトルと説明を持ち、内側に枠線のないナビゲーション項目を配置
  */
-export function SettingNavigationSection({ title, description, children }: SettingNavigationSectionProps) {
+export function SettingNavigationSection({
+    title,
+    description,
+    required = true,
+    children,
+}: SettingNavigationSectionProps) {
     const styles = useStyles();
 
     return (
         <div className={styles.section}>
             <div className={styles.header}>
-                <div className={styles.sectionTitle}>{title}</div>
+                <div className={styles.sectionTitle}>
+                    {title}
+                    {required ? (
+                        <span style={{ color: tokens.colorPaletteRedForeground1, marginLeft: "4px" }}>*</span>
+                    ) : (
+                        <span
+                            style={{
+                                color: tokens.colorNeutralForeground3,
+                                marginLeft: "4px",
+                                fontSize: tokens.fontSizeBase200,
+                            }}
+                        >
+                            (省略可能)
+                        </span>
+                    )}
+                </div>
                 {description && <div className={styles.sectionDescription}>{description}</div>}
             </div>
             {children}

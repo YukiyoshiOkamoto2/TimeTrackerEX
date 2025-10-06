@@ -2,41 +2,78 @@
 
 アプリケーションの設定画面を構成するコンポーネント群です。
 
-## 📁 ディレクトリ構造
+## � 目次
+
+- [ディレクトリ構造](#-ディレクトリ構造)
+- [Layout Components](#-layout-components)
+- [使用例](#-使用例)
+- [Components](#-components)
+  - [SettingPage (ルート)](#-settingpagetsx-ルート)
+  - [Layout Components (components/layout/)](#-layout-components-componentslayout)
+  - [UI Components (components/ui/)](#-ui-components-componentsui)
+  - [View Components (components/view/)](#-view-components-componentsview)
+- [デザインシステム](#-デザインシステム)
+- [開発ガイドライン](#-開発ガイドライン)
+- [関連ファイル](#-関連ファイル)
+- [ベストプラクティス](#-ベストプラクティス)
+
+## �📁 ディレクトリ構造
 
 ```
 setting/
 ├── README.md                    # このファイル
 ├── index.ts                     # SettingPageのエクスポート
 ├── SettingPage.tsx              # メイン設定ページ(タブナビゲーション)
-├── components/                  # 個別の設定画面コンポーネント
-│   ├── index.ts
-│   ├── AppearanceSettings.tsx
-│   ├── GeneralSettings.tsx
-│   ├── TimeTrackerSettings.tsx
-│   ├── IgnorableEventsSettings.tsx
-│   ├── IgnorableEventsEditor.tsx
-│   └── JsonEditorView.tsx
-└── layout/                      # 再利用可能なレイアウトコンポーネント
-    ├── index.ts
-    ├── SettingPageLayout.tsx
-    ├── SettingContentSection.tsx
-    ├── SettingSection.tsx
-    ├── SettingItem.tsx
-    ├── SettingNavigationSection.tsx
-    └── SettingNavigationItem.tsx
+└── components/                  # 設定画面のすべてのコンポーネント
+    ├── index.ts                 # すべてをエクスポート (layout, ui, view)
+    ├── layout/                  # ページレベルのレイアウトコンポーネント
+    │   ├── index.ts
+    │   ├── SettingPageLayout.tsx
+    │   └── SettingContentSection.tsx
+    ├── ui/                      # 再利用可能なUIパーツコンポーネント
+    │   ├── index.ts
+    │   ├── SettingSection.tsx
+    │   ├── SettingItem.tsx
+    │   ├── SettingNavigationSection.tsx
+    │   ├── SettingNavigationItem.tsx
+    │   └── EventPatternEditor.tsx
+    └── view/                    # 設定画面コンテンツ
+        ├── index.ts
+        ├── AppearanceSettings.tsx
+        ├── GeneralSettings.tsx
+        ├── TimeTrackerSettings.tsx
+        ├── IgnorableEventsSettings.tsx
+        └── JsonEditorView.tsx
 ```
 
-## 🎨 Layout Components
+### ディレクトリの役割
 
-設定画面で使用する再利用可能なレイアウトコンポーネント。
+- **components/layout/**: ページレベルのレイアウトコンポーネント
+  - ページ全体の構造を提供する高レベルのコンポーネント
+  - 例: SettingPageLayout, SettingContentSection
+  - Pageコンポーネントをラップし、一貫したレイアウトを提供
+  
+- **components/ui/**: 再利用可能なUIパーツコンポーネント
+  - 画面構成の基本単位となるコンポーネント
+  - 例: SettingSection, SettingItem, SettingNavigationItem, EventPatternEditor
+  - 設定セクション、設定項目、ナビゲーション項目など
+  - 複数のview間で再利用可能
+  
+- **components/view/**: 設定画面のコンテンツ(メイン画面)
+  - 各設定カテゴリの実装
+  - layoutとuiコンポーネントを組み合わせて画面を構成
+  - 例: TimeTrackerSettings, AppearanceSettings
+
+## 🎨 Layout Components (components/layout/)
+
+ページ全体の構造を提供する高レベルのレイアウトコンポーネント。
 
 ### SettingPageLayout
 
 ページ全体のレイアウトを提供します。
 
 ```tsx
-import { SettingPageLayout } from "../layout";
+import { SettingPageLayout } from "../components/layout";
 
 <SettingPageLayout 
     title="設定タイトル" 
@@ -58,7 +95,7 @@ import { SettingPageLayout } from "../layout";
 カードスタイルのコンテンツセクション。
 
 ```tsx
-import { SettingContentSection } from "../layout";
+import { SettingContentSection } from "../components/layout";
 
 <SettingContentSection title="セクション名" description="説明">
     {/* セクション内容 */}
@@ -77,14 +114,32 @@ import { SettingContentSection } from "../layout";
 
 ---
 
+## 🧩 UI Components (components/ui/)
+
+画面構成の基本単位となる再利用可能なUIパーツコンポーネント。
+
 ### SettingSection
 
-通常の設定項目グループ用セクション。
+通常の設定項目グループ用セクション。オプションで折りたたみ可能なモードもサポートしています。
 
 ```tsx
-import { SettingSection } from "../layout";
+import { SettingSection } from "../components/ui";
 
+// 通常モード
 <SettingSection title="基本設定" description="アプリケーションの基本的な設定">
+    <SettingItem ... />
+    <SettingItem ... />
+</SettingSection>
+
+// 折りたたみ可能モード
+<SettingSection
+    title="有給休暇の自動入力"
+    description="有給休暇を使用した日に自動でTimeTrackerに入力します"
+    collapsible={true}
+    enabled={true}
+    onEnabledChange={(enabled) => console.log(enabled)}
+    defaultExpanded={false}
+>
     <SettingItem ... />
     <SettingItem ... />
 </SettingSection>
@@ -94,13 +149,21 @@ import { SettingSection } from "../layout";
 - `title`: セクションタイトル (必須)
 - `description`: セクション説明 (オプション)
 - `children`: 設定項目 (通常は `SettingItem` の配列)
+- `collapsible`: 折りたたみ可能モードを有効にする (オプション, デフォルト: false)
+- `enabled`: 有効/無効の状態 (collapsibleがtrueの場合に使用) (オプション)
+- `onEnabledChange`: 有効/無効が変更されたときのコールバック (collapsibleがtrueの場合に使用) (オプション)
+- `defaultExpanded`: 初期表示時に展開するかどうか (collapsibleがtrueの場合に使用) (オプション, デフォルト: false)
 
 **特徴:**
 - Card で囲まれた枠線あり
 - 複数の `SettingItem` をグループ化
+- **折りたたみ可能モード**: 有効/無効スイッチとシェブロンアイコン付き
+- 有効化すると自動的に展開
+- タイトルと説明がCard内に表示
 
 **使用例:**
 - スイッチ、ドロップダウン、入力フィールドなどの通常の設定項目
+- オプション機能の有効/無効切り替えとその設定項目(折りたたみ可能モード)
 
 ---
 
@@ -109,7 +172,7 @@ import { SettingSection } from "../layout";
 個別の設定項目を表示します。
 
 ```tsx
-import { SettingItem } from "../layout";
+import { SettingItem } from "../components/ui";
 
 <SettingItem
     label="設定名"
@@ -135,7 +198,7 @@ import { SettingItem } from "../layout";
 画面遷移する項目用のセクション (Windows設定画面スタイル)。
 
 ```tsx
-import { SettingNavigationSection } from "../layout";
+import { SettingNavigationSection } from "../components/ui";
 
 <SettingNavigationSection title="無視可能イベント" description="処理から除外するイベント...">
     <SettingNavigationItem ... />
@@ -159,7 +222,7 @@ import { SettingNavigationSection } from "../layout";
 クリック可能なナビゲーション項目 (Windows設定画面スタイル)。
 
 ```tsx
-import { SettingNavigationItem } from "../layout";
+import { SettingNavigationItem } from "../components/ui";
 
 <SettingNavigationItem
     title="無視可能イベント"
@@ -188,6 +251,7 @@ import { SettingNavigationItem } from "../layout";
 | コンポーネント | 用途 | 枠線 | 例 |
 |--------------|------|------|-----|
 | **SettingSection** + **SettingItem** | 通常の設定項目 | ✅ Card枠あり | スイッチ、ドロップダウン、入力フィールド |
+| **SettingSection** (collapsible) + **SettingItem** | 有効/無効切り替え可能な設定 | ✅ Card枠あり | 有給休暇の自動入力などのオプション機能 |
 | **SettingNavigationSection** + **SettingNavigationItem** | 別画面への遷移 | ❌ 枠なし | サブ設定画面へのリンク |
 
 ## 📖 使用例
@@ -195,7 +259,7 @@ import { SettingNavigationItem } from "../layout";
 ### 通常の設定項目
 
 ```tsx
-import { SettingSection, SettingItem } from "../layout";
+import { SettingSection, SettingItem } from "../components/ui";
 
 <SettingSection title="テーマ設定" description="アプリケーションの外観をカスタマイズ">
     <SettingItem
@@ -215,7 +279,7 @@ import { SettingSection, SettingItem } from "../layout";
 
 ```tsx
 import { Badge } from "@fluentui/react-components";
-import { SettingNavigationSection, SettingNavigationItem } from "../layout";
+import { SettingNavigationSection, SettingNavigationItem } from "../components/ui";
 
 <SettingNavigationSection 
     title="無視可能イベント" 
@@ -239,7 +303,7 @@ import { SettingNavigationSection, SettingNavigationItem } from "../layout";
 ### 専用設定ページのレイアウト
 
 ```tsx
-import { SettingPageLayout, SettingContentSection } from "../layout";
+import { SettingPageLayout, SettingContentSection } from "../components/layout";
 
 <SettingPageLayout 
     title="無視可能イベント設定"
@@ -253,7 +317,7 @@ import { SettingPageLayout, SettingContentSection } from "../layout";
 
 ## 📦 Components
 
-### SettingPage.tsx
+### 📄 SettingPage.tsx (ルート)
 
 メインの設定ページ。タブナビゲーションで各設定カテゴリを切り替えます。
 
@@ -264,92 +328,143 @@ import { SettingPageLayout, SettingContentSection } from "../layout";
 
 ---
 
+## 🎨 Layout Components (components/layout/)
+
+レイアウトコンポーネントについては上記「Layout Components」セクションを参照してください。
+
+---
+
+## 🧩 UI Components (components/ui/)
+
+### EventPatternEditor.tsx
+
+イベントパターンの追加・編集・削除を行うエディタコンポーネント。
+
+**場所:** `components/ui/EventPatternEditor.tsx`
+
+**機能:**
+- パターン入力フィールド
+- マッチモード選択 (部分一致/前方一致/後方一致/正規表現)
+- 行の追加・削除ボタン
+- リアルタイムな入力検証
+
+**Props:**
+- `patterns`: `EventPattern[]` - 現在のパターンリスト
+- `onChange`: `(patterns: EventPattern[]) => void` - パターン変更時のコールバック
+
+**使用例:**
+```tsx
+import { EventPatternEditor } from "../components/ui";
+
+<EventPatternEditor 
+    patterns={patterns} 
+    onChange={setPatterns} 
+/>
+```
+
+---
+
+## 📺 View Components (components/view/)
+
+各設定カテゴリの実装。layoutとuiコンポーネントを組み合わせて画面を構成します。
+
 ### AppearanceSettings.tsx
 
-外観に関する設定。
+外観に関する設定画面。
+
+**場所:** `components/view/AppearanceSettings.tsx`
 
 **設定項目:**
 - テーマ (ライト/ダーク/システム設定)
 - アクセントカラー
-- アニメーション
+- アニメーション効果
 - コンパクトモード
+
+**使用レイアウト:**
+- `SettingSection` - 設定グループ
+- `SettingItem` - 個別設定項目
 
 ---
 
 ### GeneralSettings.tsx
 
-一般的なアプリケーション設定。
+一般的なアプリケーション設定画面。
+
+**場所:** `components/view/GeneralSettings.tsx`
 
 **設定項目:**
 - 起動設定 (自動起動、最小化で起動)
 - 通知設定 (デスクトップ通知、サウンド)
 - 言語設定
 
+**使用レイアウト:**
+- `SettingSection` - 設定グループ
+- `SettingItem` - 個別設定項目
+
 ---
 
 ### TimeTrackerSettings.tsx
 
-TimeTracker固有の設定。
+TimeTracker固有の設定画面。複雑な設定と画面遷移を含みます。
+
+**場所:** `components/view/TimeTrackerSettings.tsx`
 
 **設定項目:**
 - 基本設定 (ユーザー名、URL、プロジェクトID)
 - 自動更新設定
 - 丸め時間タイプ
 - 休暇イベント設定
-- 無視可能イベント (別画面)
+- 無視可能イベント (別画面へのナビゲーション)
 - イベント重複優先度
 - スケジュール自動入力設定
 
 **特徴:**
 - 画面遷移ロジックを含む (無視可能イベント設定)
+- `SettingNavigationSection` + `SettingNavigationItem` でサブ画面への遷移
 - バッジで設定件数を表示
+
+**使用レイアウト:**
+- `SettingSection` - 通常の設定グループ
+- `SettingItem` - 個別設定項目
+- `SettingNavigationSection` + `SettingNavigationItem` - サブ画面遷移
 
 ---
 
 ### IgnorableEventsSettings.tsx
 
-無視可能イベントの専用設定ページ。
+無視可能イベントの専用設定画面。
+
+**場所:** `components/view/IgnorableEventsSettings.tsx`
 
 **機能:**
 - 戻るボタン
 - イベントパターンの管理
-- マッチモードの説明
+- マッチモードの詳細説明
+- パターンの追加・編集・削除
 
 **使用コンポーネント:**
-- `SettingPageLayout` - ページレイアウト
+- `SettingPageLayout` - ページ全体のレイアウト
 - `SettingContentSection` - コンテンツセクション
-- `IgnorableEventsEditor` - パターンエディタ
-
----
-
-### IgnorableEventsEditor.tsx
-
-イベントパターンの追加・編集・削除を行うエディタ。
-
-**機能:**
-- パターン入力
-- マッチモード選択 (部分一致/前方一致/後方一致)
-- 行の追加・削除
-
-**Props:**
-- `patterns`: `IgnorableEventPattern[]`
-- `onChange`: `(patterns: IgnorableEventPattern[]) => void`
+- `EventPatternEditor` (ui) - パターンエディタ
 
 ---
 
 ### JsonEditorView.tsx
 
-設定をJSON形式で編集するビュー。
+設定をJSON形式で直接編集するビュー。
+
+**場所:** `components/view/JsonEditorView.tsx`
 
 **機能:**
-- JSON形式での設定表示
-- Monaco Editorベース
+- JSON形式での設定表示・編集
+- Monaco Editorベースのシンタックスハイライト
 - 保存/キャンセルボタン
+- 不正なJSON形式の警告
 
 **使用コンポーネント:**
 - `SettingPageLayout` - ページレイアウト
 - `SettingContentSection` - コンテンツセクション
-- `Editor` - Monacoエディタ
+- `Editor` - Monacoエディタ (src/components/editor)
 
 ---
 
@@ -402,15 +517,59 @@ TimeTracker固有の設定。
    </SettingNavigationSection>
    ```
 
-### 新しい設定カテゴリの追加
+### 新しい設定カテゴリ(View)の追加
 
-1. `components/` に新しいコンポーネントを作成
-2. `SettingPage.tsx` の `CATEGORY_COMPONENTS` に追加
-3. タブリストに新しいタブを追加
+1. `components/view/` に新しいコンポーネントを作成
+   ```tsx
+   // components/view/NewSettings.tsx
+   import { SettingSection, SettingItem } from "../layout";
+   
+   export function NewSettings() {
+       return (
+           <>
+               <SettingSection title="タイトル">
+                   <SettingItem ... />
+               </SettingSection>
+           </>
+       );
+   }
+   ```
+
+2. `components/view/index.ts` でエクスポート
+   ```tsx
+   export { NewSettings } from "./NewSettings";
+   ```
+
+3. `SettingPage.tsx` の `CATEGORY_COMPONENTS` に追加
+   ```tsx
+   const CATEGORY_COMPONENTS = {
+       general: GeneralSettings,
+       appearance: AppearanceSettings,
+       timetracker: TimeTrackerSettings,
+       newCategory: NewSettings, // 追加
+   };
+   ```
+
+4. タブリストに新しいタブを追加
+   ```tsx
+   <Tab value="newCategory">新カテゴリ</Tab>
+   ```
+
+### 新しいUIコンポーネントの追加
+
+再利用可能なUIパーツを追加する場合:
+
+1. `components/ui/` に新しいコンポーネントを作成
+2. `components/ui/index.ts` でエクスポート
+3. 必要なviewから `import { NewComponent } from "../ui"` で使用
 
 ### レイアウトコンポーネントの拡張
 
-レイアウトコンポーネントを拡張する場合は、`layout/` ディレクトリに追加し、`layout/index.ts` でエクスポートしてください。
+レイアウトコンポーネントを拡張する場合:
+
+1. `components/layout/` に新しいコンポーネントを追加
+2. `components/layout/index.ts` でエクスポート
+3. viewコンポーネントから `import { NewLayout } from "../layout"` で使用
 
 ## 📚 関連ファイル
 

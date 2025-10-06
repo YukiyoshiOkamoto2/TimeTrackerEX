@@ -1,7 +1,7 @@
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { ChevronRight20Regular } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
-import { Card } from "../../../components/card";
+import { Card } from "../../../../components/card";
 
 const useStyles = makeStyles({
     navigationItem: {

@@ -16,18 +16,24 @@ export type TimeCompare = "small" | "large";
 /** 一致モード */
 export type MatchMode = "partial" | "prefix" | "suffix";
 
-/** 無視可能イベントのパターン */
-export interface IgnorableEventPattern {
+/** イベントパターン（共通） */
+export interface EventPattern {
     /** パターン文字列 */
     pattern: string;
     /** 一致モード */
     matchMode: MatchMode;
 }
 
+/** 無視可能イベントのパターン */
+export interface IgnorableEventPattern extends EventPattern {}
+
+/** 休暇イベントのパターン */
+export interface TimeOffEventPattern extends EventPattern {}
+
 /** 休暇イベント設定 */
 export interface TimeOffEventConfig {
-    /** イベント名のリスト */
-    nameOfEvent: string[];
+    /** イベント名のパターンリスト */
+    namePatterns: TimeOffEventPattern[];
     /** WorkItemID */
     workItemId: number;
 }
@@ -52,6 +58,8 @@ export interface ScheduleAutoInputInfo {
 
 /** 有給休暇の自動入力設定 */
 export interface PaidLeaveInputInfo {
+    /** 有効フラグ */
+    enabled?: boolean;
     /** WorkItemID */
     workItemId: number;
     /** 開始時間（HH:MM形式） */
@@ -68,8 +76,6 @@ export interface TimeTrackerSettings {
     baseUrl: string;
     /** プロジェクトID */
     baseProjectId: number;
-    /** 自動更新の有効 */
-    enableAutoUpdate?: boolean;
     /** 履歴からのスケジュール自動入力 */
     isHistoryAutoInput?: boolean;
     /** イベント時間の丸め方法 */

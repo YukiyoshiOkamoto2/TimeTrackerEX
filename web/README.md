@@ -77,9 +77,89 @@ web/
 └── vite.config.ts        # Vite設定
 ```
 
-## 次のステップ
+## 主要機能
 
-1. PythonのアルゴリズムをTypeScriptに移行
-2. テストケースの実装
-3. UIコンポーネントの追加
-4. 状態管理の実装（必要に応じて）
+### イベントパターンマッチング
+
+無視可能イベントと休暇イベントは、柔軟なパターンマッチング機能を提供します。
+
+**共通機能:**
+- **部分一致 (partial)**: イベント名に指定した文字列が含まれている場合にマッチ
+- **前方一致 (prefix)**: イベント名が指定した文字列で始まる場合にマッチ
+- **後方一致 (suffix)**: イベント名が指定した文字列で終わる場合にマッチ
+
+**実装:**
+- `EventPatternEditor`: 共通のパターン編集UIコンポーネント
+- `EventPattern`: パターンとマッチモードを持つ基底型
+- `IgnorableEventPattern`, `TimeOffEventPattern`: 各機能固有の型
+
+### 設定画面
+
+設定は専用の画面で管理され、メイン設定画面から各設定へナビゲーションできます。
+
+**画面構成:**
+- **TimeTrackerSettings**: メイン設定画面
+- **IgnorableEventsSettings**: 無視可能イベント設定
+- **TimeOffEventsSettings**: 休暇イベント設定
+
+各設定画面は登録数をバッジで表示し、直感的な操作が可能です。
+
+## データ構造の移行ガイド
+
+### 休暇イベント設定の変更 (v2.0)
+
+休暇イベント設定のデータ構造が変更されました。
+
+**旧データ構造:**
+```typescript
+{
+  timeOffEvent: {
+    nameOfEvent: ["有給", "休暇"],
+    workItemId: 12345
+  }
+}
+```
+
+**新データ構造:**
+```typescript
+{
+  timeOffEvent: {
+    namePatterns: [
+      { pattern: "有給", matchMode: "partial" },
+      { pattern: "休暇", matchMode: "prefix" }
+    ],
+    workItemId: 12345
+  }
+}
+```
+
+この変更により、無視可能イベントと同様の柔軟なパターンマッチングが可能になりました。
+
+## コンポーネント設計
+
+### 共通UIコンポーネント
+
+- **EventPatternEditor** (`src/pages/setting/components/ui/EventPatternEditor.tsx`)
+  - イベントパターンの追加・編集・削除を行う共通コンポーネント
+  - 無視可能イベントと休暇イベントの両方で使用
+  - プレースホルダーとボタンテキストをカスタマイズ可能
+
+### ディレクトリ構造
+
+設定画面のコンポーネントは3層構造で整理されています:
+
+- **layout**: レイアウトコンポーネント (`SettingItem`, `SettingNavigationItem` 等)
+- **ui**: 再利用可能なUI部品 (`EventPatternEditor`, `IgnorableEventsEditor` 等)
+- **view**: 設定画面ビュー (`TimeTrackerSettings`, `IgnorableEventsSettings`, `TimeOffEventsSettings` 等)
+
+## テスト
+
+```bash
+# 全てのテストを実行
+npm run test
+
+# UIモード付きのテスト
+npm run test:ui
+```
+
+現在、223個のテストケースが実装されています。

@@ -6,7 +6,7 @@ import {
     DocumentBulletList24Regular,
 } from "@fluentui/react-icons";
 import { Card } from "../../../components/card";
-import { ExpandableSection } from "../../../components/expandable-section";
+import { InteractiveCard } from "../../../components/interactive-card";
 import { PageHeader } from "./PageHeader";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "./index";
 
@@ -139,7 +139,7 @@ export function CompletionView({ schedules, itemCodeOptions, onBack, onBackToLin
                         <ClipboardTask24Regular className={styles.sectionIcon} />
                         <span>実行中の処理のログを表示</span>
                     </div>
-                    <ExpandableSection title="ログ詳細" defaultExpanded={false}>
+                    <InteractiveCard title="ログ詳細" variant="expandable" defaultExpanded={false}>
                         <div className={styles.logItem}>
                             <CheckmarkCircle24Regular className={styles.logIcon} />
                             <span>実行</span>
@@ -148,7 +148,7 @@ export function CompletionView({ schedules, itemCodeOptions, onBack, onBackToLin
                             <CheckmarkCircle24Regular className={styles.logIcon} />
                             <span>完了</span>
                         </div>
-                    </ExpandableSection>
+                    </InteractiveCard>
                 </div>
 
                 <div>

@@ -138,19 +138,11 @@ export const SETTINGS_DEFINITION = {
                 positive: true,
             } as NumberSettingValueInfo,
 
-            enableAutoUpdate: {
-                type: "boolean",
-                name: "自動更新の有効",
-                description: "アプリケーションの自動更新を有効にするかどうか",
-                required: false,
-                default: true,
-            } as BooleanSettingValueInfo,
-
             isHistoryAutoInput: {
                 type: "boolean",
                 name: "履歴からのスケジュール自動入力",
                 description: "過去の履歴から自動的にスケジュールを入力するかどうか",
-                required: false,
+                required: true,
                 default: true,
             } as BooleanSettingValueInfo,
 
@@ -172,15 +164,33 @@ export const SETTINGS_DEFINITION = {
             timeOffEvent: {
                 type: "object",
                 name: "休暇イベントの設定",
-                description: "休暇イベントとして扱うイベント名とWorkItemIDの設定",
+                description: "休暇イベントとして扱うイベント名のパターンとWorkItemIDの設定",
                 required: false,
                 children: {
-                    nameOfEvent: {
+                    namePatterns: {
                         type: "array",
-                        name: "イベント名",
-                        description: "休暇イベントとして扱うイベント名のリスト",
+                        name: "休暇イベント名パターン",
+                        description: "休暇イベントとして扱うイベント名のパターンとマッチモードのリスト",
                         required: true,
-                        itemType: "string",
+                        itemType: "object",
+                        itemSchema: {
+                            pattern: {
+                                type: "string",
+                                name: "パターン",
+                                description: "イベント名のパターン",
+                                required: true,
+                                minLength: 1,
+                            } as StringSettingValueInfo,
+                            matchMode: {
+                                type: "string",
+                                name: "一致モード",
+                                description:
+                                    "パターンの一致モード（partial: 部分一致, prefix: 前方一致, suffix: 後方一致）",
+                                required: true,
+                                default: "partial",
+                                literals: ["partial", "prefix", "suffix"],
+                            } as StringSettingValueInfo,
+                        },
                         minItems: 1,
                     } as ArraySettingValueInfo,
                     workItemId: {
@@ -295,6 +305,13 @@ export const SETTINGS_DEFINITION = {
                 description: "有給休暇を自動入力する設定",
                 required: false,
                 children: {
+                    enabled: {
+                        type: "boolean",
+                        name: "有効",
+                        description: "有給休暇の自動入力を有効にする",
+                        required: false,
+                        default: false,
+                    } as BooleanSettingValueInfo,
                     workItemId: {
                         type: "number",
                         name: "有給休暇のWorkItemID",

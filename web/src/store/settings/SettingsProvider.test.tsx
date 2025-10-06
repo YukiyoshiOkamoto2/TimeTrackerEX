@@ -33,6 +33,7 @@ describe("Settings", () => {
                 baseUrl: "https://timetracker.example.com",
                 baseProjectId: 123,
                 roundingTimeTypeOfEvent: "half",
+                isHistoryAutoInput: true,
                 eventDuplicatePriority: { timeCompare: "small" },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
@@ -130,6 +131,7 @@ describe("Settings", () => {
                 baseUrl: "https://timetracker.example.com",
                 baseProjectId: 123,
                 roundingTimeTypeOfEvent: "half",
+                isHistoryAutoInput: true,
                 eventDuplicatePriority: { timeCompare: "small" },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
@@ -159,11 +161,13 @@ describe("Settings", () => {
                 userName: "test@example.com",
                 baseUrl: "https://timetracker.example.com",
                 baseProjectId: 123,
-                enableAutoUpdate: true,
                 isHistoryAutoInput: false,
                 roundingTimeTypeOfEvent: "backward",
                 timeOffEvent: {
-                    nameOfEvent: ["休暇", "有給"],
+                    namePatterns: [
+                        { pattern: "休暇", matchMode: "partial" },
+                        { pattern: "有給", matchMode: "prefix" },
+                    ],
                     workItemId: 999,
                 },
                 eventDuplicatePriority: { timeCompare: "large" },
@@ -174,6 +178,7 @@ describe("Settings", () => {
                     workItemId: 456,
                 },
                 paidLeaveInputInfo: {
+                    enabled: true,
                     workItemId: 789,
                     startTime: "09:00",
                     endTime: "18:00",
@@ -181,8 +186,11 @@ describe("Settings", () => {
             };
 
             expect(fullSettings.userName).toBe("test@example.com");
-            expect(fullSettings.enableAutoUpdate).toBe(true);
-            expect(fullSettings.timeOffEvent?.nameOfEvent).toEqual(["休暇", "有給"]);
+            expect(fullSettings.isHistoryAutoInput).toBe(false);
+            expect(fullSettings.timeOffEvent?.namePatterns).toEqual([
+                { pattern: "休暇", matchMode: "partial" },
+                { pattern: "有給", matchMode: "prefix" },
+            ]);
             expect(fullSettings.paidLeaveInputInfo?.startTime).toBe("09:00");
         });
 
@@ -202,7 +210,7 @@ describe("Settings", () => {
             };
 
             expect(minimalSettings.userName).toBe("test@example.com");
-            expect(minimalSettings.enableAutoUpdate).toBeUndefined();
+            expect(minimalSettings.isHistoryAutoInput).toBeUndefined();
             expect(minimalSettings.timeOffEvent).toBeUndefined();
             expect(minimalSettings.paidLeaveInputInfo).toBeUndefined();
         });

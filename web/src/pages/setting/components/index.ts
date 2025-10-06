@@ -1,8 +1,15 @@
-import { IgnorableEventsEditor } from "../layout/IgnorableEventsEditor";
+// View Components
+export { AppearanceSettings } from "./view/AppearanceSettings";
+export { GeneralSettings } from "./view/GeneralSettings";
+export { IgnorableEventsSettings } from "./view/IgnorableEventsSettings";
+export { JsonEditorView } from "./view/JsonEditorView";
+export { TimeTrackerSettings } from "./view/TimeTrackerSettings";
 
-export { AppearanceSettings } from "./AppearanceSettings";
-export { GeneralSettings } from "./GeneralSettings";
-export { IgnorableEventsSettings } from "./IgnorableEventsSettings";
-export { JsonEditorView } from "./JsonEditorView";
-export { TimeTrackerSettings } from "./TimeTrackerSettings";
-export { IgnorableEventsEditor };
+// Layout Components
+export * from "./layout";
+
+// UI Components
+export * from "./ui";
+
+// Layout Components
+export * from "./layout";
