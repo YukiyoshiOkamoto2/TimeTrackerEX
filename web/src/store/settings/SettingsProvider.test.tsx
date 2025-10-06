@@ -7,6 +7,9 @@
 import {
     getDefaultTimeTrackerSettings,
     isTimeTrackerSettingsComplete,
+    parseAndFixTimeTrackerSettings,
+    parseTimeTrackerSettings,
+    stringifyTimeTrackerSettings,
     validateTimeTrackerSettings,
 } from "@/schema/settings/settingsDefinition";
 import { TimeTrackerSettings } from "@/types";
@@ -213,6 +216,348 @@ describe("Settings", () => {
             expect(minimalSettings.isHistoryAutoInput).toBeUndefined();
             expect(minimalSettings.timeOffEvent).toBeUndefined();
             expect(minimalSettings.paidLeaveInputInfo).toBeUndefined();
+        });
+    });
+
+    describe("paidLeaveInputInfo設定", () => {
+        it("有効な有給休暇設定を検証できる", () => {
+            const settingsWithPaidLeave: TimeTrackerSettings = {
+                userName: "test@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half",
+                eventDuplicatePriority: { timeCompare: "small" },
+                scheduleAutoInputInfo: {
+                    startEndType: "both",
+                    roundingTimeTypeOfSchedule: "half",
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
+                paidLeaveInputInfo: {
+                    enabled: true,
+                    workItemId: 789,
+                    startTime: "09:00",
+                    endTime: "18:00",
+                },
+            };
+
+            const result = validateTimeTrackerSettings(settingsWithPaidLeave);
+            expect(result.isError).toBe(false);
+            if (!result.isError) {
+                expect(result.value.paidLeaveInputInfo?.enabled).toBe(true);
+                expect(result.value.paidLeaveInputInfo?.workItemId).toBe(789);
+                expect(result.value.paidLeaveInputInfo?.startTime).toBe("09:00");
+                expect(result.value.paidLeaveInputInfo?.endTime).toBe("18:00");
+            }
+        });
+
+        it("無効化された有給休暇設定を検証できる", () => {
+            const settingsWithDisabledPaidLeave: TimeTrackerSettings = {
+                userName: "test@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half",
+                eventDuplicatePriority: { timeCompare: "small" },
+                scheduleAutoInputInfo: {
+                    startEndType: "both",
+                    roundingTimeTypeOfSchedule: "half",
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
+                paidLeaveInputInfo: {
+                    enabled: false,
+                    workItemId: 789,
+                    startTime: "09:00",
+                    endTime: "18:00",
+                },
+            };
+
+            const result = validateTimeTrackerSettings(settingsWithDisabledPaidLeave);
+            expect(result.isError).toBe(false);
+            if (!result.isError) {
+                expect(result.value.paidLeaveInputInfo?.enabled).toBe(false);
+            }
+        });
+
+        it("時刻フォーマットのバリデーション", () => {
+            const invalidTimeFormat: TimeTrackerSettings = {
+                userName: "test@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half",
+                eventDuplicatePriority: { timeCompare: "small" },
+                scheduleAutoInputInfo: {
+                    startEndType: "both",
+                    roundingTimeTypeOfSchedule: "half",
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
+                paidLeaveInputInfo: {
+                    enabled: true,
+                    workItemId: 789,
+                    startTime: "9:0", // 不正なフォーマット
+                    endTime: "18:00",
+                },
+            };
+
+            const result = validateTimeTrackerSettings(invalidTimeFormat);
+            expect(result.isError).toBe(true);
+        });
+
+        it("有給休暇設定が未設定でも完全性チェックに影響しない", () => {
+            const settingsWithoutPaidLeave: TimeTrackerSettings = {
+                userName: "test@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half",
+                eventDuplicatePriority: { timeCompare: "small" },
+                scheduleAutoInputInfo: {
+                    startEndType: "both",
+                    roundingTimeTypeOfSchedule: "half",
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
+            };
+
+            expect(isTimeTrackerSettingsComplete(settingsWithoutPaidLeave)).toBe(true);
+        });
+    });
+
+    describe("ignorableEvents設定", () => {
+        it("複数の無視パターンを設定できる", () => {
+            const settingsWithIgnorableEvents: TimeTrackerSettings = {
+                userName: "test@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half",
+                eventDuplicatePriority: { timeCompare: "small" },
+                scheduleAutoInputInfo: {
+                    startEndType: "both",
+                    roundingTimeTypeOfSchedule: "half",
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
+                ignorableEvents: [
+                    { pattern: "MTG", matchMode: "partial" },
+                    { pattern: "ミーティング", matchMode: "prefix" },
+                    { pattern: "打ち合わせ", matchMode: "suffix" },
+                ],
+            };
+
+            const result = validateTimeTrackerSettings(settingsWithIgnorableEvents);
+            expect(result.isError).toBe(false);
+            if (!result.isError) {
+                expect(result.value.ignorableEvents).toHaveLength(3);
+            }
+        });
+
+        it("空の無視パターン配列は無効", () => {
+            const settingsWithEmptyIgnorableEvents: TimeTrackerSettings = {
+                userName: "test@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half",
+                eventDuplicatePriority: { timeCompare: "small" },
+                scheduleAutoInputInfo: {
+                    startEndType: "both",
+                    roundingTimeTypeOfSchedule: "half",
+                    startEndTime: 30,
+                    workItemId: 456,
+                },
+                ignorableEvents: [],
+            };
+
+            const result = validateTimeTrackerSettings(settingsWithEmptyIgnorableEvents);
+            expect(result.isError).toBe(true);
+        });
+    });
+
+    describe("roundingTimeTypeOfEvent設定", () => {
+        it("すべての丸め方式を受け入れる", () => {
+            const roundingMethods: Array<TimeTrackerSettings["roundingTimeTypeOfEvent"]> = [
+                "backward",
+                "forward",
+                "round",
+                "half",
+                "stretch",
+                "nonduplicate",
+            ];
+
+            roundingMethods.forEach((method) => {
+                const settings: TimeTrackerSettings = {
+                    userName: "test@example.com",
+                    baseUrl: "https://timetracker.example.com",
+                    baseProjectId: 123,
+                    roundingTimeTypeOfEvent: method,
+                    eventDuplicatePriority: { timeCompare: "small" },
+                    scheduleAutoInputInfo: {
+                        startEndType: "both",
+                        roundingTimeTypeOfSchedule: "half",
+                        startEndTime: 30,
+                        workItemId: 456,
+                    },
+                };
+
+                const result = validateTimeTrackerSettings(settings);
+                expect(result.isError).toBe(false);
+            });
+        });
+    });
+
+    describe("scheduleAutoInputInfo設定", () => {
+        it("すべてのstartEndTypeを受け入れる", () => {
+            const startEndTypes: Array<"both" | "start" | "end" | "fill"> = ["both", "start", "end", "fill"];
+
+            startEndTypes.forEach((type) => {
+                const settings: TimeTrackerSettings = {
+                    userName: "test@example.com",
+                    baseUrl: "https://timetracker.example.com",
+                    baseProjectId: 123,
+                    roundingTimeTypeOfEvent: "half",
+                    eventDuplicatePriority: { timeCompare: "small" },
+                    scheduleAutoInputInfo: {
+                        startEndType: type,
+                        roundingTimeTypeOfSchedule: "half",
+                        startEndTime: 30,
+                        workItemId: 456,
+                    },
+                };
+
+                const result = validateTimeTrackerSettings(settings);
+                expect(result.isError).toBe(false);
+            });
+        });
+
+        it("startEndTimeの境界値テスト", () => {
+            // 最小値: 1
+            const minSettings: TimeTrackerSettings = {
+                userName: "test@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half",
+                eventDuplicatePriority: { timeCompare: "small" },
+                scheduleAutoInputInfo: {
+                    startEndType: "both",
+                    roundingTimeTypeOfSchedule: "half",
+                    startEndTime: 1,
+                    workItemId: 456,
+                },
+            };
+
+            const minResult = validateTimeTrackerSettings(minSettings);
+            expect(minResult.isError).toBe(false);
+
+            // 大きい値
+            const largeSettings: TimeTrackerSettings = {
+                userName: "test@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 123,
+                roundingTimeTypeOfEvent: "half",
+                eventDuplicatePriority: { timeCompare: "small" },
+                scheduleAutoInputInfo: {
+                    startEndType: "both",
+                    roundingTimeTypeOfSchedule: "half",
+                    startEndTime: 120,
+                    workItemId: 456,
+                },
+            };
+
+            const largeResult = validateTimeTrackerSettings(largeSettings);
+            expect(largeResult.isError).toBe(false);
+        });
+    });
+
+    describe("eventDuplicatePriority設定", () => {
+        it("両方のtimeCompare値を受け入れる", () => {
+            const compareTypes: Array<"small" | "large"> = ["small", "large"];
+
+            compareTypes.forEach((type) => {
+                const settings: TimeTrackerSettings = {
+                    userName: "test@example.com",
+                    baseUrl: "https://timetracker.example.com",
+                    baseProjectId: 123,
+                    roundingTimeTypeOfEvent: "half",
+                    eventDuplicatePriority: { timeCompare: type },
+                    scheduleAutoInputInfo: {
+                        startEndType: "both",
+                        roundingTimeTypeOfSchedule: "half",
+                        startEndTime: 30,
+                        workItemId: 456,
+                    },
+                };
+
+                const result = validateTimeTrackerSettings(settings);
+                expect(result.isError).toBe(false);
+            });
+        });
+    });
+
+    describe("統合テスト", () => {
+        it("すべてのオプション機能を有効化した設定が正しく動作する", () => {
+            const fullSettings: TimeTrackerSettings = {
+                userName: "full@example.com",
+                baseUrl: "https://timetracker.example.com",
+                baseProjectId: 999,
+                roundingTimeTypeOfEvent: "backward",
+                isHistoryAutoInput: false,
+                ignorableEvents: [
+                    { pattern: "ランチ", matchMode: "partial" },
+                    { pattern: "休憩", matchMode: "prefix" },
+                ],
+                eventDuplicatePriority: { timeCompare: "large" },
+                scheduleAutoInputInfo: {
+                    startEndType: "fill",
+                    roundingTimeTypeOfSchedule: "stretch",
+                    startEndTime: 60,
+                    workItemId: 111,
+                },
+                timeOffEvent: {
+                    namePatterns: [
+                        { pattern: "有給", matchMode: "partial" },
+                        { pattern: "休暇", matchMode: "prefix" },
+                    ],
+                    workItemId: 222,
+                },
+                paidLeaveInputInfo: {
+                    enabled: true,
+                    workItemId: 333,
+                    startTime: "08:30",
+                    endTime: "17:30",
+                },
+            };
+
+            const result = validateTimeTrackerSettings(fullSettings);
+            expect(result.isError).toBe(false);
+            expect(isTimeTrackerSettingsComplete(fullSettings)).toBe(true);
+
+            // JSON変換のラウンドトリップテスト
+            const jsonString = stringifyTimeTrackerSettings(fullSettings);
+            const parseResult = parseTimeTrackerSettings(jsonString);
+            expect(parseResult.isError).toBe(false);
+
+            if (!parseResult.isError) {
+                expect(parseResult.value).toEqual(fullSettings);
+            }
+        });
+
+        it("デフォルト値を使用した最小設定から完全設定への拡張", () => {
+            const minimal = {
+                userName: "min@example.com",
+                baseUrl: "https://min.example.com",
+                baseProjectId: 1,
+            };
+
+            // デフォルト値で補完
+            const fixedResult = parseAndFixTimeTrackerSettings(minimal);
+            expect(fixedResult.isError).toBe(false);
+
+            if (!fixedResult.isError) {
+                expect(fixedResult.value.userName).toBe("min@example.com");
+                expect(fixedResult.value.roundingTimeTypeOfEvent).toBeDefined();
+                expect(fixedResult.value.eventDuplicatePriority).toBeDefined();
+                expect(fixedResult.value.scheduleAutoInputInfo).toBeDefined();
+                expect(isTimeTrackerSettingsComplete(fixedResult.value)).toBe(true);
+            }
         });
     });
 });

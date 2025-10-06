@@ -7,6 +7,12 @@
 このモジュールは、TimeTracker設定の定義、バリデーション、JSON変換機能を提供します。
 Zodを使用せず、カスタムバリデーションロジックで実装されています。
 
+## モジュール構成
+
+- **`settingsDefinition.ts`**: 設定項目の定義、バリデーション、JSON変換機能
+- **`settingUtils.ts`**: 設定定義に関するユーティリティ関数（型ガード、ヘルパー）
+- **`settingsDefinition.test.ts`**: テストファイル
+
 ## 主な機能
 
 ### 1. 設定定義 (`SETTINGS_DEFINITION`)
@@ -27,19 +33,19 @@ Zodを使用せず、カスタムバリデーションロジックで実装さ�
 設定を検証します。
 
 ```typescript
-import { validateTimeTrackerSettings } from './settingsDefinition';
+import { validateTimeTrackerSettings } from "./settingsDefinition";
 
 const result = validateTimeTrackerSettings({
-  userName: "test",
-  baseUrl: "https://timetracker.example.com",
-  baseProjectId: 123,
-  // ... その他のフィールド
+    userName: "test",
+    baseUrl: "https://timetracker.example.com",
+    baseProjectId: 123,
+    // ... その他のフィールド
 });
 
 if (!result.isError) {
-  console.log("Valid settings:", result.value);
+    console.log("Valid settings:", result.value);
 } else {
-  console.error("Validation error:", result.errorMessage);
+    console.error("Validation error:", result.errorMessage);
 }
 ```
 
@@ -66,17 +72,17 @@ if (!result.isError) {
 JSON文字列をパースし、不正な項目はデフォルト値で補完します。
 
 ```typescript
-import { parseTimeTrackerSettings } from './settingsDefinition';
+import { parseTimeTrackerSettings } from "./settingsDefinition";
 
 const jsonString = '{"userName":"test","baseUrl":"https://example.com",...}';
 const result = parseTimeTrackerSettings(jsonString);
 
 if (!result.isError) {
-  console.log("Parsed settings:", result.value);
+    console.log("Parsed settings:", result.value);
 } else {
-  // エラーがあったが、デフォルト値で補完されている
-  console.log("Parsed with defaults:", result.value);
-  console.log("Errors:", result.errorMessage);
+    // エラーがあったが、デフォルト値で補完されている
+    console.log("Parsed with defaults:", result.value);
+    console.log("Errors:", result.errorMessage);
 }
 ```
 
@@ -85,12 +91,12 @@ if (!result.isError) {
 オブジェクトを検証し、不正な項目はデフォルト値で補完します。
 
 ```typescript
-import { parseAndFixTimeTrackerSettings } from './settingsDefinition';
+import { parseAndFixTimeTrackerSettings } from "./settingsDefinition";
 
 const result = parseAndFixTimeTrackerSettings({
-  userName: "test",
-  baseUrl: "invalid-url", // URLとして不正
-  baseProjectId: -1,      // 正の整数でない
+    userName: "test",
+    baseUrl: "invalid-url", // URLとして不正
+    baseProjectId: -1, // 正の整数でない
 });
 
 // 不正なフィールドはデフォルト値で置き換えられる
@@ -102,7 +108,7 @@ console.log(result.value);
 設定をJSON文字列に変換します。
 
 ```typescript
-import { stringifyTimeTrackerSettings } from './settingsDefinition';
+import { stringifyTimeTrackerSettings } from "./settingsDefinition";
 
 const json = stringifyTimeTrackerSettings(settings, true); // インデント付き
 console.log(json);
@@ -115,7 +121,7 @@ console.log(json);
 デフォルト値を持つ全フィールドを取得します。
 
 ```typescript
-import { getDefaultTimeTrackerSettings } from './settingsDefinition';
+import { getDefaultTimeTrackerSettings } from "./settingsDefinition";
 
 const defaults = getDefaultTimeTrackerSettings();
 console.log(defaults);
@@ -132,11 +138,11 @@ console.log(defaults);
 設定が完全（全必須フィールドが存在）かチェックします。
 
 ```typescript
-import { isTimeTrackerSettingsComplete } from './settingsDefinition';
+import { isTimeTrackerSettingsComplete } from "./settingsDefinition";
 
 if (isTimeTrackerSettingsComplete(settings)) {
-  // 型ガードとして機能: settings は TimeTrackerSettings 型
-  console.log("Settings are complete");
+    // 型ガードとして機能: settings は TimeTrackerSettings 型
+    console.log("Settings are complete");
 }
 ```
 
@@ -145,7 +151,7 @@ if (isTimeTrackerSettingsComplete(settings)) {
 設定のヘルプテキストを生成します。
 
 ```typescript
-import { generateHelpText } from './settingsDefinition';
+import { generateHelpText } from "./settingsDefinition";
 
 console.log(generateHelpText());
 ```
@@ -205,6 +211,78 @@ console.log(generateHelpText());
 - `StartEndType`: 開始終了タイプの型
 - など
 
+## ユーティリティ関数 (`settingUtils.ts`)
+
+設定定義を扱うためのヘルパー関数を提供します。
+
+### 型ガード関数
+
+各設定値の型を安全にチェックするための型ガード関数：
+
+```typescript
+import {
+    isStringSettingValueInfo,
+    isBooleanSettingValueInfo,
+    isNumberSettingValueInfo,
+    isArraySettingValueInfo,
+    isObjectSettingValueInfo,
+} from "./settingUtils";
+
+const def = SETTINGS_DEFINITION.timetracker.children.userName;
+
+if (isStringSettingValueInfo(def)) {
+    // defはStringSettingValueInfo型として扱える
+    console.log(def.pattern); // OK
+}
+```
+
+### `getObjectChildren(parent, key)`
+
+ネストされたオブジェクト型定義を安全に取得します。
+
+```typescript
+import { getObjectChildren } from "./settingUtils";
+import { SETTINGS_DEFINITION, type ObjectSettingValueInfo } from "./settingsDefinition";
+
+const ttDef = (SETTINGS_DEFINITION.timetracker as ObjectSettingValueInfo).children;
+
+// ネストされた定義を取得
+const scheduleAutoInputInfoDef = getObjectChildren(ttDef, "scheduleAutoInputInfo");
+// => { startEndType: {...}, roundingTimeTypeOfSchedule: {...}, ... }
+
+// 型安全にアクセス
+console.log(scheduleAutoInputInfoDef.startEndType.name); // OK
+```
+
+### `updateNestedObject(parentValue, field, value)`
+
+ネストされた設定オブジェクトを安全に更新します。
+
+```typescript
+import { updateNestedObject } from "./settingUtils";
+
+const handleNestedUpdate = (parent: string, field: string, value: string | number | boolean | undefined) => {
+    if (value === undefined) return;
+    const parentValue = settings[parent];
+
+    updateSettings({
+        ...settings,
+        [parent]: updateNestedObject(parentValue as Record<string, unknown> | undefined, field, value),
+    });
+};
+
+// 使用例
+handleNestedUpdate("scheduleAutoInputInfo", "startEndType", "both");
+// => scheduleAutoInputInfo: { ...existing, startEndType: "both" }
+```
+
+**利点:**
+
+- 型安全性: TypeScriptの型推論が正しく機能
+- コードの簡潔化: `as any`や手動の型チェックが不要
+- 再利用性: 複数のコンポーネントで共通のロジックを使用可能
+- nullチェック: 親オブジェクトがnullやundefinedでも安全に動作
+
 ## 設定の追加・変更
 
 新しい設定項目を追加する場合：
@@ -215,25 +293,25 @@ console.log(generateHelpText());
 ```typescript
 // 1. 型を追加
 export interface TimeTrackerSettings {
-  // ... 既存のフィールド
-  newField: string;
+    // ... 既存のフィールド
+    newField: string;
 }
 
 // 2. 定義を追加
 export const SETTINGS_DEFINITION = {
-  timetracker: {
-    // ...
-    children: {
-      // ...
-      newField: {
-        type: "string",
-        name: "新しいフィールド",
-        description: "説明",
-        required: false,
-        default: "デフォルト値",
-      } as StringSettingValueInfo,
+    timetracker: {
+        // ...
+        children: {
+            // ...
+            newField: {
+                type: "string",
+                name: "新しいフィールド",
+                description: "説明",
+                required: false,
+                default: "デフォルト値",
+            } as StringSettingValueInfo,
+        },
     },
-  },
 };
 ```
 

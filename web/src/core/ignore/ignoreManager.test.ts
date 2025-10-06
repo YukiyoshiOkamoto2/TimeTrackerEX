@@ -6,7 +6,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { resetStorage } from "../../lib/storage";
-import type { Event, Schedule } from "../../types";
+import type { Event, EventPattern, Schedule } from "../../types";
 import { IgnoreManager, getIgnoreManager, resetIgnoreManager } from "./ignoreManager";
 
 // LocalStorageのモック
@@ -314,6 +314,150 @@ describe("IgnoreManager", () => {
             items.push({ type: "event", name: "追加" });
 
             expect(ignoreManager.getSize()).toBe(1);
+        });
+    });
+
+    describe("EventPatternを使用した新形式", () => {
+        // テスト用のイベント作成ヘルパー
+        const createTestEvent = (name: string): Event => ({
+            uuid: `test-${name}`,
+            name,
+            organizer: "test@example.com",
+            location: "",
+            schedule: {
+                start: new Date("2025-10-04T10:00:00"),
+                end: new Date("2025-10-04T11:00:00"),
+            },
+            isCancelled: false,
+            isPrivate: false,
+        });
+
+        it("コンストラクタで無視パターンを受け取れる", () => {
+            const patterns: EventPattern[] = [
+                { pattern: "休憩", matchMode: "partial" },
+                { pattern: "MTG", matchMode: "prefix" },
+            ];
+
+            const manager = new IgnoreManager({ ignorableEvents: patterns });
+            const retrievedPatterns = manager.getIgnorableEventPatterns();
+
+            expect(retrievedPatterns).toHaveLength(2);
+            expect(retrievedPatterns[0].pattern).toBe("休憩");
+            expect(retrievedPatterns[0].matchMode).toBe("partial");
+        });
+
+        it("部分一致（partial）でイベントを無視できる", () => {
+            const patterns: EventPattern[] = [{ pattern: "休憩", matchMode: "partial" }];
+
+            const manager = new IgnoreManager({ ignorableEvents: patterns });
+
+            const event1 = createTestEvent("昼休憩");
+            const event2 = createTestEvent("休憩時間");
+            const event3 = createTestEvent("作業");
+
+            expect(manager.ignoreEvent(event1)).toBe(true);
+            expect(manager.ignoreEvent(event2)).toBe(true);
+            expect(manager.ignoreEvent(event3)).toBe(false);
+        });
+
+        it("前方一致（prefix）でイベントを無視できる", () => {
+            const patterns: EventPattern[] = [{ pattern: "MTG", matchMode: "prefix" }];
+
+            const manager = new IgnoreManager({ ignorableEvents: patterns });
+
+            const event1 = createTestEvent("MTG資料作成");
+            const event2 = createTestEvent("MTGの準備");
+            const event3 = createTestEvent("朝会MTG");
+
+            expect(manager.ignoreEvent(event1)).toBe(true);
+            expect(manager.ignoreEvent(event2)).toBe(true);
+            expect(manager.ignoreEvent(event3)).toBe(false);
+        });
+
+        it("後方一致（suffix）でイベントを無視できる", () => {
+            const patterns: EventPattern[] = [{ pattern: "会議", matchMode: "suffix" }];
+
+            const manager = new IgnoreManager({ ignorableEvents: patterns });
+
+            const event1 = createTestEvent("定例会議");
+            const event2 = createTestEvent("打ち合わせ会議");
+            const event3 = createTestEvent("会議の準備");
+
+            expect(manager.ignoreEvent(event1)).toBe(true);
+            expect(manager.ignoreEvent(event2)).toBe(true);
+            expect(manager.ignoreEvent(event3)).toBe(false);
+        });
+
+        it("複数のパターンを組み合わせられる", () => {
+            const patterns: EventPattern[] = [
+                { pattern: "休憩", matchMode: "partial" },
+                { pattern: "MTG", matchMode: "prefix" },
+                { pattern: "会議", matchMode: "suffix" },
+            ];
+
+            const manager = new IgnoreManager({ ignorableEvents: patterns });
+
+            const event1 = createTestEvent("昼休憩");
+            const event2 = createTestEvent("MTG準備");
+            const event3 = createTestEvent("定例会議");
+            const event4 = createTestEvent("作業");
+
+            expect(manager.ignoreEvent(event1)).toBe(true);
+            expect(manager.ignoreEvent(event2)).toBe(true);
+            expect(manager.ignoreEvent(event3)).toBe(true);
+            expect(manager.ignoreEvent(event4)).toBe(false);
+        });
+
+        it("setIgnorableEventPatternsでパターンを更新できる", () => {
+            const manager = new IgnoreManager();
+
+            const patterns: EventPattern[] = [{ pattern: "テスト", matchMode: "partial" }];
+            manager.setIgnorableEventPatterns(patterns);
+
+            const event = createTestEvent("テスト実行");
+            expect(manager.ignoreEvent(event)).toBe(true);
+        });
+
+        it("新形式のパターンがある場合は旧形式より優先される", () => {
+            const patterns: EventPattern[] = [{ pattern: "休憩", matchMode: "partial" }];
+
+            const manager = new IgnoreManager({ ignorableEvents: patterns });
+            // 旧形式も追加
+            manager.addIgnoreItem({ type: "event", name: "会議", matchType: "exact" });
+
+            const event1 = createTestEvent("昼休憩");
+            const event2 = createTestEvent("会議");
+
+            // 新形式のパターンでマッチ
+            expect(manager.ignoreEvent(event1)).toBe(true);
+            // 新形式のパターンが優先されるため、旧形式の設定は無視される
+            expect(manager.ignoreEvent(event2)).toBe(false);
+        });
+
+        it("新形式のパターンが空の場合は旧形式が使用される", () => {
+            const manager = new IgnoreManager();
+            manager.addIgnoreItem({ type: "event", name: "会議", matchType: "exact" });
+
+            const event1 = createTestEvent("会議");
+            const event2 = createTestEvent("定例会議");
+
+            expect(manager.ignoreEvent(event1)).toBe(true);
+            expect(manager.ignoreEvent(event2)).toBe(false);
+        });
+
+        it("空のパターンは無視される", () => {
+            const patterns: EventPattern[] = [
+                { pattern: "", matchMode: "partial" },
+                { pattern: "テスト", matchMode: "partial" },
+            ];
+
+            const manager = new IgnoreManager({ ignorableEvents: patterns });
+
+            const event1 = createTestEvent("テスト実行");
+            const event2 = createTestEvent("作業");
+
+            expect(manager.ignoreEvent(event1)).toBe(true);
+            expect(manager.ignoreEvent(event2)).toBe(false);
         });
     });
 });

@@ -111,11 +111,18 @@ export function SettingSection({
 
     const handleHeaderClick = (e: React.MouseEvent) => {
         if (!collapsible) return;
-        // スイッチクリック時はトグルしない
-        if ((e.target as HTMLElement).closest('button[role="switch"]')) {
+        // スイッチ領域のクリック時はトグルしない
+        const target = e.target as HTMLElement;
+        const switchElement = target.closest('[role="switch"]') || target.closest(".fui-Switch");
+        if (switchElement) {
             return;
         }
         setIsExpanded(!isExpanded);
+    };
+
+    const handleSwitchClick = (e: React.MouseEvent) => {
+        // ヘッダーのクリックイベントが発火しないようにする
+        e.stopPropagation();
     };
 
     const handleSwitchChange = (_ev: React.ChangeEvent<HTMLInputElement>, data: { checked: boolean }) => {
@@ -161,7 +168,9 @@ export function SettingSection({
                             {description && <div className={styles.collapsibleDescription}>{description}</div>}
                         </div>
                         <div className={styles.collapsibleRight}>
-                            <Switch checked={enabled} onChange={handleSwitchChange} />
+                            <div onClick={handleSwitchClick}>
+                                <Switch checked={enabled} onChange={handleSwitchChange} />
+                            </div>
                             <div className={styles.chevron}>
                                 {isExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}
                             </div>

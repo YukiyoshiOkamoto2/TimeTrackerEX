@@ -252,6 +252,50 @@ export class HistoryManager {
     getAll(): Map<string, string> {
         return new Map(this.history);
     }
+
+    /**
+     * すべての履歴エントリをキー(デコード済み)とItemIdの配列で取得する
+     *
+     * @returns キー(デコード済み)とItemIdのペアの配列
+     *
+     * @remarks
+     * - キーの`%3D`は`=`にデコードされて返却されます
+     */
+    getAllEntries(): Array<{ key: string; itemId: string }> {
+        const entries: Array<{ key: string; itemId: string }> = [];
+        for (const [key, itemId] of this.history.entries()) {
+            // %3D を = にデコード
+            const decodedKey = key.replace(/%3D/g, "=");
+            entries.push({ key: decodedKey, itemId });
+        }
+        return entries;
+    }
+
+    /**
+     * キー(デコード済み)を指定して履歴を削除する
+     *
+     * @param decodedKey - デコード済みのキー文字列
+     * @returns 削除に成功した場合はtrue、キーが存在しない場合はfalse
+     *
+     * @remarks
+     * - キーに`=`が含まれている場合は`%3D`にエンコードして検索します
+     * - 削除後、自動的にStorageに保存されます
+     */
+    deleteByKey(decodedKey: string): boolean {
+        // = を %3D にエンコード
+        const encodedKey = decodedKey.replace(/=/g, "%3D");
+
+        if (this.history.has(encodedKey)) {
+            const itemId = this.history.get(encodedKey);
+            this.history.delete(encodedKey);
+            logger.debug(`履歴を削除: ${decodedKey} (${encodedKey}) -> ${itemId}`);
+            this.dump();
+            return true;
+        }
+
+        logger.debug(`削除対象のキーが見つかりません: ${decodedKey} (${encodedKey})`);
+        return false;
+    }
 }
 
 /**

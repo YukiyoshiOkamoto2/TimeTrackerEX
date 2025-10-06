@@ -12,12 +12,12 @@
 
 import { getLogger } from "../../lib/logger";
 import { getStorage } from "../../lib/storage";
-import type { Event, Schedule } from "../../types";
+import type { Event, EventPattern, Schedule } from "../../types";
 
 const logger = getLogger("IgnoreManager");
 
 /**
- * 無視情報の型
+ * 無視情報の型（後方互換性のため保持）
  */
 export interface IgnoreInfo {
     /** 無視対象の種類 */
@@ -50,37 +50,47 @@ const DEFAULT_CONFIG: IgnoreConfig = {
  *
  * @example
  * ```typescript
- * const ignoreManager = new IgnoreManager()
- *
- * // 無視設定を読み込み
- * ignoreManager.load()
+ * // 設定から無視パターンを指定して初期化
+ * const ignorePatterns = [
+ *   { pattern: '休憩', matchMode: 'partial' },
+ *   { pattern: 'MTG', matchMode: 'prefix' }
+ * ]
+ * const ignoreManager = new IgnoreManager({ ignorableEvents: ignorePatterns })
  *
  * // イベントが無視対象かチェック
  * const shouldIgnore = ignoreManager.ignoreEvent(event)
  *
- * // 無視設定を追加
- * ignoreManager.addIgnoreItem({
+ * // 旧形式（後方互換性のため保持）
+ * const oldIgnoreManager = new IgnoreManager()
+ * oldIgnoreManager.load()
+ * oldIgnoreManager.addIgnoreItem({
  *   type: 'event',
  *   name: '休憩',
  *   matchType: 'contains'
  * })
- * ignoreManager.dump()
+ * oldIgnoreManager.dump()
  * ```
  */
 export class IgnoreManager {
     private ignoreItems: IgnoreInfo[];
+    private ignorableEventPatterns: EventPattern[];
     private config: IgnoreConfig;
     private storage = getStorage();
 
     /**
      * コンストラクタ
      *
-     * @param config - 設定（オプション）
+     * @param options - オプション
+     * @param options.config - 設定（オプション、後方互換性のため保持）
+     * @param options.ignorableEvents - 無視可能イベントパターン（推奨）
      */
-    constructor(config?: Partial<IgnoreConfig>) {
+    constructor(options?: { config?: Partial<IgnoreConfig>; ignorableEvents?: EventPattern[] }) {
         this.ignoreItems = [];
-        this.config = { ...DEFAULT_CONFIG, ...config };
-        logger.debug(`IgnoreManager初期化: storageKey=${this.config.storageKey}`);
+        this.ignorableEventPatterns = options?.ignorableEvents || [];
+        this.config = { ...DEFAULT_CONFIG, ...options?.config };
+        logger.debug(
+            `IgnoreManager初期化: storageKey=${this.config.storageKey}, patterns=${this.ignorableEventPatterns.length}件`,
+        );
     }
 
     /**
@@ -158,6 +168,12 @@ export class IgnoreManager {
      * ```
      */
     ignoreEvent(event: Event): boolean {
+        // EventPatternを使用した新形式のチェック（優先）
+        if (this.ignorableEventPatterns.length > 0) {
+            return this.ignorableEventPatterns.some((pattern) => this.matchPattern(pattern, event.name));
+        }
+
+        // 旧形式のチェック（後方互換性）
         const ignoreEvents = this.ignoreItems.filter((item) => item.type === "event");
         return ignoreEvents.some((item) => this.match(item, event.name));
     }
@@ -253,7 +269,7 @@ export class IgnoreManager {
     }
 
     /**
-     * 名前がパターンにマッチするかチェックする
+     * 名前がパターンにマッチするかチェックする（旧形式）
      *
      * @param item - 無視設定
      * @param name - チェック対象の名前
@@ -271,6 +287,52 @@ export class IgnoreManager {
         } else {
             return name.includes(item.name);
         }
+    }
+
+    /**
+     * 名前がEventPatternにマッチするかチェックする（新形式）
+     *
+     * @param pattern - イベントパターン
+     * @param name - チェック対象の名前
+     * @returns マッチする場合true
+     */
+    private matchPattern(pattern: EventPattern, name: string): boolean {
+        if (!pattern.pattern) {
+            return false;
+        }
+
+        switch (pattern.matchMode) {
+            case "partial":
+                // 部分一致
+                return name.includes(pattern.pattern);
+            case "prefix":
+                // 前方一致
+                return name.startsWith(pattern.pattern);
+            case "suffix":
+                // 後方一致
+                return name.endsWith(pattern.pattern);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * 無視可能イベントパターンを取得する
+     *
+     * @returns 無視可能イベントパターンの配列
+     */
+    getIgnorableEventPatterns(): EventPattern[] {
+        return [...this.ignorableEventPatterns];
+    }
+
+    /**
+     * 無視可能イベントパターンを設定する
+     *
+     * @param patterns - 無視可能イベントパターンの配列
+     */
+    setIgnorableEventPatterns(patterns: EventPattern[]): void {
+        this.ignorableEventPatterns = patterns;
+        logger.debug(`無視可能イベントパターンを設定: ${patterns.length}件`);
     }
 }
 

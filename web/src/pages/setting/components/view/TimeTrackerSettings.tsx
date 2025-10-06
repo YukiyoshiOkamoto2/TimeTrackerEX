@@ -1,6 +1,7 @@
 import { Badge, Button, Dropdown, Input, Option, Switch } from "@fluentui/react-components";
 import { useState } from "react";
-import { SETTINGS_DEFINITION } from "../../../../schema/settings/settingsDefinition";
+import { SETTINGS_DEFINITION, type ObjectSettingValueInfo } from "../../../../schema/settings/settingsDefinition";
+import { getObjectChildren, updateNestedObject } from "../../../../schema/settings/settingUtils";
 import { useSettings } from "../../../../store/settings/SettingsProvider";
 import type { EventPattern, TimeTrackerSettings as TimeTrackerSettingsType } from "../../../../types";
 import { SettingItem, SettingNavigationItem, SettingNavigationSection, SettingSection } from "../ui";
@@ -90,9 +91,13 @@ function TimeTrackerSettingsMain({
     const { settings, updateSettings } = useSettings();
 
     // timetracker設定を取得（階層構造に対応）
-    const tt = settings.timetracker as TimeTrackerSettingsType;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ttDef = SETTINGS_DEFINITION.timetracker.children as any;
+    const tt = settings.timetracker!;
+    const ttDef = (SETTINGS_DEFINITION.timetracker as ObjectSettingValueInfo).children;
+
+    // ネストされたオブジェクト型定義を取得
+    const eventDuplicatePriorityDef = getObjectChildren(ttDef, "eventDuplicatePriority");
+    const scheduleAutoInputInfoDef = getObjectChildren(ttDef, "scheduleAutoInputInfo");
+    const paidLeaveInputInfoDef = getObjectChildren(ttDef, "paidLeaveInputInfo");
 
     const handleUpdate = (field: string, value: string | number | boolean | undefined) => {
         if (value === undefined) return;
@@ -106,14 +111,15 @@ function TimeTrackerSettingsMain({
 
     const handleNestedUpdate = (parent: string, field: string, value: string | number | boolean | undefined) => {
         if (value === undefined) return;
+        const parentValue = tt?.[parent as keyof TimeTrackerSettingsType];
         updateSettings({
             timetracker: {
                 ...tt,
-                [parent]: {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ...(tt?.[parent as keyof TimeTrackerSettingsType] as any),
-                    [field]: value,
-                },
+                [parent]: updateNestedObject(
+                    parentValue as Record<string, unknown> | undefined,
+                    field,
+                    value as string | number | boolean,
+                ),
             },
         });
     };
@@ -193,8 +199,8 @@ function TimeTrackerSettingsMain({
                     }
                 />
                 <SettingItem
-                    label={ttDef.eventDuplicatePriority.children.timeCompare.name}
-                    description={ttDef.eventDuplicatePriority.children.timeCompare.description}
+                    label={eventDuplicatePriorityDef.timeCompare.name}
+                    description={eventDuplicatePriorityDef.timeCompare.description}
                     control={
                         <Dropdown
                             value={tt?.eventDuplicatePriority?.timeCompare || "small"}
@@ -217,8 +223,8 @@ function TimeTrackerSettingsMain({
                 required={true}
             >
                 <SettingItem
-                    label={ttDef.scheduleAutoInputInfo.children.startEndType.name}
-                    description={ttDef.scheduleAutoInputInfo.children.startEndType.description}
+                    label={scheduleAutoInputInfoDef.startEndType.name}
+                    description={scheduleAutoInputInfoDef.startEndType.description}
                     control={
                         <Dropdown
                             value={tt?.scheduleAutoInputInfo?.startEndType || "both"}
@@ -236,8 +242,8 @@ function TimeTrackerSettingsMain({
                     }
                 />
                 <SettingItem
-                    label={ttDef.scheduleAutoInputInfo.children.roundingTimeTypeOfSchedule.name}
-                    description={ttDef.scheduleAutoInputInfo.children.roundingTimeTypeOfSchedule.description}
+                    label={scheduleAutoInputInfoDef.roundingTimeTypeOfSchedule.name}
+                    description={scheduleAutoInputInfoDef.roundingTimeTypeOfSchedule.description}
                     control={
                         <Dropdown
                             value={tt?.scheduleAutoInputInfo?.roundingTimeTypeOfSchedule || "half"}
@@ -260,8 +266,8 @@ function TimeTrackerSettingsMain({
                     }
                 />
                 <SettingItem
-                    label={ttDef.scheduleAutoInputInfo.children.startEndTime.name}
-                    description={ttDef.scheduleAutoInputInfo.children.startEndTime.description}
+                    label={scheduleAutoInputInfoDef.startEndTime.name}
+                    description={scheduleAutoInputInfoDef.startEndTime.description}
                     control={
                         <Input
                             type="number"
@@ -274,8 +280,8 @@ function TimeTrackerSettingsMain({
                     }
                 />
                 <SettingItem
-                    label={ttDef.scheduleAutoInputInfo.children.workItemId.name}
-                    description={ttDef.scheduleAutoInputInfo.children.workItemId.description}
+                    label={scheduleAutoInputInfoDef.workItemId.name}
+                    description={scheduleAutoInputInfoDef.workItemId.description}
                     control={
                         <Input
                             type="number"
@@ -311,8 +317,8 @@ function TimeTrackerSettingsMain({
                 }}
             >
                 <SettingItem
-                    label={ttDef.paidLeaveInputInfo.children.workItemId.name}
-                    description={ttDef.paidLeaveInputInfo.children.workItemId.description}
+                    label={paidLeaveInputInfoDef.workItemId.name}
+                    description={paidLeaveInputInfoDef.workItemId.description}
                     control={
                         <Input
                             type="number"
@@ -327,8 +333,8 @@ function TimeTrackerSettingsMain({
                     }
                 />
                 <SettingItem
-                    label={ttDef.paidLeaveInputInfo.children.startTime.name}
-                    description={ttDef.paidLeaveInputInfo.children.startTime.description}
+                    label={paidLeaveInputInfoDef.startTime.name}
+                    description={paidLeaveInputInfoDef.startTime.description}
                     control={
                         <Input
                             type="time"
@@ -340,8 +346,8 @@ function TimeTrackerSettingsMain({
                     }
                 />
                 <SettingItem
-                    label={ttDef.paidLeaveInputInfo.children.endTime.name}
-                    description={ttDef.paidLeaveInputInfo.children.endTime.description}
+                    label={paidLeaveInputInfoDef.endTime.name}
+                    description={paidLeaveInputInfoDef.endTime.description}
                     control={
                         <Input
                             type="time"
