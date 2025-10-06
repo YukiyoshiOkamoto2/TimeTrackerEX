@@ -1,6 +1,5 @@
 import { Switch } from "@fluentui/react-components";
-import { SettingItem } from "./SettingItem";
-import { SettingSection } from "./SettingSection";
+import { SettingItem, SettingSection } from "../layout";
 
 export function GeneralSettings() {
     return (

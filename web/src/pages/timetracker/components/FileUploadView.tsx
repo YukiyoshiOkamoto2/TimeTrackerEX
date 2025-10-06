@@ -4,13 +4,14 @@ import { parseICS } from "@/core/ics";
 import { parsePDF } from "@/core/pdf";
 import { getLogger } from "@/lib";
 import { Event, EventUtils, Schedule, ScheduleUtils } from "@/types";
-import { Button, makeStyles, tokens } from "@fluentui/react-components";
+import { Button, makeStyles, Popover, PopoverSurface, PopoverTrigger, tokens } from "@fluentui/react-components";
 import {
     ArrowUpload20Regular,
     Calendar24Regular,
     Dismiss24Regular,
     Document24Regular,
     Link24Regular,
+    QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
 import { ActionButton } from "../../../components/action-button";
@@ -123,6 +124,19 @@ const useStyles = makeStyles({
         display: "flex",
         alignItems: "center",
         gap: tokens.spacingHorizontalXS,
+    },
+    helpIcon: {
+        color: tokens.colorNeutralForeground3,
+        cursor: "help",
+        "&:hover": {
+            color: tokens.colorBrandForeground1,
+        },
+    },
+    popoverContent: {
+        maxWidth: "300px",
+        padding: tokens.spacingVerticalM,
+        fontSize: tokens.fontSizeBase200,
+        lineHeight: tokens.lineHeightBase300,
     },
     hiddenInput: {
         display: "none",
@@ -483,7 +497,24 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                 <div className={styles.infoSectionContainer}>
                     {/* 処理対象日時 */}
                     <div className={styles.infoSection}>
-                        <div className={styles.infoSectionHeader}>📋 処理対象日時</div>
+                        <div className={styles.infoSectionHeader}>
+                            📋 処理対象日時
+                            <Popover withArrow positioning="above-start">
+                                <PopoverTrigger disableButtonEnhancement>
+                                    <QuestionCircle20Regular className={styles.helpIcon} />
+                                </PopoverTrigger>
+                                <PopoverSurface>
+                                    <div className={styles.popoverContent}>
+                                        <strong>処理対象日時について</strong>
+                                        <br />
+                                        <br />
+                                        勤怠PDFファイルから読み取った勤務実績の日時情報です。
+                                        <br />
+                                        チェックを外した項目は処理対象から除外されます。
+                                    </div>
+                                </PopoverSurface>
+                            </Popover>
+                        </div>
                         {scheduleTableItems.length > 0 && (
                             <CheckedTable items={scheduleTableItems} onItemUpdate={setScheduleTableItems} />
                         )}
@@ -491,7 +522,24 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
 
                     {/* スケジュール情報 */}
                     <div className={styles.infoSection}>
-                        <div className={styles.infoSectionHeader}>📅 スケジュール情報</div>
+                        <div className={styles.infoSectionHeader}>
+                            📅 スケジュール情報
+                            <Popover withArrow positioning="above-start">
+                                <PopoverTrigger disableButtonEnhancement>
+                                    <QuestionCircle20Regular className={styles.helpIcon} />
+                                </PopoverTrigger>
+                                <PopoverSurface>
+                                    <div className={styles.popoverContent}>
+                                        <strong>スケジュール情報について</strong>
+                                        <br />
+                                        <br />
+                                        ICSファイルから読み取ったカレンダーイベント情報です。
+                                        <br />
+                                        チェックを外した項目は紐づけ処理から除外されます。
+                                    </div>
+                                </PopoverSurface>
+                            </Popover>
+                        </div>
                         {eventTableItems.length > 0 && (
                             <CheckedTable items={eventTableItems} onItemUpdate={setEventTableItems} />
                         )}

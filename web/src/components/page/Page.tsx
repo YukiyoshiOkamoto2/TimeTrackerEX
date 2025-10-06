@@ -1,5 +1,5 @@
 import { makeStyles, Spinner, tokens } from "@fluentui/react-components";
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
 
 const useStyles = makeStyles({
     container: {

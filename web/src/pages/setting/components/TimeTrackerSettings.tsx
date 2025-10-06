@@ -1,10 +1,45 @@
-import { Button, Dropdown, Input, Option, Switch } from "@fluentui/react-components";
+import { Badge, Button, Dropdown, Input, Option, Switch } from "@fluentui/react-components";
+import { useState } from "react";
 import { SETTINGS_DEFINITION } from "../../../schema/settings/settingsDefinition";
 import { useSettings } from "../../../store/settings/SettingsProvider";
-import { SettingItem } from "./SettingItem";
-import { SettingSection } from "./SettingSection";
+import { SettingItem, SettingNavigationItem, SettingNavigationSection, SettingSection } from "../layout";
+import { IgnorableEventsSettings } from "./IgnorableEventsSettings";
 
 export function TimeTrackerSettings() {
+    const [showIgnorableEvents, setShowIgnorableEvents] = useState(false);
+
+    if (showIgnorableEvents) {
+        return <TimeTrackerSettingsWithIgnorableEvents onBack={() => setShowIgnorableEvents(false)} />;
+    }
+
+    return <TimeTrackerSettingsMain onNavigateToIgnorableEvents={() => setShowIgnorableEvents(true)} />;
+}
+
+interface TimeTrackerSettingsWithIgnorableEventsProps {
+    onBack: () => void;
+}
+
+function TimeTrackerSettingsWithIgnorableEvents({ onBack }: TimeTrackerSettingsWithIgnorableEventsProps) {
+    const { settings, updateSettings } = useSettings();
+    const tt = settings.timetracker as any;
+
+    const handleUpdate = (patterns: any) => {
+        updateSettings({
+            timetracker: {
+                ...tt,
+                ignorableEvents: patterns,
+            },
+        });
+    };
+
+    return <IgnorableEventsSettings patterns={tt?.ignorableEvents || []} onChange={handleUpdate} onBack={onBack} />;
+}
+
+interface TimeTrackerSettingsMainProps {
+    onNavigateToIgnorableEvents: () => void;
+}
+
+function TimeTrackerSettingsMain({ onNavigateToIgnorableEvents }: TimeTrackerSettingsMainProps) {
     const { settings, updateSettings } = useSettings();
 
     // timetracker設定を取得（階層構造に対応）
@@ -134,7 +169,10 @@ export function TimeTrackerSettings() {
                                 handleNestedUpdate(
                                     "timeOffEvent",
                                     "nameOfEvent",
-                                    data.value.split(",").map((s) => s.trim()),
+                                    data.value
+                                        .split(",")
+                                        .map((s) => s.trim())
+                                        .filter((s) => s.length > 0),
                                 )
                             }
                             placeholder="有給, 休暇"
@@ -158,6 +196,26 @@ export function TimeTrackerSettings() {
                     }
                 />
             </SettingSection>
+
+            <SettingNavigationSection
+                title={ttDef.ignorableEvents.name}
+                description={ttDef.ignorableEvents.description}
+            >
+                <SettingNavigationItem
+                    title={ttDef.ignorableEvents.name}
+                    description={ttDef.ignorableEvents.description}
+                    badge={
+                        tt?.ignorableEvents && tt.ignorableEvents.length > 0 ? (
+                            <Badge appearance="filled" color="informative">
+                                {tt.ignorableEvents.length}件
+                            </Badge>
+                        ) : (
+                            <span style={{ color: "var(--colorNeutralForeground3)" }}>0件</span>
+                        )
+                    }
+                    onClick={onNavigateToIgnorableEvents}
+                />
+            </SettingNavigationSection>
 
             <SettingSection
                 title={ttDef.eventDuplicatePriority.name}

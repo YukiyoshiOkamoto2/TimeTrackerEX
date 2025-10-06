@@ -75,11 +75,13 @@ export interface NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
 export interface ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
     type: "array";
     /** 配列要素の型 */
-    itemType: "string" | "number";
+    itemType: "string" | "number" | "object";
+    /** オブジェクト型の場合の子要素定義 */
+    itemSchema?: Record<string, SettingValueInfo>;
     /** 最小要素数 */
     minItems?: number;
     /** デフォルト値 */
-    default?: string[] | number[];
+    default?: string[] | number[] | Record<string, unknown>[];
 }
 
 /**
@@ -191,6 +193,32 @@ export const SETTINGS_DEFINITION = {
                     } as NumberSettingValueInfo,
                 },
             } as ObjectSettingValueInfo,
+
+            ignorableEvents: {
+                type: "array",
+                name: "無視可能イベント",
+                description: "処理から除外するイベント名のパターンとマッチモードのリスト",
+                required: false,
+                itemType: "object",
+                itemSchema: {
+                    pattern: {
+                        type: "string",
+                        name: "パターン",
+                        description: "イベント名のパターン",
+                        required: true,
+                        minLength: 1,
+                    } as StringSettingValueInfo,
+                    matchMode: {
+                        type: "string",
+                        name: "一致モード",
+                        description: "パターンの一致モード（partial: 部分一致, prefix: 前方一致, suffix: 後方一致）",
+                        required: true,
+                        default: "partial",
+                        literals: ["partial", "prefix", "suffix"],
+                    } as StringSettingValueInfo,
+                },
+                default: [],
+            } as ArraySettingValueInfo,
 
             eventDuplicatePriority: {
                 type: "object",
@@ -439,23 +467,69 @@ function validateValue(value: unknown, info: SettingValueInfo, fieldPath: string
             }
 
             // 配列要素の型チェック
+            const validatedArray: unknown[] = [];
             for (let i = 0; i < value.length; i++) {
                 const item = value[i];
+                const itemPath = `${fieldPath}[${i}]`;
+
                 if (info.itemType === "string" && typeof item !== "string") {
                     return {
                         isError: true,
-                        errorMessage: `${fieldPath} (${info.name})[${i}] は文字列である必要があります`,
+                        errorMessage: `${itemPath} は文字列である必要があります`,
                     };
                 }
                 if (info.itemType === "number" && typeof item !== "number") {
                     return {
                         isError: true,
-                        errorMessage: `${fieldPath} (${info.name})[${i}] は数値である必要があります`,
+                        errorMessage: `${itemPath} は数値である必要があります`,
                     };
+                }
+                if (info.itemType === "object") {
+                    if (typeof item !== "object" || item === null || Array.isArray(item)) {
+                        return {
+                            isError: true,
+                            errorMessage: `${itemPath} はオブジェクトである必要があります`,
+                        };
+                    }
+
+                    if (!info.itemSchema) {
+                        return {
+                            isError: true,
+                            errorMessage: `${fieldPath} のitemSchemaが定義されていません`,
+                        };
+                    }
+
+                    // オブジェクトの各プロパティを検証
+                    const obj = item as Record<string, unknown>;
+                    const validatedObj: Record<string, unknown> = {};
+                    const errors: string[] = [];
+
+                    for (const [key, propInfo] of Object.entries(info.itemSchema)) {
+                        const propValue = obj[key];
+                        const propPath = `${itemPath}.${key}`;
+                        const result = validateValue(propValue, propInfo, propPath);
+
+                        if (result.isError) {
+                            errors.push(result.errorMessage);
+                        } else {
+                            validatedObj[key] = result.value;
+                        }
+                    }
+
+                    if (errors.length > 0) {
+                        return {
+                            isError: true,
+                            errorMessage: errors.join("\n"),
+                        };
+                    }
+
+                    validatedArray.push(validatedObj);
+                } else {
+                    validatedArray.push(item);
                 }
             }
 
-            return { isError: false, value };
+            return { isError: false, value: validatedArray };
         }
 
         case "object": {

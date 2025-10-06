@@ -13,6 +13,17 @@ export type StartEndType = "both" | "start" | "end" | "fill";
 /** 時間比較タイプ */
 export type TimeCompare = "small" | "large";
 
+/** 一致モード */
+export type MatchMode = "partial" | "prefix" | "suffix";
+
+/** 無視可能イベントのパターン */
+export interface IgnorableEventPattern {
+    /** パターン文字列 */
+    pattern: string;
+    /** 一致モード */
+    matchMode: MatchMode;
+}
+
 /** 休暇イベント設定 */
 export interface TimeOffEventConfig {
     /** イベント名のリスト */
@@ -65,6 +76,8 @@ export interface TimeTrackerSettings {
     roundingTimeTypeOfEvent: RoundingMethod;
     /** 休暇イベントの設定 */
     timeOffEvent?: TimeOffEventConfig;
+    /** 無視可能イベント（パターンと一致モード） */
+    ignorableEvents?: IgnorableEventPattern[];
     /** イベント重複時の優先判定 */
     eventDuplicatePriority: EventDuplicatePriority;
     /** 勤務時間の自動入力設定 */
