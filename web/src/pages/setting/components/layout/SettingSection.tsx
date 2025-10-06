@@ -159,7 +159,6 @@ export function SettingSection({
                             </Badge>
                         )}
                     </div>
-                    {description && <div className={styles.sectionDescription}>{description}</div>}
                 </div>
                 <Card className={styles.collapsibleCard}>
                     <div className={styles.collapsibleHeader} onClick={handleHeaderClick}>

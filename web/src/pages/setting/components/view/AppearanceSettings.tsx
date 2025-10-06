@@ -1,46 +1,45 @@
 import { themeHandler } from "@/main";
-import { Dropdown, Option, Switch } from "@fluentui/react-components";
-import { SettingItem, SettingSection } from "../ui";
+import { APPEARANCE_SETTINGS_DEFINITION } from "@/schema/settings";
+import { useSettings } from "@/store/settings/SettingsProvider";
+import type { AppearanceSettings as AppearanceSettingsType } from "@/types/settings";
+import { AutoSettingItem, SettingSection } from "../ui";
+
+const appearanceDef = APPEARANCE_SETTINGS_DEFINITION.children!;
 
 export function AppearanceSettings() {
+    const { settings, updateSettings } = useSettings();
+    const appearance = settings.appearance as AppearanceSettingsType;
+
+    const handleUpdate = (field: string, value: string) => {
+        updateSettings({
+            appearance: {
+                ...appearance,
+                [field]: value,
+            },
+        });
+
+        // テーマ変更を適用
+        if (field === "theme") {
+            if (value === "dark") {
+                themeHandler.setTheme(true);
+            } else if (value === "light") {
+                themeHandler.setTheme(false);
+            } else {
+                // system の場合はシステム設定に従う
+                const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                themeHandler.setTheme(isDark);
+            }
+        }
+    };
+
     return (
         <>
             <SettingSection title="テーマ設定" description="アプリケーションの外観をカスタマイズ" required={false}>
-                <SettingItem
-                    label="テーマ"
-                    description="ライト、ダーク、またはシステム設定に従います"
-                    control={
-                        <Dropdown
-                            placeholder="テーマを選択"
-                            defaultValue="システム設定"
-                            onOptionSelect={(_, d) => {
-                                themeHandler.setTheme(d.optionText === "ダーク");
-                            }}
-                            style={{ minWidth: "200px" }}
-                        >
-                            <Option>ライト</Option>
-                            <Option>ダーク</Option>
-                            <Option>システム設定</Option>
-                        </Dropdown>
-                    }
-                />
-                <SettingItem
-                    label="アクセントカラー"
-                    description="システムのアクセントカラーを使用する"
-                    control={<Switch defaultChecked />}
-                />
-            </SettingSection>
-
-            <SettingSection title="表示設定" description="UI要素の表示に関する設定" required={false}>
-                <SettingItem
-                    label="アニメーションを有効にする"
-                    description="画面遷移時のアニメーション効果を表示します"
-                    control={<Switch defaultChecked />}
-                />
-                <SettingItem
-                    label="コンパクトモード"
-                    description="UIを密度高く表示して画面スペースを節約します"
-                    control={<Switch />}
+                <AutoSettingItem
+                    definition={appearanceDef.theme}
+                    value={appearance?.theme || "system"}
+                    onChange={(value: unknown) => handleUpdate("theme", value as string)}
+                    minWidth="200px"
                 />
             </SettingSection>
         </>

@@ -16,6 +16,9 @@ export type TimeCompare = "small" | "large";
 /** 一致モード */
 export type MatchMode = "partial" | "prefix" | "suffix";
 
+/** テーマモード */
+export type ThemeMode = "light" | "dark" | "system";
+
 /** イベントパターン（共通） */
 export interface EventPattern {
     /** パターン文字列 */
@@ -92,10 +95,18 @@ export interface TimeTrackerSettings {
     paidLeaveInputInfo?: PaidLeaveInputInfo;
 }
 
+/** 外観設定 */
+export interface AppearanceSettings {
+    /** テーマモード */
+    theme: ThemeMode;
+}
+
 /** アプリケーション設定 */
 export interface AppSettings {
     /** TimeTracker設定 */
     timetracker: TimeTrackerSettings;
+    /** 外観設定 */
+    appearance: AppearanceSettings;
 }
 
 // Type aliases for backward compatibility

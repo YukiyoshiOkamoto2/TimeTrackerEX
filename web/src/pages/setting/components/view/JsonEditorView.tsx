@@ -1,7 +1,6 @@
 import { Editor } from "@/components/editor";
-import { Button, makeStyles, tokens } from "@fluentui/react-components";
-import { SaveRegular } from "@fluentui/react-icons";
-import { SettingContentSection, SettingPageLayout } from "../layout";
+import { makeStyles, tokens } from "@fluentui/react-components";
+import { SettingPageLayout, SettingSection } from "../layout";
 
 const useStyles = makeStyles({
     editor: {
@@ -53,20 +52,9 @@ export function JsonEditorView({ onBack }: JsonEditorViewProps) {
             title="設定のJSON表示"
             subtitle="設定をJSON形式で直接編集できます。不正なJSON形式で保存するとアプリケーションが正常に動作しない可能性があります。"
         >
-            <SettingContentSection>
-                <div className={styles.editor}>
-                    <Editor language="json" value={mockSettings} />
-                </div>
-
-                <div className={styles.actions}>
-                    <Button appearance="secondary" onClick={onBack}>
-                        キャンセル
-                    </Button>
-                    <Button appearance="primary" icon={<SaveRegular />}>
-                        保存
-                    </Button>
-                </div>
-            </SettingContentSection>
+            <SettingSection title="JSON設定">
+                <Editor className={styles.editor} value={mockSettings} language="json" />
+            </SettingSection>
         </SettingPageLayout>
     );
 }

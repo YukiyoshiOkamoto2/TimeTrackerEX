@@ -6,22 +6,20 @@
  */
 
 import { appMessageDialogRef } from "@/components/message-dialog";
+import { getLogger } from "@/lib";
+import { getFieldDefaultValue, TIMETRACKER_SETTINGS_DEFINITION, updateErrorValue } from "@/schema";
+import { APPEARANCE_SETTINGS_DEFINITION } from "@/schema/settings/appearanceDefinition";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { getStorage } from "../../lib/storage";
-import {
-    getDefaultTimeTrackerSettings,
-    isTimeTrackerSettingsComplete,
-    parseAndFixTimeTrackerSettings,
-    parseTimeTrackerSettings,
-    stringifyTimeTrackerSettings,
-    validateTimeTrackerSettings,
-} from "../../schema/settings/settingsDefinition";
-import type { AppSettings } from "../../types";
+import type { AppearanceSettings, AppSettings, TimeTrackerSettings } from "../../types";
+import { a } from "vitest/dist/suite-dWqIFb_-.js";
+
+const logger = getLogger("SettingsProvider");
 
 /**
  * ローカルストレージのキー
  */
-const STORAGE_KEY = "time-tracker-settings";
+const STORAGE_KEY = "settings";
 
 /**
  * ストレージインスタンス
@@ -34,13 +32,6 @@ const storage = getStorage();
 interface SettingsContextType {
     /** 設定の状態 */
     settings: Partial<AppSettings>;
-    /** 設定が完全かどうか */
-    isComplete: boolean;
-    /** 検証エラーのリスト */
-    validationErrors: string[];
-    /** 設定をロード中かどうか */
-    isLoading: boolean;
-
     /** 設定を更新 */
     updateSettings: (newSettings: Partial<AppSettings>) => void;
     /** 設定をリセット */
@@ -55,42 +46,60 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 /**
  * デフォルト設定を取得
  */
-function getDefaultAppSettings(): Partial<AppSettings> {
+function getDefaultAppSettings(): AppSettings {
     return {
-        timetracker: getDefaultTimeTrackerSettings() as any,
+        appearance: getFieldDefaultValue(APPEARANCE_SETTINGS_DEFINITION) as AppearanceSettings,
+        timetracker: getFieldDefaultValue(TIMETRACKER_SETTINGS_DEFINITION) as TimeTrackerSettings,
     };
+}
+
+function parse(json: string): AppSettings | undefined {
+    let obj;
+    try {
+        obj = JSON.parse(json);
+    } catch (e) {
+        logger.error(e instanceof Error ? e.message : "Faild parse json.");
+    }
+    return obj;
 }
 
 /**
  * 設定をローカルストレージから読み込み
  */
-function loadSettings(): Partial<AppSettings> {
+function loadSettings(): AppSettings {
     try {
         const stored = storage.getValue<string>(STORAGE_KEY);
         if (!stored) {
-            return getDefaultAppSettings();
-        }
-
-        // JSON文字列をパース
-        const parseResult = parseTimeTrackerSettings(stored);
-        if (parseResult.isError) {
-            console.warn("Failed to parse settings:", parseResult.errorMessage);
             appMessageDialogRef.showMessageAsync(
                 "設定読み込みエラー",
-                `設定の読み込みに失敗しました。デフォルト設定を使用します。\n\nエラー: ${parseResult.errorMessage}`,
+                "設定のが存在しません。デフォルト設定を使用します。",
                 "WARN",
             );
             return getDefaultAppSettings();
         }
 
-        // バリデーションと修正
-        const fixResult = parseAndFixTimeTrackerSettings(parseResult.value as any);
-        if (fixResult.isError) {
-            console.warn("Settings validation failed:", fixResult.errorMessage);
+        const obj = parse(stored);
+        if (!obj) {
+            appMessageDialogRef.showMessageAsync(
+                "設定読み込みエラー",
+                "設定の読み込みに失敗しました。デフォルト設定を使用します。",
+                "WARN",
+            );
+            return getDefaultAppSettings();
         }
 
+        const appearance = updateErrorValue(
+            obj.appearance as any,
+            APPEARANCE_SETTINGS_DEFINITION,
+        ) as unknown as AppearanceSettings;
+        const timetracker = updateErrorValue(
+            obj.timetracker as any,
+            TIMETRACKER_SETTINGS_DEFINITION,
+        ) as unknown as TimeTrackerSettings;
+
         return {
-            timetracker: parseResult.value,
+            appearance,
+            timetracker,
         };
     } catch (error) {
         console.error("Failed to load settings from localStorage:", error);
@@ -113,7 +122,7 @@ function saveSettings(settings: Partial<AppSettings>): void {
         }
 
         // JSON文字列に変換
-        const jsonString = stringifyTimeTrackerSettings(settings.timetracker, true);
+        const jsonString = JSON.stringify(settings);
         const success = storage.setValue(STORAGE_KEY, jsonString);
         if (!success) {
             throw new Error("設定の保存に失敗しました");
@@ -130,34 +139,6 @@ function saveSettings(settings: Partial<AppSettings>): void {
 }
 
 /**
- * 設定のバリデーションとエラー修正
- * バリデーションエラーがある項目だけデフォルト値に置き換えます
- *
- * @param settings - 検証する設定
- * @returns 修正された設定
- */
-function validateAndCorrectSettings(settings: Partial<AppSettings>): Partial<AppSettings> {
-    if (!settings.timetracker) {
-        return getDefaultAppSettings();
-    }
-
-    // バリデーションと自動修正
-    const fixResult = parseAndFixTimeTrackerSettings(settings.timetracker as any);
-
-    if (fixResult.isError) {
-        console.warn(`ローカルストレージの設定に無効な項目があります: ${fixResult.errorMessage}`);
-        appMessageDialogRef.showMessageAsync(
-            "設定検証エラー",
-            `設定の検証に失敗しました。デフォルト設定を使用します。\n\nエラー: ${fixResult.errorMessage}`,
-            "WARN",
-        );
-        return getDefaultAppSettings();
-    }
-
-    return settings;
-}
-
-/**
  * 設定Providerのプロパティ
  */
 interface SettingsProviderProps {
@@ -168,41 +149,21 @@ interface SettingsProviderProps {
  * 設定Provider
  */
 export function SettingsProvider({ children }: SettingsProviderProps) {
-    const [settings, setSettings] = useState<Partial<AppSettings>>(getDefaultAppSettings());
-    const [isLoading, setIsLoading] = useState(true);
+    const [settings, setSettings] = useState<AppSettings>(getDefaultAppSettings());
 
     // 初回ロード
     useEffect(() => {
         const loaded = loadSettings();
-        const validated = validateAndCorrectSettings(loaded);
-        setSettings(validated);
-        setIsLoading(false);
+        setSettings(loaded);
     }, []);
 
     // 設定が変更されたら保存
     useEffect(() => {
-        if (!isLoading) {
-            saveSettings(settings);
-        }
-    }, [settings, isLoading]);
-
-    // 検証
-    const validationResult = settings.timetracker
-        ? validateTimeTrackerSettings(settings.timetracker)
-        : { isError: true, errorMessage: "timetracker設定が存在しません" };
-    const validationErrors = validationResult.isError ? [validationResult.errorMessage] : [];
-    const isComplete = settings.timetracker ? isTimeTrackerSettingsComplete(settings.timetracker) : false;
+        saveSettings(settings);
+    }, [settings]);
 
     // 設定の更新
     const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
-        // バリデーション
-        if (newSettings.timetracker) {
-            const validationResult = validateTimeTrackerSettings(newSettings.timetracker);
-            if (validationResult.isError) {
-                throw new Error(`設定の更新に失敗しました: ${validationResult.errorMessage}`);
-            }
-        }
-
         setSettings((prev) => ({ ...prev, ...newSettings }));
     }, []);
 
@@ -213,9 +174,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
     const value: SettingsContextType = {
         settings,
-        isComplete,
-        validationErrors,
-        isLoading,
         updateSettings,
         resetSettings,
     };
@@ -234,19 +192,4 @@ export function useSettings(): SettingsContextType {
     }
 
     return context;
-}
-
-/**
- * 設定が完全な場合のみ取得するカスタムフック
- *
- * @throws {Error} 設定が不完全な場合
- */
-export function useCompleteSettings(): AppSettings {
-    const { settings, isComplete, validationErrors } = useSettings();
-
-    if (!isComplete) {
-        throw new Error(`設定が不完全です: ${validationErrors.join(", ")}`);
-    }
-
-    return settings as AppSettings;
 }

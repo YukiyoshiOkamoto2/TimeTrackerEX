@@ -1,16 +1,9 @@
-import { Button, makeStyles, tokens } from "@fluentui/react-components";
-import { ArrowLeft20Regular } from "@fluentui/react-icons";
+import { makeStyles, tokens } from "@fluentui/react-components";
 import { IgnorableEventPattern } from "../../../../types/settings";
-import { SettingContentSection, SettingPageLayout } from "../layout";
+import { SettingPageLayout, SettingSection } from "../layout";
 import { EventPatternEditor } from "../ui";
 
 const useStyles = makeStyles({
-    header: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalM,
-        marginBottom: tokens.spacingVerticalL,
-    },
     helpText: {
         fontSize: tokens.fontSizeBase200,
         color: tokens.colorNeutralForeground3,
@@ -32,20 +25,9 @@ export function IgnorableEventsSettings({ patterns, onChange, onBack }: Ignorabl
         <SettingPageLayout
             title="無視可能イベント設定"
             subtitle="処理から除外するイベント名のパターンと一致モードを設定します。"
+            onBack={onBack}
         >
-            <div className={styles.header}>
-                <Button
-                    appearance="subtle"
-                    icon={<ArrowLeft20Regular />}
-                    onClick={onBack}
-                    size="large"
-                    aria-label="戻る"
-                >
-                    戻る
-                </Button>
-            </div>
-
-            <SettingContentSection title="イベントパターン">
+            <SettingSection title="イベントパターン">
                 <div className={styles.helpText}>
                     <strong>一致モードについて:</strong>
                     <br />• <strong>部分一致</strong>: パターンがイベント名のどこかに含まれていればマッチ
@@ -61,10 +43,10 @@ export function IgnorableEventsSettings({ patterns, onChange, onBack }: Ignorabl
                 <EventPatternEditor
                     patterns={patterns}
                     onChange={onChange}
-                    placeholder="パターン（例: MTG, 個人作業）"
+                    placeholder="パターン(例: MTG, 個人作業)"
                     addButtonText="パターンを追加"
                 />
-            </SettingContentSection>
+            </SettingSection>
         </SettingPageLayout>
     );
 }

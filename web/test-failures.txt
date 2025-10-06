@@ -1,0 +1,1208 @@
+﻿
+> time-tracker-ex-web@0.0.1 test
+> vitest --run --reporter=verbose
+
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mC:/dev/repos/TimeTrackerEX/web[39m
+
+[90mstdout[2m | src/lib/storage.test.ts[2m > [22m[2mStorage[2m > [22m[2mLocalStorageStorage[2m > [22m[2mclear[2m > [22m[2m縺吶∋縺ｦ縺ｮ蛟､繧偵け繝ｪ繧｢縺ｧ縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] 繧ｹ繝医Ξ繝ｼ繧ｸ繧偵け繝ｪ繧｢ : Storage
+
+[90mstdout[2m | src/lib/storage.test.ts[2m > [22m[2mStorage[2m > [22m[2mLocalStorageStorage[2m > [22m[2mprefix[2m > [22m[2m繝励Ξ繝輔ぅ繝・け繧ｹ莉倥″繧ｹ繝医Ξ繝ｼ繧ｸ縺ｮ繧ｯ繝ｪ繧｢縺ｯ莉悶↓蠖ｱ髻ｿ縺励↑縺・[22m[39m
+2025/10/06 18:57:13 [INFO] 繧ｹ繝医Ξ繝ｼ繧ｸ繧偵け繝ｪ繧｢ : Storage
+
+[90mstdout[2m | src/lib/storage.test.ts[2m > [22m[2mStorage[2m > [22m[2mgetStorage[2m > [22m[2mLocalStorageStorage繧定ｿ斐☆[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/lib/storage.test.ts[2m > [22m[2mStorage[2m > [22m[2mgetStorage[2m > [22m[2m繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ縺ｨ縺励※蜍穂ｽ懊☆繧・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/lib/storage.test.ts[2m > [22m[2mStorage[2m > [22m[2mgetStorage[2m > [22m[2m繝・・繧ｿ縺悟・譛峨＆繧後ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/lib/storage.test.ts[2m > [22m[2mStorage[2m > [22m[2mgetStorage[2m > [22m[2mresetStorage蠕後・譁ｰ縺励＞繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ縺御ｽ懈・縺輔ｌ繧・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetValue 縺ｨ setValue[2m > [22m譁・ｭ怜・繧剃ｿ晏ｭ倥・蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetValue 縺ｨ setValue[2m > [22m謨ｰ蛟､繧剃ｿ晏ｭ倥・蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetValue 縺ｨ setValue[2m > [22m逵溷⊃蛟､繧剃ｿ晏ｭ倥・蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetValue 縺ｨ setValue[2m > [22m繧ｪ繝悶ず繧ｧ繧ｯ繝医ｒ菫晏ｭ倥・蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetValue 縺ｨ setValue[2m > [22m驟榊・繧剃ｿ晏ｭ倥・蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetValue 縺ｨ setValue[2m > [22mnull繧剃ｿ晏ｭ倥・蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetValue 縺ｨ setValue[2m > [22m蟄伜惠縺励↑縺・く繝ｼ縺ｯnull繧定ｿ斐☆
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetValue 縺ｨ setValue[2m > [22m蛟､繧剃ｸ頑嶌縺阪〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mremoveValue[2m > [22m蛟､繧貞炎髯､縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mremoveValue[2m > [22m蟄伜惠縺励↑縺・く繝ｼ繧貞炎髯､縺励※繧ゅお繝ｩ繝ｼ縺ｫ縺ｪ繧峨↑縺・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mhasKey[2m > [22m蟄伜惠縺吶ｋ繧ｭ繝ｼ縺ｯtrue繧定ｿ斐☆
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mhasKey[2m > [22m蟄伜惠縺励↑縺・く繝ｼ縺ｯfalse繧定ｿ斐☆
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mhasKey[2m > [22m蜑企勁縺励◆繧ｭ繝ｼ縺ｯfalse繧定ｿ斐☆
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetAllKeys[2m > [22m縺吶∋縺ｦ縺ｮ繧ｭ繝ｼ繧貞叙蠕励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mgetAllKeys[2m > [22m遨ｺ縺ｮ蝣ｴ蜷医・遨ｺ驟榊・繧定ｿ斐☆
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mclear[2m > [22m縺吶∋縺ｦ縺ｮ蛟､繧偵け繝ｪ繧｢縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mprefix[2m > [22m繝励Ξ繝輔ぅ繝・け繧ｹ莉倥″縺ｧ繧ｭ繝ｼ繧剃ｿ晏ｭ倥〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mprefix[2m > [22m繝励Ξ繝輔ぅ繝・け繧ｹ縺斐→縺ｫ蜷榊燕遨ｺ髢薙′蛻・屬縺輔ｌ繧・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mprefix[2m > [22m繝励Ξ繝輔ぅ繝・け繧ｹ莉倥″繧ｹ繝医Ξ繝ｼ繧ｸ縺ｮ繧ｯ繝ｪ繧｢縺ｯ莉悶↓蠖ｱ髻ｿ縺励↑縺・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mLocalStorageStorage[2m > [22mprefix[2m > [22m繝励Ξ繝輔ぅ繝・け繧ｹ莉倥″繧ｹ繝医Ξ繝ｼ繧ｸ縺ｮgetAllKeys縺ｯ繝励Ξ繝輔ぅ繝・け繧ｹ縺ｪ縺励〒霑斐☆
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mMemoryStorage[2m > [22m蛟､繧剃ｿ晏ｭ倥・蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mMemoryStorage[2m > [22m隍・尅縺ｪ繧ｪ繝悶ず繧ｧ繧ｯ繝医ｒ菫晏ｭ倥・蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mMemoryStorage[2m > [22m蛟､繧貞炎髯､縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mMemoryStorage[2m > [22mhasKey縺梧ｭ｣縺励￥蜍穂ｽ懊☆繧・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mMemoryStorage[2m > [22mgetAllKeys縺梧ｭ｣縺励￥蜍穂ｽ懊☆繧・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mMemoryStorage[2m > [22mclear縺梧ｭ｣縺励￥蜍穂ｽ懊☆繧・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mMemoryStorage[2m > [22m繝励Ξ繝輔ぅ繝・け繧ｹ縺梧ｭ｣縺励￥蜍穂ｽ懊☆繧・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mgetStorage[2m > [22mLocalStorageStorage繧定ｿ斐☆
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mgetStorage[2m > [22m繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ縺ｨ縺励※蜍穂ｽ懊☆繧・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mgetStorage[2m > [22m繝・・繧ｿ縺悟・譛峨＆繧後ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22mgetStorage[2m > [22mresetStorage蠕後・譁ｰ縺励＞繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ縺御ｽ懈・縺輔ｌ繧・ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22m蝙句ｮ牙・諤ｧ[2m > [22m蝙九ヱ繝ｩ繝｡繝ｼ繧ｿ縺ｧ蝙句ｮ牙・縺ｫ蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/lib/storage.test.ts[2m > [22mStorage[2m > [22m蝙句ｮ牙・諤ｧ[2m > [22m驟榊・縺ｮ蝙九ヱ繝ｩ繝｡繝ｼ繧ｿ縺梧ｩ溯・縺吶ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mload 縺ｨ dump[2m > [22m遨ｺ縺ｮ螻･豁ｴ繧貞・譛溷喧縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mload 縺ｨ dump[2m > [22m螻･豁ｴ繧剃ｿ晏ｭ倥＠縺ｦ隱ｭ縺ｿ霎ｼ繧√ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mload 縺ｨ dump[2m > [22m隍・焚縺ｮ螻･豁ｴ繧剃ｿ晏ｭ倥＠縺ｦ隱ｭ縺ｿ霎ｼ繧√ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mload 縺ｨ dump[2m > [22m荳肴ｭ｣縺ｪ繝・・繧ｿ繧偵せ繧ｭ繝・・縺吶ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22msetHistory 縺ｨ getWorkItemId[2m > [22m繧､繝吶Φ繝医→菴懈･ｭ鬆・岼繧偵・繝・ヴ繝ｳ繧ｰ縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22msetHistory 縺ｨ getWorkItemId[2m > [22m蟄伜惠縺励↑縺・う繝吶Φ繝医・null繧定ｿ斐☆
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22msetHistory 縺ｨ getWorkItemId[2m > [22m蜷後§繧､繝吶Φ繝医・繝槭ャ繝斐Φ繧ｰ繧剃ｸ頑嶌縺阪〒縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22msetHistory 縺ｨ getWorkItemId[2m > [22m繧､繝吶Φ繝医く繝ｼ縺ｫ = 縺悟性縺ｾ繧後※縺・※繧よｭ｣縺励￥蜃ｦ逅・〒縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mcheckWorkItemId[2m > [22m譛牙柑縺ｪ菴懈･ｭ鬆・岼ID縺ｯ谿九ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mcheckWorkItemId[2m > [22m辟｡蜉ｹ縺ｪ菴懈･ｭ鬆・岼ID縺ｯ蜑企勁縺輔ｌ繧・ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mcheckWorkItemId[2m > [22m隍・焚縺ｮ菴懈･ｭ鬆・岼繧剃ｸ蠎ｦ縺ｫ繝√ぉ繝・け縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22m譛螟ｧ繧ｵ繧､繧ｺ邂｡逅・[2m > [22m譛螟ｧ繧ｵ繧､繧ｺ繧定ｶ・∴繧九→蜿､縺・お繝ｳ繝医Μ縺悟炎髯､縺輔ｌ繧・ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22m譛螟ｧ繧ｵ繧､繧ｺ邂｡逅・[2m > [22m隱ｭ縺ｿ霎ｼ縺ｿ譎ゅ↓譛螟ｧ繧ｵ繧､繧ｺ繧定ｶ・∴繧九ョ繝ｼ繧ｿ縺ｯ蛻・ｊ謐ｨ縺ｦ繧峨ｌ繧・ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mclear[2m > [22m縺吶∋縺ｦ縺ｮ螻･豁ｴ繧偵け繝ｪ繧｢縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mclear[2m > [22m繧ｯ繝ｪ繧｢蠕後ｂLocalStorage縺ｯ譖ｴ譁ｰ縺輔ｌ繧・ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetHistoryManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m蜷後§繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ繧定ｿ斐☆
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetHistoryManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m繝・・繧ｿ縺悟・譛峨＆繧後ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetHistoryManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22mresetHistoryManager 縺ｧ譁ｰ縺励＞繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ縺御ｽ懈・縺輔ｌ繧・ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetAll[2m > [22m縺吶∋縺ｦ縺ｮ繧ｨ繝ｳ繝医Μ繧貞叙蠕励〒縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetAllEntries[2m > [22m遨ｺ縺ｮ螻･豁ｴ縺ｧ遨ｺ驟榊・繧定ｿ斐☆
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetAllEntries[2m > [22m縺吶∋縺ｦ縺ｮ繧ｨ繝ｳ繝医Μ繧偵く繝ｼ縺ｨItemId縺ｮ驟榊・縺ｧ蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetAllEntries[2m > [22m繧ｭ繝ｼ縺ｮ%3D縺・縺ｫ繝・さ繝ｼ繝峨＆繧後ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetAllEntries[2m > [22m隍・焚縺ｮ=繧貞性繧繧ｭ繝ｼ縺梧ｭ｣縺励￥繝・さ繝ｼ繝峨＆繧後ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mdeleteByKey[2m > [22m繧ｭ繝ｼ繧呈欠螳壹＠縺ｦ螻･豁ｴ繧貞炎髯､縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mdeleteByKey[2m > [22m蟄伜惠縺励↑縺・く繝ｼ繧貞炎髯､縺励ｈ縺・→縺吶ｋ縺ｨfalse繧定ｿ斐☆
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mdeleteByKey[2m > [22m=繧貞性繧繧ｭ繝ｼ(繝・さ繝ｼ繝画ｸ医∩)縺ｧ螻･豁ｴ繧貞炎髯､縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mdeleteByKey[2m > [22m隍・焚縺ｮ繧ｨ繝ｳ繝医Μ縺九ｉ迚ｹ螳壹・繧ｭ繝ｼ縺縺大炎髯､縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mdeleteByKey[2m > [22m蜑企勁蠕後↓Storage縺ｫ閾ｪ蜍穂ｿ晏ｭ倥＆繧後ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mdeleteByKey[2m > [22m隍・焚縺ｮ=繧貞性繧繧ｭ繝ｼ縺ｧ繧ょ炎髯､縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetAllEntries 縺ｨ deleteByKey 縺ｮ邨ｱ蜷・[2m > [22mgetAllEntries縺ｧ蜿門ｾ励＠縺溘く繝ｼ繧壇eleteByKey縺ｧ蜑企勁縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetAllEntries 縺ｨ deleteByKey 縺ｮ邨ｱ蜷・[2m > [22m=繧貞性繧繧ｭ繝ｼ縺ｧ繧ＨetAllEntries縺ｨdeleteByKey縺碁｣謳ｺ縺励※蜍穂ｽ懊☆繧・ [32m笨・[39m src/core/history/historyManager.test.ts[2m > [22mHistoryManager[2m > [22mgetAllEntries 縺ｨ deleteByKey 縺ｮ邨ｱ蜷・[2m > [22m隍・焚繧ｨ繝ｳ繝医Μ繧帝・ｬ｡蜑企勁縺ｧ縺阪ｋ
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mload 縺ｨ dump[2m > [22m[2m遨ｺ縺ｮ螻･豁ｴ繧貞・譛溷喧縺ｧ縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繝・・繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mload 縺ｨ dump[2m > [22m[2m螻･豁ｴ繧剃ｿ晏ｭ倥＠縺ｦ隱ｭ縺ｿ霎ｼ繧√ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繧定ｪｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 1莉ｶ : HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mload 縺ｨ dump[2m > [22m[2m隍・焚縺ｮ螻･豁ｴ繧剃ｿ晏ｭ倥＠縺ｦ隱ｭ縺ｿ霎ｼ繧√ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繧定ｪｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 2莉ｶ : HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mload 縺ｨ dump[2m > [22m[2m荳肴ｭ｣縺ｪ繝・・繧ｿ繧偵せ繧ｭ繝・・縺吶ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繧定ｪｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 1莉ｶ : HistoryManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mload 縺ｨ dump[2m > [22m[2m遨ｺ縺ｮ險ｭ螳壹ｒ蛻晄悄蛹悶〒縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹′隕九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mload 縺ｨ dump[2m > [22m[2m險ｭ螳壹ｒ菫晏ｭ倥＠縺ｦ隱ｭ縺ｿ霎ｼ繧√ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹ｒ隱ｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 1莉ｶ : IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mload 縺ｨ dump[2m > [22m[2m隍・焚縺ｮ險ｭ螳壹ｒ菫晏ｭ倥＠縺ｦ隱ｭ縺ｿ霎ｼ繧√ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹ｒ隱ｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 3莉ｶ : IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mload 縺ｨ dump[2m > [22m[2m荳肴ｭ｣縺ｪ繝・・繧ｿ繧偵せ繧ｭ繝・・縺吶ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹ｒ隱ｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 1莉ｶ : IgnoreManager
+
+node.exe : [90mstderr[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22
+m[2mload 縺ｨ dump[2m > [22m[2m荳肴ｭ｣縺ｪ繝・・繧ｿ繧偵せ繧ｭ繝・・縺吶ｋ[22m[39m
+発生場所 行:1 文字:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([90mstderr[2m...・・縺吶ｋ[22m[39m:String) [], RemoteExceptio 
+   n
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2025/10/06 18:57:13 [WARN] 荳肴ｭ｣縺ｪ辟｡隕冶ｨｭ螳壹〒縺・ {"type":"event"} : IgnoreManager
+2025/10/06 18:57:13 [WARN] 荳肴ｭ｣縺ｪ辟｡隕冶ｨｭ螳壹〒縺・ {"name":"辟｡蜉ｹ"} : IgnoreManager
+2025/10/06 18:57:13 [WARN] 荳肴ｭ｣縺ｪ辟｡隕冶ｨｭ螳壹〒縺・ null : IgnoreManager
+2025/10/06 18:57:13 [WARN] 荳肴ｭ｣縺ｪ辟｡隕冶ｨｭ螳壹〒縺・ null : IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreEvent[2m > [22m[2m螳悟・荳閾ｴ縺ｧ繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreEvent[2m > [22m[2m螳悟・荳閾ｴ縺ｧ荳閾ｴ縺励↑縺・ｴ蜷医・辟｡隕悶＠縺ｪ縺・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreEvent[2m > [22m[2m驛ｨ蛻・ｸ閾ｴ縺ｧ繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreEvent[2m > [22m[2mmatchType縺梧悴謖・ｮ壹・蝣ｴ蜷医・螳悟・荳閾ｴ縺ｫ縺ｪ繧・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreEvent[2m > [22m[2mschedule險ｭ螳壹・繧､繝吶Φ繝亥愛螳壹↓蠖ｱ髻ｿ縺励↑縺・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreEvent[2m > [22m[2m隍・焚縺ｮ險ｭ螳壹′縺ゅｋ蝣ｴ蜷医√＞縺壹ｌ縺九↓繝槭ャ繝√☆繧後・辟｡隕悶☆繧・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreSchedule[2m > [22m[2mSchedule縺ｯ蜷榊燕繧呈戟縺溘↑縺・◆繧∝ｸｸ縺ｫfalse繧定ｿ斐☆[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreSchedule[2m > [22m[2mschedule險ｭ螳壹ｒ霑ｽ蜉縺励※繧Ｇalse繧定ｿ斐☆[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mignoreSchedule[2m > [22m[2mevent險ｭ螳壹ｂ繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ蛻､螳壹↓蠖ｱ髻ｿ縺励↑縺・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2maddIgnoreItem 縺ｨ removeIgnoreItem[2m > [22m[2m險ｭ螳壹ｒ霑ｽ蜉縺ｧ縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2maddIgnoreItem 縺ｨ removeIgnoreItem[2m > [22m[2m險ｭ螳壹ｒ蜑企勁縺ｧ縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2maddIgnoreItem 縺ｨ removeIgnoreItem[2m > [22m[2m遽・峇螟悶・繧､繝ｳ繝・ャ繧ｯ繧ｹ縺ｧ蜑企勁縺励※繧ゅお繝ｩ繝ｼ縺ｫ縺ｪ繧峨↑縺・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mclear[2m > [22m[2m縺吶∋縺ｦ縺ｮ險ｭ螳壹ｒ繧ｯ繝ｪ繧｢縺ｧ縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹ｒ繧ｯ繝ｪ繧｢縺励∪縺励◆ : IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mclear[2m > [22m[2m繧ｯ繝ｪ繧｢蠕後ｂStorage縺ｯ譖ｴ譁ｰ縺輔ｌ繧・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹ｒ繧ｯ繝ｪ繧｢縺励∪縺励◆ : IgnoreManager
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹ｒ隱ｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 0莉ｶ : IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mgetIgnoreManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m[2m蜷後§繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ繧定ｿ斐☆[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹′隕九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mgetIgnoreManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m[2m繝・・繧ｿ縺悟・譛峨＆繧後ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹′隕九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mgetIgnoreManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m[2mresetIgnoreManager 縺ｧ譁ｰ縺励＞繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ縺御ｽ懈・縺輔ｌ繧・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹′隕九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: IgnoreManager
+2025/10/06 18:57:13 [INFO] 辟｡隕冶ｨｭ螳壹ｒ隱ｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 0莉ｶ : IgnoreManager
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mgetAllIgnoreItems[2m > [22m[2m縺吶∋縺ｦ縺ｮ險ｭ螳壹ｒ蜿門ｾ励〒縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mgetAllIgnoreItems[2m > [22m[2m蜈・・驟榊・縺ｯ螟画峩縺輔ｌ縺ｪ縺・ｼ医さ繝斐・繧定ｿ斐☆・・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2m繧ｳ繝ｳ繧ｹ繝医Λ繧ｯ繧ｿ縺ｧ辟｡隕悶ヱ繧ｿ繝ｼ繝ｳ繧貞女縺大叙繧後ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2m驛ｨ蛻・ｸ閾ｴ・・artial・峨〒繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2m蜑肴婿荳閾ｴ・・refix・峨〒繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2m蠕梧婿荳閾ｴ・・uffix・峨〒繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2m隍・焚縺ｮ繝代ち繝ｼ繝ｳ繧堤ｵ・∩蜷医ｏ縺帙ｉ繧後ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2msetIgnorableEventPatterns縺ｧ繝代ち繝ｼ繝ｳ繧呈峩譁ｰ縺ｧ縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2m譁ｰ蠖｢蠑上・繝代ち繝ｼ繝ｳ縺後≠繧句ｴ蜷医・譌ｧ蠖｢蠑上ｈ繧雁━蜈医＆繧後ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2m譁ｰ蠖｢蠑上・繝代ち繝ｼ繝ｳ縺檎ｩｺ縺ｮ蝣ｴ蜷医・譌ｧ蠖｢蠑上′菴ｿ逕ｨ縺輔ｌ繧・[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+[90mstdout[2m | src/core/ignore/ignoreManager.test.ts[2m > [22m[2mIgnoreManager[2m > [22m[2mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m[2m遨ｺ縺ｮ繝代ち繝ｼ繝ｳ縺ｯ辟｡隕悶＆繧後ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] LocalStorage繧剃ｽｿ逕ｨ縺励∪縺・: Storage
+
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mload 縺ｨ dump[2m > [22m遨ｺ縺ｮ險ｭ螳壹ｒ蛻晄悄蛹悶〒縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mload 縺ｨ dump[2m > [22m險ｭ螳壹ｒ菫晏ｭ倥＠縺ｦ隱ｭ縺ｿ霎ｼ繧√ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mload 縺ｨ dump[2m > [22m隍・焚縺ｮ險ｭ螳壹ｒ菫晏ｭ倥＠縺ｦ隱ｭ縺ｿ霎ｼ繧√ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mload 縺ｨ dump[2m > [22m荳肴ｭ｣縺ｪ繝・・繧ｿ繧偵せ繧ｭ繝・・縺吶ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreEvent[2m > [22m螳悟・荳閾ｴ縺ｧ繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreEvent[2m > [22m螳悟・荳閾ｴ縺ｧ荳閾ｴ縺励↑縺・ｴ蜷医・辟｡隕悶＠縺ｪ縺・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreEvent[2m > [22m驛ｨ蛻・ｸ閾ｴ縺ｧ繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreEvent[2m > [22mmatchType縺梧悴謖・ｮ壹・蝣ｴ蜷医・螳悟・荳閾ｴ縺ｫ縺ｪ繧・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreEvent[2m > [22mschedule險ｭ螳壹・繧､繝吶Φ繝亥愛螳壹↓蠖ｱ髻ｿ縺励↑縺・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreEvent[2m > [22m隍・焚縺ｮ險ｭ螳壹′縺ゅｋ蝣ｴ蜷医√＞縺壹ｌ縺九↓繝槭ャ繝√☆繧後・辟｡隕悶☆繧・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreSchedule[2m > [22mSchedule縺ｯ蜷榊燕繧呈戟縺溘↑縺・◆繧∝ｸｸ縺ｫfalse繧定ｿ斐☆
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreSchedule[2m > [22mschedule險ｭ螳壹ｒ霑ｽ蜉縺励※繧Ｇalse繧定ｿ斐☆
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mignoreSchedule[2m > [22mevent險ｭ螳壹ｂ繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ蛻､螳壹↓蠖ｱ髻ｿ縺励↑縺・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22maddIgnoreItem 縺ｨ removeIgnoreItem[2m > [22m險ｭ螳壹ｒ霑ｽ蜉縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22maddIgnoreItem 縺ｨ removeIgnoreItem[2m > [22m險ｭ螳壹ｒ蜑企勁縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22maddIgnoreItem 縺ｨ removeIgnoreItem[2m > [22m遽・峇螟悶・繧､繝ｳ繝・ャ繧ｯ繧ｹ縺ｧ蜑企勁縺励※繧ゅお繝ｩ繝ｼ縺ｫ縺ｪ繧峨↑縺・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mclear[2m > [22m縺吶∋縺ｦ縺ｮ險ｭ螳壹ｒ繧ｯ繝ｪ繧｢縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mclear[2m > [22m繧ｯ繝ｪ繧｢蠕後ｂStorage縺ｯ譖ｴ譁ｰ縺輔ｌ繧・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mgetIgnoreManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m蜷後§繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ繧定ｿ斐☆
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mgetIgnoreManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m繝・・繧ｿ縺悟・譛峨＆繧後ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mgetIgnoreManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22mresetIgnoreManager 縺ｧ譁ｰ縺励＞繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ縺御ｽ懈・縺輔ｌ繧・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mgetAllIgnoreItems[2m > [22m縺吶∋縺ｦ縺ｮ險ｭ螳壹ｒ蜿門ｾ励〒縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mgetAllIgnoreItems[2m > [22m蜈・・驟榊・縺ｯ螟画峩縺輔ｌ縺ｪ縺・ｼ医さ繝斐・繧定ｿ斐☆・・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m繧ｳ繝ｳ繧ｹ繝医Λ繧ｯ繧ｿ縺ｧ辟｡隕悶ヱ繧ｿ繝ｼ繝ｳ繧貞女縺大叙繧後ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m驛ｨ蛻・ｸ閾ｴ・・artial・峨〒繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m蜑肴婿荳閾ｴ・・refix・峨〒繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m蠕梧婿荳閾ｴ・・uffix・峨〒繧､繝吶Φ繝医ｒ辟｡隕悶〒縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m隍・焚縺ｮ繝代ち繝ｼ繝ｳ繧堤ｵ・∩蜷医ｏ縺帙ｉ繧後ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22msetIgnorableEventPatterns縺ｧ繝代ち繝ｼ繝ｳ繧呈峩譁ｰ縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m譁ｰ蠖｢蠑上・繝代ち繝ｼ繝ｳ縺後≠繧句ｴ蜷医・譌ｧ蠖｢蠑上ｈ繧雁━蜈医＆繧後ｋ
+ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m譁ｰ蠖｢蠑上・繝代ち繝ｼ繝ｳ縺檎ｩｺ縺ｮ蝣ｴ蜷医・譌ｧ蠖｢蠑上′菴ｿ逕ｨ縺輔ｌ繧・ [32m笨・[39m src/core/ignore/ignoreManager.test.ts[2m > [22mIgnoreManager[2m > [22mEventPattern繧剃ｽｿ逕ｨ縺励◆譁ｰ蠖｢蠑・[2m > [22m遨ｺ縺ｮ繝代ち繝ｼ繝ｳ縺ｯ辟｡隕悶＆繧後ｋ
+[90mstderr[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mloa
+d 縺ｨ dump[2m > [22m[2m荳肴ｭ｣縺ｪ繝・・繧ｿ繧偵せ繧ｭ繝・・縺吶ｋ[22m[39m
+2025/10/06 18:57:13 [WARN] 荳肴ｭ｣縺ｪ譁・ｭ怜・縺ｧ縺・ invalid-line : HistoryManager
+2025/10/06 18:57:13 [WARN] 荳肴ｭ｣縺ｪ譁・ｭ怜・縺ｧ縺・ =value2 : HistoryManager
+2025/10/06 18:57:13 [WARN] 荳肴ｭ｣縺ｪ譁・ｭ怜・縺ｧ縺・ key3= : HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2m譛螟ｧ繧ｵ繧､繧ｺ邂｡逅・[2m > [22m[2m隱ｭ縺ｿ霎ｼ縺ｿ譎ゅ↓譛螟ｧ繧ｵ繧､繧ｺ繧定ｶ・∴繧九ョ繝ｼ繧ｿ縺ｯ蛻・ｊ謐ｨ縺ｦ繧峨ｌ繧・[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繧定ｪｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆: 2莉ｶ : HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mclear[2m > [22m[2m縺吶∋縺ｦ縺ｮ螻･豁ｴ繧偵け繝ｪ繧｢縺ｧ縺阪ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繧偵け繝ｪ繧｢縺励∪縺励◆ : HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mclear[2m > [22m[2m繧ｯ繝ｪ繧｢蠕後ｂLocalStorage縺ｯ譖ｴ譁ｰ縺輔ｌ繧・[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繧偵け繝ｪ繧｢縺励∪縺励◆ : HistoryManager
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繝・・繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mgetHistoryManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m[2m蜷後§繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ繧定ｿ斐☆[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繝・・繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mgetHistoryManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m[2m繝・・繧ｿ縺悟・譛峨＆繧後ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繝・・繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mgetHistoryManager (繧ｷ繝ｳ繧ｰ繝ｫ繝医Φ)[2m > [22m[2mresetHistoryManager 縺ｧ譁ｰ縺励＞繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ縺御ｽ懈・縺輔ｌ繧・[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繝・・繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: HistoryManager
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繝・・繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: HistoryManager
+
+[90mstdout[2m | src/core/history/historyManager.test.ts[2m > [22m[2mHistoryManager[2m > [22m[2mdeleteByKey[2m > [22m[2m蜑企勁蠕後↓Storage縺ｫ閾ｪ蜍穂ｿ晏ｭ倥＆繧後ｋ[22m[39m
+2025/10/06 18:57:13 [INFO] 螻･豁ｴ繝・・繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲よ眠隕上↓菴懈・縺励∪縺吶・: HistoryManager
+
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mSETTINGS_DEFINITION[2m > [22mtimetracker繧ｪ繝悶ず繧ｧ繧ｯ繝医′螳夂ｾｩ縺輔ｌ縺ｦ縺・ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mSETTINGS_DEFINITION[2m > [22mtimetracker蜀・↓children縺悟ｮ夂ｾｩ縺輔ｌ縺ｦ縺・ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mSETTINGS_DEFINITION[2m > [22m蜷・ヵ繧｣繝ｼ繝ｫ繝峨↓蜷榊燕縺ｨ隱ｬ譏弱′縺ゅｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mSETTINGS_DEFINITION[2m > [22m蠢・医ヵ繧｣繝ｼ繝ｫ繝峨′required=true縺ｧ螳夂ｾｩ縺輔ｌ縺ｦ縺・ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m譛牙柑縺ｪ險ｭ螳壹ｒ蜿励￠蜈･繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m蠢・医ヵ繧｣繝ｼ繝ｫ繝峨′谺縺代※縺・ｋ蝣ｴ蜷医・諡貞凄縺吶ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m蝙九′豁｣縺励￥縺ｪ縺・ｴ蜷医・諡貞凄縺吶ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22mURL蠖｢蠑上・繝舌Μ繝・・繧ｷ繝ｧ繝ｳ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m蛻玲嫌蝙九・繝舌Μ繝・・繧ｷ繝ｧ繝ｳ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m豁｣縺ｮ謨ｴ謨ｰ縺ｮ繝舌Μ繝・・繧ｷ繝ｧ繝ｳ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m驟榊・縺ｮminItems讀懆ｨｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m豁｣隕剰｡ｨ迴ｾ繝代ち繝ｼ繝ｳ縺ｮ讀懆ｨｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m繧ｪ繝励す繝ｧ繝ｳ繝輔ぅ繝ｼ繝ｫ繝峨・逵∫払蜿ｯ閭ｽ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidateTimeTrackerSettings[2m > [22m繝阪せ繝医＆繧後◆繧ｪ繝悶ず繧ｧ繧ｯ繝医ｒ豁｣縺励￥讀懆ｨｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mparseTimeTrackerSettings[2m > [22m譛牙柑縺ｪJSON譁・ｭ怜・繧偵ヱ繝ｼ繧ｹ縺ｧ縺阪ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mparseTimeTrackerSettings[2m > [22m荳肴ｭ｣縺ｪJSON譁・ｭ怜・縺ｮ蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mparseTimeTrackerSettings[2m > [22mJSON繝代・繧ｹ蠕後・繝舌Μ繝・・繧ｷ繝ｧ繝ｳ繧ｨ繝ｩ繝ｼ繧呈､懷・
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mparseAndFixTimeTrackerSettings[2m > [22m荳榊ｮ悟・縺ｪ險ｭ螳壹↓繝・ヵ繧ｩ繝ｫ繝亥､繧定｣懷ｮ後☆繧・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mparseAndFixTimeTrackerSettings[2m > [22m蠢・医ヵ繧｣繝ｼ繝ｫ繝峨′荳崎ｶｳ縺励※縺・ｋ蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mparseAndFixTimeTrackerSettings[2m > [22m驛ｨ蛻・噪縺ｪ險ｭ螳壹ｒ繝槭・繧ｸ縺励※繝・ヵ繧ｩ繝ｫ繝亥､縺ｧ陬懷ｮ・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mstringifyTimeTrackerSettings[2m > [22m險ｭ螳壹が繝悶ず繧ｧ繧ｯ繝医ｒJSON譁・ｭ怜・縺ｫ螟画鋤縺ｧ縺阪ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mstringifyTimeTrackerSettings[2m > [22mpretty=true縺ｧ繧､繝ｳ繝・Φ繝医＆繧後◆JSON譁・ｭ怜・繧堤函謌・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mgetDefaultTimeTrackerSettings[2m > [22m繝・ヵ繧ｩ繝ｫ繝亥､繧貞叙蠕励〒縺阪ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mgetDefaultTimeTrackerSettings[2m > [22m繝・ヵ繧ｩ繝ｫ繝亥､縺悟ｮ夂ｾｩ縺輔ｌ縺ｦ縺・ｋ繝輔ぅ繝ｼ繝ｫ繝峨′蜷ｫ縺ｾ繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mgetDefaultTimeTrackerSettings[2m > [22m繝阪せ繝医＆繧後◆繝・ヵ繧ｩ繝ｫ繝亥､縺悟性縺ｾ繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mgetDefaultTimeTrackerSettings[2m > [22m蠢・医ヵ繧｣繝ｼ繝ｫ繝峨↓縺ｯ繝・ヵ繧ｩ繝ｫ繝亥､縺瑚ｨｭ螳壹＆繧後※縺・ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22misTimeTrackerSettingsComplete[2m > [22m螳悟・縺ｪ險ｭ螳壹・蝣ｴ蜷医・true繧定ｿ斐☆
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22misTimeTrackerSettingsComplete[2m > [22m蠢・医ヵ繧｣繝ｼ繝ｫ繝峨′遨ｺ縺ｮ蝣ｴ蜷医・false繧定ｿ斐☆
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22misTimeTrackerSettingsComplete[2m > [22mbaseProjectId縺・縺ｮ蝣ｴ蜷医・false繧定ｿ斐☆
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mgenerateHelpText[2m > [22m繝倥Ν繝励ユ繧ｭ繧ｹ繝医ｒ逕滓・縺ｧ縺阪ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mgenerateHelpText[2m > [22mtimetracker縺ｮ險ｭ螳夐・岼縺悟性縺ｾ繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mgenerateHelpText[2m > [22m蠢・・繧ｪ繝励す繝ｧ繝ｳ諠・ｱ縺悟性縺ｾ繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mgenerateHelpText[2m > [22m繝・ヵ繧ｩ繝ｫ繝亥､縺悟性縺ｾ繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mpaidLeaveInputInfo validation[2m > [22m譛牙柑縺ｪpaidLeaveInputInfo繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mpaidLeaveInputInfo validation[2m > [22menabled縺掲alse縺ｮ蝣ｴ蜷医ｂ蜿励￠蜈･繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mpaidLeaveInputInfo validation[2m > [22mstartTime縺ｮ蠖｢蠑上′荳肴ｭ｣縺ｪ蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mpaidLeaveInputInfo validation[2m > [22mendTime縺ｮ蠖｢蠑上′荳肴ｭ｣縺ｪ蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mpaidLeaveInputInfo validation[2m > [22mworkItemId縺瑚ｲ縺ｮ蛟､縺ｮ蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mpaidLeaveInputInfo validation[2m > [22mpaidLeaveInputInfo蜈ｨ菴薙′逵∫払蜿ｯ閭ｽ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mtimeOffEvent validation[2m > [22m隍・焚縺ｮnamePattern繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mtimeOffEvent validation[2m > [22mnamePatterns縺檎ｩｺ驟榊・縺ｮ蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mtimeOffEvent validation[2m > [22m荳肴ｭ｣縺ｪmatchMode縺ｮ蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mtimeOffEvent validation[2m > [22mpattern縺檎ｩｺ譁・ｭ怜・縺ｮ蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mboundary value testing[2m > [22mbaseProjectId縺梧怙蟆丞､(1)縺ｮ蝣ｴ蜷・ [31mﾃ・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mboundary value testing[2m > [22mstartEndTime縺梧怙蟆丞､(1)縺ｮ蝣ｴ蜷・[31m   竊・expected true to be false // Object.is equality[39m
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mboundary value testing[2m > [22m譎ょ綾縺・0:00縺ｮ蝣ｴ蜷・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mboundary value testing[2m > [22m譎ょ綾縺・3:59縺ｮ蝣ｴ蜷・ [31mﾃ・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mboundary value testing[2m > [22m譎ょ綾縺・4:00莉･荳翫・蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+[31m   竊・expected false to be true // Object.is equality[39m
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mcomplex validation scenarios[2m > [22m縺吶∋縺ｦ縺ｮ繧ｪ繝励す繝ｧ繝ｳ繝輔ぅ繝ｼ繝ｫ繝峨ｒ蜷ｫ繧螳悟・縺ｪ險ｭ螳・ [31mﾃ・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mcomplex validation scenarios[2m > [22mJSON繝代・繧ｹ縺九ｉ繝舌Μ繝・・繧ｷ繝ｧ繝ｳ縺ｾ縺ｧ縺ｮ繝輔Ν繝輔Ο繝ｼ
+[31m   竊・expected true to be false // Object.is equality[39m
+ [31mﾃ・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mcomplex validation scenarios[2m > [22m繝代・繧ｹ縺ｨ繝輔ぅ繝・け繧ｹ縺ｮ邨・∩蜷医ｏ縺帙ユ繧ｹ繝・[31m   竊・expected true to be false // Object.is equality[39m
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m蜊倅ｸ繝輔ぅ繝ｼ繝ｫ繝峨・驛ｨ蛻・峩譁ｰ[2m > [22muserName縺ｮ縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m蜊倅ｸ繝輔ぅ繝ｼ繝ｫ繝峨・驛ｨ蛻・峩譁ｰ[2m > [22mbaseUrl縺ｮ縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m蜊倅ｸ繝輔ぅ繝ｼ繝ｫ繝峨・驛ｨ蛻・峩譁ｰ[2m > [22mbaseProjectId縺ｮ縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m蜊倅ｸ繝輔ぅ繝ｼ繝ｫ繝峨・驛ｨ蛻・峩譁ｰ[2m > [22mroundingTimeTypeOfEvent縺ｮ縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m蜊倅ｸ繝輔ぅ繝ｼ繝ｫ繝峨・驛ｨ蛻・峩譁ｰ[2m > [22misHistoryAutoInput縺ｮ縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝阪せ繝医＆繧後◆繧ｪ繝悶ず繧ｧ繧ｯ繝医・驛ｨ蛻・峩譁ｰ[2m > [22meventDuplicatePriority縺ｮ荳驛ｨ繝輔ぅ繝ｼ繝ｫ繝峨・縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝阪せ繝医＆繧後◆繧ｪ繝悶ず繧ｧ繧ｯ繝医・驛ｨ蛻・峩譁ｰ[2m > [22mscheduleAutoInputInfo縺ｮ荳驛ｨ繝輔ぅ繝ｼ繝ｫ繝峨・縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ・・orkItemId縺ｪ縺暦ｼ・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝阪せ繝医＆繧後◆繧ｪ繝悶ず繧ｧ繧ｯ繝医・驛ｨ蛻・峩譁ｰ[2m > [22mscheduleAutoInputInfo縺ｮ隍・焚繝輔ぅ繝ｼ繝ｫ繝峨ｒ譖ｴ譁ｰ・亥ｿ・医・workItemId縺ｪ縺暦ｼ・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝阪せ繝医＆繧後◆繧ｪ繝悶ず繧ｧ繧ｯ繝医・驛ｨ蛻・峩譁ｰ[2m > [22mpaidLeaveInputInfo縺ｮenabled縺ｮ縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ・亥ｿ・医・workItemId縺ｪ縺暦ｼ・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝阪せ繝医＆繧後◆繧ｪ繝悶ず繧ｧ繧ｯ繝医・驛ｨ蛻・峩譁ｰ[2m > [22mpaidLeaveInputInfo縺ｮ譎ょ綾縺ｮ縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ・亥ｿ・医・workItemId縺ｪ縺暦ｼ・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝阪せ繝医＆繧後◆繧ｪ繝悶ず繧ｧ繧ｯ繝医・驛ｨ蛻・峩譁ｰ[2m > [22mtimeOffEvent縺ｮ荳驛ｨ繝輔ぅ繝ｼ繝ｫ繝峨・縺ｿ縺ｮ譖ｴ譁ｰ繧貞女縺大・繧後ｋ・亥ｿ・医・workItemId縺ｪ縺暦ｼ・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m隍・焚繝輔ぅ繝ｼ繝ｫ繝峨・蜷梧凾譖ｴ譁ｰ[2m > [22m隍・焚縺ｮ迢ｬ遶九＠縺溘ヵ繧｣繝ｼ繝ｫ繝峨・蜷梧凾譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m隍・焚繝輔ぅ繝ｼ繝ｫ繝峨・蜷梧凾譖ｴ譁ｰ[2m > [22m繝医ャ繝励Ξ繝吶Ν縺ｨ繝阪せ繝医＆繧後◆繝輔ぅ繝ｼ繝ｫ繝峨・蜷梧凾譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m隍・焚繝輔ぅ繝ｼ繝ｫ繝峨・蜷梧凾譖ｴ譁ｰ[2m > [22m隍・焚縺ｮ繝阪せ繝医が繝悶ず繧ｧ繧ｯ繝医・蜷梧凾譖ｴ譁ｰ繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝舌Μ繝・・繧ｷ繝ｧ繝ｳ繧ｨ繝ｩ繝ｼ[2m > [22m荳肴ｭ｣縺ｪ蝙九・userName繧呈拠蜷ｦ縺吶ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝舌Μ繝・・繧ｷ繝ｧ繝ｳ繧ｨ繝ｩ繝ｼ[2m > [22m荳肴ｭ｣縺ｪURL縺ｮbaseUrl繧呈拠蜷ｦ縺吶ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝舌Μ繝・・繧ｷ繝ｧ繝ｳ繧ｨ繝ｩ繝ｼ[2m > [22m荳肴ｭ｣縺ｪ蝙九・baseProjectId繧呈拠蜷ｦ縺吶ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝舌Μ繝・・繧ｷ繝ｧ繝ｳ繧ｨ繝ｩ繝ｼ[2m > [22m荳肴ｭ｣縺ｪ蛟､縺ｮroundingTimeTypeOfEvent繧呈拠蜷ｦ縺吶ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝舌Μ繝・・繧ｷ繝ｧ繝ｳ繧ｨ繝ｩ繝ｼ[2m > [22m繝阪せ繝医＆繧後◆繧ｪ繝悶ず繧ｧ繧ｯ繝医・荳肴ｭ｣縺ｪ蛟､繧呈拠蜷ｦ縺吶ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝舌Μ繝・・繧ｷ繝ｧ繝ｳ繧ｨ繝ｩ繝ｼ[2m > [22m譛ｪ螳夂ｾｩ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨ｒ諡貞凄縺吶ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繝舌Μ繝・・繧ｷ繝ｧ繝ｳ繧ｨ繝ｩ繝ｼ[2m > [22m隍・焚縺ｮ繧ｨ繝ｩ繝ｼ繧偵☆縺ｹ縺ｦ蝣ｱ蜻翫☆繧・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繧ｨ繝・ず繧ｱ繝ｼ繧ｹ[2m > [22m遨ｺ縺ｮ繧ｪ繝悶ず繧ｧ繧ｯ繝医ｒ蜿励￠蜈･繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繧ｨ繝・ず繧ｱ繝ｼ繧ｹ[2m > [22mundefined繧貞性繧繝阪せ繝医が繝悶ず繧ｧ繧ｯ繝医ｒ豁｣縺励￥蜃ｦ逅・☆繧・ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m繧ｨ繝・ず繧ｱ繝ｼ繧ｹ[2m > [22m螳悟・縺ｪ險ｭ螳壹が繝悶ず繧ｧ繧ｯ繝医ｂ蜿励￠蜈･繧後ｋ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m螳滄圀縺ｮ繝ｦ繝ｼ繧ｹ繧ｱ繝ｼ繧ｹ[2m > [22mUI縺ｧ縺ｮuserName螟画峩繧ｷ繝翫Μ繧ｪ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m螳滄圀縺ｮ繝ｦ繝ｼ繧ｹ繧ｱ繝ｼ繧ｹ[2m > [22mUI縺ｧ縺ｮscheduleAutoInputInfo譛牙柑蛹悶す繝翫Μ繧ｪ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m螳滄圀縺ｮ繝ｦ繝ｼ繧ｹ繧ｱ繝ｼ繧ｹ[2m > [22mUI縺ｧ縺ｮpaidLeaveInputInfo繝医げ繝ｫ繧ｷ繝翫Μ繧ｪ
+ [32m笨・[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefinition[2m > [22mvalidatePartialTimeTrackerSettings[2m > [22m螳滄圀縺ｮ繝ｦ繝ｼ繧ｹ繧ｱ繝ｼ繧ｹ[2m > [22mUI縺ｧ縺ｮ蝓ｺ譛ｬ險ｭ螳壼､画峩繧ｷ繝翫Μ繧ｪ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mgetDefaultTimeTrackerSettings[2m > [22m繝・ヵ繧ｩ繝ｫ繝亥､縺梧ｭ｣縺励￥險ｭ螳壹＆繧後※縺・ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mvalidateTimeTrackerSettings[2m > [22m螳悟・縺ｪ險ｭ螳壹・蝣ｴ蜷医∵､懆ｨｼ縺梧・蜉溘☆繧・ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mvalidateTimeTrackerSettings[2m > [22m繝ｦ繝ｼ繧ｶ繝ｼ蜷阪′谺縺代※縺・ｋ蝣ｴ蜷医√お繝ｩ繝ｼ縺瑚ｿ斐＆繧後ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mvalidateTimeTrackerSettings[2m > [22m繝吶・繧ｹURL縺梧ｬ縺代※縺・ｋ蝣ｴ蜷医√お繝ｩ繝ｼ縺瑚ｿ斐＆繧後ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mvalidateTimeTrackerSettings[2m > [22m繝励Ο繧ｸ繧ｧ繧ｯ繝・D縺梧ｬ縺代※縺・ｋ蝣ｴ蜷医√お繝ｩ繝ｼ縺瑚ｿ斐＆繧後ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mvalidateTimeTrackerSettings[2m > [22m隍・焚縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨′谺縺代※縺・ｋ蝣ｴ蜷医∬､・焚縺ｮ繧ｨ繝ｩ繝ｼ縺瑚ｿ斐＆繧後ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22misTimeTrackerSettingsComplete[2m > [22m螳悟・縺ｪ險ｭ螳壹・蝣ｴ蜷医》rue繧定ｿ斐☆
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22misTimeTrackerSettingsComplete[2m > [22m荳榊ｮ悟・縺ｪ險ｭ螳壹・蝣ｴ蜷医’alse繧定ｿ斐☆
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mTimeTrackerSettings蝙・[2m > [22m繧ｪ繝励す繝ｧ繝ｳ鬆・岼繧貞性繧螳悟・縺ｪ險ｭ螳壹ｒ菴懈・縺ｧ縺阪ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mTimeTrackerSettings蝙・[2m > [22m繧ｪ繝励す繝ｧ繝ｳ鬆・岼繧堤怐逡･縺励◆險ｭ螳壹ｒ菴懈・縺ｧ縺阪ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mpaidLeaveInputInfo險ｭ螳・[2m > [22m譛牙柑縺ｪ譛臥ｵｦ莨第嚊險ｭ螳壹ｒ讀懆ｨｼ縺ｧ縺阪ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mpaidLeaveInputInfo險ｭ螳・[2m > [22m辟｡蜉ｹ蛹悶＆繧後◆譛臥ｵｦ莨第嚊險ｭ螳壹ｒ讀懆ｨｼ縺ｧ縺阪ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mpaidLeaveInputInfo險ｭ螳・[2m > [22m譎ょ綾繝輔か繝ｼ繝槭ャ繝医・繝舌Μ繝・・繧ｷ繝ｧ繝ｳ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mpaidLeaveInputInfo險ｭ螳・[2m > [22m譛臥ｵｦ莨第嚊險ｭ螳壹′譛ｪ險ｭ螳壹〒繧ょｮ悟・諤ｧ繝√ぉ繝・け縺ｫ蠖ｱ髻ｿ縺励↑縺・ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mignorableEvents險ｭ螳・[2m > [22m隍・焚縺ｮ辟｡隕悶ヱ繧ｿ繝ｼ繝ｳ繧定ｨｭ螳壹〒縺阪ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mignorableEvents險ｭ螳・[2m > [22m遨ｺ縺ｮ辟｡隕悶ヱ繧ｿ繝ｼ繝ｳ驟榊・縺ｯ辟｡蜉ｹ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mroundingTimeTypeOfEvent險ｭ螳・[2m > [22m縺吶∋縺ｦ縺ｮ荳ｸ繧∵婿蠑上ｒ蜿励￠蜈･繧後ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mscheduleAutoInputInfo險ｭ螳・[2m > [22m縺吶∋縺ｦ縺ｮstartEndType繧貞女縺大・繧後ｋ
+ [31mﾃ・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22mscheduleAutoInputInfo險ｭ螳・[2m > [22mstartEndTime縺ｮ蠅・阜蛟､繝・せ繝・[31m   竊・expected true to be false // Object.is equality[39m
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22meventDuplicatePriority險ｭ螳・[2m > [22m荳｡譁ｹ縺ｮtimeCompare蛟､繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22m邨ｱ蜷医ユ繧ｹ繝・[2m > [22m縺吶∋縺ｦ縺ｮ繧ｪ繝励す繝ｧ繝ｳ讖溯・繧呈怏蜉ｹ蛹悶＠縺溯ｨｭ螳壹′豁｣縺励￥蜍穂ｽ懊☆繧・ [31mﾃ・[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > [22m邨ｱ蜷医ユ繧ｹ繝・[2m > [22m繝・ヵ繧ｩ繝ｫ繝亥､繧剃ｽｿ逕ｨ縺励◆譛蟆剰ｨｭ螳壹°繧牙ｮ悟・險ｭ螳壹∈縺ｮ諡｡蠑ｵ
+[31m   竊・expected true to be false // Object.is equality[39m
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingTime[2m > [22mshould round up time correctly
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingTime[2m > [22mshould not round when already on boundary
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingTime[2m > [22mshould round to next hour
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingTime[2m > [22mshould round down time correctly
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingTime[2m > [22mshould round down to previous half hour
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingTime[2m > [22mshould handle midnight crossing
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould round schedule backward
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould round schedule forward
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould round schedule using round method
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould round schedule using half method
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould round schedule using stretch method
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould round schedule using nonduplicate method with no conflicts
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould return null for schedule that becomes too short
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould handle schedule spanning multiple days
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould avoid duplicates with nonduplicate method
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould handle half rounding with specific time boundaries (14min)
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould handle half rounding with 1 minute after boundary
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould handle half rounding at exactly 15 minutes
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould avoid duplicate with end time adjustment
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould avoid duplicate with different time range
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mroundingSchedule[2m > [22mshould handle nonduplicate with start time after existing event
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent[2m > [22mshould create start event only when startEndType is "start"
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent[2m > [22mshould create end event only when startEndType is "end"
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent[2m > [22mshould create both start and end events with backward rounding
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent[2m > [22mshould create both events with forward rounding
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent[2m > [22mshould create both events with round rounding
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent[2m > [22mshould create both events with stretch rounding
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent[2m > [22mshould handle schedule spanning multiple days
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mgetRecurrenceEvent[2m > [22mshould generate recurring events correctly
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mcleanDuplicateEvent[2m > [22mshould clean duplicate events using "small" comparison
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mcleanDuplicateEvent[2m > [22mshould clean duplicate events using "large" comparison
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msplitOneDayTask[2m > [22mshould split events into day tasks
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msplitOneDayTask[2m > [22mshould create day tasks with working events
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msplitOneDayTask[2m > [22mshould handle events on multiple days
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msplitOneDayTask[2m > [22mshould handle recurring events
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msplitOneDayTask[2m > [22mshould filter out invalid events
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msplitOneDayTask[2m > [22mshould clean duplicate events correctly
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22maddStartToEndDate[2m > [22mshould split multi-day events correctly
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mmargedScheduleEvents[2m > [22mshould merge schedule events with normal events
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mmargedScheduleEvents[2m > [22mshould handle overlapping events correctly
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mmargedScheduleEvents[2m > [22mshould only include schedule events when no normal events
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mmargedScheduleEvents[2m > [22mshould handle complex multi-day scenario with filtering
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent with fill mode[2m > [22mshould create fill events for multi-day schedule
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22mscheduleToEvent with fill mode[2m > [22mshould avoid overlapping with existing events in fill mode
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould find next event with small comparison from start
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould find next event with large comparison from start
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould find next event after current event
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould handle overlapping events correctly
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould return null when no next event exists
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould find next event with large comparison after current event
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould find next event with small comparison from long overlapping event
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould find next event with large comparison from long overlapping event
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould find same event for both small and large when no overlap
+ [32m笨・[39m src/core/algorithm/algorithm.test.ts[2m > [22mTimeTrackerAlgorithm[2m > [22msearchNextEvent[2m > [22mshould find next event from before work hours
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingTime[2m > [22m[2mshould round up time correctly[22m[39m
+2025/10/06 18:57:13 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingTime[2m > [22m[2mshould not round when already on boundary[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingTime[2m > [22m[2mshould round to next hour[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingTime[2m > [22m[2mshould round down time correctly[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingTime[2m > [22m[2mshould round down to previous half hour[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingTime[2m > [22m[2mshould handle midnight crossing[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould round schedule backward[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould round schedule forward[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould round schedule using round method[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould round schedule using half method[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould round schedule using stretch method[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould round schedule using nonduplicate method with no conflicts[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould return null for schedule that becomes too short[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ縺悟炎髯､縺輔ｌ縺ｾ縺励◆縲・025/10/06(譛・ 09:07 - 2025/10/06(譛・ 09:15 -> Mon Oct 06 2025 09:30:00 GMT+0900 (譌･譛ｬ讓呎ｺ匁凾) - Mon Oct 06 2025 09:30:00 GMT+0900 (譌･譛ｬ讓呎ｺ匁凾) : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould handle schedule spanning multiple days[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould avoid duplicates with nonduplicate method[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould handle half rounding with specific time boundaries (14min)[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould handle half rounding with 1 minute after boundary[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould handle half rounding at exactly 15 minutes[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould avoid duplicate with end time adjustment[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould avoid duplicate with different time range[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mroundingSchedule[2m > [22m[2mshould handle nonduplicate with start time after existing event[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent[2m > [22m[2mshould create start event only when startEndType is "start"[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent[2m > [22m[2mshould create end event only when startEndType is "end"[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent[2m > [22m[2mshould create both start and end events with backward rounding[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent[2m > [22m[2mshould create both events with forward rounding[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent[2m > [22m[2mshould create both events with round rounding[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent[2m > [22m[2mshould create both events with stretch rounding[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent[2m > [22m[2mshould handle schedule spanning multiple days[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mgetRecurrenceEvent[2m > [22m[2mshould generate recurring events correctly[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mcleanDuplicateEvent[2m > [22m[2mshould clean duplicate events using "small" comparison[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mcleanDuplicateEvent[2m > [22m[2mshould clean duplicate events using "large" comparison[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msplitOneDayTask[2m > [22m[2mshould split events into day tasks[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡髢句ｧ・ 繧､繝吶Φ繝域焚=2, 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ謨ｰ=1 : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡螳御ｺ・ 逕滓・縺輔ｌ縺溘ち繧ｹ繧ｯ謨ｰ=2 : TimeTrackerAlgorithm
+
+[90mstderr[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2m
+splitOneDayTask[2m > [22m[2mshould split events into day tasks[22m[39m
+2025/10/06 18:57:14 [WARN] 蜍､蜍呎凾髢薙う繝吶Φ繝医′2縺､譛ｪ貅縺ｮ縺溘ａ縲∝・逅・ｒ繧ｹ繧ｭ繝・・縺励∪縺吶・025-10-05 : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msplitOneDayTask[2m > [22m[2mshould create day tasks with working events[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡髢句ｧ・ 繧､繝吶Φ繝域焚=1, 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ謨ｰ=1 : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡螳御ｺ・ 逕滓・縺輔ｌ縺溘ち繧ｹ繧ｯ謨ｰ=2 : TimeTrackerAlgorithm
+
+[90mstderr[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2m
+splitOneDayTask[2m > [22m[2mshould create day tasks with working events[22m[39m
+2025/10/06 18:57:14 [WARN] 蜍､蜍呎凾髢薙う繝吶Φ繝医′2縺､譛ｪ貅縺ｮ縺溘ａ縲∝・逅・ｒ繧ｹ繧ｭ繝・・縺励∪縺吶・025-10-05 : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msplitOneDayTask[2m > [22m[2mshould handle events on multiple days[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡髢句ｧ・ 繧､繝吶Φ繝域焚=2, 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ謨ｰ=2 : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡螳御ｺ・ 逕滓・縺輔ｌ縺溘ち繧ｹ繧ｯ謨ｰ=3 : TimeTrackerAlgorithm
+
+[90mstderr[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2m
+splitOneDayTask[2m > [22m[2mshould handle events on multiple days[22m[39m
+2025/10/06 18:57:14 [WARN] 蜍､蜍呎凾髢薙う繝吶Φ繝医′2縺､譛ｪ貅縺ｮ縺溘ａ縲∝・逅・ｒ繧ｹ繧ｭ繝・・縺励∪縺吶・025-10-05 : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [WARN] 蜍､蜍呎凾髢薙う繝吶Φ繝医′2縺､譛ｪ貅縺ｮ縺溘ａ縲∝・逅・ｒ繧ｹ繧ｭ繝・・縺励∪縺吶・025-10-06 : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msplitOneDayTask[2m > [22m[2mshould handle recurring events[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡髢句ｧ・ 繧､繝吶Φ繝域焚=1, 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ謨ｰ=2 : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡螳御ｺ・ 逕滓・縺輔ｌ縺溘ち繧ｹ繧ｯ謨ｰ=4 : TimeTrackerAlgorithm
+
+[90mstderr[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2m
+splitOneDayTask[2m > [22m[2mshould handle recurring events[22m[39m
+2025/10/06 18:57:14 [WARN] 蜍､蜍呎凾髢薙う繝吶Φ繝医′2縺､譛ｪ貅縺ｮ縺溘ａ縲∝・逅・ｒ繧ｹ繧ｭ繝・・縺励∪縺吶・025-10-05 : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [WARN] 蜍､蜍呎凾髢薙う繝吶Φ繝医′2縺､譛ｪ貅縺ｮ縺溘ａ縲∝・逅・ｒ繧ｹ繧ｭ繝・・縺励∪縺吶・025-10-12 : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msplitOneDayTask[2m > [22m[2mshould filter out invalid events[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡髢句ｧ・ 繧､繝吶Φ繝域焚=3, 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ謨ｰ=1 : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡螳御ｺ・ 逕滓・縺輔ｌ縺溘ち繧ｹ繧ｯ謨ｰ=2 : TimeTrackerAlgorithm
+
+[90mstderr[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2m
+splitOneDayTask[2m > [22m[2mshould filter out invalid events[22m[39m
+2025/10/06 18:57:14 [WARN] 蜍､蜍呎凾髢薙う繝吶Φ繝医′2縺､譛ｪ貅縺ｮ縺溘ａ縲∝・逅・ｒ繧ｹ繧ｭ繝・・縺励∪縺吶・025-10-05 : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msplitOneDayTask[2m > [22m[2mshould clean duplicate events correctly[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡髢句ｧ・ 繧､繝吶Φ繝域焚=2, 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ謨ｰ=1 : TimeTrackerAlgorithm
+2025/10/06 18:57:14 [INFO] 1譌･繧ｿ繧ｹ繧ｯ蛻・牡螳御ｺ・ 逕滓・縺輔ｌ縺溘ち繧ｹ繧ｯ謨ｰ=2 : TimeTrackerAlgorithm
+
+[90mstderr[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2m
+splitOneDayTask[2m > [22m[2mshould clean duplicate events correctly[22m[39m
+2025/10/06 18:57:14 [WARN] 蜍､蜍呎凾髢薙う繝吶Φ繝医′2縺､譛ｪ貅縺ｮ縺溘ａ縲∝・逅・ｒ繧ｹ繧ｭ繝・・縺励∪縺吶・025-10-05 : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2maddStartToEndDate[2m > [22m[2mshould split multi-day events correctly[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mmargedScheduleEvents[2m > [22m[2mshould merge schedule events with normal events[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mmargedScheduleEvents[2m > [22m[2mshould handle overlapping events correctly[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mmargedScheduleEvents[2m > [22m[2mshould only include schedule events when no normal events[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mmargedScheduleEvents[2m > [22m[2mshould handle complex multi-day scenario with filtering[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent with fill mode[2m > [22m[2mshould create fill events for multi-day schedule[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2mscheduleToEvent with fill mode[2m > [22m[2mshould avoid overlapping with existing events in fill mode[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould find next event with small comparison from start[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould find next event with large comparison from start[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould find next event after current event[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould handle overlapping events correctly[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould return null when no next event exists[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould find next event with large comparison after current event[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould find next event with small comparison from long overlapping event[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould find next event with large comparison from long overlapping event[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould find same event for both small and large when no overlap[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/algorithm/algorithm.test.ts[2m > [22m[2mTimeTrackerAlgorithm[2m > [22m[2msearchNextEvent[2m > [22m[2mshould find next event from before work hours[22m[39m
+2025/10/06 18:57:14 [INFO] 繧｢繝ｫ繧ｴ繝ｪ繧ｺ繝蛻晄悄蛹・ 繝励Ο繧ｸ繧ｧ繧ｯ繝・test-project : TimeTrackerAlgorithm
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [22m[2m遨ｺ縺ｮICS繝輔ぃ繧､繝ｫ繧偵ヱ繝ｼ繧ｹ縺ｧ縺阪ｋ[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=0莉ｶ, 繧ｨ繝ｩ繝ｼ=0莉ｶ : ICSParser
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [22m[2m繧ｷ繝ｳ繝励Ν縺ｪ繧､繝吶Φ繝医ｒ繝代・繧ｹ縺ｧ縺阪ｋ[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=1莉ｶ, 繧ｨ繝ｩ繝ｼ=0莉ｶ : ICSParser
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [22m[2m郢ｰ繧願ｿ斐＠繧､繝吶Φ繝医ｒ螻暮幕縺ｧ縺阪ｋ[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=1莉ｶ, 繧ｨ繝ｩ繝ｼ=0莉ｶ : ICSParser
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [22m[2m繧ｭ繝｣繝ｳ繧ｻ繝ｫ縺輔ｌ縺溘う繝吶Φ繝医ｒ隴伜挨縺ｧ縺阪ｋ[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=1莉ｶ, 繧ｨ繝ｩ繝ｼ=0莉ｶ : ICSParser
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [22m[2m繝励Λ繧､繝吶・繝医う繝吶Φ繝医ｒ隴伜挨縺ｧ縺阪ｋ[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=1莉ｶ, 繧ｨ繝ｩ繝ｼ=0莉ｶ : ICSParser
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [22m[2m驕主悉縺ｮ繧､繝吶Φ繝・30譌･莉･蜑・縺ｯ繧ｹ繧ｭ繝・・縺輔ｌ繧・[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=0莉ｶ, 繧ｨ繝ｩ繝ｼ=1莉ｶ : ICSParser
+
+[90mstderr[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [
+22m[2m驕主悉縺ｮ繧､繝吶Φ繝・30譌･莉･蜑・縺ｯ繧ｹ繧ｭ繝・・縺輔ｌ繧・[22m[39m
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"蜿､縺・う繝吶Φ繝・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 蜿､縺・う繝吶Φ繝・: ICSPar
+ser
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [22m[2m隍・焚縺ｮ繧､繝吶Φ繝医ｒ髢句ｧ区凾蛻ｻ縺ｧ繧ｽ繝ｼ繝医☆繧・[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=3莉ｶ, 繧ｨ繝ｩ繝ｼ=0莉ｶ : ICSParser
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [22m[2m荳肴ｭ｣縺ｪ繧､繝吶Φ繝医・繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺ｫ蜷ｫ縺ｾ繧後ｋ[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=0莉ｶ, 繧ｨ繝ｩ繝ｼ=1莉ｶ : ICSParser
+
+[90mstderr[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2mparseICS[2m > [
+22m[2m荳肴ｭ｣縺ｪ繧､繝吶Φ繝医・繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺ｫ蜷ｫ縺ｾ繧後ｋ[22m[39m
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2m螳滄圀縺ｮICS繝輔ぃ繧､繝ｫ縺ｮ繝・せ繝・[2m > [22m[2m蟯｡譛ｬ 陦梧ｬｽ 縺ｮ莠亥ｮ夊｡ｨ.ics繧偵ヱ繝ｼ繧ｹ縺ｧ縺阪ｋ[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=72莉ｶ, 繧ｨ繝ｩ繝ｼ=59莉ｶ : ICSParser
+菫晁ご蝨帝√ｊ 09:00-09:15 [08/21,08/22,08/25,08/26,08/27,08/28,08/29,09/01,09/02,09/03,09/04,09/05,09/08,09/09,09/10,09/11,09/12,09/15,09/16,09/17,09/18]蜍､諤謇ｿ隱・09:30-10:00 [08/21,08/26,08/28,09/02,09/04,09/09,09/11,09/16,09/18]縲宣｡ｧ螳｢縲大・陬ｽ譛昜ｼ夲ｼ・ailto:yukiyoshi.okamoto@askul.com・・10:00-11:00 [08/21,08/26,08/28,09/02,09/04,09/09,09/11,09/16,09/18]縲先怦邱繧∵ｳ穂ｺｺ繧ｫ繝ｼ繝画ｱｺ貂医鷹幕逋ｺ螳壻ｾ貴TG・・ailto:natsumi.kamada@askul.com・・11:00-11:30 [08/21,08/28,09/04,09/11,09/18]鬘ｧ螳｢PF-SAG 螳壻ｾ具ｼ・ailto:kota.iijima@askul.com・・14:00-15:00 [08/21,08/28,09/04,09/11,09/18]1ON1(蜉阯､縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・16:00-16:30 [08/21,08/28,09/04,09/11,09/18]遘ｻ蜍・09:30-10:00 [08/22,08/29,09/05,09/12]謖ｯ繧願ｿ斐ｊ莨夲ｼ・ailto:narumi.suzuki@askul.com・・11:00-12:00 [08/22,08/29,09/05,09/12]縲慎rylion縲繕AT-WG・・ailto:hiroko.kamiya@askul.com・・11:00-12:00 [08/22,08/29,09/05,09/12]縺頑仂 12:00-13:00 [08/22,08/29,09/05,09/12]髢狗匱逕溽肇諤ｧ蜷台ｸ階aigi・・ailto:taishi.araki@askul.com・・13:00-13:30 [08/22,09/05]1ON1(菴占陸縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・13:30-14:00 [08/22,08/29,09/05,09/12]1ON1(驤ｴ譛ｨ縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・14:00-14:30 [08/22,08/29,09/05,09/12]Try繧ｿ繧ｹ繧ｯ蜆ｪ蜈域凾髢難ｼ・ailto:narumi.suzuki@askul.com・・15:00-16:00 [08/22,08/29,09/05,09/12]1ON1(譛ｨ譚代＆繧薙∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・16:00-16:30 [08/22,08/29,09/05,09/12]繧ｨ繝ｳ繧ｸ繝九い繝ｪ繝ｳ繧ｰ1驛ｨ縲繝√・繝髢捺ュ蝣ｱ蜈ｱ譛我ｼ夲ｼ・ailto:makoto.miyazaki@askul.com・・16:30-17:00 [08/22,08/29,09/05,09/12]螳壽凾騾遉ｾ譌･ 18:00-21:00 [08/22,08/29,09/05,09/12]縲宣｡ｧ螳｢縲羨I縲繧ｨ繝ｩ繝ｼ讀懃衍菫ｮ豁｣閾ｪ蜍募喧・・ailto:yukiyoshi.okamoto@askul.com・・10:00-11:00 [08/25,09/01,09/08,09/15]B-EMD - mgr螳壻ｾ・62譛滉ｸ区悄)・・ailto:hiroaki.harita@askul.com・・14:00-14:30 [08/25,09/01,09/08,09/15]縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ具ｼ・ailto:yutaka.soyama@askul.com・・16:00-16:30 [08/25,09/01,09/08,09/15]1ON1(荳ｭ螢ｺ縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・16:30-17:00 [08/25,09/01,09/08,09/15]繧､繝ｳ繧ｿ繝ｼ繝ｳ譛昜ｼ夲ｼ・ailto:yukiyoshi.okamoto@askul.com・・09:45-10:00 [08/26,08/27,08/28,08/29,09/01,09/02,09/03,09/04,09/05]蜑咲伐縺輔ｓ竍秘｡ｧ螳｢T隱ｲ鬘梧､懆ｨ惹ｼ・螳壻ｾ・ 窶ｻ蠖捺律10:00縺ｾ縺ｧ縺ｫ隴ｰ鬘後↑縺代ｌ縺ｰ豬∽ｼ夲ｼ・ailto:yutaka.soyama@askul.com・・14:00-14:30 [08/26,09/02,09/09,09/16]Trylion PJ 鬘ｧ螳｢T 髢狗匱螳壻ｾ具ｼ・ailto:yukiyoshi.okamoto@askul.com・・14:30-15:00 [08/26,09/02,09/09,09/16]鬘ｧ螳｢T遒ｺ隱堺ｼ夲ｼ育↓譖懈律・会ｼ・ailto:yuji.yamaguchi@askul.com・・15:00-16:00 [08/26,09/02,09/09,09/16]繝ｪ繝ｪ繝ｼ繧ｹ・・ailto:yukiyoshi.okamoto@askul.com・・17:00-20:00 [08/26,09/02,09/09,09/16]繧､繝ｳ繧ｿ繝ｼ繝ｳ螟穂ｼ夲ｼ・ailto:yukiyoshi.okamoto@askul.com・・17:30-18:00 [08/26,08/27,08/28,08/29,09/01,09/02,09/03,09/04]Trylion_繝・せ繝医・蜩∬ｳｪ螳壻ｾ具ｼ・ailto:daichi.tanaka3@askul.com・・09:30-10:00 [08/27,09/03,09/10,09/17]縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ具ｼ・ailto:yutaka.soyama@askul.com・・10:00-10:30 [08/27,09/03,09/10,09/17]鬘ｧ螳｢菫晏ｮ磯ｲ謐怜ｮ壻ｾ具ｼ・ailto:yutaka.soyama@askul.com・・10:30-11:00 [08/27,09/03,09/10,09/17]縲慎rylion縲鷹幕逋ｺ螳壻ｾ倶ｼ夲ｼ・ailto:hiroko.kamiya@askul.com・・14:00-15:00 [08/27,09/03,09/10,09/17]1on1 (譖ｽ螻ｱ)・・ailto:yutaka.soyama@askul.com・・15:30-16:00 [08/27,09/03,09/10,09/17]1on1・亥ｲ｡譛ｬ・会ｼ・ailto:yukiyoshi.okamoto@askul.com・・16:30-17:00 [08/27,09/03,09/10,09/17]1on1・・ailto:shungo.sasai@askul.com・・13:00-13:30 [08/29,09/12]1ON1(騾ｲ阯､縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・16:00-16:30 [09/02,09/16]1on1・井ｼ頑擲縺輔ｓ・会ｼ・ailto:yukiyoshi.okamoto@askul.com・・16:30-17:00 [09/02,09/16]鬘ｧ螳｢繝√・繝諠・ｱ蜈ｱ譛我ｼ夲ｼ・ailto:watanabe_toru@askul.com・・15:00-15:30 [09/03]1on1(蟯｡譛ｬﾃ怜・螻ｱ)・・ailto:yosuke.uchiyama@askul.com・・16:00-16:30 [09/03]蜈ｱ騾壹Λ繧､繝悶Λ繝ｪ縺ｮ逶ｸ隲・髮・ｮ｢ x 鬘ｧ螳｢・・ailto:shota.nagao@askul.com・・2025/09/04(譛ｨ) 15:00 - 2025/09/04(譛ｨ) 15:30縲舌く繝｣繝ｳ繧ｻ繝ｫ縲代く繝｣繝ｳ繧ｻ繝ｫ貂医∩: 繝壹い繝励Ο・・ailto:masaki.nakatsubo@askul.com・・2025/09/04(譛ｨ) 15:00 - 2025/09/04(譛ｨ) 16:00縲舌く繝｣繝ｳ繧ｻ繝ｫ縲舛anceled: 繧ｨ繝ｳ繧ｸ繝九い繝ｪ繝ｳ繧ｰ1&2邨ｱ諡ｬ驛ｨ莨夲ｼ・ailto:yosuke.uchiyama@askul.com・・14:00-15:00 [09/08]鬮呎ｩ九＆繧薙3繝ｶ譛育岼讓呵ｪｬ譏趣ｼ・ailto:isamu.kato@askul.com・・2025/09/09(轣ｫ) 11:00 - 2025/09/09(轣ｫ) 11:30豕穂ｺｺ繧ｫ繝ｼ繝会ｼ医・繧｢繝励Ο・会ｼ・ailto:masaki.nakatsubo@askul.com・・2025/09/09(轣ｫ) 13:00 - 2025/09/09(轣ｫ) 14:00縲舌く繝｣繝ｳ繧ｻ繝ｫ縲舛anceled: 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ・2025/09/10(豌ｴ) 10:00 - 2025/09/10(豌ｴ) 10:30縲宣撼蜈ｬ髢九代舌く繝｣繝ｳ繧ｻ繝ｫ縲鷹撼蜈ｬ髢九・莠亥ｮ・2025/09/10(豌ｴ) 13:00 - 2025/09/10(豌ｴ) 14:00縲植ITR縲禅rylion鬘ｧ螳｢API縺ｮ繝偵い繝ｪ繝ｳ繧ｰ・・ailto:shinji.murata@askul.com・・2025/09/10(豌ｴ) 15:00 - 2025/09/10(豌ｴ) 15:30縲舌く繝｣繝ｳ繧ｻ繝ｫ縲舛anceled: 1on1 (譖ｽ螻ｱ) 2025/09/10(豌ｴ) 15:30 - 2025/09/10(豌ｴ) 16:00縲宣撼蜈ｬ髢九鷹撼蜈ｬ髢九・莠亥ｮ・2025/09/10(豌ｴ) 17:30 - 2025/09/10(豌ｴ) 18:30譁ｰ隕冗匳骭ｲ譯井ｻｶ謾ｹ蝟・・逶ｸ隲・ｼ亥膚蜩・佑LUBﾃ鈴｡ｧ螳｢・会ｼ・ailto:yukiyoshi.okamoto@askul.com・・2025/09/11(譛ｨ) 11:30 - 2025/09/11(譛ｨ) 12:00譁ｰ蜊偵お繝ｳ繧ｸ繝九い繧､繝ｳ繧ｿ繝ｼ繝ｳ繧ｷ繝・・謖ｯ繧願ｿ斐ｊ蝣ｱ蜻奇ｼ・ailto:yuya.ogi@askul.com・・2025/09/11(譛ｨ) 12:00 - 2025/09/11(譛ｨ) 12:30縺頑仂 2025/09/11(譛ｨ) 12:30 - 2025/09/11(譛ｨ) 13:30SAG譁ｰ隕就PI縺ｫ縺､縺・※逶ｸ隲・ｼ・ailto:keiichiro.sato@askul.com・・2025/09/11(譛ｨ) 13:30 - 2025/09/11(譛ｨ) 14:001ON1(鬮呎ｩ九＆繧薙∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・15:30-16:00 [09/11,09/18] 縲蝕SMS縲・6蟷ｴ5譛域悄2蝗樒岼縺ｮSO/ISMS讌ｭ蜍呵ｲｬ莉ｻ閠・・諡・ｽ楢・ｼ夊ｭｰ・・ailto:mayu.kawaguchi@askul.com・・2025/09/12(驥・ 10:00 - 2025/09/12(驥・ 11:009譛亥ｺｦ繝励Ο繝繧ｯ繝・繝槭・繧ｱ繝・ぅ繝ｳ繧ｰ譛ｬ驛ｨ莨壹窶ｻ繝上う繝悶Μ繝・ヨ髢句ぎ・医す繧ｧ繧｢繝､繝ｼ繝会ｼ会ｼ・ailto:caiyi.li@askul.com・・2025/09/12(驥・ 14:00 - 2025/09/12(驥・ 15:00縲宣撼蜈ｬ髢九鷹撼蜈ｬ髢九・莠亥ｮ・2025/09/12(驥・ 18:00 - 2025/09/12(驥・ 20:30MTG荳榊庄 18:00-21:00 [09/15]莠区腐蟇ｾ遲・蝗樒岼・・ailto:yosuke.uchiyama@askul.com・・2025/09/16(轣ｫ) 11:00 - 2025/09/16(轣ｫ) 11:30SAG譁ｰ隕就PI縺ｫ縺､縺・※逶ｸ隲・ｼ・ailto:keiichiro.sato@askul.com・・2025/09/16(轣ｫ) 11:30 - 2025/09/16(轣ｫ) 12:00Trylion縺ｮ鬘ｧ螳｢讒矩縺ｫ縺､縺・※・・ailto:kuemura@askul.com・・2025/09/16(轣ｫ) 13:30 - 2025/09/16(轣ｫ) 14:00縲舌お繝ｳ繧ｸ繝九い蜷代￠縲醍､ｾ蜩｡邏ｹ莉句宛蠎ｦ隱ｬ譏惹ｼ夲ｼ・ailto:yoshiki.nishimoto@askul.com・・2025/09/16(轣ｫ) 14:00 - 2025/09/16(轣ｫ) 15:00縺ｪ繧薙■繧・▲縺ｦSSO縲蟇ｾ蠢懃嶌隲・ｼ・ailto:yukiyoshi.okamoto@askul.com・・2025/09/16(轣ｫ) 14:30 - 2025/09/16(轣ｫ) 15:00繝ｭ繝ｼ繝ｫ繝舌ャ繧ｯ縺ｮ螳牙・蛹鳳J縺ｮ繧､繝ｳ繝励ャ繝茨ｼ・ailto:michio.sugano@askul.com・・2025/09/16(轣ｫ) 15:30 - 2025/09/16(轣ｫ) 16:00CLUB蜍牙ｼｷ莨夲ｼ・ailto:narumi.suzuki@askul.com・・2025/09/16(轣ｫ) 16:00 - 2025/09/16(轣ｫ) 16:30險ｭ險域嶌蟇ｾ髱｢繝ｬ繝薙Η繝ｼ・・ailto:moe.kimura@askul.com・・2025/09/17(豌ｴ) 13:30 - 2025/09/17(豌ｴ) 14:00鬘ｧ螳｢繝√・繝諠・ｱ蜈ｱ譛我ｼ夲ｼ・ailto:watanabe_toru@askul.com・・15:00-15:30 [09/17]縲宣撼蜈ｬ髢九鷹撼蜈ｬ髢九・莠亥ｮ・2025/09/17(豌ｴ) 19:00 - 2025/09/17(豌ｴ) 20:00謗･螳｢繝・・繝ｫ鬘ｧ螳｢遒ｺ隱搾ｼ・ailto:tomomi.sato2@askul.com・・2025/09/18(譛ｨ) 12:00 - 2025/09/18(譛ｨ) 12:30縺頑仂 2025/09/18(譛ｨ) 12:30 - 2025/09/18(譛ｨ) 13:30繝壹い繝励Ο・・ailto:masaki.nakatsubo@askul.com・・2025/09/18(譛ｨ) 14:00 - 2025/09/18(譛ｨ) 15:00繝薙ず繝阪せ繝ｫ繝ｼ繝ｫ隱ｭ縺ｿ蜷医ｏ縺幢ｼ・蝗樒岼・会ｼ・ailto:yukiyoshi.okamoto@askul.com・・2025/09/18(譛ｨ) 15:00 - 2025/09/18(譛ｨ) 15:30縲宣撼蜈ｬ髢九鷹撼蜈ｬ髢九・莠亥ｮ・2025/09/18(譛ｨ) 17:30 - 2025/09/18(譛ｨ) 18:00
+
+=== ICS隗｣譫千ｵ先棡繧ｵ繝槭Μ繝ｼ ===
+繝代・繧ｹ縺輔ｌ縺溘う繝吶Φ繝域焚: 72
+繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ謨ｰ: 59
+
+譛蛻昴・繧､繝吶Φ繝・ 菫晁ご蝨帝√ｊ
+  UUID: 040000008200E00074C5B7101A82E00800000000105A315A2DC3DB01000000000000000010000000EC44F17E8AD46E45B794B8BB632B3D22
+  髢句ｧ・ 2025-08-21T00:00:00.000Z
+  邨ゆｺ・ 2025-08-21T00:15:00.000Z
+  蝣ｴ謇: (縺ｪ縺・
+  荳ｻ蛯ｬ閠・ (縺ｪ縺・
+  繝励Λ繧､繝吶・繝・ false
+  繧ｭ繝｣繝ｳ繧ｻ繝ｫ: false
+  郢ｰ繧願ｿ斐＠: 21蝗・
+=== 蜈ｨ繧､繝吶Φ繝医Μ繧ｹ繝茨ｼ磯撼繧ｭ繝｣繝ｳ繧ｻ繝ｫ繝ｻ髱槭・繝ｩ繧､繝吶・繝茨ｼ・===
+陦ｨ遉ｺ蟇ｾ雎｡繧､繝吶Φ繝域焚: 63
+---
+1. 菫晁ご蝨帝√ｊ 09:00-09:15 [08/21,08/22,08/25,08/26,08/27,08/28,08/29,09/01,09/02,09/03,09/04,09/05,09/08,09/09,09/10,09/11,09/12,09/15,09/16,09/17,09/18]
+2. 蜍､諤謇ｿ隱・09:30-10:00 [08/21,08/26,08/28,09/02,09/04,09/09,09/11,09/16,09/18]
+3. 縲宣｡ｧ螳｢縲大・陬ｽ譛昜ｼ夲ｼ・ailto:yukiyoshi.okamoto@askul.com・・10:00-11:00 [08/21,08/26,08/28,09/02,09/04,09/09,09/11,09/16,09/18]
+4. 縲先怦邱繧∵ｳ穂ｺｺ繧ｫ繝ｼ繝画ｱｺ貂医鷹幕逋ｺ螳壻ｾ貴TG・・ailto:natsumi.kamada@askul.com・・11:00-11:30 [08/21,08/28,09/04,09/11,09/18]
+5. 鬘ｧ螳｢PF-SAG 螳壻ｾ具ｼ・ailto:kota.iijima@askul.com・・14:00-15:00 [08/21,08/28,09/04,09/11,09/18]
+6. 1ON1(蜉阯､縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・16:00-16:30 [08/21,08/28,09/04,09/11,09/18]
+7. 遘ｻ蜍・09:30-10:00 [08/22,08/29,09/05,09/12]
+8. 謖ｯ繧願ｿ斐ｊ莨夲ｼ・ailto:narumi.suzuki@askul.com・・11:00-12:00 [08/22,08/29,09/05,09/12]
+9. 縲慎rylion縲繕AT-WG・・ailto:hiroko.kamiya@askul.com・・11:00-12:00 [08/22,08/29,09/05,09/12]
+10. 縺頑仂 12:00-13:00 [08/22,08/29,09/05,09/12]
+11. 髢狗匱逕溽肇諤ｧ蜷台ｸ階aigi・・ailto:taishi.araki@askul.com・・13:00-13:30 [08/22,09/05]
+12. 1ON1(菴占陸縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・13:30-14:00 [08/22,08/29,09/05,09/12]
+13. 1ON1(驤ｴ譛ｨ縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・14:00-14:30 [08/22,08/29,09/05,09/12]
+14. Try繧ｿ繧ｹ繧ｯ蜆ｪ蜈域凾髢難ｼ・ailto:narumi.suzuki@askul.com・・15:00-16:00 [08/22,08/29,09/05,09/12]
+15. 1ON1(譛ｨ譚代＆繧薙∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・16:00-16:30 [08/22,08/29,09/05,09/12]
+16. 繧ｨ繝ｳ繧ｸ繝九い繝ｪ繝ｳ繧ｰ1驛ｨ縲繝√・繝髢捺ュ蝣ｱ蜈ｱ譛我ｼ夲ｼ・ailto:makoto.miyazaki@askul.com・・16:30-17:00 [08/22,08/29,09/05,09/12]
+17. 螳壽凾騾遉ｾ譌･ 18:00-21:00 [08/22,08/29,09/05,09/12]
+18. 縲宣｡ｧ螳｢縲羨I縲繧ｨ繝ｩ繝ｼ讀懃衍菫ｮ豁｣閾ｪ蜍募喧・・ailto:yukiyoshi.okamoto@askul.com・・10:00-11:00 [08/25,09/01,09/08,09/15]
+19. B-EMD - mgr螳壻ｾ・62譛滉ｸ区悄)・・ailto:hiroaki.harita@askul.com・・14:00-14:30 [08/25,09/01,09/08,09/15]
+20. 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ具ｼ・ailto:yutaka.soyama@askul.com・・16:00-16:30 [08/25,09/01,09/08,09/15]
+21. 1ON1(荳ｭ螢ｺ縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・16:30-17:00 [08/25,09/01,09/08,09/15]
+22. 繧､繝ｳ繧ｿ繝ｼ繝ｳ譛昜ｼ夲ｼ・ailto:yukiyoshi.okamoto@askul.com・・09:45-10:00 [08/26,08/27,08/28,08/29,09/01,09/02,09/03,09/04,09/05]
+23. 蜑咲伐縺輔ｓ竍秘｡ｧ螳｢T隱ｲ鬘梧､懆ｨ惹ｼ・螳壻ｾ・ 窶ｻ蠖捺律10:00縺ｾ縺ｧ縺ｫ隴ｰ鬘後↑縺代ｌ縺ｰ豬∽ｼ夲ｼ・ailto:yutaka.soyama@askul.com・・14:00-14:30 [08/26,09/02,09/09,09/16]
+24. Trylion PJ 鬘ｧ螳｢T 髢狗匱螳壻ｾ具ｼ・ailto:yukiyoshi.okamoto@askul.com・・14:30-15:00 [08/26,09/02,09/09,09/16]
+25. 鬘ｧ螳｢T遒ｺ隱堺ｼ夲ｼ育↓譖懈律・会ｼ・ailto:yuji.yamaguchi@askul.com・・15:00-16:00 [08/26,09/02,09/09,09/16]
+26. 繝ｪ繝ｪ繝ｼ繧ｹ・・ailto:yukiyoshi.okamoto@askul.com・・17:00-20:00 [08/26,09/02,09/09,09/16]
+27. 繧､繝ｳ繧ｿ繝ｼ繝ｳ螟穂ｼ夲ｼ・ailto:yukiyoshi.okamoto@askul.com・・17:30-18:00 [08/26,08/27,08/28,08/29,09/01,09/02,09/03,09/04]
+28. Trylion_繝・せ繝医・蜩∬ｳｪ螳壻ｾ具ｼ・ailto:daichi.tanaka3@askul.com・・09:30-10:00 [08/27,09/03,09/10,09/17]
+29. 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ具ｼ・ailto:yutaka.soyama@askul.com・・10:00-10:30 [08/27,09/03,09/10,09/17]
+30. 鬘ｧ螳｢菫晏ｮ磯ｲ謐怜ｮ壻ｾ具ｼ・ailto:yutaka.soyama@askul.com・・10:30-11:00 [08/27,09/03,09/10,09/17]
+31. 縲慎rylion縲鷹幕逋ｺ螳壻ｾ倶ｼ夲ｼ・ailto:hiroko.kamiya@askul.com・・14:00-15:00 [08/27,09/03,09/10,09/17]
+32. 1on1 (譖ｽ螻ｱ)・・ailto:yutaka.soyama@askul.com・・15:30-16:00 [08/27,09/03,09/10,09/17]
+33. 1on1・亥ｲ｡譛ｬ・会ｼ・ailto:yukiyoshi.okamoto@askul.com・・16:30-17:00 [08/27,09/03,09/10,09/17]
+34. 1on1・・ailto:shungo.sasai@askul.com・・13:00-13:30 [08/29,09/12]
+35. 1ON1(騾ｲ阯､縺輔ｓ縲∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・16:00-16:30 [09/02,09/16]
+36. 1on1・井ｼ頑擲縺輔ｓ・会ｼ・ailto:yukiyoshi.okamoto@askul.com・・16:30-17:00 [09/02,09/16]
+37. 鬘ｧ螳｢繝√・繝諠・ｱ蜈ｱ譛我ｼ夲ｼ・ailto:watanabe_toru@askul.com・・15:00-15:30 [09/03]
+38. 1on1(蟯｡譛ｬﾃ怜・螻ｱ)・・ailto:yosuke.uchiyama@askul.com・・16:00-16:30 [09/03]
+39. 蜈ｱ騾壹Λ繧､繝悶Λ繝ｪ縺ｮ逶ｸ隲・髮・ｮ｢ x 鬘ｧ螳｢・・ailto:shota.nagao@askul.com・・2025/09/04(譛ｨ) 15:00 - 2025/09/04(譛ｨ) 15:30
+40. 鬮呎ｩ九＆繧薙3繝ｶ譛育岼讓呵ｪｬ譏趣ｼ・ailto:isamu.kato@askul.com・・2025/09/09(轣ｫ) 11:00 - 2025/09/09(轣ｫ) 11:30
+41. 豕穂ｺｺ繧ｫ繝ｼ繝会ｼ医・繧｢繝励Ο・会ｼ・ailto:masaki.nakatsubo@askul.com・・2025/09/09(轣ｫ) 13:00 - 2025/09/09(轣ｫ) 14:00
+42. 縲植ITR縲禅rylion鬘ｧ螳｢API縺ｮ繝偵い繝ｪ繝ｳ繧ｰ・・ailto:shinji.murata@askul.com・・2025/09/10(豌ｴ) 15:00 - 2025/09/10(豌ｴ) 15:30
+43. 譁ｰ隕冗匳骭ｲ譯井ｻｶ謾ｹ蝟・・逶ｸ隲・ｼ亥膚蜩・佑LUBﾃ鈴｡ｧ螳｢・会ｼ・ailto:yukiyoshi.okamoto@askul.com・・2025/09/11(譛ｨ) 11:30 - 2025/09/11(譛ｨ) 12:00
+44. 譁ｰ蜊偵お繝ｳ繧ｸ繝九い繧､繝ｳ繧ｿ繝ｼ繝ｳ繧ｷ繝・・謖ｯ繧願ｿ斐ｊ蝣ｱ蜻奇ｼ・ailto:yuya.ogi@askul.com・・2025/09/11(譛ｨ) 12:00 - 2025/09/11(譛ｨ) 12:30
+45. 縺頑仂 2025/09/11(譛ｨ) 12:30 - 2025/09/11(譛ｨ) 13:30
+46. SAG譁ｰ隕就PI縺ｫ縺､縺・※逶ｸ隲・ｼ・ailto:keiichiro.sato@askul.com・・2025/09/11(譛ｨ) 13:30 - 2025/09/11(譛ｨ) 14:00
+47. 1ON1(鬮呎ｩ九＆繧薙∝ｲ｡譛ｬ)・・ailto:yukiyoshi.okamoto@askul.com・・15:30-16:00 [09/11,09/18]
+48.  縲蝕SMS縲・6蟷ｴ5譛域悄2蝗樒岼縺ｮSO/ISMS讌ｭ蜍呵ｲｬ莉ｻ閠・・諡・ｽ楢・ｼ夊ｭｰ・・ailto:mayu.kawaguchi@askul.com・・2025/09/12(驥・ 10:00 - 2025/09/12(驥・ 11:00
+49. 9譛亥ｺｦ繝励Ο繝繧ｯ繝・繝槭・繧ｱ繝・ぅ繝ｳ繧ｰ譛ｬ驛ｨ莨壹窶ｻ繝上う繝悶Μ繝・ヨ髢句ぎ・医す繧ｧ繧｢繝､繝ｼ繝会ｼ会ｼ・ailto:caiyi.li@askul.com・・2025/09/12(驥・ 14:00 - 2025/09/12(驥・ 15:00
+50. MTG荳榊庄 18:00-21:00 [09/15]
+51. 莠区腐蟇ｾ遲・蝗樒岼・・ailto:yosuke.uchiyama@askul.com・・2025/09/16(轣ｫ) 11:00 - 2025/09/16(轣ｫ) 11:30
+52. SAG譁ｰ隕就PI縺ｫ縺､縺・※逶ｸ隲・ｼ・ailto:keiichiro.sato@askul.com・・2025/09/16(轣ｫ) 11:30 - 2025/09/16(轣ｫ) 12:00
+53. Trylion縺ｮ鬘ｧ螳｢讒矩縺ｫ縺､縺・※・・ailto:kuemura@askul.com・・2025/09/16(轣ｫ) 13:30 - 2025/09/16(轣ｫ) 14:00
+54. 縲舌お繝ｳ繧ｸ繝九い蜷代￠縲醍､ｾ蜩｡邏ｹ莉句宛蠎ｦ隱ｬ譏惹ｼ夲ｼ・ailto:yoshiki.nishimoto@askul.com・・2025/09/16(轣ｫ) 14:00 - 2025/09/16(轣ｫ) 15:00
+55. 縺ｪ繧薙■繧・▲縺ｦSSO縲蟇ｾ蠢懃嶌隲・ｼ・ailto:yukiyoshi.okamoto@askul.com・・2025/09/16(轣ｫ) 14:30 - 2025/09/16(轣ｫ) 15:00
+56. 繝ｭ繝ｼ繝ｫ繝舌ャ繧ｯ縺ｮ螳牙・蛹鳳J縺ｮ繧､繝ｳ繝励ャ繝茨ｼ・ailto:michio.sugano@askul.com・・2025/09/16(轣ｫ) 15:30 - 2025/09/16(轣ｫ) 16:00
+57. CLUB蜍牙ｼｷ莨夲ｼ・ailto:narumi.suzuki@askul.com・・2025/09/16(轣ｫ) 16:00 - 2025/09/16(轣ｫ) 16:30
+58. 險ｭ險域嶌蟇ｾ髱｢繝ｬ繝薙Η繝ｼ・・ailto:moe.kimura@askul.com・・2025/09/17(豌ｴ) 13:30 - 2025/09/17(豌ｴ) 14:00
+59. 鬘ｧ螳｢繝√・繝諠・ｱ蜈ｱ譛我ｼ夲ｼ・ailto:watanabe_toru@askul.com・・15:00-15:30 [09/17]
+60. 謗･螳｢繝・・繝ｫ鬘ｧ螳｢遒ｺ隱搾ｼ・ailto:tomomi.sato2@askul.com・・2025/09/18(譛ｨ) 12:00 - 2025/09/18(譛ｨ) 12:30
+61. 縺頑仂 2025/09/18(譛ｨ) 12:30 - 2025/09/18(譛ｨ) 13:30
+62. 繝壹い繝励Ο・・ailto:masaki.nakatsubo@askul.com・・2025/09/18(譛ｨ) 14:00 - 2025/09/18(譛ｨ) 15:00
+63. 繝薙ず繝阪せ繝ｫ繝ｼ繝ｫ隱ｭ縺ｿ蜷医ｏ縺幢ｼ・蝗樒岼・会ｼ・ailto:yukiyoshi.okamoto@askul.com・・2025/09/18(譛ｨ) 15:00 - 2025/09/18(譛ｨ) 15:30
+
+[90mstderr[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2m螳滄圀縺ｮICS繝輔ぃ繧､繝ｫ縺ｮ
+繝・せ繝・[2m > [22m[2m蟯｡譛ｬ 陦梧ｬｽ 縺ｮ莠亥ｮ夊｡ｨ.ics繧偵ヱ繝ｼ繧ｹ縺ｧ縺阪ｋ[22m[39m
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"Canceled: 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺
+ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Canceled: 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"縲宣｡ｧ螳｢繝√・繝縲大ｲ｡譛ｬ縺輔ｓ繧ｨ繝ｳ繝医Μ繝ｼ・夐｡ｧ螳｢謚懈悽謾ｹ蝟・嶌隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆:
+ 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 縲宣｡ｧ螳｢繝√・繝縲大ｲ｡譛ｬ縺輔ｓ繧ｨ繝ｳ繝医Μ繝ｼ・夐｡ｧ螳｢謚懈悽謾ｹ蝟・嶌隲・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"Canceled: 繧ｨ繝ｳ繧ｸ繝九い繝ｪ繝ｳ繧ｰ1驛ｨ縲繝√・繝髢捺ュ蝣ｱ蜈ｱ譛我ｼ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆
+: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Canceled: 繧ｨ繝ｳ繧ｸ繝九い繝ｪ繝ｳ繧ｰ1驛ｨ縲繝√・繝髢捺ュ蝣ｱ蜈ｱ譛我ｼ・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"BtoB邨ｱ諡ｬ驛ｨ莨・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ BtoB邨ｱ諡ｬ驛ｨ莨・: IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ蜿励￠蜈･繧・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､繝ｳ繧ｿ繝ｼ繝ｳ蜿
+励￠蜈･繧・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"縺ｪ縺ｪ繧∽ｼ夊ｭｰ-隱ｬ譏惹ｼ夲ｼ・譛磯幕蛯ｬ蛻・ｼ・| 雎頑ｴｲ11F莨夊ｭｰ螳､・医ワ繧､繝悶Μ繝・ヨ髢句ぎ・・ 縺ｮ隗｣
+譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 縺ｪ縺ｪ繧∽ｼ夊ｭｰ-隱ｬ譏惹ｼ夲ｼ・譛磯幕蛯ｬ蛻・ｼ・| 雎頑ｴｲ11F莨夊ｭｰ螳､・医ワ繧､繝悶Μ繝・ヨ髢句ぎ・・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧ｭ繝｣繝ｳ繧ｻ繝ｫ貂医∩: 繝壹い繝励Ο" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧ｭ繝｣繝ｳ
+繧ｻ繝ｫ貂医∩: 繝壹い繝励Ο : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"螟ｧ驥上ョ繝ｼ繧ｿ繝・せ繝医・逶ｸ隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 螟ｧ驥上ョ繝ｼ繧ｿ
+繝・せ繝医・逶ｸ隲・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"DevContainer縺ｮ縺皮嶌隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ DevContai
+ner縺ｮ縺皮嶌隲・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"譛育ｷ繧∵ｳ穂ｺｺ繧ｫ繝ｼ繝峨・霑ｽ蜉蟇ｾ蠢懊・縺皮嶌隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒
+縺・ 譛育ｷ繧∵ｳ穂ｺｺ繧ｫ繝ｼ繝峨・霑ｽ蜉蟇ｾ蠢懊・縺皮嶌隲・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ貅門ｙ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､繝ｳ繧ｿ繝ｼ繝ｳ貅門ｙ 
+: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繝壹い繝励Ο" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繝壹い繝励Ο : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"reCAPTCHA 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ諢溘・蜈ｱ譛・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・
+ reCAPTCHA 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ諢溘・蜈ｱ譛・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"菴懈･ｭ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 菴懈･ｭ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､繝ｳ繧ｿ繝ｼ繝ｳ : ICSP
+arser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"菴懈･ｭ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 菴懈･ｭ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ隕∵ｱょ・譫舌ヲ繧｢繝ｪ繝ｳ繧ｰ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧
+､繝ｳ繧ｿ繝ｼ繝ｳ隕∵ｱょ・譫舌ヲ繧｢繝ｪ繝ｳ繧ｰ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ隕∽ｻｶ螳夂ｾｩ繝ｬ繝薙Η繝ｼ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､
+繝ｳ繧ｿ繝ｼ繝ｳ隕∽ｻｶ螳夂ｾｩ繝ｬ繝薙Η繝ｼ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"Trylion髢狗匱繝√・繝蜈ｱ譛我ｼ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Trylion
+髢狗匱繝√・繝蜈ｱ譛我ｼ・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繝・・繧ｿ菴懈・逶ｸ隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繝・・繧ｿ菴懈・逶ｸ隲・: IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"R2螟ｧ驥上ョ繝ｼ繧ｿ繝・せ繝医蟇ｾ雎｡IF繝ｬ繝薙Η繝ｼ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医
+〒縺・ R2螟ｧ驥上ョ繝ｼ繧ｿ繝・せ繝医蟇ｾ雎｡IF繝ｬ繝薙Η繝ｼ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"雉ｪ蝠擾ｼ亥ｾｳ蜴滂ｼ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 雉ｪ蝠擾ｼ亥ｾｳ蜴滂ｼ・: IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繝ｪ繝ｪ繝ｼ繧ｹ貅門ｙ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繝ｪ繝ｪ繝ｼ繧ｹ貅門ｙ : IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､繝ｳ繧ｿ繝ｼ繝ｳ : ICSP
+arser
+[90mstdout[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2m螳滄圀縺ｮICS繝輔ぃ繧､繝ｫ縺ｮ繝・せ繝・[2m > [22m[2mPython縺ｨ蜷後§邨先棡縺悟・蜉帙＆繧後ｋ[22m[39m
+2025/10/04 21:00:00 [INFO] ICS繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・: ICSParser
+2025/10/04 21:00:00 [INFO] ICS繝代・繧ｹ螳御ｺ・ 謌仙粥=72莉ｶ, 繧ｨ繝ｩ繝ｼ=59莉ｶ : ICSParser
+
+=== Python莠呈鋤諤ｧ繝√ぉ繝・け ===
+笨・邱上う繝吶Φ繝域焚: 72 (譛溷ｾ・､: 72)
+笨・陦ｨ遉ｺ繧､繝吶Φ繝域焚: 63
+笨・譛蛻昴・繧､繝吶Φ繝亥錐: "菫晁ご蝨帝√ｊ" (譛溷ｾ・､: "菫晁ご蝨帝√ｊ")
+笨・繧､繝吶Φ繝医た繝ｼ繝磯・ 豁｣蟶ｸ
+笨・郢ｰ繧願ｿ斐＠繧､繝吶Φ繝亥・逅・ 豁｣蟶ｸ
+
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"Trylion 隱ｬ譏・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Trylion 隱ｬ譏・: IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"2谿ｵ髫手ｪ崎ｨｼ逕ｻ髱｢繧ｨ繝ｩ繝ｼ蜃ｦ逅・↓縺､縺・※謨吶∴縺ｦ縺・◆縺縺阪◆縺・〒縺・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励
+◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 2谿ｵ髫手ｪ崎ｨｼ逕ｻ髱｢繧ｨ繝ｩ繝ｼ蜃ｦ逅・↓縺､縺・※謨吶∴縺ｦ縺・◆縺縺阪◆縺・〒縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧ｹ繝槭・荳榊・蜷亥ｯｾ蠢・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧ｹ繝槭・荳榊・蜷亥ｯｾ蠢・
+: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"險ｭ險域嶌雉ｪ蝠・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 險ｭ險域嶌雉ｪ蝠・: ICSParse
+r
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+
+=== ICS繝代・繧ｹ隴ｦ蜻・===
+  1. 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺御ｸ崎ｶｳ縺励※縺・∪縺・  2. 縲心KI
+P縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺御ｸ崎ｶｳ縺励※縺・∪縺・  3. 縲心KIP縲・繧､繝吶Φ繝
+・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺御ｸ崎ｶｳ縺励※縺・∪縺・  4. 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 
+縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺御ｸ崎ｶｳ縺励※縺・∪縺・  5. 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ
+謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺御ｸ崎ｶｳ縺励※縺・∪縺・  6. 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆:
+ 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺御ｸ崎ｶｳ縺励※縺・∪縺・  7. 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝
+ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺御ｸ崎ｶｳ縺励※縺・∪縺・  8. 縲心KIP縲・繧､繝吶Φ繝・"Canceled: 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙
+Η繝ｼ螳壻ｾ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Canceled: 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ・  9. 縲心KIP縲・繧
+､繝吶Φ繝・"縲宣｡ｧ螳｢繝√・繝縲大ｲ｡譛ｬ縺輔ｓ繧ｨ繝ｳ繝医Μ繝ｼ・夐｡ｧ螳｢謚懈悽謾ｹ蝟・嶌隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 縲宣｡ｧ螳｢繝√・繝縲大ｲ｡譛ｬ縺
+輔ｓ繧ｨ繝ｳ繝医Μ繝ｼ・夐｡ｧ螳｢謚懈悽謾ｹ蝟・嶌隲・  10. 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, D
+TEND)縺御ｸ崎ｶｳ縺励※縺・∪縺・  ... 莉・49 莉ｶ
+
+[90mstderr[2m | src/core/ics/icsParser.test.ts[2m > [22m[2micsParser[2m > [22m[2m螳滄圀縺ｮICS繝輔ぃ繧､繝ｫ縺ｮ
+繝・せ繝・[2m > [22m[2mPython縺ｨ蜷後§邨先棡縺悟・蜉帙＆繧後ｋ[22m[39m
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"Canceled: 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺
+ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Canceled: 縲宣｡ｧ螳｢繝√・繝縲題ｦ∽ｻｶ螳夂ｾｩ繝√・繝蜀・Κ繝ｬ繝薙Η繝ｼ螳壻ｾ・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"縲宣｡ｧ螳｢繝√・繝縲大ｲ｡譛ｬ縺輔ｓ繧ｨ繝ｳ繝医Μ繝ｼ・夐｡ｧ螳｢謚懈悽謾ｹ蝟・嶌隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆:
+ 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 縲宣｡ｧ螳｢繝√・繝縲大ｲ｡譛ｬ縺輔ｓ繧ｨ繝ｳ繝医Μ繝ｼ・夐｡ｧ螳｢謚懈悽謾ｹ蝟・嶌隲・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"Canceled: 繧ｨ繝ｳ繧ｸ繝九い繝ｪ繝ｳ繧ｰ1驛ｨ縲繝√・繝髢捺ュ蝣ｱ蜈ｱ譛我ｼ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆
+: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Canceled: 繧ｨ繝ｳ繧ｸ繝九い繝ｪ繝ｳ繧ｰ1驛ｨ縲繝√・繝髢捺ュ蝣ｱ蜈ｱ譛我ｼ・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"BtoB邨ｱ諡ｬ驛ｨ莨・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ BtoB邨ｱ諡ｬ驛ｨ莨・: IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ蜿励￠蜈･繧・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､繝ｳ繧ｿ繝ｼ繝ｳ蜿
+励￠蜈･繧・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"縺ｪ縺ｪ繧∽ｼ夊ｭｰ-隱ｬ譏惹ｼ夲ｼ・譛磯幕蛯ｬ蛻・ｼ・| 雎頑ｴｲ11F莨夊ｭｰ螳､・医ワ繧､繝悶Μ繝・ヨ髢句ぎ・・ 縺ｮ隗｣
+譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 縺ｪ縺ｪ繧∽ｼ夊ｭｰ-隱ｬ譏惹ｼ夲ｼ・譛磯幕蛯ｬ蛻・ｼ・| 雎頑ｴｲ11F莨夊ｭｰ螳､・医ワ繧､繝悶Μ繝・ヨ髢句ぎ・・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧ｭ繝｣繝ｳ繧ｻ繝ｫ貂医∩: 繝壹い繝励Ο" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧ｭ繝｣繝ｳ
+繧ｻ繝ｫ貂医∩: 繝壹い繝励Ο : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"螟ｧ驥上ョ繝ｼ繧ｿ繝・せ繝医・逶ｸ隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 螟ｧ驥上ョ繝ｼ繧ｿ
+繝・せ繝医・逶ｸ隲・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"DevContainer縺ｮ縺皮嶌隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ DevContai
+ner縺ｮ縺皮嶌隲・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"譛育ｷ繧∵ｳ穂ｺｺ繧ｫ繝ｼ繝峨・霑ｽ蜉蟇ｾ蠢懊・縺皮嶌隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒
+縺・ 譛育ｷ繧∵ｳ穂ｺｺ繧ｫ繝ｼ繝峨・霑ｽ蜉蟇ｾ蠢懊・縺皮嶌隲・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ貅門ｙ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､繝ｳ繧ｿ繝ｼ繝ｳ貅門ｙ 
+: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繝壹い繝励Ο" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繝壹い繝励Ο : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"reCAPTCHA 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ諢溘・蜈ｱ譛・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・
+ reCAPTCHA 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ諢溘・蜈ｱ譛・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"菴懈･ｭ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 菴懈･ｭ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､繝ｳ繧ｿ繝ｼ繝ｳ : ICSP
+arser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"菴懈･ｭ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 菴懈･ｭ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ隕∵ｱょ・譫舌ヲ繧｢繝ｪ繝ｳ繧ｰ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧
+､繝ｳ繧ｿ繝ｼ繝ｳ隕∵ｱょ・譫舌ヲ繧｢繝ｪ繝ｳ繧ｰ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ隕∽ｻｶ螳夂ｾｩ繝ｬ繝薙Η繝ｼ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､
+繝ｳ繧ｿ繝ｼ繝ｳ隕∽ｻｶ螳夂ｾｩ繝ｬ繝薙Η繝ｼ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"Trylion髢狗匱繝√・繝蜈ｱ譛我ｼ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Trylion
+髢狗匱繝√・繝蜈ｱ譛我ｼ・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"髱槫・髢九・莠亥ｮ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 髱槫・髢九・莠亥ｮ・: ICSPar
+ser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繝・・繧ｿ菴懈・逶ｸ隲・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繝・・繧ｿ菴懈・逶ｸ隲・: IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"R2螟ｧ驥上ョ繝ｼ繧ｿ繝・せ繝医蟇ｾ雎｡IF繝ｬ繝薙Η繝ｼ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医
+〒縺・ R2螟ｧ驥上ョ繝ｼ繧ｿ繝・せ繝医蟇ｾ雎｡IF繝ｬ繝薙Η繝ｼ : ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"雉ｪ蝠擾ｼ亥ｾｳ蜴滂ｼ・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 雉ｪ蝠擾ｼ亥ｾｳ蜴滂ｼ・: IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繝ｪ繝ｪ繝ｼ繧ｹ貅門ｙ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繝ｪ繝ｪ繝ｼ繧ｹ貅門ｙ : IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧､繝ｳ繧ｿ繝ｼ繝ｳ" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧､繝ｳ繧ｿ繝ｼ繝ｳ : ICSP
+arser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"Trylion 隱ｬ譏・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ Trylion 隱ｬ譏・: IC
+SParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"2谿ｵ髫手ｪ崎ｨｼ逕ｻ髱｢繧ｨ繝ｩ繝ｼ蜃ｦ逅・↓縺､縺・※謨吶∴縺ｦ縺・◆縺縺阪◆縺・〒縺・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励
+◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 2谿ｵ髫手ｪ崎ｨｼ逕ｻ髱｢繧ｨ繝ｩ繝ｼ蜃ｦ逅・↓縺､縺・※謨吶∴縺ｦ縺・◆縺縺阪◆縺・〒縺・: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"繧ｹ繝槭・荳榊・蜷亥ｯｾ蠢・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 繧ｹ繝槭・荳榊・蜷亥ｯｾ蠢・
+: ICSParser
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"險ｭ險域嶌雉ｪ蝠・ 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 驕主悉縺ｮ繧､繝吶Φ繝医〒縺・ 險ｭ險域嶌雉ｪ蝠・: ICSParse
+r
+2025/10/04 21:00:00 [WARN] 縲心KIP縲・繧､繝吶Φ繝・"(荳肴・)" 縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: 蠢・医ヵ繧｣繝ｼ繝ｫ繝・SUMMARY, DTSTART, DTEND)縺
+御ｸ崎ｶｳ縺励※縺・∪縺・: ICSParser
+
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mparseICS[2m > [22m遨ｺ縺ｮICS繝輔ぃ繧､繝ｫ繧偵ヱ繝ｼ繧ｹ縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mparseICS[2m > [22m繧ｷ繝ｳ繝励Ν縺ｪ繧､繝吶Φ繝医ｒ繝代・繧ｹ縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mparseICS[2m > [22m郢ｰ繧願ｿ斐＠繧､繝吶Φ繝医ｒ螻暮幕縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mparseICS[2m > [22m繧ｭ繝｣繝ｳ繧ｻ繝ｫ縺輔ｌ縺溘う繝吶Φ繝医ｒ隴伜挨縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mparseICS[2m > [22m繝励Λ繧､繝吶・繝医う繝吶Φ繝医ｒ隴伜挨縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mparseICS[2m > [22m驕主悉縺ｮ繧､繝吶Φ繝・30譌･莉･蜑・縺ｯ繧ｹ繧ｭ繝・・縺輔ｌ繧・ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mparseICS[2m > [22m隍・焚縺ｮ繧､繝吶Φ繝医ｒ髢句ｧ区凾蛻ｻ縺ｧ繧ｽ繝ｼ繝医☆繧・ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mparseICS[2m > [22m荳肴ｭ｣縺ｪ繧､繝吶Φ繝医・繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺ｫ蜷ｫ縺ｾ繧後ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mextractRecentEvents[2m > [22m譛霑代・繧､繝吶Φ繝医・縺ｿ繧呈歓蜃ｺ縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mextractRecentEvents[2m > [22m譌･莉倥ヵ繧ｩ繝ｼ繝槭ャ繝・YYYMMDD繧ょ・逅・〒縺阪ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22mextractRecentEvents[2m > [22mdaysAgo繝代Λ繝｡繝ｼ繧ｿ縺ｧ譛滄俣繧貞､画峩縺ｧ縺阪ｋ
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22m螳滄圀縺ｮICS繝輔ぃ繧､繝ｫ縺ｮ繝・せ繝・[2m > [22m蟯｡譛ｬ 陦梧ｬｽ 縺ｮ莠亥ｮ夊｡ｨ.ics繧偵ヱ繝ｼ繧ｹ縺ｧ縺阪ｋ[33m 491[2mms[22m[39m
+ [32m笨・[39m src/core/ics/icsParser.test.ts[2m > [22micsParser[2m > [22m螳滄圀縺ｮICS繝輔ぃ繧､繝ｫ縺ｮ繝・せ繝・[2m > [22mPython縺ｨ蜷後§邨先棡縺悟・蜉帙＆繧後ｋ
+ [32m笨・[39m src/store/navigation/NavigationProvider.test.tsx[2m > [22mNavigationProvider[2m > [22m蝙句ｮ夂ｾｩ[2m > [22mNavigationHistoryItem縺ｮ蝙九′豁｣縺励￥螳夂ｾｩ縺輔ｌ縺ｦ縺・ｋ・・ull險ｱ螳ｹ・・ [32m笨・[39m src/store/navigation/NavigationProvider.test.tsx[2m > [22mNavigationProvider[2m > [22m蝙句ｮ夂ｾｩ[2m > [22mNavigationProvider縺梧ｭ｣縺励￥繧ｨ繧ｯ繧ｹ繝昴・繝医＆繧後※縺・ｋ
+ [32m笨・[39m src/store/navigation/NavigationProvider.test.tsx[2m > [22mNavigationProvider[2m > [22mNavigationProvider縺ｮ繝励Ο繝代ユ繧｣[2m > [22mNavigationProvider縺悟ｿ・ｦ√↑props繧貞女縺大・繧後ｋ・・ull險ｱ螳ｹ・・ [32m笨・[39m src/store/navigation/NavigationProvider.test.tsx[2m > [22mNavigationProvider[2m > [22mNavigationProvider縺ｮ繝励Ο繝代ユ繧｣[2m > [22mcanGoBack繝励Ο繝代ユ繧｣縺悟ｭ伜惠縺吶ｋ
+ [32m笨・[39m src/store/navigation/NavigationProvider.test.tsx[2m > [22mNavigationProvider[2m > [22m螻･豁ｴ繧ｵ繧､繧ｺ蛻ｶ髯・[2m > [22m螻･豁ｴ縺ｯ譛螟ｧ30蛟九∪縺ｧ菫晄戟縺輔ｌ繧・ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22m蝙句ｮ夂ｾｩ[2m > [22mPageContent縺ｮ蝙九′豁｣縺励￥螳夂ｾｩ縺輔ｌ縺ｦ縺・ｋ
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22m蝙句ｮ夂ｾｩ[2m > [22mContentProvider縺梧ｭ｣縺励￥繧ｨ繧ｯ繧ｹ繝昴・繝医＆繧後※縺・ｋ
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22mContentProvider縺ｮ繝励Ο繝代ユ繧｣[2m > [22mContentProvider縺悟ｿ・ｦ√↑props繧貞女縺大・繧後ｋ
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22m繧ｳ繝ｳ繝・Φ繝・ｮ｡逅・ｩ溯・[2m > [22m繝壹・繧ｸ繧ｳ繝ｳ繝・Φ繝・ｒ險ｭ螳壹・蜿門ｾ励〒縺阪ｋ讒矩
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22m繧ｳ繝ｳ繝・Φ繝・ｮ｡逅・ｩ溯・[2m > [22m隍・焚縺ｮ繝壹・繧ｸ繧ｳ繝ｳ繝・Φ繝・ｒ邂｡逅・〒縺阪ｋ讒矩
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22m繧ｳ繝ｳ繝・Φ繝・ｮ｡逅・ｩ溯・[2m > [22m迚ｹ螳壹・繝壹・繧ｸ繧ｳ繝ｳ繝・Φ繝・ｒ繧ｯ繝ｪ繧｢縺ｧ縺阪ｋ讒矩
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22m繧ｳ繝ｳ繝・Φ繝・ｮ｡逅・ｩ溯・[2m > [22m縺吶∋縺ｦ縺ｮ繧ｳ繝ｳ繝・Φ繝・ｒ繧ｯ繝ｪ繧｢縺ｧ縺阪ｋ讒矩
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22musePageContent 繝輔ャ繧ｯ[2m > [22musePageContent 縺後ず繧ｧ繝阪Μ繝・け蝙九ｒ蜿励￠蜈･繧後ｋ
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22musePageContent 繝輔ャ繧ｯ[2m > [22musePageContent 縺ｮ謌ｻ繧雁､縺ｮ讒矩縺梧ｭ｣縺励＞
+ [32m笨・[39m src/store/content/ContentProvider.test.tsx[2m > [22mContentProvider[2m > [22mContentContextType[2m > [22mContentContextType縺ｮ讒矩縺梧ｭ｣縺励＞
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m蝓ｺ譛ｬ逧・↑繝ｭ繧ｰ蜃ｺ蜉・[2m > [22mDEBUG繝ｬ繝吶Ν縺ｮ繝ｭ繧ｰ繧貞・蜉帙〒縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m蝓ｺ譛ｬ逧・↑繝ｭ繧ｰ蜃ｺ蜉・[2m > [22mINFO繝ｬ繝吶Ν縺ｮ繝ｭ繧ｰ繧貞・蜉帙〒縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m蝓ｺ譛ｬ逧・↑繝ｭ繧ｰ蜃ｺ蜉・[2m > [22mWARN繝ｬ繝吶Ν縺ｮ繝ｭ繧ｰ繧貞・蜉帙〒縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m蝓ｺ譛ｬ逧・↑繝ｭ繧ｰ蜃ｺ蜉・[2m > [22mERROR繝ｬ繝吶Ν縺ｮ繝ｭ繧ｰ繧貞・蜉帙〒縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝ｭ繧ｰ繝ｬ繝吶Ν繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ[2m > [22mINFO繝ｬ繝吶Ν縺ｫ險ｭ螳壹＠縺溷ｴ蜷医．EBUG繝ｭ繧ｰ縺ｯ蜃ｺ蜉帙＆繧後↑縺・ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝ｭ繧ｰ繝ｬ繝吶Ν繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ[2m > [22mWARN繝ｬ繝吶Ν縺ｫ險ｭ螳壹＠縺溷ｴ蜷医！NFO莉･荳九・繝ｭ繧ｰ縺ｯ蜃ｺ蜉帙＆繧後↑縺・ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝ｭ繧ｰ繝ｬ繝吶Ν繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ[2m > [22mERROR繝ｬ繝吶Ν縺ｫ險ｭ螳壹＠縺溷ｴ蜷医・RROR縺ｮ縺ｿ蜃ｺ蜉帙＆繧後ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝ｭ繧ｰ繝ｬ繝吶Ν繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ[2m > [22msetLevel縺ｧ繝ｭ繧ｰ繝ｬ繝吶Ν繧貞､画峩縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝｡繝・そ繝ｼ繧ｸ縺ｮ繝輔か繝ｼ繝槭ャ繝・[2m > [22mnull縺ｨundefined繧・None"縺ｨ縺励※謇ｱ縺・ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝｡繝・そ繝ｼ繧ｸ縺ｮ繝輔か繝ｼ繝槭ャ繝・[2m > [22m髟ｷ縺・Γ繝・そ繝ｼ繧ｸ繧貞・繧願ｩｰ繧√ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝｡繝・そ繝ｼ繧ｸ縺ｮ繝輔か繝ｼ繝槭ャ繝・[2m > [22m繧ｪ繝悶ず繧ｧ繧ｯ繝医ｒ譁・ｭ怜・縺ｫ螟画鋤縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝｡繝・そ繝ｼ繧ｸ縺ｮ繝輔か繝ｼ繝槭ャ繝・[2m > [22m謨ｰ蛟､繧呈枚蟄怜・縺ｫ螟画鋤縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝輔か繝ｼ繝槭ャ繝医が繝励す繝ｧ繝ｳ[2m > [22m繧ｿ繧､繝繧ｹ繧ｿ繝ｳ繝励ｒ髱櫁｡ｨ遉ｺ縺ｫ縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝輔か繝ｼ繝槭ャ繝医が繝励す繝ｧ繝ｳ[2m > [22m繝ｭ繧ｰ繝ｬ繝吶Ν繧帝撼陦ｨ遉ｺ縺ｫ縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝輔か繝ｼ繝槭ャ繝医が繝励す繝ｧ繝ｳ[2m > [22m繧ｽ繝ｼ繧ｹ諠・ｱ繧帝撼陦ｨ遉ｺ縺ｫ縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繝輔か繝ｼ繝槭ャ繝医が繝励す繝ｧ繝ｳ[2m > [22mupdateConfig縺ｧ險ｭ螳壹ｒ譖ｴ譁ｰ縺ｧ縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m霑ｽ蜉蠑墓焚縺ｮ繧ｵ繝昴・繝・[2m > [22m隍・焚縺ｮ蠑墓焚繧呈ｸ｡縺帙ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繧ｰ繝ｭ繝ｼ繝舌Ν繝ｭ繧ｬ繝ｼ[2m > [22mgetLogger縺ｧ繝ｭ繧ｬ繝ｼ繧貞叙蠕励〒縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繧ｰ繝ｭ繝ｼ繝舌Ν繝ｭ繧ｬ繝ｼ[2m > [22m蜷榊燕繧呈欠螳壹＠縺ｦ繝ｭ繧ｬ繝ｼ繧貞叙蠕励〒縺阪ｋ
+ [32m笨・[39m src/lib/logger.test.ts[2m > [22mLogger[2m > [22m繧ｰ繝ｭ繝ｼ繝舌Ν繝ｭ繧ｬ繝ｼ[2m > [22mconfigureLogger縺ｧ繧ｰ繝ｭ繝ｼ繝舌Ν險ｭ螳壹ｒ譖ｴ譁ｰ縺ｧ縺阪ｋ
+[90mstdout[2m | warn (file:\C:\dev\repos\TimeTrackerEX\web\node_modules\pdfjs-dist\build\webpack:\pdf.js\src\shared\util.js:385:13)[22m[39m
+Warning: Please use the `legacy` build in Node.js environments.
+
+[90mstdout[2m | src/core/pdf/pdfParser.test.ts[2m > [22m[2mpdfParser[2m > [22m[2mparsePDF[2m > [22m[2mFile繧ｪ繝悶ず繧ｧ繧ｯ繝医ｒ蜿励￠蜿悶ｊPromise繧定ｿ斐☆[22m[39m
+2025/10/06 18:57:22 [INFO] PDF繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・ test.pdf : PDFParser
+
+[90mstderr[2m | src/core/pdf/pdfParser.test.ts[2m > [22m[2mpdfParser[2m > [22m[2mparsePDF[2m > [
+22m[2mFile繧ｪ繝悶ず繧ｧ繧ｯ繝医ｒ蜿励￠蜿悶ｊPromise繧定ｿ斐☆[22m[39m
+2025/10/06 18:57:22 [ERROR] PDF繝輔ぃ繧､繝ｫ縺ｮ隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆: file.arrayBuffer is not a function : PDFParser
+
+[90mstdout[2m | src/core/pdf/pdfParser.test.ts[2m > [22m[2mpdfParser[2m > [22m[2mparsePDF[2m > [22m[2m螳滄圀縺ｮPDF繝輔ぃ繧､繝ｫ繧定ｧ｣譫舌〒縺阪ｋ[22m[39m
+2025/10/06 18:57:22 [INFO] PDF繝輔ぃ繧､繝ｫ縺ｮ繝代・繧ｹ髢句ｧ・ 蜍､蜍吝ｮ溽ｸｾ蜈･蜉幢ｼ域悽莠ｺ逕ｨ・・pdf : PDFParser
+2025/10/06 18:57:23 [INFO] PDF繝代・繧ｹ螳御ｺ・ 繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｫ=30莉ｶ, 謇灘綾=30莉ｶ : PDFParser
+2025/08/21(譛ｨ) 09:01 - 2025/08/21(譛ｨ) 18:47
+2025/08/22(驥・ 10:00 - 2025/08/22(驥・ 19:39
+2025/08/23(蝨・ 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/08/24(譌･) 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/08/25(譛・ 09:50 - 2025/08/25(譛・ 21:57
+2025/08/26(轣ｫ) 09:07 - 2025/08/26(轣ｫ) 19:56
+2025/08/27(豌ｴ) 09:12 - 2025/08/27(豌ｴ) 20:41
+2025/08/28(譛ｨ) 09:27 - 2025/08/28(譛ｨ) 20:39
+2025/08/29(驥・ 08:48 - 2025/08/29(驥・ 17:43
+2025/08/30(蝨・ 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/08/31(譌･) 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/09/01(譛・ 10:32 - 2025/09/01(譛・ 20:03
+2025/09/02(轣ｫ) 09:00 - 2025/09/02(轣ｫ) 19:10
+2025/09/03(豌ｴ) 09:26 - 2025/09/03(豌ｴ) 19:34
+2025/09/04(譛ｨ) 09:16 - 2025/09/04(譛ｨ) 17:30
+2025/09/05(驥・ 09:00 - 2025/09/05(驥・ 17:30
+2025/09/06(蝨・ 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/09/07(譌･) 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/09/08(譛・ 09:00 - 2025/09/08(譛・ 17:30
+2025/09/09(轣ｫ) 09:00 - 2025/09/09(轣ｫ) 17:30
+2025/09/10(豌ｴ) 09:00 - 2025/09/10(豌ｴ) 17:30
+2025/09/11(譛ｨ) 09:00 - 2025/09/11(譛ｨ) 17:30
+2025/09/12(驥・ 09:00 - 2025/09/12(驥・ 17:30
+2025/09/13(蝨・ 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/09/14(譌･) 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/09/15(譛・ 縲蝉ｼ第律縲・00:00 - 邨ゆｺ・凾髢捺悴螳・窶ｻ蜍､蜍呎凾髢薙′隕九▽縺九ｊ縺ｾ縺帙ｓ縲・2025/09/16(轣ｫ) 09:00 - 2025/09/16(轣ｫ) 17:30
+2025/09/17(豌ｴ) 09:00 - 2025/09/17(豌ｴ) 17:30
+2025/09/18(譛ｨ) 09:00 - 2025/09/18(譛ｨ) 17:30
+2025/09/19(驥・ 09:00 - 2025/09/19(驥・ 17:30
+
+ [32m笨・[39m src/core/pdf/pdfParser.test.ts[2m > [22mpdfParser[2m > [22mparsePDF[2m > [22mparsePDF髢｢謨ｰ縺悟ｭ伜惠縺吶ｋ
+ [32m笨・[39m src/core/pdf/pdfParser.test.ts[2m > [22mpdfParser[2m > [22mparsePDF[2m > [22mFile繧ｪ繝悶ず繧ｧ繧ｯ繝医ｒ蜿励￠蜿悶ｊPromise繧定ｿ斐☆
+ [32m笨・[39m src/core/pdf/pdfParser.test.ts[2m > [22mpdfParser[2m > [22mparsePDF[2m > [22m螳滄圀縺ｮPDF繝輔ぃ繧､繝ｫ繧定ｧ｣譫舌〒縺阪ｋ[33m 328[2mms[22m[39m
+
+[31m竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ[1m[7m Failed Tests 6 [27m[22m竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefin
+ition[2m > [22mboundary value testing[2m > [22mstartEndTime縺梧怙蟆丞､(1)縺ｮ蝣ｴ蜷・[31m[1mAssertionError[22
+m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m笶ｯ[22m src/schema/settings/settingsDefinition.test.ts:[2m853:36[22m[39m
+    [90m851| [39m
+    [90m852| [39m            [35mconst[39m result [33m=[39m [34mvalidateTimeTrackerSettings[39m(va
+lidSettings)[33m;[39m
+    [90m853| [39m            [34mexpect[39m(result[33m.[39misError)[33m.[39m[34mtoBe[39m([35mfa
+lse[39m)[33m;[39m
+    [90m   | [39m                                   [31m^[39m
+    [90m854| [39m        })[33m;[39m
+    [90m855| [39m
+
+[31m[2m竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ[1/6]竡ｯ[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefin
+ition[2m > [22mboundary value testing[2m > [22m譎ょ綾縺・4:00莉･荳翫・蝣ｴ蜷医・繧ｨ繝ｩ繝ｼ
+[31m[1mAssertionError[22m: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2m笶ｯ[22m src/schema/settings/settingsDefinition.test.ts:[2m928:36[22m[39m
+    [90m926| [39m
+    [90m927| [39m            [35mconst[39m result [33m=[39m [34mvalidateTimeTrackerSettings[39m(in
+validSettings窶ｦ
+    [90m928| [39m            [34mexpect[39m(result[33m.[39misError)[33m.[39m[34mtoBe[39m([35mtr
+ue[39m)[33m;[39m
+    [90m   | [39m                                   [31m^[39m
+    [90m929| [39m        })[33m;[39m
+    [90m930| [39m    })[33m;[39m
+
+[31m[2m竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ[2/6]竡ｯ[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefin
+ition[2m > [22mcomplex validation scenarios[2m > [22mJSON繝代・繧ｹ縺九ｉ繝舌Μ繝・・繧ｷ繝ｧ繝ｳ縺ｾ縺ｧ縺ｮ繝輔Ν繝輔Ο繝ｼ
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m笶ｯ[22m src/schema/settings/settingsDefinition.test.ts:[2m989:41[22m[39m
+    [90m987| [39m
+    [90m988| [39m            [35mconst[39m parseResult [33m=[39m [34mparseTimeTrackerSettings[39m(
+jsonString)[33m;[39m
+    [90m989| [39m            [34mexpect[39m(parseResult[33m.[39misError)[33m.[39m[34mtoBe[39m([
+35mfalse[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m990| [39m
+    [90m991| [39m            [35mif[39m ([33m![39mparseResult[33m.[39misError) {
+
+[31m[2m竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ[3/6]竡ｯ[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/schema/settings/settingsDefinition.test.ts[2m > [22msettingsDefin
+ition[2m > [22mcomplex validation scenarios[2m > [22m繝代・繧ｹ縺ｨ繝輔ぅ繝・け繧ｹ縺ｮ邨・∩蜷医ｏ縺帙ユ繧ｹ繝・[31m[1mAssertionE
+rror[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m笶ｯ[22m src/schema/settings/settingsDefinition.test.ts:[2m1016:39[22m[39m
+    [90m1014| [39m
+    [90m1015| [39m            [35mconst[39m fixResult [33m=[39m [34mparseAndFixTimeTrackerSettings
+[39m([33mJSON[39m[33m.[39m[34mpars[39m窶ｦ
+    [90m1016| [39m            [34mexpect[39m(fixResult[33m.[39misError)[33m.[39m[34mtoBe[39m([3
+5mfalse[39m)[33m;[39m
+    [90m   | [39m                                      [31m^[39m
+    [90m1017| [39m
+    [90m1018| [39m            [35mif[39m ([33m![39mfixResult[33m.[39misError) {
+
+[31m[2m竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ[4/6]竡ｯ[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > 
+[22mscheduleAutoInputInfo險ｭ螳・[2m > [22mstartEndTime縺ｮ蠅・阜蛟､繝・せ繝・[31m[1mAssertionError[22m: expected tr
+ue to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m笶ｯ[22m src/store/settings/SettingsProvider.test.tsx:[2m448:39[22m[39m
+    [90m446| [39m
+    [90m447| [39m            [35mconst[39m minResult [33m=[39m [34mvalidateTimeTrackerSettings[39m
+(minSettings)[33m;[39m
+    [90m448| [39m            [34mexpect[39m(minResult[33m.[39misError)[33m.[39m[34mtoBe[39m([35
+mfalse[39m)[33m;[39m
+    [90m   | [39m                                      [31m^[39m
+    [90m449| [39m
+    [90m450| [39m            [90m// 螟ｧ縺阪＞蛟､[39m
+
+[31m[2m竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ[5/6]竡ｯ[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/store/settings/SettingsProvider.test.tsx[2m > [22mSettings[2m > 
+[22m邨ｱ蜷医ユ繧ｹ繝・[2m > [22m繝・ヵ繧ｩ繝ｫ繝亥､繧剃ｽｿ逕ｨ縺励◆譛蟆剰ｨｭ螳壹°繧牙ｮ悟・險ｭ螳壹∈縺ｮ諡｡蠑ｵ
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m笶ｯ[22m src/store/settings/SettingsProvider.test.tsx:[2m552:41[22m[39m
+    [90m550| [39m            [90m// 繝・ヵ繧ｩ繝ｫ繝亥､縺ｧ陬懷ｮ・[39m
+    [90m551| [39m            [35mconst[39m fixedResult [33m=[39m [34mparseAndFixTimeTrackerSettings
+[39m(minimal窶ｦ
+    [90m552| [39m            [34mexpect[39m(fixedResult[33m.[39misError)[33m.[39m[34mtoBe[39m([
+35mfalse[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m553| [39m
+    [90m554| [39m            [35mif[39m ([33m![39mfixedResult[33m.[39misError) {
+
+[31m[2m竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ竡ｯ[6/6]竡ｯ[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m297 passed[39m[22m[90m (303)[39m
+[2m   Start at [22m 18:57:00
+[2m   Duration [22m 22.52s[2m (transform 2.26s, setup 193ms, collect 4.50s, tests 1.65s, environment 101.33s, prepare 13.87s)[22m
+

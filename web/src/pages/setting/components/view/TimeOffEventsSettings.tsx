@@ -1,17 +1,14 @@
-import { Button, Input, makeStyles, tokens } from "@fluentui/react-components";
-import { ArrowLeft20Regular } from "@fluentui/react-icons";
+import { TIMETRACKER_SETTINGS_DEFINITION } from "@/schema/settings";
+import { makeStyles, tokens } from "@fluentui/react-components";
 import type { TimeOffEventPattern } from "../../../../types/settings";
-import { SettingContentSection, SettingPageLayout } from "../layout";
-import { SettingItem } from "../ui";
+import { SettingPageLayout, SettingSection } from "../layout";
+import { AutoSettingItem } from "../ui";
 import { EventPatternEditor } from "../ui/EventPatternEditor";
 
+const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
+const timeOffEventDef = (ttDef.timeOffEvent as any).children!;
+
 const useStyles = makeStyles({
-    header: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalM,
-        marginBottom: tokens.spacingVerticalL,
-    },
     helpText: {
         fontSize: tokens.fontSizeBase200,
         color: tokens.colorNeutralForeground3,
@@ -42,20 +39,9 @@ export function TimeOffEventsSettings({ patterns, workItemId, onChange, onBack }
         <SettingPageLayout
             title="休暇イベント設定"
             subtitle="休暇イベントとして扱うイベント名のパターンとWorkItemIDを設定します。"
+            onBack={onBack}
         >
-            <div className={styles.header}>
-                <Button
-                    appearance="subtle"
-                    icon={<ArrowLeft20Regular />}
-                    onClick={onBack}
-                    size="large"
-                    aria-label="戻る"
-                >
-                    戻る
-                </Button>
-            </div>
-
-            <SettingContentSection title="休暇イベント名パターン">
+            <SettingSection title="休暇イベント名パターン">
                 <div className={styles.helpText}>
                     <strong>一致モードについて:</strong>
                     <br />• <strong>部分一致</strong>: パターンがイベント名のどこかに含まれていればマッチ
@@ -74,23 +60,17 @@ export function TimeOffEventsSettings({ patterns, workItemId, onChange, onBack }
                     placeholder="パターン（例: 有給, 休暇）"
                     addButtonText="パターンを追加"
                 />
-            </SettingContentSection>
+            </SettingSection>
 
-            <SettingContentSection title="WorkItem設定">
-                <SettingItem
-                    label="休暇WorkItemID"
-                    description="休暇として登録するWorkItemのID"
-                    control={
-                        <Input
-                            type="number"
-                            value={workItemId?.toString() || ""}
-                            onChange={(_, data) => handleWorkItemIdChange(parseInt(data.value) || 0)}
-                            placeholder="WorkItemID"
-                            style={{ maxWidth: "150px" }}
-                        />
-                    }
+            <SettingSection title="WorkItem設定">
+                <AutoSettingItem
+                    definition={timeOffEventDef.workItemId}
+                    value={workItemId || 0}
+                    onChange={(value: unknown) => handleWorkItemIdChange(value as number)}
+                    maxWidth="150px"
+                    placeholder="WorkItemID"
                 />
-            </SettingContentSection>
+            </SettingSection>
         </SettingPageLayout>
     );
 }

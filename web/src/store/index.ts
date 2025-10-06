@@ -7,4 +7,4 @@
 export { ContentProvider, useContent, usePageContent } from "./content/ContentProvider";
 export type { PageContent } from "./content/ContentProvider";
 export { NavigationProvider, useNavigation } from "./navigation/NavigationProvider";
-export { SettingsProvider, useCompleteSettings, useSettings } from "./settings/SettingsProvider";
+export { SettingsProvider, useSettings } from "./settings/SettingsProvider";

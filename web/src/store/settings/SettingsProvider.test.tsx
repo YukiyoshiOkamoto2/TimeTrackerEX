@@ -10,8 +10,8 @@ import {
     parseAndFixTimeTrackerSettings,
     parseTimeTrackerSettings,
     stringifyTimeTrackerSettings,
-    validateTimeTrackerSettings,
-} from "@/schema/settings/settingsDefinition";
+} from "@/schema/settings/settingUtils";
+import { validateTimeTrackerSettings } from "@/schema/settings/timetrackerDefinition";
 import { TimeTrackerSettings } from "@/types";
 import { describe, expect, it } from "vitest";
 
