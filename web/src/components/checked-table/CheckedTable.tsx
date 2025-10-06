@@ -22,12 +22,12 @@ const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalS,
+        height: "90%",
     },
     header: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingBottom: tokens.spacingVerticalS,
     },
     headerLeft: {
         display: "flex",
@@ -43,10 +43,6 @@ const useStyles = makeStyles({
         position: "relative",
         border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
         borderRadius: tokens.borderRadiusMedium,
-    },
-    tableCell: {
-        paddingTop: tokens.spacingVerticalM,
-        paddingBottom: tokens.spacingVerticalM,
     },
     checkboxCell: {
         display: "flex",
@@ -149,16 +145,10 @@ export function CheckedTable({ items, onItemUpdate }: CheckedTableProps) {
                     <TableBody>
                         {items.map((item, index) => (
                             <TableRow key={index}>
-                                <TableCell
-                                    className={styles.tableCell}
-                                    {...columnSizing_unstable.getTableCellProps("content")}
-                                >
+                                <TableCell {...columnSizing_unstable.getTableCellProps("content")}>
                                     <TableCellLayout>{item.content}</TableCellLayout>
                                 </TableCell>
-                                <TableCell
-                                    className={styles.tableCell}
-                                    {...columnSizing_unstable.getTableCellProps("checked")}
-                                >
+                                <TableCell {...columnSizing_unstable.getTableCellProps("checked")}>
                                     <TableCellLayout className={styles.checkboxCell}>
                                         <Checkbox
                                             checked={item.checked}

@@ -1,3 +1,4 @@
+import { CheckedTable, CheckedTableItem } from "@/components/checked-table";
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { parseICS } from "@/core/ics";
 import { parsePDF } from "@/core/pdf";
@@ -15,7 +16,6 @@ import { useEffect, useRef, useState } from "react";
 import { ActionButton } from "../../../components/action-button";
 import { Card } from "../../../components/card";
 import { ICS, PDF, UploadInfo } from "../models";
-import { CheckedTable, CheckedTableItem } from "./CheckedTable";
 
 const logger = getLogger("FileUploadView");
 
@@ -101,9 +101,9 @@ const useStyles = makeStyles({
     actionSection: {
         display: "flex",
         flexDirection: "column",
-        paddingTop: tokens.spacingVerticalXXXL,
+        paddingTop: tokens.spacingVerticalL,
         marginTop: tokens.spacingVerticalXS,
-        gap: tokens.spacingVerticalXXL,
+        gap: tokens.spacingVerticalL,
     },
     infoSectionContainer: {
         display: "grid",
@@ -114,7 +114,7 @@ const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalM,
-        maxHeight: "320px",
+        maxHeight: "420px",
     },
     infoSectionHeader: {
         fontSize: tokens.fontSizeBase400,

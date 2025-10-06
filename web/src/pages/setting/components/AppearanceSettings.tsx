@@ -1,3 +1,4 @@
+import { themeHandler } from "@/main";
 import { Dropdown, Option, Switch } from "@fluentui/react-components";
 import { SettingItem } from "./SettingItem";
 import { SettingSection } from "./SettingSection";
@@ -10,7 +11,14 @@ export function AppearanceSettings() {
                     label="テーマ"
                     description="ライト、ダーク、またはシステム設定に従います"
                     control={
-                        <Dropdown placeholder="テーマを選択" defaultValue="システム設定" style={{ minWidth: "200px" }}>
+                        <Dropdown
+                            placeholder="テーマを選択"
+                            defaultValue="システム設定"
+                            onOptionSelect={(e, d) => {
+                                themeHandler.setTheme(d.optionText === "ダーク");
+                            }}
+                            style={{ minWidth: "200px" }}
+                        >
                             <Option>ライト</Option>
                             <Option>ダーク</Option>
                             <Option>システム設定</Option>

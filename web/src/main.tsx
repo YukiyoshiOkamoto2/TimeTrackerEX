@@ -1,6 +1,6 @@
 import { BrandVariants, createDarkTheme, createLightTheme, FluentProvider, Theme } from "@fluentui/react-components";
 import { editor } from "monaco-editor";
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { ContentProvider, SettingsProvider } from "./store";
@@ -40,9 +40,33 @@ darkTheme.colorBrandForeground2 = myNewTheme[120];
 
 editor.setTheme("vs-dark");
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-        <FluentProvider theme={darkTheme}>
+export interface ThemeHandler {
+    setTheme(isDark: boolean): void;
+}
+
+class ThemeHandlerImpl implements ThemeHandler {
+    private delegate?: (isDark: boolean) => void;
+
+    setDelegate(delegate: (isDark: boolean) => void) {
+        this.delegate = delegate;
+    }
+
+    setTheme(isDark: boolean): void {
+        this.delegate?.(isDark);
+    }
+}
+
+const _themeHandler = new ThemeHandlerImpl();
+export const themeHandler: ThemeHandler = _themeHandler;
+
+const Main = () => {
+    const [theme, setTheme] = useState(darkTheme);
+    _themeHandler.setDelegate((isDark) => {
+        setTheme(isDark ? darkTheme : lightTheme);
+        editor.setTheme(isDark ? "vs-dark" : "vs-light");
+    });
+    return (
+        <FluentProvider theme={theme}>
             <NavigationProvider initialPageName="Home">
                 <SettingsProvider>
                     <ContentProvider>
@@ -51,5 +75,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 </SettingsProvider>
             </NavigationProvider>
         </FluentProvider>
+    );
+};
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>
+        <Main />
     </React.StrictMode>,
 );
