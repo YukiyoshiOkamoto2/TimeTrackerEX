@@ -717,6 +717,30 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
 }
 
 /**
+ * オブジェクト型の設定値情報
+ */
+export class ObjectSettingValueInfoTyped<T extends Record<string, SettingValueInfo>> extends ObjectSettingValueInfo {
+    constructor(props: {
+        name: string;
+        description: string;
+        required: boolean;
+        defaultValue?: ObjectType;
+         children?: T;
+        disableUnknownField?: boolean;
+    }) {
+        super({
+            ...props,
+            children: props.children
+        });
+    }
+
+    // Type-safe accessor for children
+    getTypedChildren(): T | undefined {
+        return this.children as T | undefined;
+    }
+}
+
+/**
  * 設定値情報の型
  */
 export type SettingValueInfo =

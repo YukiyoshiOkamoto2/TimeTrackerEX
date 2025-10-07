@@ -2,13 +2,12 @@
  * 勤務時間自動入力設定セクション
  */
 
-import { ObjectSettingValueInfo, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
+import { TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO } from "@/schema";
 import { SettingSection } from "../../../layout";
 import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
-const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
-const scheduleAutoInputInfoDef = (ttDef.scheduleAutoInputInfo as ObjectSettingValueInfo).children!;
+const scheduleAutoInputInfoDef = TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO.children!;
 
 export function ScheduleAutoInputSettings() {
     const { settings, handleNestedUpdate } = useTimeTrackerSettings();

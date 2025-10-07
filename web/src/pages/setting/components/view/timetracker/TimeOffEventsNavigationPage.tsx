@@ -1,12 +1,11 @@
-import { TIMETRACKER_SETTINGS_DEFINITION } from "@/schema/settings";
+import { StringSettingValueInfo, TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION } from "@/schema/settings";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import type { TimeOffEventPattern } from "../../../../../types/settings";
 import { SettingNavigationPageLayout, SettingSection } from "../../layout";
 import { AutoSettingItem } from "../../ui";
 import { EventPatternEditor } from "../../ui/EventPatternEditor";
 
-const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
-const timeOffEventDef = (ttDef.timeOffEvent as any).children!;
+const timeOffEventDef = TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION.getTypedChildren()!;
 
 const useStyles = makeStyles({
     helpText: {
@@ -23,6 +22,16 @@ interface TimeOffEventsNavigationPageProps {
     onChange: (patterns: TimeOffEventPattern[], workItemId: number) => void;
     onBack: () => void;
 }
+
+
+// パターン入力用の定義
+const patternDefinition = new StringSettingValueInfo({
+    name: "パターン",
+    description: "イベント名にマッチするパターン",
+    required: true,
+    disableEmpty: true,
+    minLength: 1,
+});
 
 export function TimeOffEventsNavigationPage({
     patterns,
@@ -60,6 +69,7 @@ export function TimeOffEventsNavigationPage({
                     例: パターン"有給" → "午前有給"はマッチ、"有給休暇"はマッチしない
                 </div>
                 <EventPatternEditor
+                    patternDefinition={patternDefinition}
                     patterns={patterns ?? []}
                     onChange={handlePatternsChange}
                     placeholder="パターン（例: 有給, 休暇）"

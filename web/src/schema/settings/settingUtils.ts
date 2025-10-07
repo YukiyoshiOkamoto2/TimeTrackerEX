@@ -1,4 +1,5 @@
-import { ObjectSettingValueInfo, SettingValueInfo } from "./settingsDefinition";
+import { EventPattern } from "@/types";
+import { ObjectSettingValueInfo, SettingValue, SettingValueInfo } from "./settingsDefinition";
 
 /**
  * 設定エラーの型定義
@@ -186,4 +187,78 @@ export function getFieldDefaultValue(info: SettingValueInfo): unknown {
     }
 
     return undefined;
+}
+
+/**
+ * イベントパターンリストから重複を除去する
+ * @template T - EventPatternを継承した型（IgnorableEventPatternやTimeOffEventPatternなど）
+ * @param patterns - イベントパターンの配列
+ * @returns 重複を除去したイベントパターンの配列
+ */
+export function removeDuplicateEventPatterns<T extends EventPattern>(patterns: T[]): T[] {
+    return patterns.filter((pattern, index) => 
+        patterns.findIndex(p => 
+            p.pattern === pattern.pattern && 
+            p.matchMode === pattern.matchMode
+        ) === index
+    );
+}
+
+/**
+ * 設定をJSONファイルとしてエクスポート
+ * @param settings エクスポートする設定
+ * @returns ダウンロード用のBlobオブジェクト
+ */
+export function exportSettingsToJson(settings: Record<string, unknown>): Blob {
+    const jsonString = JSON.stringify(settings, null, 2);
+    return new Blob([jsonString], { type: "application/json" });
+}
+
+/**
+ * JSONファイルから設定をインポート
+ * @param file インポートするJSONファイル
+ * @returns パースされた設定オブジェクト
+ */
+export async function importSettingsFromJson(file: File): Promise<Record<string, unknown>> {
+    const text = await file.text();
+    try {
+        const settings = JSON.parse(text);
+        if (typeof settings !== "object" || settings === null || Array.isArray(settings)) {
+            throw new Error("無効な設定ファイルです");
+        }
+        return settings as Record<string, unknown>;
+    } catch (e) {
+        throw new Error("設定ファイルの解析に失敗しました");
+    }
+}
+
+/**
+ * 設定定義から子要素の定義を取得する
+ * @param def - 親の設定定義
+ * @param path - 子要素へのパス（ドット区切り）
+ * @returns 子要素の定義
+ * @throws 子要素が見つからない、または型が異なる場合
+ */
+export function getSettingDefinitionChild(def: ObjectSettingValueInfo, parts: string[]): SettingValueInfo {
+
+    let current = def;
+
+    for (const part of parts) {
+        if (!current.children) {
+            throw new Error(`${part}の親定義に子要素が存在しません`);
+        }
+
+        const child = current.children[part];
+        if (!child) {
+            throw new Error(`定義${part}が見つかりません`);
+        }
+
+        if (child.type !== "object") {
+            throw new Error(`${part}はオブジェクト型ではありません`);
+        }
+
+        current = child as ObjectSettingValueInfo;
+    }
+
+    return current;
 }

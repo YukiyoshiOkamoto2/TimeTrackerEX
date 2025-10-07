@@ -1,7 +1,7 @@
-import { getSettingErrors, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
+import { getSettingErrors, removeDuplicateEventPatterns, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
 import { useEffect, useState } from "react";
 import { useSettings } from "../../../../../store/settings/SettingsProvider";
-import type { TimeTrackerSettings as TimeTrackerSettingsType } from "../../../../../types";
+import type { IgnorableEventPattern, TimeOffEventPattern, TimeTrackerSettings as TimeTrackerSettingsType } from "../../../../../types";
 import { SettingPageLayout } from "../../layout";
 
 import { IgnorableEventsNavigationPage } from "./IgnorableEventsNavigationPage";
@@ -22,6 +22,32 @@ export function TimeTrackerSettingsPage() {
     const tt = settings.timetracker as TimeTrackerSettingsType;
     const [allErrors, setAllErrors] = useState(() => getSettingErrors(tt, TIMETRACKER_SETTINGS_DEFINITION));
 
+    const handleIgnorableEventsChange = (patterns: IgnorableEventPattern[]) => {
+        // const uniquePatterns = removeDuplicateEventPatterns(patterns);
+        const uniquePatterns = patterns
+        updateSettings({
+            timetracker: {
+                ...tt,
+                ignorableEvents: uniquePatterns.length > 0 ? uniquePatterns : undefined,
+            },
+        });
+    };
+
+    const handleTimeOffEventChange = (patterns: TimeOffEventPattern[], workItemId: number) => {
+        // const uniquePatterns = removeDuplicateEventPatterns(patterns);
+        const uniquePatterns = patterns
+        const timeOffEvent = uniquePatterns.length > 0 ? {
+            namePatterns: uniquePatterns,
+            workItemId,
+        } : undefined;
+        updateSettings({
+            timetracker: {
+                ...tt,
+                timeOffEvent,
+            },
+        });
+    };
+
     useEffect(() => {
         setAllErrors(getSettingErrors(tt, TIMETRACKER_SETTINGS_DEFINITION));
     }, [tt]);
@@ -31,14 +57,7 @@ export function TimeTrackerSettingsPage() {
         return (
             <IgnorableEventsNavigationPage
                 patterns={tt?.ignorableEvents || []}
-                onChange={(patterns) => {
-                    updateSettings({
-                        timetracker: {
-                            ...tt,
-                            ignorableEvents: patterns,
-                        },
-                    });
-                }}
+                onChange={handleIgnorableEventsChange}
                 onBack={() => setCurrentView("main")}
             />
         );
@@ -50,17 +69,7 @@ export function TimeTrackerSettingsPage() {
             <TimeOffEventsNavigationPage
                 patterns={tt?.timeOffEvent?.namePatterns}
                 workItemId={tt?.timeOffEvent?.workItemId}
-                onChange={(patterns, workItemId) => {
-                    updateSettings({
-                        timetracker: {
-                            ...tt,
-                            timeOffEvent: {
-                                namePatterns: patterns,
-                                workItemId,
-                            },
-                        },
-                    });
-                }}
+                onChange={handleTimeOffEventChange}
                 onBack={() => setCurrentView("main")}
             />
         );

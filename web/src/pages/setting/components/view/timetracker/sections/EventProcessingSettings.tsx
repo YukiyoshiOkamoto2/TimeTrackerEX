@@ -2,13 +2,13 @@
  * イベント処理設定セクション
  */
 
-import { ObjectSettingValueInfo, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
+import { TIMETRACKER_EVENT_DUPLICATE_PRIORITY, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
 import { SettingSection } from "../../../layout";
 import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
 const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
-const eventDuplicatePriorityDef = (ttDef.eventDuplicatePriority as ObjectSettingValueInfo).children!;
+const eventDuplicatePriorityDef = TIMETRACKER_EVENT_DUPLICATE_PRIORITY.children!;
 
 export function EventProcessingSettings() {
     const { settings, handleUpdate, handleNestedUpdate } = useTimeTrackerSettings();

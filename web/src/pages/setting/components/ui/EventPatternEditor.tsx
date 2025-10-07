@@ -29,6 +29,7 @@ const useStyles = makeStyles({
 });
 
 interface EventPatternEditorProps {
+    patternDefinition: StringSettingValueInfo,
     patterns: EventPattern[];
     onChange: (patterns: EventPattern[]) => void;
     placeholder?: string;
@@ -36,21 +37,13 @@ interface EventPatternEditorProps {
 }
 
 export function EventPatternEditor({
+    patternDefinition,
     patterns,
     onChange,
     placeholder = "パターン（例: MTG, 個人作業）",
     addButtonText = "パターンを追加",
 }: EventPatternEditorProps) {
     const styles = useStyles();
-
-    // パターン入力用の定義
-    const patternDefinition = new StringSettingValueInfo({
-        name: "パターン",
-        description: "イベント名にマッチするパターン",
-        required: true,
-        disableEmpty: true,
-        minLength: 1,
-    });
 
     const handlePatternChange = (index: number, pattern: string) => {
         const newPatterns = [...patterns];

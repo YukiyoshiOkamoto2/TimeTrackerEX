@@ -2,13 +2,13 @@
  * 有給休暇自動入力設定セクション
  */
 
-import { ObjectSettingValueInfo, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
+import { TIMETRACKER_PAID_LEAVE_INPUT_INFO, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
 import { SettingSection } from "../../../layout";
 import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
 const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
-const paidLeaveInputInfoDef = (ttDef.paidLeaveInputInfo as ObjectSettingValueInfo).children!;
+const paidLeaveInputInfoDef = TIMETRACKER_PAID_LEAVE_INPUT_INFO.children!;
 
 export function PaidLeaveInputSettings() {
     const { settings, handleNestedUpdate, handleObjectUpdate } = useTimeTrackerSettings();

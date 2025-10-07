@@ -2,6 +2,7 @@ import { makeStyles, tokens } from "@fluentui/react-components";
 import { IgnorableEventPattern } from "../../../../../types/settings";
 import { SettingNavigationPageLayout, SettingSection } from "../../layout";
 import { EventPatternEditor } from "../../ui";
+import { StringSettingValueInfo } from "@/schema";
 
 const useStyles = makeStyles({
     helpText: {
@@ -17,6 +18,16 @@ interface IgnorableEventsNavigationPageProps {
     onChange: (patterns: IgnorableEventPattern[]) => void;
     onBack: () => void;
 }
+
+
+// パターン入力用の定義
+const patternDefinition = new StringSettingValueInfo({
+    name: "パターン",
+    description: "イベント名にマッチするパターン",
+    required: true,
+    disableEmpty: true,
+    minLength: 1,
+});
 
 export function IgnorableEventsNavigationPage({ patterns, onChange, onBack }: IgnorableEventsNavigationPageProps) {
     const styles = useStyles();
@@ -41,6 +52,7 @@ export function IgnorableEventsNavigationPage({ patterns, onChange, onBack }: Ig
                     例: パターン"MTG" → "朝会MTG"はマッチ、"MTG資料作成"はマッチしない
                 </div>
                 <EventPatternEditor
+                    patternDefinition={patternDefinition}
                     patterns={patterns}
                     onChange={onChange}
                     placeholder="パターン(例: MTG, 個人作業)"

@@ -594,7 +594,7 @@ describe("timetrackerDefinition", () => {
                 // ユーザーが有給休暇入力機能のトグルをオンにする（オブジェクトを作成）
                 const partialSettings = {
                     paidLeaveInputInfo: {
-                        workItemId: 0,
+                        workItemId: 1,
                         startTime: "09:00",
                         endTime: "17:30",
                     },
