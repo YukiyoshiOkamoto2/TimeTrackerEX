@@ -1557,6 +1557,612 @@ describe("settingsDefinition2", () => {
                     expect(result.isError).toBe(false);
                 });
             });
+
+            describe("undefined/nullが提供された場合", () => {
+                it("必須フィールドにundefinedを提供するとエラー", () => {
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        age: new NumberSettingValueInfo({
+                            name: "年齢",
+                            description: "年齢説明",
+                            required: false,
+                            defaultValue: 0,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+                    const result = info.validatePartial({ name: undefined });
+                    expect(result.isError).toBe(true);
+                    if (result.isError) {
+                        expect(result.errorMessage).toContain("name");
+                        expect(result.errorMessage).toContain("必須です");
+                    }
+                });
+
+                it("必須フィールドにnullを提供するとエラー", () => {
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+                    const result = info.validatePartial({ name: null });
+                    expect(result.isError).toBe(true);
+                    if (result.isError) {
+                        expect(result.errorMessage).toContain("name");
+                        expect(result.errorMessage).toContain("必須です");
+                    }
+                });
+
+                it("オプションフィールドにundefinedを提供するとOK", () => {
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: false,
+                            defaultValue: "",
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+                    const result = info.validatePartial({ name: undefined });
+                    expect(result.isError).toBe(false);
+                });
+
+                it("オプションフィールドにnullを提供するとOK", () => {
+                    const children = {
+                        age: new NumberSettingValueInfo({
+                            name: "年齢",
+                            description: "年齢説明",
+                            required: false,
+                            defaultValue: 0,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+                    const result = info.validatePartial({ age: null });
+                    expect(result.isError).toBe(false);
+                });
+
+                it("ネストされた必須オブジェクトにundefinedを提供するとエラー", () => {
+                    const addressChildren = {
+                        city: new StringSettingValueInfo({
+                            name: "市区町村",
+                            description: "市区町村説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                    };
+                    const children = {
+                        address: new ObjectSettingValueInfo({
+                            name: "住所",
+                            description: "住所説明",
+                            required: true,
+                            children: addressChildren,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+                    const result = info.validatePartial({ address: undefined });
+                    expect(result.isError).toBe(true);
+                    if (result.isError) {
+                        expect(result.errorMessage).toContain("address");
+                    }
+                });
+
+                it("ネストされたオプションオブジェクトにundefinedを提供するとOK", () => {
+                    const addressChildren = {
+                        city: new StringSettingValueInfo({
+                            name: "市区町村",
+                            description: "市区町村説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                    };
+                    const children = {
+                        address: new ObjectSettingValueInfo({
+                            name: "住所",
+                            description: "住所説明",
+                            required: false,
+                            children: addressChildren,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+                    const result = info.validatePartial({ address: undefined });
+                    expect(result.isError).toBe(false);
+                });
+            });
+
+            describe("深くネストされたオブジェクト", () => {
+                it("3階層のネストされたオブジェクトの部分バリデーション", () => {
+                    const phoneChildren = {
+                        countryCode: new StringSettingValueInfo({
+                            name: "国番号",
+                            description: "国番号説明",
+                            required: true,
+                            defaultValue: "+81",
+                        }),
+                        number: new StringSettingValueInfo({
+                            name: "電話番号",
+                            description: "電話番号説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                    };
+                    const contactChildren = {
+                        email: new StringSettingValueInfo({
+                            name: "メール",
+                            description: "メール説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        phone: new ObjectSettingValueInfo({
+                            name: "電話",
+                            description: "電話説明",
+                            required: true,
+                            children: phoneChildren,
+                        }),
+                    };
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        contact: new ObjectSettingValueInfo({
+                            name: "連絡先",
+                            description: "連絡先説明",
+                            required: true,
+                            children: contactChildren,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+
+                    // 3階層目のフィールドのみ更新
+                    const result = info.validatePartial({
+                        contact: {
+                            phone: {
+                                countryCode: "+1",
+                            },
+                        },
+                    });
+                    expect(result.isError).toBe(false);
+                });
+
+                it("3階層のネストされたオブジェクトのバリデーションエラーを検出", () => {
+                    const phoneChildren = {
+                        countryCode: new StringSettingValueInfo({
+                            name: "国番号",
+                            description: "国番号説明",
+                            required: true,
+                            defaultValue: "+81",
+                            minLength: 2,
+                        }),
+                        number: new StringSettingValueInfo({
+                            name: "電話番号",
+                            description: "電話番号説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                    };
+                    const contactChildren = {
+                        email: new StringSettingValueInfo({
+                            name: "メール",
+                            description: "メール説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        phone: new ObjectSettingValueInfo({
+                            name: "電話",
+                            description: "電話説明",
+                            required: true,
+                            children: phoneChildren,
+                        }),
+                    };
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        contact: new ObjectSettingValueInfo({
+                            name: "連絡先",
+                            description: "連絡先説明",
+                            required: true,
+                            children: contactChildren,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+
+                    // 3階層目のバリデーションエラー
+                    const result = info.validatePartial({
+                        contact: {
+                            phone: {
+                                countryCode: "+", // 短すぎる
+                            },
+                        },
+                    });
+                    expect(result.isError).toBe(true);
+                    if (result.isError) {
+                        expect(result.errorMessage).toContain("contact");
+                        expect(result.errorMessage).toContain("phone");
+                        expect(result.errorMessage).toContain("countryCode");
+                    }
+                });
+            });
+
+            describe("配列を含むオブジェクトの部分バリデーション", () => {
+                it("配列フィールドを含むオブジェクトの部分更新", () => {
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        tags: new ArraySettingValueInfo({
+                            name: "タグ",
+                            description: "タグ説明",
+                            required: true,
+                            defaultValue: [],
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+
+                    // 配列フィールドのみ更新
+                    const result = info.validatePartial({ tags: ["tag1", "tag2"] });
+                    expect(result.isError).toBe(false);
+                });
+
+                it("配列フィールドのバリデーションエラーを検出", () => {
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        tags: new ArraySettingValueInfo({
+                            name: "タグ",
+                            description: "タグ説明",
+                            required: true,
+                            defaultValue: [],
+                            maxItems: 3,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+
+                    // 配列が長すぎる
+                    const result = info.validatePartial({ tags: ["tag1", "tag2", "tag3", "tag4"] });
+                    expect(result.isError).toBe(true);
+                    if (result.isError) {
+                        expect(result.errorMessage).toContain("tags");
+                        expect(result.errorMessage).toContain("最大3個まで");
+                    }
+                });
+            });
+
+            describe("複雑なシナリオ", () => {
+                it("複数階層での複数フィールドの部分更新", () => {
+                    const settingsChildren = {
+                        theme: new StringSettingValueInfo({
+                            name: "テーマ",
+                            description: "テーマ説明",
+                            required: true,
+                            defaultValue: "light",
+                            literals: ["light", "dark"],
+                        }),
+                        fontSize: new NumberSettingValueInfo({
+                            name: "フォントサイズ",
+                            description: "フォントサイズ説明",
+                            required: true,
+                            defaultValue: 14,
+                        }),
+                    };
+                    const profileChildren = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        age: new NumberSettingValueInfo({
+                            name: "年齢",
+                            description: "年齢説明",
+                            required: true,
+                            defaultValue: 0,
+                        }),
+                    };
+                    const children = {
+                        profile: new ObjectSettingValueInfo({
+                            name: "プロフィール",
+                            description: "プロフィール説明",
+                            required: true,
+                            children: profileChildren,
+                        }),
+                        settings: new ObjectSettingValueInfo({
+                            name: "設定",
+                            description: "設定説明",
+                            required: true,
+                            children: settingsChildren,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+
+                    // 複数の階層で複数フィールドを更新
+                    const result = info.validatePartial({
+                        profile: {
+                            name: "Alice",
+                        },
+                        settings: {
+                            theme: "dark",
+                        },
+                    });
+                    expect(result.isError).toBe(false);
+                });
+
+                it("複数階層での複数バリデーションエラーを全て検出", () => {
+                    const settingsChildren = {
+                        theme: new StringSettingValueInfo({
+                            name: "テーマ",
+                            description: "テーマ説明",
+                            required: true,
+                            defaultValue: "light",
+                            literals: ["light", "dark"],
+                        }),
+                        fontSize: new NumberSettingValueInfo({
+                            name: "フォントサイズ",
+                            description: "フォントサイズ説明",
+                            required: true,
+                            defaultValue: 14,
+                            min: 10,
+                        }),
+                    };
+                    const profileChildren = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "Alice",
+                            minLength: 2,
+                        }),
+                        age: new NumberSettingValueInfo({
+                            name: "年齢",
+                            description: "年齢説明",
+                            required: true,
+                            defaultValue: 1,
+                            positive: true,
+                        }),
+                    };
+                    const children = {
+                        profile: new ObjectSettingValueInfo({
+                            name: "プロフィール",
+                            description: "プロフィール説明",
+                            required: true,
+                            children: profileChildren,
+                        }),
+                        settings: new ObjectSettingValueInfo({
+                            name: "設定",
+                            description: "設定説明",
+                            required: true,
+                            children: settingsChildren,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+
+                    // 複数の階層で複数のエラー
+                    const result = info.validatePartial({
+                        profile: {
+                            name: "A", // 短すぎる
+                            age: -1, // 負数
+                        },
+                        settings: {
+                            theme: "invalid", // 不正な値
+                            fontSize: 5, // 小さすぎる
+                        },
+                    });
+                    expect(result.isError).toBe(true);
+                    if (result.isError) {
+                        expect(result.errorMessage).toContain("profile");
+                        expect(result.errorMessage).toContain("name");
+                        expect(result.errorMessage).toContain("age");
+                        expect(result.errorMessage).toContain("settings");
+                        expect(result.errorMessage).toContain("theme");
+                        expect(result.errorMessage).toContain("fontSize");
+                    }
+                });
+
+                it("空のネストされたオブジェクトを提供", () => {
+                    const addressChildren = {
+                        city: new StringSettingValueInfo({
+                            name: "市区町村",
+                            description: "市区町村説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                    };
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                        address: new ObjectSettingValueInfo({
+                            name: "住所",
+                            description: "住所説明",
+                            required: true,
+                            children: addressChildren,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+
+                    // 空のネストされたオブジェクト（フィールドが欠けている）
+                    const result = info.validatePartial({
+                        address: {},
+                    });
+                    expect(result.isError).toBe(false);
+                });
+            });
+
+            describe("エッジケース", () => {
+                it("childrenが定義されていないオブジェクトの部分バリデーション", () => {
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                    });
+                    const result = info.validatePartial({ anyField: "value" });
+                    expect(result.isError).toBe(false);
+                });
+
+                it("disableUnknownFieldがtrueでchildrenが未定義の場合", () => {
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        disableUnknownField: true,
+                    });
+                    const result = info.validatePartial({ anyField: "value" });
+                    expect(result.isError).toBe(false);
+                });
+
+                it("全フィールドが不正な値を持つ場合", () => {
+                    const children = {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "名前説明",
+                            required: true,
+                            defaultValue: "Alice",
+                            minLength: 5,
+                        }),
+                        age: new NumberSettingValueInfo({
+                            name: "年齢",
+                            description: "年齢説明",
+                            required: true,
+                            defaultValue: 1,
+                            positive: true,
+                        }),
+                        active: new BooleanSettingValueInfo({
+                            name: "アクティブ",
+                            description: "アクティブ説明",
+                            required: true,
+                            defaultValue: false,
+                        }),
+                    };
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children,
+                    });
+
+                    // 全フィールドが不正
+                    const result = info.validatePartial({
+                        name: "Ab", // 短すぎる
+                        age: -10, // 負数
+                        active: "not boolean" as any, // 型が違う
+                    });
+                    expect(result.isError).toBe(true);
+                    if (result.isError) {
+                        expect(result.errorMessage).toContain("name");
+                        expect(result.errorMessage).toContain("age");
+                        expect(result.errorMessage).toContain("active");
+                    }
+                });
+
+                it("必須オブジェクトフィールド自体がnullの場合", () => {
+                    const info = new ObjectSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: true,
+                        children: {
+                            name: new StringSettingValueInfo({
+                                name: "名前",
+                                description: "名前説明",
+                                required: true,
+                                defaultValue: "",
+                            }),
+                        },
+                    });
+                    const result = info.validatePartial(null as any);
+                    expect(result.isError).toBe(true);
+                    if (result.isError) {
+                        expect(result.errorMessage).toContain("必須です");
+                    }
+                });
+            });
         });
     });
 

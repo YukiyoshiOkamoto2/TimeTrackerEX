@@ -14,7 +14,7 @@ import { Button, makeStyles, SelectTabData, SelectTabEvent, Tab, TabList, tokens
 import { CodeRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 import { Page } from "../../components/page";
-import { AppearanceSettings, GeneralSettings, JsonEditorView, TimeTrackerSettings } from "./components";
+import { AppearanceSettingsPage, GeneralSettingsPage, JsonEditorView, TimeTrackerSettingsPage } from "./components";
 
 const useStyles = makeStyles({
     pageContainer: {
@@ -51,9 +51,9 @@ type SettingCategory = "general" | "appearance" | "timetracker";
 
 // カテゴリーに対応するコンポーネントマップ
 const CATEGORY_COMPONENTS: Record<SettingCategory, React.ComponentType> = {
-    general: GeneralSettings,
-    appearance: AppearanceSettings,
-    timetracker: TimeTrackerSettings,
+    general: GeneralSettingsPage,
+    appearance: AppearanceSettingsPage,
+    timetracker: TimeTrackerSettingsPage,
 };
 
 export function SettingPage() {

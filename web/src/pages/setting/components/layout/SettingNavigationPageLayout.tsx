@@ -28,7 +28,7 @@ const useStyles = makeStyles({
     },
 });
 
-export interface SettingPageNavigationLayoutProps {
+export interface SettingNavigationPageLayoutProps {
     title: string;
     subtitle?: string;
     /** 戻るボタンのクリックハンドラ。指定すると戻るボタンが表示されます */
@@ -67,14 +67,14 @@ export interface SettingPageNavigationLayoutProps {
  * </SettingPageNavigationLayout>
  * ```
  */
-export function SettingPageNavigationLayout({
+export function SettingNavigationPageLayout({
     title,
     subtitle,
     onBack,
     headerActions,
     onShowJson,
     children,
-}: SettingPageNavigationLayoutProps) {
+}: SettingNavigationPageLayoutProps) {
     const styles = useStyles();
 
     return (

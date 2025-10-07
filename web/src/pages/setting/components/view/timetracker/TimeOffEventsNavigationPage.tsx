@@ -1,7 +1,7 @@
 import { TIMETRACKER_SETTINGS_DEFINITION } from "@/schema/settings";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import type { TimeOffEventPattern } from "../../../../../types/settings";
-import { SettingSection, SettingPageNavigationLayout } from "../../layout";
+import { SettingSection, SettingNavigationPageLayout } from "../../layout";
 import { AutoSettingItem, type SettingError } from "../../ui";
 import { EventPatternEditor } from "../../ui/EventPatternEditor";
 
@@ -17,7 +17,7 @@ const useStyles = makeStyles({
     },
 });
 
-interface TimeOffEventsSettingsProps {
+interface TimeOffEventsNavigationPageProps {
     patterns?: TimeOffEventPattern[];
     workItemId?: number;
     onChange: (patterns: TimeOffEventPattern[], workItemId: number) => void;
@@ -25,13 +25,13 @@ interface TimeOffEventsSettingsProps {
     onShowJson: () => void;
 }
 
-export function TimeOffEventsSettings({
+export function TimeOffEventsNavigationPage({
     patterns,
     workItemId,
     onChange,
     onBack,
     onShowJson,
-}: TimeOffEventsSettingsProps) {
+}: TimeOffEventsNavigationPageProps) {
     const styles = useStyles();
 
     // TODO: 実際のバリデーションエラーを収集する
@@ -46,7 +46,7 @@ export function TimeOffEventsSettings({
     };
 
     return (
-        <SettingPageNavigationLayout
+        <SettingNavigationPageLayout
             title="休暇イベント設定"
             subtitle="休暇イベントとして扱うイベント名のパターンとWorkItemIDを設定します。"
             onBack={onBack}
@@ -82,6 +82,6 @@ export function TimeOffEventsSettings({
                     placeholder="WorkItemID"
                 />
             </SettingSection>
-        </SettingPageNavigationLayout>
+        </SettingNavigationPageLayout>
     );
 }

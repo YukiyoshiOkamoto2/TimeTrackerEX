@@ -1,6 +1,6 @@
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { IgnorableEventPattern } from "../../../../../types/settings";
-import { SettingSection, SettingPageNavigationLayout } from "../../layout";
+import { SettingSection, SettingNavigationPageLayout } from "../../layout";
 import { EventPatternEditor, type SettingError } from "../../ui";
 
 const useStyles = makeStyles({
@@ -12,21 +12,21 @@ const useStyles = makeStyles({
     },
 });
 
-interface IgnorableEventsSettingsProps {
+interface IgnorableEventsNavigationPageProps {
     patterns: IgnorableEventPattern[];
     onChange: (patterns: IgnorableEventPattern[]) => void;
     onBack: () => void;
     onShowJson: () => void;
 }
 
-export function IgnorableEventsSettings({ patterns, onChange, onBack, onShowJson }: IgnorableEventsSettingsProps) {
+export function IgnorableEventsNavigationPage({ patterns, onChange, onBack, onShowJson }: IgnorableEventsNavigationPageProps) {
     const styles = useStyles();
 
     // TODO: 実際のバリデーションエラーを収集する
     const errors: SettingError[] = [];
 
     return (
-        <SettingPageNavigationLayout
+        <SettingNavigationPageLayout
             title="無視可能イベント設定"
             subtitle="処理から除外するイベント名のパターンと一致モードを設定します。"
             onBack={onBack}
@@ -52,6 +52,6 @@ export function IgnorableEventsSettings({ patterns, onChange, onBack, onShowJson
                     addButtonText="パターンを追加"
                 />
             </SettingSection>
-        </SettingPageNavigationLayout>
+        </SettingNavigationPageLayout>
     );
 }

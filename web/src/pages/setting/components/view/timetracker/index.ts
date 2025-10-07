@@ -1,3 +1,3 @@
-export { IgnorableEventsSettings } from "./IgnorableEventsSettings";
-export { TimeOffEventsSettings } from "./TimeOffEventsSettings";
-export { TimeTrackerSettings } from "./TimeTrackerSettings";
+export { IgnorableEventsNavigationPage } from "./IgnorableEventsNavigationPage";
+export { TimeOffEventsNavigationPage } from "./TimeOffEventsNavigationPage";
+export { TimeTrackerSettingsPage } from "./TimeTrackerSettingsPage";

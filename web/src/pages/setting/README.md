@@ -22,89 +22,138 @@ setting/
 ├── SettingPage.tsx              # メイン設定ページ(タブナビゲーション)
 └── components/                  # 設定画面のすべてのコンポーネント
     ├── index.ts                 # すべてをエクスポート (layout, ui, view)
-    ├── layout/                  # ページレベルのレイアウトコンポーネント
+    ├── layout/                  # レイアウトコンポーネント
     │   ├── index.ts
-    │   ├── SettingPageLayout.tsx        # 統合レイアウト(戻るボタンオプション)
-    │   ├── SettingSection.tsx           # セクションコンテナ
-    │   └── SettingNavigationSection.tsx # ナビゲーション用セクション
-    ├── ui/                      # 再利用可能なUIパーツコンポーネント
+    │   ├── SettingNavigationPageLayout.tsx  # ナビゲーション用レイアウト(戻るボタン対応)
+    │   ├── SettingSection.tsx               # セクションコンテナ
+    │   └── SettingNavigationSection.tsx     # ナビゲーション用セクション
+    ├── ui/                      # UIパーツコンポーネント
     │   ├── index.ts
     │   ├── AutoSettingItem.tsx          # スキーマ駆動の設定項目
     │   ├── SettingItem.tsx              # 手動設定項目
     │   ├── SettingNavigationItem.tsx    # ナビゲーション項目
+    │   ├── SettingErrorsSummary.tsx     # エラーサマリー表示
+    │   ├── SettingValidatedInput.tsx    # 検証機能付き入力フィールド
     │   └── EventPatternEditor.tsx       # パターンエディタ
-    └── view/                    # 設定画面コンテンツ
+    └── view/                    # 設定ページコンポーネント
         ├── index.ts
-        ├── AppearanceSettings.tsx       # 外観設定
-        ├── GeneralSettings.tsx          # 一般設定
-        ├── TimeTrackerSettings.tsx      # TimeTracker設定
-        ├── TimeOffEventsSettings.tsx    # 休暇イベント設定
-        ├── IgnorableEventsSettings.tsx  # 無視可能イベント設定
-        └── JsonEditorView.tsx           # JSON直接編集
+        ├── general/
+        │   └── GeneralSettingsPage.tsx          # 一般設定ページ
+        ├── appearance/
+        │   └── AppearanceSettingsPage.tsx       # 外観設定ページ
+        ├── timetracker/
+        │   ├── TimeTrackerSettingsPage.tsx              # TimeTracker設定ページ
+        │   ├── TimeOffEventsNavigationPage.tsx          # 休暇イベント設定ナビゲーションページ
+        │   └── IgnorableEventsNavigationPage.tsx       # 無視可能イベント設定ナビゲーションページ
+        └── shared/
+            └── JsonEditorView.tsx               # JSON直接編集ビュー
 ```
+
+## 🏗️ アーキテクチャ
+
+### 命名規則
+
+#### layout/ (レイアウトコンポーネント)
+- **命名**: 後方に `Section` または `Layout` をつける
+- **特徴**: 必ず `children` 要素を持つ
+- **責務**: 画面全体のレイアウト、セクションの共通レイアウトを提供
+
+**例:**
+- `SettingSection` - セクションコンテナ
+- `SettingNavigationSection` - ナビゲーションセクション
+- `SettingNavigationPageLayout` - ナビゲーションページレイアウト
+
+#### ui/ (UIパーツコンポーネント)
+- **命名**: 機能を表す名前
+- **責務**: 再利用可能なUIパーツ、共通コンポーネント
+
+**例:**
+- `AutoSettingItem` - 自動生成設定項目
+- `SettingNavigationItem` - ナビゲーション項目
+- `EventPatternEditor` - パターンエディタ
+
+#### view/ (設定ページコンポーネント)
+- **命名**: 
+  - メインページ: 後方に `Page` をつける
+  - サブページ(別ページからナビゲーション): 後方に `NavigationPage` をつける
+- **責務**: 設定画面の項目的なページ、画面遷移を伴うページ
+
+**例:**
+- `GeneralSettingsPage` - 一般設定のメインページ
+- `TimeTrackerSettingsPage` - TimeTracker設定のメインページ
+- `TimeOffEventsNavigationPage` - 休暇イベント設定のナビゲーションページ
+- `IgnorableEventsNavigationPage` - 無視可能イベント設定のナビゲーションページ
 
 ### ディレクトリの役割
 
-- **components/layout/**: ページレベルのレイアウトコンポーネント
-  - ページ全体の構造を提供する高レベルのコンポーネント
-  - `SettingPageLayout`: 統合されたページレイアウト(戻るボタンのオプション対応)
-  - `SettingSection`: カード形式のセクションコンテナ(折りたたみ機能付き)
-  - `SettingNavigationSection`: シンプルなナビゲーション用セクション
-  - Pageコンポーネントをラップし、一貫したレイアウトを提供
-  
-- **components/ui/**: 再利用可能なUIパーツコンポーネント
-  - 画面構成の基本単位となるコンポーネント
-  - `AutoSettingItem`: スキーマ定義から自動生成される設定項目
-  - `SettingItem`: 手動で構築する設定項目(ラベル+コントロール)
-  - `SettingNavigationItem`: クリック可能なナビゲーション項目
-  - `EventPatternEditor`: イベントパターンの編集用エディタ
-  - 複数のview間で再利用可能
-  
-- **components/view/**: 設定画面のコンテンツ(メイン画面)
-  - 各設定カテゴリの実装
-  - layoutとuiコンポーネントを組み合わせて画面を構成
-  - 例: TimeTrackerSettings, AppearanceSettings, IgnorableEventsSettings
+#### **components/layout/** - レイアウトコンポーネント
+画面全体のレイアウトやセクションの共通レイアウトを提供します。
+
+- `SettingNavigationPageLayout`: ナビゲーションページ用のレイアウト(戻るボタン、JSON表示ボタン対応)
+- `SettingSection`: カード形式のセクションコンテナ(折りたたみ機能付き)
+- `SettingNavigationSection`: シンプルなナビゲーション用セクション
+- **必ず `children` プロパティを持つ**
+- Pageコンポーネントをラップし、一貫したレイアウトを提供
+
+#### **components/ui/** - UIパーツコンポーネント
+再利用可能なUIパーツや共通コンポーネントです。
+
+- `AutoSettingItem`: スキーマ定義から自動生成される設定項目
+- `SettingItem`: 手動で構築する設定項目(ラベル+コントロール)
+- `SettingNavigationItem`: クリック可能なナビゲーション項目
+- `SettingErrorsSummary`: エラーサマリー表示コンポーネント
+- `SettingValidatedInput`: 検証機能付き入力フィールド
+- `EventPatternEditor`: イベントパターンの編集用エディタ
+- 複数のページ間で再利用可能
+
+#### **components/view/** - 設定ページコンポーネント
+各設定カテゴリの実装や、画面遷移を伴うページです。
+
+- **カテゴリごとにディレクトリで分割**
+- layoutとuiコンポーネントを組み合わせて画面を構成
+- メインページ: `~Page` という命名
+- ナビゲーションページ: `~NavigationPage` という命名
+- 例: 
+  - `TimeTrackerSettingsPage` - メイン設定ページ
+  - `IgnorableEventsNavigationPage` - 別ページから遷移するナビゲーションページ
 
 ---
 
 ## 🎨 Layout Components (components/layout/)
 
-ページ全体の構造を提供する高レベルのレイアウトコンポーネント。
+画面全体のレイアウトやセクションの共通レイアウトを提供するコンポーネント。
+**すべて `children` プロパティを持ちます。**
 
-### SettingPageLayout
+### SettingNavigationPageLayout
 
-ページ全体のレイアウトを提供します。オプショナルな`onBack`プロパティで戻るボタンの表示を制御できます。
+ナビゲーションページ用のレイアウトコンポーネント。戻るボタンやJSON表示ボタンを表示できます。
 
 ```tsx
-import { SettingPageLayout } from "../components/layout";
+import { SettingNavigationPageLayout } from "../components/layout";
 
-// 戻るボタンなし(メイン設定画面)
-<SettingPageLayout 
-    title="設定" 
-    subtitle="アプリケーションの設定"
->
-    <SettingSection>...</SettingSection>
-</SettingPageLayout>
-
-// 戻るボタンあり(サブ設定画面)
-<SettingPageLayout 
+// 戻るボタンとJSON表示ボタンあり
+<SettingNavigationPageLayout 
     title="無視可能イベント設定" 
     subtitle="処理から除外するイベントを設定"
     onBack={() => navigate('back')}
+    onShowJson={() => setShowJsonEditor(true)}
 >
     <SettingSection>...</SettingSection>
-</SettingPageLayout>
+</SettingNavigationPageLayout>
 ```
 
 **Props:**
 - `title`: ページタイトル (必須)
 - `subtitle`: ページの説明文 (オプション)
 - `onBack`: 戻るボタンのクリックハンドラ。指定すると戻るボタンが表示されます (オプション)
-- `children`: ページ内容
+- `headerActions`: ヘッダー右側に表示する追加アクション (オプション)
+- `onShowJson`: JSON表示ボタンのクリックハンドラ。指定するとJSON表示ボタンが表示されます (オプション)
+- `children`: ページ内容 (必須)
 
 **特徴:**
 - Pageコンポーネントをラップ
 - onBackが指定された場合のみ戻るボタンを表示
+- onShowJsonが指定された場合のみJSON表示ボタンを表示
 - 一貫した余白とレイアウト
 
 ---
@@ -372,9 +421,16 @@ import { EventPatternEditor } from "../components/ui";
 
 各設定カテゴリの実装。layoutとuiコンポーネントを組み合わせて画面を構成します。
 
-### AppearanceSettings.tsx
+### 命名規則
 
-外観に関する設定画面。
+- **メインページ**: 後方に `Page` をつける (例: `GeneralSettingsPage`)
+- **ナビゲーションページ**: 後方に `NavigationPage` をつける (例: `IgnorableEventsNavigationPage`)
+
+---
+
+### AppearanceSettingsPage.tsx
+
+外観に関する設定のメインページ。
 
 **設定項目:**
 - テーマ (ライト/ダーク/システム設定)
@@ -388,9 +444,9 @@ import { EventPatternEditor } from "../components/ui";
 
 ---
 
-### GeneralSettings.tsx
+### GeneralSettingsPage.tsx
 
-一般的なアプリケーション設定画面。
+一般的なアプリケーション設定のメインページ。
 
 **設定項目:**
 - 起動設定 (自動起動、最小化で起動)
@@ -403,9 +459,9 @@ import { EventPatternEditor } from "../components/ui";
 
 ---
 
-### TimeTrackerSettings.tsx
+### TimeTrackerSettingsPage.tsx
 
-TimeTracker固有の設定画面。複雑な設定と画面遷移を含みます。
+TimeTracker固有の設定のメインページ。複雑な設定と画面遷移を含みます。
 
 **設定項目:**
 - 基本設定 (ユーザー名、URL、プロジェクトID等)
@@ -424,9 +480,9 @@ TimeTracker固有の設定画面。複雑な設定と画面遷移を含みます
 
 ---
 
-### TimeOffEventsSettings.tsx
+### TimeOffEventsNavigationPage.tsx
 
-休暇イベントの専用設定画面。
+休暇イベント設定のナビゲーションページ (TimeTrackerSettingsPageから遷移)。
 
 **機能:**
 - 戻るボタン
@@ -435,16 +491,16 @@ TimeTracker固有の設定画面。複雑な設定と画面遷移を含みます
 - マッチモードの詳細説明
 
 **使用コンポーネント:**
-- `SettingPageLayout` (onBack指定) - 戻るボタン付きレイアウト
+- `SettingNavigationPageLayout` (onBack指定) - 戻るボタン付きレイアウト
 - `SettingSection` - コンテンツセクション
 - `EventPatternEditor` - パターンエディタ
 - `AutoSettingItem` - WorkItemID入力
 
 ---
 
-### IgnorableEventsSettings.tsx
+### IgnorableEventsNavigationPage.tsx
 
-無視可能イベントの専用設定画面。
+無視可能イベント設定のナビゲーションページ (TimeTrackerSettingsPageから遷移)。
 
 **機能:**
 - 戻るボタン
@@ -453,7 +509,7 @@ TimeTracker固有の設定画面。複雑な設定と画面遷移を含みます
 - パターンの追加・編集・削除
 
 **使用コンポーネント:**
-- `SettingPageLayout` (onBack指定) - 戻るボタン付きレイアウト
+- `SettingNavigationPageLayout` (onBack指定) - 戻るボタン付きレイアウト
 - `SettingSection` - コンテンツセクション
 - `EventPatternEditor` - パターンエディタ
 
@@ -469,7 +525,7 @@ TimeTracker固有の設定画面。複雑な設定と画面遷移を含みます
 - 不正なJSON形式の警告
 
 **使用コンポーネント:**
-- `SettingPageLayout` - ページレイアウト
+- `SettingNavigationPageLayout` - ページレイアウト
 - `SettingSection` - コンテンツセクション
 - `Editor` - Monacoエディタ (src/components/editor)
 
@@ -580,16 +636,17 @@ import { SettingSection, AutoSettingItem } from "../components";
 </SettingSection>
 ```
 
-### 戻るボタン付きサブ画面
+### 戻るボタン付きナビゲーションページ
 
 ```tsx
-import { SettingPageLayout, SettingSection } from "../components";
+import { SettingNavigationPageLayout, SettingSection } from "../components";
 import { EventPatternEditor } from "../components";
 
-<SettingPageLayout 
+<SettingNavigationPageLayout 
     title="無視可能イベント設定"
     subtitle="処理から除外するイベント名のパターンと一致モードを設定します。"
     onBack={() => setView('main')}
+    onShowJson={() => setShowJsonEditor(true)}
 >
     <SettingSection title="イベントパターン">
         <EventPatternEditor
@@ -599,7 +656,7 @@ import { EventPatternEditor } from "../components";
             addButtonText="パターンを追加"
         />
     </SettingSection>
-</SettingPageLayout>
+</SettingNavigationPageLayout>
 ```
 
 ---
@@ -709,11 +766,12 @@ export const NEW_SETTINGS_DEFINITION: SettingDefinition<NewSettings> = {
    };
    ```
 
-2. **Viewコンポーネントを作成** (`components/view/NewCategorySettings.tsx`)
+2. **Pageコンポーネントを作成** (`components/view/newcategory/NewCategorySettingsPage.tsx`)
+   - **命名規則**: 後方に `Page` をつける
    ```tsx
-   import { SettingSection, AutoSettingItem } from "../layout";
+   import { SettingSection, AutoSettingItem } from "../../layout";
    
-   export function NewCategorySettings() {
+   export function NewCategorySettingsPage() {
        const { settings, updateSettings } = useSettings();
        
        return (
@@ -726,43 +784,46 @@ export const NEW_SETTINGS_DEFINITION: SettingDefinition<NewSettings> = {
    }
    ```
 
-3. **エクスポートを追加** (`components/view/index.ts`)
+3. **エクスポートを追加** (`components/view/newcategory/index.ts`)
    ```tsx
-   export { NewCategorySettings } from "./NewCategorySettings";
+   export { NewCategorySettingsPage } from "./NewCategorySettingsPage";
    ```
 
 4. **タブを追加** (`SettingPage.tsx`)
    ```tsx
    const CATEGORY_COMPONENTS = {
-       general: GeneralSettings,
-       appearance: AppearanceSettings,
-       timetracker: TimeTrackerSettings,
-       newcategory: NewCategorySettings, // 追加
+       general: GeneralSettingsPage,
+       appearance: AppearanceSettingsPage,
+       timetracker: TimeTrackerSettingsPage,
+       newcategory: NewCategorySettingsPage, // 追加
    };
    
    // タブリストに追加
    <Tab value="newcategory">新カテゴリ</Tab>
    ```
 
-### サブ画面の実装
+### ナビゲーションページの実装
+
+**命名規則**: 後方に `NavigationPage` をつける
 
 ```tsx
-// メイン画面でのナビゲーション項目
+// メインページでのナビゲーション項目
 <SettingNavigationItem
     title="サブ設定"
     onClick={() => setView('sub-settings')}
 />
 
-// サブ画面
+// ナビゲーションページ (SubSettingsNavigationPage.tsx)
 {view === 'sub-settings' && (
-    <SettingPageLayout
+    <SettingNavigationPageLayout
         title="サブ設定"
         onBack={() => setView('main')}
+        onShowJson={() => setShowJsonEditor(true)}
     >
         <SettingSection title="詳細">
             {/* コンテンツ */}
         </SettingSection>
-    </SettingPageLayout>
+    </SettingNavigationPageLayout>
 )}
 ```
 

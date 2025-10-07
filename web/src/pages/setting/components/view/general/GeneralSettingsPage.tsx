@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { SettingItem, SettingSection, type SettingError } from "../../ui";
+import { SettingItem, type SettingError } from "../../ui";
+import { SettingSection } from "../../layout";
 
-export function GeneralSettings() {
+export function GeneralSettingsPage() {
     // バリデーションエラーを収集
     // 注: 現在GeneralSettingsには編集可能な項目がないため、エラーは常に空
     const errors = useMemo(() => {

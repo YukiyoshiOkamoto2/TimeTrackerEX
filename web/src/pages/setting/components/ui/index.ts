@@ -1,7 +1,3 @@
-export { SettingSection } from "../layout/SettingSection";
-export type { SettingSectionProps } from "../layout/SettingSection";
-export { SettingNavigationSection } from "../layout/SettingNavigationSection";
-export type { SettingNavigationSectionProps } from "../layout/SettingNavigationSection";
 export { AutoSettingItem } from "./AutoSettingItem";
 export type { AutoSettingItemProps } from "./AutoSettingItem";
 export { EventPatternEditor } from "./EventPatternEditor";

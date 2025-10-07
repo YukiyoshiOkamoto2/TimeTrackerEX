@@ -3,11 +3,12 @@ import { APPEARANCE_SETTINGS_DEFINITION } from "@/schema/settings";
 import { useSettings } from "@/store/settings/SettingsProvider";
 import type { AppearanceSettings as AppearanceSettingsType } from "@/types/settings";
 import { useMemo } from "react";
-import { AutoSettingItem, SettingSection, type SettingError } from "../../ui";
+import { AutoSettingItem, type SettingError } from "../../ui";
+import { SettingSection } from "../../layout";
 
 const appearanceDef = APPEARANCE_SETTINGS_DEFINITION.children!;
 
-export function AppearanceSettings() {
+export function AppearanceSettingsPage() {
     const { settings, updateSettings } = useSettings();
     const appearance = settings.appearance as AppearanceSettingsType;
 

@@ -5,14 +5,13 @@ import { useSettings } from "../../../../../store/settings/SettingsProvider";
 import type { EventPattern, TimeTrackerSettings as TimeTrackerSettingsType } from "../../../../../types";
 import {
     AutoSettingItem,
-    SettingSection,
     SettingNavigationItem,
-    SettingNavigationSection,
     type SettingError,
 } from "../../ui";
+import { SettingSection, SettingNavigationSection } from "../../layout";
 import { JsonEditorView } from "../shared/JsonEditorView";
-import { IgnorableEventsSettings } from "./IgnorableEventsSettings";
-import { TimeOffEventsSettings } from "./TimeOffEventsSettings";
+import { IgnorableEventsNavigationPage } from "./IgnorableEventsNavigationPage";
+import { TimeOffEventsNavigationPage } from "./TimeOffEventsNavigationPage";
 
 type SettingView = "main" | "ignorableEvents" | "timeOffEvents" | "jsonEditor";
 
@@ -21,7 +20,7 @@ const eventDuplicatePriorityDef = (ttDef.eventDuplicatePriority as ObjectSetting
 const scheduleAutoInputInfoDef = (ttDef.scheduleAutoInputInfo as ObjectSettingValueInfo).children!;
 const paidLeaveInputInfoDef = (ttDef.paidLeaveInputInfo as ObjectSettingValueInfo).children!;
 
-export function TimeTrackerSettings() {
+export function TimeTrackerSettingsPage() {
     const [currentView, setCurrentView] = useState<SettingView>("main");
     const { settings, updateSettings } = useSettings();
 
@@ -84,7 +83,7 @@ function TimeTrackerSettingsWithIgnorableEvents({ onBack, onShowJson }: TimeTrac
     };
 
     return (
-        <IgnorableEventsSettings
+        <IgnorableEventsNavigationPage
             patterns={tt?.ignorableEvents || []}
             onChange={handleUpdate}
             onBack={onBack}
@@ -115,7 +114,7 @@ function TimeTrackerSettingsWithTimeOffEvents({ onBack, onShowJson }: TimeTracke
     };
 
     return (
-        <TimeOffEventsSettings
+        <TimeOffEventsNavigationPage
             patterns={tt?.timeOffEvent?.namePatterns}
             workItemId={tt?.timeOffEvent?.workItemId}
             onChange={handleUpdate}

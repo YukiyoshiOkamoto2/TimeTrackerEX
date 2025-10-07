@@ -375,7 +375,7 @@ export class TimeTrackerAlgorithm {
                           event.schedule.end.getMinutes(),
                           event.schedule.end.getSeconds(),
                       )
-                    : null,
+                    : undefined,
             };
 
             const newEvent = EventUtils.scheduled(event, newSchedule, true);
