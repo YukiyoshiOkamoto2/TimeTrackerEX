@@ -85,6 +85,9 @@ describe("SettingsProvider - Core Logic", () => {
                 appearance: {
                     theme: "dark",
                 },
+                general: {
+                    language: "ja",
+                },
             };
 
             const result = updateErrorValue(
@@ -216,6 +219,9 @@ describe("SettingsProvider - Core Logic", () => {
                 appearance: {
                     theme: "light",
                 },
+                general: {
+                    language: "ja",
+                },
             };
 
             mockStorage.getValue.mockReturnValue(JSON.stringify(testSettings));
@@ -265,6 +271,9 @@ describe("SettingsProvider - Core Logic", () => {
                 },
                 appearance: {
                     theme: "dark",
+                },
+                general: {
+                    language: "ja",
                 },
             };
 

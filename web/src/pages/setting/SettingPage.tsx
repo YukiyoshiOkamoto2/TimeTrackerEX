@@ -1,13 +1,14 @@
+import type { ObjectSettingValueInfo } from "@/schema/settings";
 import {
-    APP_SETTINGS_DEFINITION,
     APPEARANCE_SETTINGS_DEFINITION,
+    GENERAL_SETTINGS_DEFINITION,
     TIMETRACKER_SETTINGS_DEFINITION,
 } from "@/schema/settings";
 import { useNavigation } from "@/store/navigation";
 import { useSettings } from "@/store/settings/SettingsProvider";
 import type {
     AppearanceSettings as AppearanceSettingsType,
-    AppSettings,
+    GeneralSettings as GeneralSettingsType,
     TimeTrackerSettings as TimeTrackerSettingsType,
 } from "@/types/settings";
 import { Button, makeStyles, SelectTabData, SelectTabEvent, Tab, TabList, tokens } from "@fluentui/react-components";
@@ -49,11 +50,40 @@ const useStyles = makeStyles({
 
 type SettingCategory = "general" | "appearance" | "timetracker";
 
-// カテゴリーに対応するコンポーネントマップ
-const CATEGORY_COMPONENTS: Record<SettingCategory, React.ComponentType> = {
-    general: GeneralSettingsPage,
-    appearance: AppearanceSettingsPage,
-    timetracker: TimeTrackerSettingsPage,
+/**
+ * カテゴリー設定定義
+ */
+interface CategoryConfig<T> {
+    /** UIコンポーネント */
+    component: React.ComponentType;
+    /** スキーマ定義 */
+    definition: ObjectSettingValueInfo;
+    /** 設定値の取得 */
+    getValue: (settings: ReturnType<typeof useSettings>["settings"]) => T;
+    /** 設定値の保存 */
+    updateValue: (updateFn: ReturnType<typeof useSettings>["updateSettings"], value: T) => void;
+}
+
+// カテゴリー設定の一元管理
+const CATEGORY_CONFIG: Record<SettingCategory, CategoryConfig<Record<string, unknown>>> = {
+    general: {
+        component: GeneralSettingsPage,
+        definition: GENERAL_SETTINGS_DEFINITION,
+        getValue: (settings) => settings.general as unknown as Record<string, unknown>,
+        updateValue: (updateFn, val) => updateFn({ general: val as unknown as GeneralSettingsType }),
+    },
+    appearance: {
+        component: AppearanceSettingsPage,
+        definition: APPEARANCE_SETTINGS_DEFINITION,
+        getValue: (settings) => settings.appearance as unknown as Record<string, unknown>,
+        updateValue: (updateFn, val) => updateFn({ appearance: val as unknown as AppearanceSettingsType }),
+    },
+    timetracker: {
+        component: TimeTrackerSettingsPage,
+        definition: TIMETRACKER_SETTINGS_DEFINITION,
+        getValue: (settings) => settings.timetracker as unknown as Record<string, unknown>,
+        updateValue: (updateFn, val) => updateFn({ timetracker: val as unknown as TimeTrackerSettingsType }),
+    },
 };
 
 export function SettingPage() {
@@ -77,45 +107,26 @@ export function SettingPage() {
 
     // コンテンツをレンダリング
     const renderContent = () => {
-        if (showJsonEditor) {
-            // カテゴリーに応じた定義と値を取得
-            let definition, value, onSave;
+        const config = CATEGORY_CONFIG[selectedCategory];
 
-            switch (selectedCategory) {
-                case "general":
-                    // 一般設定 = 全体のapp settings (timetracker + appearance)
-                    definition = APP_SETTINGS_DEFINITION;
-                    value = settings as unknown as Record<string, unknown>;
-                    onSave = (val: Record<string, unknown>) => updateSettings(val as unknown as AppSettings);
-                    break;
-                case "appearance":
-                    definition = APPEARANCE_SETTINGS_DEFINITION;
-                    value = settings.appearance as unknown as Record<string, unknown>;
-                    onSave = (val: Record<string, unknown>) =>
-                        updateSettings({ appearance: val as unknown as AppearanceSettingsType });
-                    break;
-                case "timetracker":
-                    definition = TIMETRACKER_SETTINGS_DEFINITION;
-                    value = settings.timetracker as unknown as Record<string, unknown>;
-                    onSave = (val: Record<string, unknown>) =>
-                        updateSettings({ timetracker: val as unknown as TimeTrackerSettingsType });
-                    break;
-            }
+        if (showJsonEditor) {
+            const value = config.getValue(settings);
+            const handleSave = (val: Record<string, unknown>) => {
+                config.updateValue(updateSettings, val);
+                setShowJsonEditor(false);
+            };
 
             return (
                 <JsonEditorView
-                    definition={definition}
+                    definition={config.definition}
                     value={value}
-                    onSave={(val) => {
-                        onSave(val);
-                        setShowJsonEditor(false);
-                    }}
+                    onSave={handleSave}
                     onCancel={() => setShowJsonEditor(false)}
                 />
             );
         }
 
-        const Component = CATEGORY_COMPONENTS[selectedCategory];
+        const Component = config.component;
         return <Component />;
     };
 

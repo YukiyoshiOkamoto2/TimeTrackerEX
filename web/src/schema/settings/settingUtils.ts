@@ -1,6 +1,48 @@
 import { ObjectSettingValueInfo, SettingValueInfo } from "./settingsDefinition";
 
 /**
+ * 設定エラーの型定義
+ */
+export interface SettingError {
+    id: string;
+    label: string;
+    message: string;
+}
+
+/**
+ * 設定のバリデーションエラーを取得する
+ * @param setting - 検証する設定値
+ * @param definition - 設定のスキーマ定義
+ * @returns エラーのリスト
+ */
+export function getSettingErrors(setting: unknown, definition: ObjectSettingValueInfo): SettingError[] {
+    const errorList: SettingError[] = [];
+    const result = definition.validate(setting as Record<string, unknown>);
+
+    if (result.isError && result.errorMessage) {
+        const lines = result.errorMessage.split("\n").filter((line) => line.trim());
+        lines.forEach((line, index) => {
+            const match = line.match(/^(.+?):\s*(.+)$/);
+            if (match) {
+                errorList.push({
+                    id: `error-${index}`,
+                    label: match[1].trim(),
+                    message: match[2].trim(),
+                });
+            } else {
+                errorList.push({
+                    id: `error-${index}`,
+                    label: "設定エラー",
+                    message: line.trim(),
+                });
+            }
+        });
+    }
+
+    return errorList;
+}
+
+/**
  * 不正なフィールドのみデフォルト値に置き換え（再帰的）
  */
 export function updateErrorValue(
@@ -132,7 +174,7 @@ export function getFieldDefaultValue(info: SettingValueInfo): unknown {
         return info.defaultValue;
     }
 
-    if (info.type === "object" && info.children) {
+    if (info.type === "object" && info.required && info.children) {
         const obj: Record<string, unknown> = {};
         for (const [key, childInfo] of Object.entries(info.children)) {
             const defaultValue = getFieldDefaultValue(childInfo);

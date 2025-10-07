@@ -77,6 +77,51 @@ pages/
 
 ## 実装ガイドライン
 
+### 1ファイル1コンポーネント原則
+
+**基本ルール**: 1つのファイルには1つのエクスポートされるコンポーネントのみを配置します。
+
+```typescript
+// ✅ Good: 1ファイル1コンポーネント
+// SettingsForm.tsx
+export function SettingsForm({ data, onSubmit }: SettingsFormProps) {
+  // ヘルパー関数（同ファイル内はOK）
+  const validateForm = (data: FormData) => { /* ... */ }
+  
+  return <form onSubmit={onSubmit}>...</form>
+}
+
+// FormHeader.tsx（別ファイル）
+export function FormHeader({ title }: FormHeaderProps) {
+  return <header>{title}</header>
+}
+
+// FormFooter.tsx（別ファイル）
+export function FormFooter({ onCancel, onSubmit }: FormFooterProps) {
+  return <footer>...</footer>
+}
+```
+
+```typescript
+// ❌ Bad: 複数コンポーネントを1ファイルに配置
+// SettingsForm.tsx
+export function SettingsForm() { /* ... */ }
+export function FormHeader() { /* ... */ }      // ❌ 別ファイルに分離すべき
+export function FormFooter() { /* ... */ }      // ❌ 別ファイルに分離すべき
+function InternalHelper() { /* ... */ }         // ✅ エクスポートしないヘルパーはOK
+```
+
+**例外として許可されるもの:**
+- 同じファイル内でのみ使用されるヘルパー関数（エクスポートしない）
+- コンポーネントのProps型定義
+- コンポーネント固有の定数
+- ローカルで使用される小さな型定義
+
+**分離の目安:**
+- コンポーネントが他の場所で再利用される可能性がある → 別ファイル化
+- コンポーネントが50行以上 → 別ファイル化を検討
+- コンポーネントが独立したロジックを持つ → 別ファイル化
+
 ### ✅ Good: ページ内で完結
 
 ```typescript

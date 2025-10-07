@@ -10,6 +10,7 @@ export * from "./settingsDefinition";
 // 個別の設定定義
 export * from "./app";
 export * from "./appearance";
+export * from "./general";
 export * from "./timetracker";
 
 // ユーティリティ関数

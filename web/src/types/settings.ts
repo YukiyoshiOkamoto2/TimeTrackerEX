@@ -19,6 +19,9 @@ export type MatchMode = "partial" | "prefix" | "suffix";
 /** テーマモード */
 export type ThemeMode = "light" | "dark" | "system";
 
+/** 言語 */
+export type Language = "ja";
+
 /** イベントパターン（共通） */
 export interface EventPattern {
     /** パターン文字列 */
@@ -61,8 +64,6 @@ export interface ScheduleAutoInputInfo {
 
 /** 有給休暇の自動入力設定 */
 export interface PaidLeaveInputInfo {
-    /** 有効フラグ */
-    enabled?: boolean;
     /** WorkItemID */
     workItemId: number;
     /** 開始時間（HH:MM形式） */
@@ -95,6 +96,12 @@ export interface TimeTrackerSettings {
     paidLeaveInputInfo?: PaidLeaveInputInfo;
 }
 
+/** 一般設定 */
+export interface GeneralSettings {
+    /** 言語 */
+    language: Language;
+}
+
 /** 外観設定 */
 export interface AppearanceSettings {
     /** テーマモード */
@@ -103,10 +110,12 @@ export interface AppearanceSettings {
 
 /** アプリケーション設定 */
 export interface AppSettings {
-    /** TimeTracker設定 */
-    timetracker: TimeTrackerSettings;
+    /** 一般設定 */
+    general: GeneralSettings;
     /** 外観設定 */
     appearance: AppearanceSettings;
+    /** TimeTracker設定 */
+    timetracker: TimeTrackerSettings;
 }
 
 // Type aliases for backward compatibility

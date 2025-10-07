@@ -205,15 +205,9 @@ export const TIMETRACKER_SETTINGS_DEFINITION = new ObjectSettingValueInfo({
 
         paidLeaveInputInfo: new ObjectSettingValueInfo({
             name: "有給休暇の自動入力設定",
-            description: "有給休暇を自動入力する設定",
+            description: "有給休暇を自動入力する設定(オブジェクトが存在する場合に有効)",
             required: false,
             children: {
-                enabled: new BooleanSettingValueInfo({
-                    name: "有効",
-                    description: "有給休暇の自動入力を有効にする",
-                    required: false,
-                    defaultValue: false,
-                }),
                 workItemId: new NumberSettingValueInfo({
                     name: "有給休暇のWorkItemID",
                     description: "有給休暇として登録するWorkItemのID",

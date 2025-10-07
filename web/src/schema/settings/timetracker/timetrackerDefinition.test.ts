@@ -58,7 +58,6 @@ describe("timetrackerDefinition", () => {
                     workItemId: 789,
                 },
                 paidLeaveInputInfo: {
-                    enabled: true,
                     startTime: "09:00",
                     endTime: "18:00",
                     workItemId: 1011,
@@ -351,10 +350,10 @@ describe("timetrackerDefinition", () => {
                 expect(result.isError).toBe(false);
             });
 
-            it("paidLeaveInputInfoのenabledのみの更新を受け入れる（必須のworkItemIdなし）", () => {
+            it("paidLeaveInputInfoの一部フィールドのみの更新を受け入れる（必須のworkItemIdなし）", () => {
                 const partialSettings = {
                     paidLeaveInputInfo: {
-                        enabled: true,
+                        startTime: "08:30",
                     },
                 } as Partial<TimeTrackerSettings>;
 
@@ -416,7 +415,7 @@ describe("timetrackerDefinition", () => {
                         startEndType: "end" as StartEndType,
                     },
                     paidLeaveInputInfo: {
-                        enabled: false,
+                        startTime: "08:00",
                     },
                 } as Partial<TimeTrackerSettings>;
 
@@ -555,7 +554,6 @@ describe("timetrackerDefinition", () => {
                         workItemId: 789,
                     },
                     paidLeaveInputInfo: {
-                        enabled: true,
                         startTime: "09:00",
                         endTime: "18:00",
                         workItemId: 1011,
@@ -593,10 +591,12 @@ describe("timetrackerDefinition", () => {
             });
 
             it("UIでのpaidLeaveInputInfoトグルシナリオ", () => {
-                // ユーザーが有給休暇入力機能のトグルを切り替え
+                // ユーザーが有給休暇入力機能のトグルをオンにする（オブジェクトを作成）
                 const partialSettings = {
                     paidLeaveInputInfo: {
-                        enabled: true,
+                        workItemId: 0,
+                        startTime: "09:00",
+                        endTime: "17:30",
                     },
                 } as Partial<TimeTrackerSettings>;
 

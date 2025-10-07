@@ -5,6 +5,7 @@
  */
 
 import { APPEARANCE_SETTINGS_DEFINITION } from "../appearance";
+import { GENERAL_SETTINGS_DEFINITION } from "../general";
 import { ObjectSettingValueInfo } from "../settingsDefinition";
 import { TIMETRACKER_SETTINGS_DEFINITION } from "../timetracker";
 
@@ -17,7 +18,8 @@ export const APP_SETTINGS_DEFINITION = new ObjectSettingValueInfo({
     required: true,
     disableUnknownField: true,
     children: {
-        timetracker: TIMETRACKER_SETTINGS_DEFINITION,
+        general: GENERAL_SETTINGS_DEFINITION,
         appearance: APPEARANCE_SETTINGS_DEFINITION,
+        timetracker: TIMETRACKER_SETTINGS_DEFINITION,
     },
 });

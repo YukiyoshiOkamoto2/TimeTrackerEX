@@ -3,8 +3,8 @@ import { APPEARANCE_SETTINGS_DEFINITION } from "@/schema/settings";
 import { useSettings } from "@/store/settings/SettingsProvider";
 import type { AppearanceSettings as AppearanceSettingsType } from "@/types/settings";
 import { useMemo } from "react";
+import { SettingPageLayout, SettingSection } from "../../layout";
 import { AutoSettingItem, type SettingError } from "../../ui";
-import { SettingSection } from "../../layout";
 
 const appearanceDef = APPEARANCE_SETTINGS_DEFINITION.children!;
 
@@ -63,12 +63,11 @@ export function AppearanceSettingsPage() {
     };
 
     return (
-        <>
+        <SettingPageLayout errors={errors}>
             <SettingSection
                 title="テーマ設定"
                 description="アプリケーションの外観をカスタマイズ"
-                required={false}
-                errors={errors}
+                required={appearanceDef.theme.required}
             >
                 <AutoSettingItem
                     definition={appearanceDef.theme}
@@ -77,6 +76,6 @@ export function AppearanceSettingsPage() {
                     minWidth="200px"
                 />
             </SettingSection>
-        </>
+        </SettingPageLayout>
     );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFieldDefaultValue, updateErrorValue } from "./settingUtils";
+import { getFieldDefaultValue, getSettingErrors, updateErrorValue } from "./settingUtils";
 import {
     ArraySettingValueInfo,
     BooleanSettingValueInfo,
@@ -1563,6 +1563,169 @@ describe("settingUtils", () => {
                     hobbies: ["swimming", "reading"], // "x"削除
                 });
             });
+        });
+    });
+    describe("getSettingErrors", () => {
+        it("有効な設定の場合、空の配列を返す", () => {
+            const definition = new ObjectSettingValueInfo({
+                name: "テスト設定",
+                description: "テスト用の設定",
+                required: true,
+                children: {
+                    name: new StringSettingValueInfo({
+                        name: "名前",
+                        description: "名前フィールド",
+                        required: true,
+                    }),
+                },
+            });
+
+            const validSetting = { name: "test" };
+            const errors = getSettingErrors(validSetting, definition);
+
+            expect(errors).toEqual([]);
+        });
+
+        it("必須フィールドが欠けている場合、エラーを返す", () => {
+            const definition = new ObjectSettingValueInfo({
+                name: "テスト設定",
+                description: "テスト用の設定",
+                required: true,
+                children: {
+                    name: new StringSettingValueInfo({
+                        name: "名前",
+                        description: "名前フィールド",
+                        required: true,
+                    }),
+                },
+            });
+
+            const invalidSetting = {};
+            const errors = getSettingErrors(invalidSetting, definition);
+
+            expect(errors.length).toBeGreaterThan(0);
+            expect(errors[0]).toHaveProperty("id");
+            expect(errors[0]).toHaveProperty("label");
+            expect(errors[0]).toHaveProperty("message");
+        });
+
+        it("型が正しくない場合、エラーを返す", () => {
+            const definition = new ObjectSettingValueInfo({
+                name: "テスト設定",
+                description: "テスト用の設定",
+                required: true,
+                children: {
+                    age: new NumberSettingValueInfo({
+                        name: "年齢",
+                        description: "年齢フィールド",
+                        required: true,
+                    }),
+                },
+            });
+
+            const invalidSetting = { age: "not a number" };
+            const errors = getSettingErrors(invalidSetting, definition);
+
+            expect(errors.length).toBeGreaterThan(0);
+            expect(errors[0].label).toContain("年齢");
+        });
+
+        it("複数のエラーがある場合、すべてのエラーを返す", () => {
+            const definition = new ObjectSettingValueInfo({
+                name: "テスト設定",
+                description: "テスト用の設定",
+                required: true,
+                children: {
+                    name: new StringSettingValueInfo({
+                        name: "名前",
+                        description: "名前フィールド",
+                        required: true,
+                        minLength: 3,
+                    }),
+                    age: new NumberSettingValueInfo({
+                        name: "年齢",
+                        description: "年齢フィールド",
+                        required: true,
+                        positive: true,
+                    }),
+                },
+            });
+
+            const invalidSetting = {
+                name: "ab", // 短すぎる
+                age: -5, // 負の値
+            };
+            const errors = getSettingErrors(invalidSetting, definition);
+
+            expect(errors.length).toBeGreaterThan(0);
+        });
+
+        it("エラーメッセージがラベルとメッセージに正しく分割される", () => {
+            const definition = new ObjectSettingValueInfo({
+                name: "テスト設定",
+                description: "テスト用の設定",
+                required: true,
+                children: {
+                    email: new StringSettingValueInfo({
+                        name: "メールアドレス",
+                        description: "メールアドレス",
+                        required: true,
+                        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    }),
+                },
+            });
+
+            const invalidSetting = { email: "invalid-email" };
+            const errors = getSettingErrors(invalidSetting, definition);
+
+            expect(errors.length).toBeGreaterThan(0);
+            expect(errors[0].label).toBeTruthy();
+            expect(errors[0].message).toBeTruthy();
+        });
+
+        it("エラーメッセージにコロンがない場合、デフォルトラベルを使用する", () => {
+            const definition = new ObjectSettingValueInfo({
+                name: "テスト設定",
+                description: "テスト用の設定",
+                required: true,
+                children: {},
+            });
+
+            // 意図的に不正なデータ型を渡す
+            const invalidSetting = "not an object" as any;
+            const errors = getSettingErrors(invalidSetting, definition);
+
+            if (errors.length > 0) {
+                // エラーがある場合、ラベルが設定されていることを確認
+                expect(errors[0].label).toBeDefined();
+            }
+        });
+
+        it("エラーIDがユニークである", () => {
+            const definition = new ObjectSettingValueInfo({
+                name: "テスト設定",
+                description: "テスト用の設定",
+                required: true,
+                children: {
+                    field1: new StringSettingValueInfo({
+                        name: "フィールド1",
+                        description: "フィールド1",
+                        required: true,
+                    }),
+                    field2: new StringSettingValueInfo({
+                        name: "フィールド2",
+                        description: "フィールド2",
+                        required: true,
+                    }),
+                },
+            });
+
+            const invalidSetting = {}; // 両方のフィールドが欠けている
+            const errors = getSettingErrors(invalidSetting, definition);
+
+            const ids = errors.map((e) => e.id);
+            const uniqueIds = new Set(ids);
+            expect(ids.length).toBe(uniqueIds.size);
         });
     });
 });

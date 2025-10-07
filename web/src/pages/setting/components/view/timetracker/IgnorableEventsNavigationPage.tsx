@@ -1,7 +1,7 @@
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { IgnorableEventPattern } from "../../../../../types/settings";
-import { SettingSection, SettingNavigationPageLayout } from "../../layout";
-import { EventPatternEditor, type SettingError } from "../../ui";
+import { SettingNavigationPageLayout, SettingSection } from "../../layout";
+import { EventPatternEditor } from "../../ui";
 
 const useStyles = makeStyles({
     helpText: {
@@ -16,23 +16,18 @@ interface IgnorableEventsNavigationPageProps {
     patterns: IgnorableEventPattern[];
     onChange: (patterns: IgnorableEventPattern[]) => void;
     onBack: () => void;
-    onShowJson: () => void;
 }
 
-export function IgnorableEventsNavigationPage({ patterns, onChange, onBack, onShowJson }: IgnorableEventsNavigationPageProps) {
+export function IgnorableEventsNavigationPage({ patterns, onChange, onBack }: IgnorableEventsNavigationPageProps) {
     const styles = useStyles();
-
-    // TODO: 実際のバリデーションエラーを収集する
-    const errors: SettingError[] = [];
 
     return (
         <SettingNavigationPageLayout
             title="無視可能イベント設定"
             subtitle="処理から除外するイベント名のパターンと一致モードを設定します。"
             onBack={onBack}
-            onShowJson={onShowJson}
         >
-            <SettingSection title="イベントパターン" errors={errors}>
+            <SettingSection title="イベントパターン">
                 <div className={styles.helpText}>
                     <strong>一致モードについて:</strong>
                     <br />• <strong>部分一致</strong>: パターンがイベント名のどこかに含まれていればマッチ
