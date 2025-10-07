@@ -96,7 +96,6 @@ export interface IStorage {
  * - データは構造化され、1つのルートキーに保存されます
  */
 export class LocalStorageStorage implements IStorage {
-    private prefix: string;
     private rootKey: string;
 
     /**
@@ -109,7 +108,6 @@ export class LocalStorageStorage implements IStorage {
      * - 例: `new LocalStorageStorage('app1:')` → キーは `app1:key` となります
      */
     constructor(prefix: string = "") {
-        this.prefix = prefix;
         this.rootKey = `${prefix}${ROOT_STORAGE_KEY}`;
         logger.debug(`LocalStorageStorage初期化: prefix=${prefix}, rootKey=${this.rootKey}`);
     }

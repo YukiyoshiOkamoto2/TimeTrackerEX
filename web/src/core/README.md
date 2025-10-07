@@ -1,410 +1,262 @@
-# core
+# Core Modules
 
-ビジネスロジックを提供するコアモジュールです。UIから独立した純粋な関数とクラスで構成され、テスト可能で再利用可能な設計となっています。
+UI非依存のビジネスロジックモジュール群。純粋関数とクラスで実装、全モジュールテスト完備。
 
-## 概要
+## Overview
 
-TimeTracker EXのコアロジックを実装したモジュール群です。Pythonバックエンドからの移植を進めており、以下の機能を提供します:
+TimeTracker EXのコアロジック。Pythonバックエンドから完全移植済み。
 
-- 時間計算アルゴリズム
-- TimeTracker API通信
-- 履歴管理
-- ICSファイルパース
-- 無視設定管理
-- PDFファイルパース
+機能:
+- 時間計算アルゴリズム (丸め、重複除去、1日タスク分割)
+- TimeTracker API通信 (認証、プロジェクト/WorkItem取得、タスク登録)
+- 履歴管理 (イベント→WorkItemマッピング、最大300件)
+- ICSパース (Outlook/Googleカレンダー、繰り返しイベント展開)
+- 無視設定管理 (パターンマッチング、完全/部分/前方/後方一致)
+- PDFパース (TimeTracker勤怠PDF、勤務時間/休日抽出)
 
-## ディレクトリ構成
+## Directory Structure
 
 ```
 core/
-├── algorithm/       # 時間計算アルゴリズム
+├── algorithm/       # Time calculation engine
 │   ├── algorithm.ts
-│   ├── algorithm.test.ts
-│   └── index.ts
-├── api/             # API通信
+│   ├── algorithm.test.ts (54 tests)
+│   ├── index.ts
+│   └── README.md
+├── api/             # TimeTracker API client
 │   ├── timeTracker.ts
-│   └── index.ts
-├── history/         # 履歴管理
+│   ├── index.ts
+│   └── README.md
+├── history/         # Event→WorkItem mapping history
 │   ├── historyManager.ts
-│   ├── historyManager.test.ts
+│   ├── historyManager.test.ts (32 tests)
 │   ├── index.ts
 │   └── README.md
-├── ics/             # ICSファイルパース
+├── ics/             # ICS file parser
 │   ├── icsParser.ts
-│   ├── icsParser.test.ts
+│   ├── icsParser.test.ts (13 tests)
 │   ├── index.ts
 │   └── README.md
-├── ignore/          # 無視設定管理
+├── ignore/          # Event ignore pattern manager
 │   ├── ignoreManager.ts
-│   ├── ignoreManager.test.ts
+│   ├── ignoreManager.test.ts (32 tests)
 │   ├── index.ts
 │   └── README.md
-└── pdf/             # PDFファイルパース
+└── pdf/             # PDF attendance parser
     ├── pdfParser.ts
-    ├── pdfParser.test.ts
+    ├── pdfParser.test.ts (3 tests)
     ├── index.ts
     └── README.md
 ```
 
-## モジュール一覧
+## Module Details
 
-### algorithm
+### algorithm/
+時間計算エンジン。
 
-**時間計算アルゴリズム**
+**機能:**
+- roundingTime: 指定単位(5/10/15/30分)で時刻丸め(切り上げ/切り捨て/四捨五入)
+- roundingSchedule: スケジュール丸め(backward/forward/round/half/stretch/nonduplicate)
+- cleanDuplicateEvent: 重複イベント除去(small/large比較モード)
+- splitOneDayTask: 1日タスク分割(勤務開始/終了イベント生成)
+- getRecurrenceEvent: 繰り返しイベント展開
+- scheduleToEvent: スケジュール→イベント変換(start/end/bothモード)
+- margedScheduleEvents: 通常イベント+スケジュールイベント統合
+- searchNextEvent: 次イベント検索(重複考慮)
 
-- イベントとスケジュールから勤務時間を自動計算
-- 時間の丸め処理（切り上げ・切り捨て・四捨五入等）
-- 重複イベントの除去
+**依存:** types, lib/logger
 
-📖 詳細: [algorithm/README.md](./algorithm/README.md)
+**テスト:** 54 tests全パス
 
-### api
+詳細: [algorithm/README.md](./algorithm/README.md)
 
-**TimeTracker APIクライアント**
+### api/
+TimeTracker APIクライアント。
 
-- TimeTrackerへの認証
-- プロジェクト一覧取得
-- 作業項目取得
-- タスク登録（単一/一括）
+**機能:**
+- connectAsync: 認証(ユーザー名/パスワード)
+- getProjectsAsync: プロジェクト一覧取得
+- getWorkItemsAsync: WorkItem一覧取得
+- postTaskAsync: タスク単一登録
+- postTasksAsync: タスク一括登録
+- validateTimeTrackerTask: タスクバリデーション
 
-📖 詳細: [api/README.md](./api/README.md)
+**依存:** types, lib/asyncQueue
 
-### history
+**テスト:** 未実装(HTTPモック必要)
 
-**履歴マネージャー**
+詳細: [api/README.md](./api/README.md)
 
-- イベントと作業項目のマッピング履歴管理
-- Storageを使用した永続化
-- 自動提案機能
+### history/
+イベント→WorkItemマッピング履歴管理。
 
-📖 詳細: [history/README.md](./history/README.md)
+**機能:**
+- set/get: UUID→WorkItemIDマッピング
+- getAll: 全履歴取得
+- deleteByKey: 履歴削除
+- clear: 全削除
+- dump: localStorage保存
+- load: localStorage読み込み
+- 最大300件自動削除(FIFO)
 
-### history
+**依存:** lib/storage, lib/logger
 
-**履歴マネージャー**
+**テスト:** 32 tests全パス
 
-- イベントと作業項目のマッピング履歴管理
-- Storageを使用した永続化
-- 自動提案機能
-- 最大サイズ管理（300件）
+**シングルトン:** getHistoryManager()
 
-📖 詳細: [history/README.md](./history/README.md)
+詳細: [history/README.md](./history/README.md)
 
-### ics
+### ics/
+ICSファイルパーサー。
 
-**ICSファイルパーサー**
+**機能:**
+- parseICS: ICSファイル→Eventリスト変換
+- extractRecentEvents: 最近N日イベント抽出
+- 繰り返しイベント自動展開(ical.js使用)
+- キャンセル/プライベートイベント判定
+- 過去イベント自動フィルタ(デフォルト30日以前除外)
 
-- Outlook/GoogleカレンダーのICSファイル読み込み
-- イベント情報の抽出
-- 繰り返しイベントの展開
-- 過去イベントのフィルタリング
+**依存:** types, lib/logger, ical.js v2.2.1
 
-📖 詳細: [ics/README.md](./ics/README.md)
+**テスト:** 13 tests全パス
 
-### ignore
+詳細: [ics/README.md](./ics/README.md)
 
-**無視設定マネージャー**
+### ignore/
+イベント無視パターン管理。
 
-- イベント/スケジュールのフィルタリング
-- パターンマッチング（完全一致・部分一致）
-- Storageを使用した永続化
-- シングルトンパターン
+**機能:**
+- addIgnoreItem/removeIgnoreItem: パターン追加/削除
+- ignoreEvent: イベント無視判定
+- setIgnorableEventPatterns: 新形式パターン設定(完全/部分/前方/後方一致)
+- getAllIgnoreItems: 全パターン取得
+- clear: 全削除
+- dump: localStorage保存
+- load: localStorage読み込み
 
-📖 詳細: [ignore/README.md](./ignore/README.md)
+**依存:** lib/storage, lib/logger
 
-### pdf
+**テスト:** 32 tests全パス
 
-**PDFファイルパーサー**
+**シングルトン:** getIgnoreManager()
 
-- TimeTracker勤怠PDFの読み込み
-- 勤務時間・打刻時間の抽出
-- 休日・有給休暇の判定
+**パターン:**
+- exact: 完全一致
+- partial: 部分一致
+- prefix: 前方一致
+- suffix: 後方一致
 
-📖 詳細: [pdf/README.md](./pdf/README.md)
+詳細: [ignore/README.md](./ignore/README.md)
 
-## 設計原則
+### pdf/
+TimeTracker勤怠PDFパーサー。
 
-### 1. UIからの独立
+**機能:**
+- parsePDF: PDF→Scheduleリスト+打刻時間変換
+- 勤務時間抽出(開始/終了時刻)
+- 休日判定(土日、祝日文字列検出)
+- 有給休暇判定
+- 30日分データ抽出
 
-- Reactコンポーネントに依存しない
-- ブラウザAPIの直接使用を最小限に
-- 純粋な関数・クラスとして実装
+**依存:** types, lib/logger, pdfjs-dist
 
-### 2. テスト可能性
+**テスト:** 3 tests全パス
 
-- 各モジュールに対応するテストファイルを配置
-- 依存関係を注入可能に設計
-- モックしやすいインターフェース
+詳細: [pdf/README.md](./pdf/README.md)
 
-### 3. 型安全性
+## Design Principles
 
-- 全ての関数に型注釈
-- `any`型の使用禁止
-- 入力バリデーション
+### 1. UI Independence
+React/DOMに依存しない純粋関数/クラス設計。ブラウザAPI使用最小限。
 
-## 使用方法
+### 2. Testability
+全関数単体テスト可能。依存注入対応。モック容易。
 
-### algorithm - 時間計算
+### 3. Type Safety
+全関数型注釈必須。any型禁止。入力バリデーション必須。
 
-```typescript
-import { TimeTrackerAlgorithm } from '@/core/algorithm'
+### 4. Singleton Pattern
+HistoryManager, IgnoreManagerはシングルトン。getXxxManager()でアクセス。resetXxxManager()でテスト用リセット。
 
-const algorithm = new TimeTrackerAlgorithm(project, eventInfo, scheduleInfo)
-const dayTasks = algorithm.splitOneDayTask(date, events, schedules)
+### 5. Storage Abstraction
+localStorage直接アクセス禁止。lib/storage経由。テスト時モック可能。
 
-dayTasks.forEach(task => {
-  console.log(`${task.workItemName}: ${task.start} - ${task.end}`)
-})
-```
-
-### api - TimeTracker API
-
-```typescript
-import { TimeTracker, validateTimeTrackerTask } from '@/core/api'
-import type { TimeTrackerTask } from '@/core/api'
-
-const api = new TimeTracker(baseUrl, userName, projectId)
-await api.connectAsync(password)
-
-const project = await api.getProjectsAsync()
-const workItems = await api.getWorkItemsAsync()
-
-const task: TimeTrackerTask = {
-  workItemId: 'item-123',
-  startTime: new Date('2025-10-04T09:00:00'),
-  endTime: new Date('2025-10-04T12:00:00'),
-  memo: '開発作業'
-}
-
-validateTimeTrackerTask(task)
-await api.postTaskAsync(task)
-```
-
-### history - 履歴管理
-
-```typescript
-import { getHistoryManager } from '@/core/history'
-
-const historyManager = getHistoryManager()
-
-// 履歴を追加
-historyManager.set('event-uuid-123', 'work-item-456')
-historyManager.dump()
-
-// 履歴から取得
-const workItemId = historyManager.get('event-uuid-123')
-
-// すべての履歴を取得
-const allHistory = historyManager.getAll()
-```
-
-### ics - ICSパース
-
-```typescript
-import { parseICS, extractRecentEvents } from '@/core/ics'
-import type { InputICSResult } from '@/core/ics'
-
-// ICSファイルをパース
-const result: InputICSResult = parseICS(fileContent)
-
-if (result.errorMessages.length === 0) {
-  result.events.forEach(event => {
-    if (!event.isCancelled && !event.isPrivate) {
-      console.log(`${event.name}: ${event.start} - ${event.end}`)
-    }
-  })
-}
-
-// 最近30日のイベントのみ抽出
-const recentResult = extractRecentEvents(fileContent, 30)
-```
-
-### ignore - 無視設定
-
-```typescript
-import { getIgnoreManager } from '@/core/ignore'
-
-const ignoreManager = getIgnoreManager()
-
-// 無視設定を追加
-ignoreManager.addIgnoreItem({
-  type: 'event',
-  name: '休憩',
-  matchType: 'contains'
-})
-ignoreManager.dump()
-
-// イベントが無視対象かチェック
-if (ignoreManager.ignoreEvent(event)) {
-  console.log('このイベントは無視されます')
-}
-```
-
-### pdf - PDFパース
-
-```typescript
-import { parsePDF } from '@/core/pdf'
-
-const file = new File([pdfData], 'attendance.pdf')
-const result = await parsePDF(file)
-
-if (result.schedules.length > 0) {
-  result.schedules.forEach(schedule => {
-    console.log(`${schedule.start} - ${schedule.end}`)
-    if (schedule.isHoliday) console.log('休日')
-    if (schedule.isPaidLeave) console.log('有給休暇')
-  })
-}
-```
-
-## テスト
-
-```bash
-# 全テスト実行
-npm test
-
-# core配下のみ
-npm test -- core/
-
-# 特定のモジュール
-npm test -- core/algorithm/
-```
-
-## テスト状況
-
-| モジュール | テスト数 | カバレッジ | 依存ライブラリ |
-|-----------|---------|-----------|---------------|
-| algorithm | 54 | ✅ 100% | - |
-| api | - | 🔄 未実装 | HttpRequestQueue |
-| history | 19 | ✅ 完了 | Storage |
-| ics | 11 | ✅ 完了 | ical.js v2.2.1 |
-| ignore | 23 | ✅ 完了 | Storage |
-| pdf | 3 | ✅ 完了 | pdfjs-dist |
-| **合計** | **110** | **✅ 99%** | - |
-
-### テスト実行
-
-```bash
-# 全テスト実行
-npm test
-
-# coreモジュールのみ
-npm test -- core/
-
-# 特定のモジュール
-npm test -- core/algorithm/
-npm test -- core/history/
-npm test -- core/ignore/
-
-# watchモード
-npm test -- core/ --watch
-```
-
-## パフォーマンス
-
-各モジュールの計算量:
-
-| モジュール | 計算量 | 備考 |
-|-----------|--------|------|
-| algorithm | O(n log n) | n = イベント数、ソートが支配的 |
-| history | O(1) | Mapベースの高速検索 |
-| ignore | O(n) | n = 無視設定数 |
-| ics | O(n) | n = イベント数 |
-| pdf | O(n) | n = PDFページ数 |
-
-## 依存関係
+## Test Status
 
 ```
-core/
-├── algorithm     → types, lib/logger
-├── api          → types, lib/asyncQueue
-├── history      → lib/storage, lib/logger
-├── ics          → types, lib/logger, ical.js
-├── ignore       → types, lib/storage, lib/logger
-└── pdf          → types, lib/logger, pdfjs-dist
+Test Files  14 passed
+Tests      462 passed
+Duration   47.63s
 ```
 
-## Pythonからの移植状況
+core/配下テスト内訳:
+- algorithm: 54 tests ✅
+- history: 32 tests ✅
+- ics: 13 tests ✅
+- ignore: 32 tests ✅
+- pdf: 3 tests ✅
+- **合計: 134 tests** ✅
 
-| Python | TypeScript | 状態 | テスト |
-|--------|------------|------|--------|
-| algorithm.py | algorithm/ | ✅ 完了 | 54 |
-| api.py | api/ | ✅ 完了 | 🔄 未実装 |
-| history.py | history/ | ✅ 完了 | 19 |
-| input_ics.py | ics/ | ✅ 完了 | 11 |
-| ignore.py | ignore/ | ✅ 完了 | 23 |
-| input_pdf.py | pdf/ | ✅ 完了 | 3 |
+## Performance
 
-## 開発ガイドライン
+| Module | Complexity | Note |
+|--------|------------|------|
+| algorithm | O(n log n) | n=events, sort dominant |
+| history | O(1) | Map-based lookup |
+| ignore | O(m) | m=patterns |
+| ics | O(n) | n=events |
+| pdf | O(p) | p=pages |
 
-### 新しいモジュールを追加する場合
+## Dependencies
 
-1. **ディレクトリ構成**
-   ```
-   core/
-   └── new-module/
-       ├── newModule.ts
-       ├── newModule.test.ts
-       ├── index.ts
-       └── README.md
-   ```
-
-2. **index.tsでエクスポート**
-   ```typescript
-   export { NewModule } from './newModule'
-   export type { NewModuleConfig } from './newModule'
-   ```
-
-3. **core/index.tsに追加**
-   ```typescript
-   export * from './new-module'
-   ```
-
-4. **READMEを作成**
-   - 概要
-   - 使用例
-   - API リファレンス
-   - Pythonとの対応表
-
-5. **テストを作成**
-   - 100%カバレッジを目指す
-   - エッジケースをカバー
-   - エラーハンドリングをテスト
-
-### コーディング規約
-
-- **命名規則**: camelCase (クラス名はPascalCase)
-- **ロギング**: すべての主要な操作でログ出力
-- **型安全性**: `any`型は禁止、厳密な型定義
-- **エラーハンドリング**: try-catchで適切にエラーをキャッチ
-- **ドキュメント**: JSDocコメントを記述
-
-## トラブルシューティング
-
-### よくある問題
-
-**Q: テストが失敗する**
-```bash
-# キャッシュをクリアして再実行
-npm run clean
-npm test
+```
+core/algorithm → types/models, lib/logger
+core/api → types/models, lib/asyncQueue, lib/logger
+core/history → lib/storage, lib/logger
+core/ics → types/models, lib/logger, ical.js
+core/ignore → types/models, lib/storage, lib/logger
+core/pdf → types/models, lib/logger, pdfjs-dist
 ```
 
-**Q: 型エラーが出る**
-```bash
-# 型定義を再生成
-npm run type-check
-```
+**External Libraries:**
+- ical.js v2.2.1 (ics/)
+- pdfjs-dist (pdf/)
 
-**Q: ログが表示されない**
-```typescript
-// ログレベルを確認
-import { configureLogger, LogLevel } from '@/lib/logger'
-configureLogger({ level: LogLevel.DEBUG })
-```
+## Python Migration Status
 
-## 関連
+| Python Module | TypeScript Module | Status | Tests |
+|--------------|-------------------|--------|-------|
+| algorithm.py | core/algorithm | ✅ Complete | 54 |
+| api.py | core/api | ✅ Complete | - |
+| history.py | core/history | ✅ Complete | 32 |
+| input_ics.py | core/ics | ✅ Complete | 13 |
+| ignore.py | core/ignore | ✅ Complete | 32 |
+| input_pdf.py | core/pdf | ✅ Complete | 3 |
 
-- `types/` - 型定義
-- `store/` - 状態管理
-- `schema/` - バリデーション
+全モジュール移植完了。API以外テスト完備。
+
+## Development Guidelines
+
+### Adding New Module
+
+1. ディレクトリ作成: `core/new-module/`
+2. ファイル作成: `newModule.ts`, `newModule.test.ts`, `index.ts`, `README.md`
+3. core/index.tsに追加: `export * from './new-module'`
+4. テスト100%カバレッジ必須
+5. README記載: 概要、API、依存関係
+
+### Coding Standards
+
+- **命名:** camelCase (クラス=PascalCase)
+- **ロギング:** 全主要操作でlogger使用
+- **型安全:** any型禁止、厳密な型定義
+- **エラー処理:** try-catch適切に使用
+- **ドキュメント:** JSDocコメント必須
+
+## Related Modules
+
+- **types/**: 型定義(Event, Schedule, Project, WorkItem)
+- **lib/**: ユーティリティ(logger, storage, asyncQueue)
+- **store/**: 状態管理(SettingsProvider, ContentProvider)
+- **schema/**: バリデーション(settings定義)

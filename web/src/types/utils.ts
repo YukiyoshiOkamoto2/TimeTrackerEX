@@ -274,7 +274,7 @@ export function createSchedule(
 
     return {
         start,
-        end,
+        end: end ?? undefined,
         isHoliday,
         isPaidLeave,
         errorMessage,
