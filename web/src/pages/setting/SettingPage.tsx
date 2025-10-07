@@ -19,17 +19,18 @@ import { AppearanceSettingsPage, GeneralSettingsPage, JsonEditorView, TimeTracke
 
 const useStyles = makeStyles({
     pageContainer: {
-        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingVerticalS,
     },
     headerActions: {
         position: "absolute",
-        top: 0,
-        right: 0,
-        zIndex: 10,
+        top: "32px",
+        right: "32px",
     },
     contentContainer: {
         display: "flex",
-        gap: tokens.spacingHorizontalXXL,
+        gap: tokens.spacingHorizontalS,
     },
     sidebar: {
         minWidth: "240px",

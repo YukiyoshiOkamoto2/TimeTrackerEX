@@ -1,8 +1,11 @@
+import { TIMETRACKER_IGNORABLE_EVENTS } from "@/schema";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { IgnorableEventPattern } from "../../../../../types/settings";
 import { SettingNavigationPageLayout, SettingSection } from "../../layout";
 import { EventPatternEditor } from "../../ui";
-import { StringSettingValueInfo } from "@/schema";
+
+const ignorableEventDef = TIMETRACKER_IGNORABLE_EVENTS;
+const patternDefinition = ignorableEventDef.getTypedItemSchema()!.getTypedChildren()!;
 
 const useStyles = makeStyles({
     helpText: {
@@ -19,23 +22,13 @@ interface IgnorableEventsNavigationPageProps {
     onBack: () => void;
 }
 
-
-// パターン入力用の定義
-const patternDefinition = new StringSettingValueInfo({
-    name: "パターン",
-    description: "イベント名にマッチするパターン",
-    required: true,
-    disableEmpty: true,
-    minLength: 1,
-});
-
 export function IgnorableEventsNavigationPage({ patterns, onChange, onBack }: IgnorableEventsNavigationPageProps) {
     const styles = useStyles();
 
     return (
         <SettingNavigationPageLayout
-            title="無視可能イベント設定"
-            subtitle="処理から除外するイベント名のパターンと一致モードを設定します。"
+            title={ignorableEventDef.name}
+            subtitle={ignorableEventDef.description}
             onBack={onBack}
         >
             <SettingSection title="イベントパターン">
@@ -52,7 +45,7 @@ export function IgnorableEventsNavigationPage({ patterns, onChange, onBack }: Ig
                     例: パターン"MTG" → "朝会MTG"はマッチ、"MTG資料作成"はマッチしない
                 </div>
                 <EventPatternEditor
-                    patternDefinition={patternDefinition}
+                    patternDefinition={patternDefinition.pattern}
                     patterns={patterns}
                     onChange={onChange}
                     placeholder="パターン(例: MTG, 個人作業)"

@@ -8,7 +8,7 @@ import { SettingNavigationSection } from "../../../layout";
 import { SettingNavigationItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
-const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
+const ttDef = TIMETRACKER_SETTINGS_DEFINITION.getTypedChildren()!;
 
 interface NavigationSettingsProps {
     onNavigateToTimeOffEvents: () => void;

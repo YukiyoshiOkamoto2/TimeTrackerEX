@@ -7,7 +7,7 @@ import { SettingSection } from "../../../layout";
 import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
-const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
+const ttDef = TIMETRACKER_SETTINGS_DEFINITION.getTypedChildren()!;
 
 export function BasicSettings() {
     const { settings, handleUpdate } = useTimeTrackerSettings();

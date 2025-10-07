@@ -5,6 +5,10 @@
  * この定義からバリデーションとJSON変換処理を提供します。
  */
 
+import { getLogger } from "@/lib";
+
+const logger = getLogger("IgnoreManager");
+
 /**
  * 設定値の型
  */
@@ -87,16 +91,26 @@ abstract class BaseSettingValueInfo<T extends SettingValueType> implements Setti
             console.warn(`[${name}] Required field should have defaultValue`);
         }
     }
+
     validate(value: unknown): ValidationResult {
-        const result = this.validateInternal(value);
-        if (result.isError) {
-            return result;
+        try {
+            const result = this.validateInternal(value);
+            if (result.isError) {
+                return result;
+            }
+            // オプションフィールドでundefined/nullの場合はvalidateSubをスキップ
+            if (value === undefined || value === null) {
+                return { isError: false };
+            }
+            return this.validateSub(value as SettingValueTypeMap[T]);
+        } catch (err) {
+            const errorMessage = `Faild validate. ${err instanceof Error ? err.message : String(err)}`;
+            logger.error(errorMessage);
+            return {
+                isError: true,
+                errorMessage,
+            };
         }
-        // オプションフィールドでundefined/nullの場合はvalidateSubをスキップ
-        if (value === undefined || value === null) {
-            return { isError: false };
-        }
-        return this.validateSub(value as SettingValueTypeMap[T]);
     }
 
     protected validateInternal(value: unknown): ValidationResult {
@@ -432,12 +446,14 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
     }
 }
 
+export type ArraySettingValueType = "string" | "number" | "object";
+
 /**
  * 配列型の設定値情報
  */
 export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
     /** 配列要素の型 */
-    readonly itemType?: "string" | "number" | "object";
+    readonly itemType?: ArraySettingValueType;
     /** 配列要素のスキーマ定義 */
     readonly itemSchema?: StringSettingValueInfo | NumberSettingValueInfo | ObjectSettingValueInfo;
     /** 最小要素数 */
@@ -450,7 +466,7 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
         description: string;
         required: boolean;
         defaultValue?: [] | undefined;
-        itemType?: "string" | "number" | "object";
+        itemType?: ArraySettingValueType;
         itemSchema?: StringSettingValueInfo | NumberSettingValueInfo | ObjectSettingValueInfo;
         minItems?: number;
         maxItems?: number;
@@ -567,6 +583,41 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
         }
 
         return { isError: false };
+    }
+}
+
+/**
+ * 配列型の設定値情報
+ */
+export type ArraySettingValueTypeTyped =
+    | StringSettingValueInfo
+    | NumberSettingValueInfo
+    | ObjectSettingValueInfo
+    | ObjectSettingValueInfoTyped<Record<string, unknown>>;
+
+/**
+ * 配列型の設定値情報()
+ */
+export class ArraySettingValueInfoTyped<T extends ArraySettingValueTypeTyped> extends ArraySettingValueInfo {
+    constructor(props: {
+        name: string;
+        description: string;
+        required: boolean;
+        defaultValue?: [] | undefined;
+        itemType?: ArraySettingValueType;
+        itemSchema?: T;
+        minItems?: number;
+        maxItems?: number;
+    }) {
+        super({
+            ...props,
+            itemSchema: props.itemSchema,
+        });
+    }
+
+    // Type-safe accessor for itemSchema
+    getTypedItemSchema(): T | undefined {
+        return this.itemSchema as T | undefined;
     }
 }
 
@@ -719,24 +770,24 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
 /**
  * オブジェクト型の設定値情報
  */
-export class ObjectSettingValueInfoTyped<T extends Record<string, SettingValueInfo>> extends ObjectSettingValueInfo {
+export class ObjectSettingValueInfoTyped<T> extends ObjectSettingValueInfo {
     constructor(props: {
         name: string;
         description: string;
         required: boolean;
         defaultValue?: ObjectType;
-         children?: T;
+        children?: Record<keyof T, SettingValueInfo>;
         disableUnknownField?: boolean;
     }) {
         super({
             ...props,
-            children: props.children
+            children: props.children,
         });
     }
 
     // Type-safe accessor for children
-    getTypedChildren(): T | undefined {
-        return this.children as T | undefined;
+    getTypedChildren(): Record<keyof T, SettingValueInfo> | undefined {
+        return this.children as Record<keyof T, SettingValueInfo> | undefined;
     }
 }
 
@@ -748,4 +799,6 @@ export type SettingValueInfo =
     | BooleanSettingValueInfo
     | NumberSettingValueInfo
     | ArraySettingValueInfo
-    | ObjectSettingValueInfo;
+    | ArraySettingValueInfoTyped<ArraySettingValueTypeTyped>
+    | ObjectSettingValueInfo
+    | ObjectSettingValueInfoTyped<Record<string, SettingValueInfo>>;

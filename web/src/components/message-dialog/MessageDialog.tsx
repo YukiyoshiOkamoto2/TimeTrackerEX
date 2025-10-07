@@ -79,7 +79,7 @@ class AppMessageDialogRefImpl implements AppMessageDialogRef {
 }
 
 const _appMessageDialogRef = new AppMessageDialogRefImpl();
-export const appMessageDialogRef = _appMessageDialogRef;
+export const appMessageDialogRef: AppMessageDialogRef = _appMessageDialogRef;
 
 const LEVEL_CONFIG = {
     INFO: {

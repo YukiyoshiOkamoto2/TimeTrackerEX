@@ -1,5 +1,5 @@
 import { EventPattern } from "@/types";
-import { ObjectSettingValueInfo, SettingValue, SettingValueInfo } from "./settingsDefinition";
+import { ObjectSettingValueInfo, SettingValueInfo } from "./settingsDefinition";
 
 /**
  * 設定エラーの型定義
@@ -196,13 +196,71 @@ export function getFieldDefaultValue(info: SettingValueInfo): unknown {
  * @returns 重複を除去したイベントパターンの配列
  */
 export function removeDuplicateEventPatterns<T extends EventPattern>(patterns: T[]): T[] {
-    return patterns.filter((pattern, index) => 
-        patterns.findIndex(p => 
-            p.pattern === pattern.pattern && 
-            p.matchMode === pattern.matchMode
-        ) === index
+    return patterns.filter(
+        (pattern, index) =>
+            patterns.findIndex((p) => p.pattern === pattern.pattern && p.matchMode === pattern.matchMode) === index,
     );
 }
+
+/**
+ * 設定JSONの成功結果型
+ */
+export type SettingJSONResultOK<T extends Record<string, unknown>> = {
+    isError: false;
+    value: T;
+};
+
+/**
+ * 設定JSONのエラー結果型
+ */
+export type SettingJSONResultNG = {
+    isError: true;
+    errorMessage: string;
+};
+
+/**
+ * 設定JSONの結果型
+ */
+export type SettingJSONResult<T extends Record<string, unknown>> = SettingJSONResultOK<T> | SettingJSONResultNG;
+
+/**
+ * 設定のJSON変換ユーティリティ
+ */
+export const SettingJSON = {
+    /**
+     * 設定オブジェクトをJSON文字列に変換
+     * @param setting 変換する設定オブジェクト
+     * @param format 整形するかどうか（デフォルト: true）
+     * @returns JSON文字列
+     */
+    json: (setting: Record<string, unknown>, format: boolean = true): string => {
+        if (format) {
+            return JSON.stringify(setting, null, 2);
+        } else {
+            return JSON.stringify(setting);
+        }
+    },
+
+    /**
+     * JSON文字列を設定オブジェクトに変換
+     * @param json 解析するJSON文字列
+     * @returns 解析結果（成功時は設定オブジェクト、失敗時はエラーメッセージ）
+     */
+    parse: <T extends Record<string, unknown>>(json: string): SettingJSONResult<T> => {
+        try {
+            return {
+                isError: false,
+                value: JSON.parse(json),
+            };
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            return {
+                isError: true,
+                errorMessage,
+            };
+        }
+    },
+};
 
 /**
  * 設定をJSONファイルとしてエクスポート
@@ -230,35 +288,4 @@ export async function importSettingsFromJson(file: File): Promise<Record<string,
     } catch (e) {
         throw new Error("設定ファイルの解析に失敗しました");
     }
-}
-
-/**
- * 設定定義から子要素の定義を取得する
- * @param def - 親の設定定義
- * @param path - 子要素へのパス（ドット区切り）
- * @returns 子要素の定義
- * @throws 子要素が見つからない、または型が異なる場合
- */
-export function getSettingDefinitionChild(def: ObjectSettingValueInfo, parts: string[]): SettingValueInfo {
-
-    let current = def;
-
-    for (const part of parts) {
-        if (!current.children) {
-            throw new Error(`${part}の親定義に子要素が存在しません`);
-        }
-
-        const child = current.children[part];
-        if (!child) {
-            throw new Error(`定義${part}が見つかりません`);
-        }
-
-        if (child.type !== "object") {
-            throw new Error(`${part}はオブジェクト型ではありません`);
-        }
-
-        current = child as ObjectSettingValueInfo;
-    }
-
-    return current;
 }

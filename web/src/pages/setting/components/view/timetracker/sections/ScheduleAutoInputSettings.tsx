@@ -7,7 +7,7 @@ import { SettingSection } from "../../../layout";
 import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
-const scheduleAutoInputInfoDef = TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO.children!;
+const scheduleAutoInputInfoDef = TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO.getTypedChildren()!;
 
 export function ScheduleAutoInputSettings() {
     const { settings, handleNestedUpdate } = useTimeTrackerSettings();

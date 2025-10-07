@@ -1,7 +1,11 @@
-import { getSettingErrors, removeDuplicateEventPatterns, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
+import { getSettingErrors, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
 import { useEffect, useState } from "react";
 import { useSettings } from "../../../../../store/settings/SettingsProvider";
-import type { IgnorableEventPattern, TimeOffEventPattern, TimeTrackerSettings as TimeTrackerSettingsType } from "../../../../../types";
+import type {
+    IgnorableEventPattern,
+    TimeOffEventPattern,
+    TimeTrackerSettings as TimeTrackerSettingsType,
+} from "../../../../../types";
 import { SettingPageLayout } from "../../layout";
 
 import { IgnorableEventsNavigationPage } from "./IgnorableEventsNavigationPage";
@@ -24,7 +28,7 @@ export function TimeTrackerSettingsPage() {
 
     const handleIgnorableEventsChange = (patterns: IgnorableEventPattern[]) => {
         // const uniquePatterns = removeDuplicateEventPatterns(patterns);
-        const uniquePatterns = patterns
+        const uniquePatterns = patterns;
         updateSettings({
             timetracker: {
                 ...tt,
@@ -35,11 +39,14 @@ export function TimeTrackerSettingsPage() {
 
     const handleTimeOffEventChange = (patterns: TimeOffEventPattern[], workItemId: number) => {
         // const uniquePatterns = removeDuplicateEventPatterns(patterns);
-        const uniquePatterns = patterns
-        const timeOffEvent = uniquePatterns.length > 0 ? {
-            namePatterns: uniquePatterns,
-            workItemId,
-        } : undefined;
+        const uniquePatterns = patterns;
+        const timeOffEvent =
+            uniquePatterns.length > 0
+                ? {
+                      namePatterns: uniquePatterns,
+                      workItemId,
+                  }
+                : undefined;
         updateSettings({
             timetracker: {
                 ...tt,

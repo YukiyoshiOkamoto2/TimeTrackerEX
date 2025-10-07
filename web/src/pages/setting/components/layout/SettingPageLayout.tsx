@@ -6,7 +6,7 @@ const useStyles = makeStyles({
     container: {
         display: "flex",
         flexDirection: "column",
-        gap: tokens.spacingVerticalXXL,
+        gap: tokens.spacingVerticalS,
     },
     content: {
         display: "flex",

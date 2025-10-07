@@ -7,8 +7,8 @@ import { SettingSection } from "../../../layout";
 import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
-const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
-const paidLeaveInputInfoDef = TIMETRACKER_PAID_LEAVE_INPUT_INFO.children!;
+const ttDef = TIMETRACKER_SETTINGS_DEFINITION.getTypedChildren()!;
+const paidLeaveInputInfoDef = TIMETRACKER_PAID_LEAVE_INPUT_INFO.getTypedChildren()!;
 
 export function PaidLeaveInputSettings() {
     const { settings, handleNestedUpdate, handleObjectUpdate } = useTimeTrackerSettings();

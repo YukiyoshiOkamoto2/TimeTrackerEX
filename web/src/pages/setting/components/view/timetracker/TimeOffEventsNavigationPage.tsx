@@ -1,4 +1,4 @@
-import { StringSettingValueInfo, TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION } from "@/schema/settings";
+import { TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION } from "@/schema/settings";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import type { TimeOffEventPattern } from "../../../../../types/settings";
 import { SettingNavigationPageLayout, SettingSection } from "../../layout";
@@ -6,6 +6,7 @@ import { AutoSettingItem } from "../../ui";
 import { EventPatternEditor } from "../../ui/EventPatternEditor";
 
 const timeOffEventDef = TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION.getTypedChildren()!;
+const patternDefinition = timeOffEventDef.namePatterns;
 
 const useStyles = makeStyles({
     helpText: {
@@ -22,16 +23,6 @@ interface TimeOffEventsNavigationPageProps {
     onChange: (patterns: TimeOffEventPattern[], workItemId: number) => void;
     onBack: () => void;
 }
-
-
-// パターン入力用の定義
-const patternDefinition = new StringSettingValueInfo({
-    name: "パターン",
-    description: "イベント名にマッチするパターン",
-    required: true,
-    disableEmpty: true,
-    minLength: 1,
-});
 
 export function TimeOffEventsNavigationPage({
     patterns,

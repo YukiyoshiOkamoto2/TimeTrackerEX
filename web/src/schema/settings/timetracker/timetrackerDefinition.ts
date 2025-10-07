@@ -4,30 +4,37 @@
  * TimeTrackerの設定項目定義です。
  */
 
-import { EventDuplicatePriority, IgnorableEventPattern, PaidLeaveInputInfo, ScheduleAutoInputInfo, TimeOffEventConfig, TimeOffEventPattern, TimeTrackerSettings } from "@/types";
 import {
-    ArraySettingValueInfo,
+    EventDuplicatePriority,
+    IgnorableEventPattern,
+    PaidLeaveInputInfo,
+    ScheduleAutoInputInfo,
+    TimeOffEventConfig,
+    TimeOffEventPattern,
+    TimeTrackerSettings,
+} from "@/types";
+import {
+    ArraySettingValueInfoTyped,
     BooleanSettingValueInfo,
     NumberSettingValueInfo,
     ObjectSettingValueInfoTyped,
-    SettingValueInfo,
     StringSettingValueInfo,
 } from "../settingsDefinition";
 
 /**
  * 休暇イベントの設定定義
  */
-export const TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION = new ObjectSettingValueInfoTyped<Record<keyof TimeOffEventConfig, SettingValueInfo>>({
+export const TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION = new ObjectSettingValueInfoTyped<TimeOffEventConfig>({
     name: "休暇イベントの設定",
     description: "休暇イベントとして扱うイベント名のパターンとWorkItemIDの設定",
     required: false,
     children: {
-        namePatterns: new ArraySettingValueInfo({
+        namePatterns: new ArraySettingValueInfoTyped<ObjectSettingValueInfoTyped<TimeOffEventPattern>>({
             name: "休暇イベント名パターン",
             description: "休暇イベントとして扱うイベント名のパターンとマッチモードのリスト",
             required: true,
             itemType: "object",
-            itemSchema: new ObjectSettingValueInfoTyped<Record<keyof TimeOffEventPattern, SettingValueInfo>>({
+            itemSchema: new ObjectSettingValueInfoTyped<TimeOffEventPattern>({
                 name: "パターン設定",
                 description: "イベント名のパターンとマッチモード",
                 required: true,
@@ -41,8 +48,7 @@ export const TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION = new ObjectSettingVa
                     }),
                     matchMode: new StringSettingValueInfo({
                         name: "一致モード",
-                        description:
-                            "パターンの一致モード(partial: 部分一致, prefix: 前方一致, suffix: 後方一致)",
+                        description: "パターンの一致モード(partial: 部分一致, prefix: 前方一致, suffix: 後方一致)",
                         required: true,
                         defaultValue: "partial",
                         literals: ["partial", "prefix", "suffix"],
@@ -59,17 +65,19 @@ export const TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION = new ObjectSettingVa
             positive: true,
         }),
     },
-})
+});
 
 /**
  * 無視可能イベントの設定定義
  */
-export const TIMETRACKER_IGNORABLE_EVENTS = new ArraySettingValueInfo({
+export const TIMETRACKER_IGNORABLE_EVENTS = new ArraySettingValueInfoTyped<
+    ObjectSettingValueInfoTyped<IgnorableEventPattern>
+>({
     name: "無視可能イベント",
     description: "処理から除外するイベント名のパターンとマッチモードのリスト",
     required: false,
     itemType: "object",
-    itemSchema: new ObjectSettingValueInfoTyped<Record<keyof IgnorableEventPattern, SettingValueInfo>>({
+    itemSchema: new ObjectSettingValueInfoTyped<IgnorableEventPattern>({
         name: "パターン設定",
         description: "イベント名のパターンとマッチモード",
         required: true,
@@ -96,7 +104,7 @@ export const TIMETRACKER_IGNORABLE_EVENTS = new ArraySettingValueInfo({
 /**
  * イベント重複時の優先判定設定
  */
-export const TIMETRACKER_EVENT_DUPLICATE_PRIORITY = new ObjectSettingValueInfoTyped<Record<keyof EventDuplicatePriority, SettingValueInfo>>({
+export const TIMETRACKER_EVENT_DUPLICATE_PRIORITY = new ObjectSettingValueInfoTyped<EventDuplicatePriority>({
     name: "イベント重複時の優先判定",
     description: "イベントが重複した場合の優先度判定方法",
     required: true,
@@ -111,12 +119,12 @@ export const TIMETRACKER_EVENT_DUPLICATE_PRIORITY = new ObjectSettingValueInfoTy
             literals: ["small", "large"],
         }),
     },
-})
+});
 
 /**
  * 勤務時間の自動入力設定
  */
-export const TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO = new ObjectSettingValueInfoTyped<Record<keyof ScheduleAutoInputInfo, SettingValueInfo>>({
+export const TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO = new ObjectSettingValueInfoTyped<ScheduleAutoInputInfo>({
     name: "勤務時間の自動入力設定",
     description: "勤務開始・終了時間を自動入力する設定",
     required: true,
@@ -159,12 +167,12 @@ export const TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO = new ObjectSettingValueInfoTy
             positive: true,
         }),
     },
-})
+});
 
 /**
  * 有給休暇の自動入力設定
  */
-export const TIMETRACKER_PAID_LEAVE_INPUT_INFO = new ObjectSettingValueInfoTyped<Record<keyof PaidLeaveInputInfo, SettingValueInfo>>({
+export const TIMETRACKER_PAID_LEAVE_INPUT_INFO = new ObjectSettingValueInfoTyped<PaidLeaveInputInfo>({
     name: "有給休暇の自動入力設定",
     description: "有給休暇を自動入力する設定(オブジェクトが存在する場合に有効)",
     required: false,
@@ -191,12 +199,12 @@ export const TIMETRACKER_PAID_LEAVE_INPUT_INFO = new ObjectSettingValueInfoTyped
             pattern: /^\d{2}:\d{2}$/,
         }),
     },
-})
+});
 
 /**
  * TimeTracker設定定義
  */
-export const TIMETRACKER_SETTINGS_DEFINITION = new ObjectSettingValueInfoTyped<Record<keyof TimeTrackerSettings, SettingValueInfo>>({
+export const TIMETRACKER_SETTINGS_DEFINITION = new ObjectSettingValueInfoTyped<TimeTrackerSettings>({
     name: "TimeTracker設定",
     description: "TimeTrackerに関する設定",
     required: true,

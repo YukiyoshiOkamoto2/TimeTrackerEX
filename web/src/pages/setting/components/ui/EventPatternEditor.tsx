@@ -1,4 +1,4 @@
-import { StringSettingValueInfo } from "@/schema";
+import { SettingValueInfo } from "@/schema";
 import { Button, Dropdown, Option, makeStyles, tokens } from "@fluentui/react-components";
 import { Add20Regular, Dismiss20Regular } from "@fluentui/react-icons";
 import type { EventPattern } from "../../../../types/settings";
@@ -29,7 +29,7 @@ const useStyles = makeStyles({
 });
 
 interface EventPatternEditorProps {
-    patternDefinition: StringSettingValueInfo,
+    patternDefinition: SettingValueInfo;
     patterns: EventPattern[];
     onChange: (patterns: EventPattern[]) => void;
     placeholder?: string;

@@ -7,8 +7,8 @@ import { SettingSection } from "../../../layout";
 import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
-const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
-const eventDuplicatePriorityDef = TIMETRACKER_EVENT_DUPLICATE_PRIORITY.children!;
+const ttDef = TIMETRACKER_SETTINGS_DEFINITION.getTypedChildren()!;
+const eventDuplicatePriorityDef = TIMETRACKER_EVENT_DUPLICATE_PRIORITY.getTypedChildren()!;
 
 export function EventProcessingSettings() {
     const { settings, handleUpdate, handleNestedUpdate } = useTimeTrackerSettings();

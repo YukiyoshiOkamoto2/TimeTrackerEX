@@ -6,14 +6,11 @@
  */
 
 import { appMessageDialogRef } from "@/components/message-dialog";
-import { getLogger } from "@/lib";
-import { APP_SETTINGS_DEFINITION, getFieldDefaultValue, updateErrorValue } from "@/schema";
+import { APP_SETTINGS_DEFINITION, getFieldDefaultValue, SettingJSON, updateErrorValue } from "@/schema";
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { getStorage } from "../../lib/storage";
 import type { AppSettings } from "../../types";
-
-const logger = getLogger("SettingsProvider");
 
 /**
  * ローカルストレージのキー
@@ -49,46 +46,35 @@ function getDefaultAppSettings(): AppSettings {
     return getFieldDefaultValue(APP_SETTINGS_DEFINITION) as AppSettings;
 }
 
-function parse(json: string): AppSettings | undefined {
-    let obj;
-    try {
-        obj = JSON.parse(json);
-    } catch (e) {
-        logger.error(e instanceof Error ? e.message : "Faild parse json.");
-    }
-    return obj;
-}
-
 /**
  * 設定をローカルストレージから読み込み
  */
 function loadSettings(): AppSettings {
+    const stored = storage.getValue<string>(STORAGE_KEY);
+    if (!stored) {
+        appMessageDialogRef.showMessageAsync(
+            "設定読み込みエラー",
+            "設定のが存在しません。デフォルト設定を使用します。",
+            "WARN",
+        );
+        return getDefaultAppSettings();
+    }
+
+    const result = SettingJSON.parse(stored);
+    if (result.isError) {
+        appMessageDialogRef.showMessageAsync(
+            "設定読み込みエラー",
+            "設定の読み込みに失敗しました。デフォルト設定を使用します。\n\n" + result.errorMessage,
+            "WARN",
+        );
+        return getDefaultAppSettings();
+    }
+
     try {
-        const stored = storage.getValue<string>(STORAGE_KEY);
-        if (!stored) {
-            appMessageDialogRef.showMessageAsync(
-                "設定読み込みエラー",
-                "設定のが存在しません。デフォルト設定を使用します。",
-                "WARN",
-            );
-            return getDefaultAppSettings();
-        }
-
-        const obj = parse(stored);
-        if (!obj) {
-            appMessageDialogRef.showMessageAsync(
-                "設定読み込みエラー",
-                "設定の読み込みに失敗しました。デフォルト設定を使用します。",
-                "WARN",
-            );
-            return getDefaultAppSettings();
-        }
-
         // APP_SETTINGS_DEFINITIONを使って全体をバリデーション
-        const validated = updateErrorValue(obj as unknown as Record<string, unknown>, APP_SETTINGS_DEFINITION);
+        const validated = updateErrorValue(result.value, APP_SETTINGS_DEFINITION);
         return validated as unknown as AppSettings;
     } catch (error) {
-        console.error("Failed to load settings from localStorage:", error);
         appMessageDialogRef.showMessageAsync(
             "設定読み込みエラー",
             `設定の読み込みに失敗しました。デフォルト設定を使用します。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
@@ -102,25 +88,11 @@ function loadSettings(): AppSettings {
  * 設定をローカルストレージに保存
  */
 function saveSettings(settings: Partial<AppSettings>): void {
-    try {
-        if (!settings.timetracker) {
-            throw new Error("timetracker設定が存在しません");
-        }
-
-        // JSON文字列に変換
-        const jsonString = JSON.stringify(settings);
-        const success = storage.setValue(STORAGE_KEY, jsonString);
-        if (!success) {
-            throw new Error("設定の保存に失敗しました");
-        }
-    } catch (error) {
-        console.error("Failed to save settings to localStorage:", error);
-        appMessageDialogRef.showMessageAsync(
-            "設定保存エラー",
-            `設定の保存に失敗しました。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-            "ERROR",
-        );
-        throw new Error("設定の保存に失敗しました");
+    // JSON文字列に変換
+    const jsonString = SettingJSON.json(settings);
+    const success = storage.setValue(STORAGE_KEY, jsonString);
+    if (!success) {
+        appMessageDialogRef.showMessageAsync("設定保存エラー", "設定の保存に失敗しました。", "ERROR");
     }
 }
 
@@ -135,7 +107,7 @@ interface SettingsProviderProps {
  * 設定Provider
  */
 export function SettingsProvider({ children }: SettingsProviderProps) {
-    const [settings, setSettings] = useState<AppSettings>(loadSettings());
+    const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
 
     // 設定が変更されたら保存
     useEffect(() => {
