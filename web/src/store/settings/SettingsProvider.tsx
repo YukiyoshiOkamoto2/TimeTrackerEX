@@ -7,12 +7,11 @@
 
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { getLogger } from "@/lib";
-import { getFieldDefaultValue, TIMETRACKER_SETTINGS_DEFINITION, updateErrorValue } from "@/schema";
-import { APPEARANCE_SETTINGS_DEFINITION } from "@/schema/settings/appearanceDefinition";
+import { APP_SETTINGS_DEFINITION, getFieldDefaultValue, updateErrorValue } from "@/schema";
+
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { getStorage } from "../../lib/storage";
-import type { AppearanceSettings, AppSettings, TimeTrackerSettings } from "../../types";
-import { a } from "vitest/dist/suite-dWqIFb_-.js";
+import type { AppSettings } from "../../types";
 
 const logger = getLogger("SettingsProvider");
 
@@ -47,10 +46,7 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
  * デフォルト設定を取得
  */
 function getDefaultAppSettings(): AppSettings {
-    return {
-        appearance: getFieldDefaultValue(APPEARANCE_SETTINGS_DEFINITION) as AppearanceSettings,
-        timetracker: getFieldDefaultValue(TIMETRACKER_SETTINGS_DEFINITION) as TimeTrackerSettings,
-    };
+    return getFieldDefaultValue(APP_SETTINGS_DEFINITION) as AppSettings;
 }
 
 function parse(json: string): AppSettings | undefined {
@@ -88,19 +84,9 @@ function loadSettings(): AppSettings {
             return getDefaultAppSettings();
         }
 
-        const appearance = updateErrorValue(
-            obj.appearance as any,
-            APPEARANCE_SETTINGS_DEFINITION,
-        ) as unknown as AppearanceSettings;
-        const timetracker = updateErrorValue(
-            obj.timetracker as any,
-            TIMETRACKER_SETTINGS_DEFINITION,
-        ) as unknown as TimeTrackerSettings;
-
-        return {
-            appearance,
-            timetracker,
-        };
+        // APP_SETTINGS_DEFINITIONを使って全体をバリデーション
+        const validated = updateErrorValue(obj as unknown as Record<string, unknown>, APP_SETTINGS_DEFINITION);
+        return validated as unknown as AppSettings;
     } catch (error) {
         console.error("Failed to load settings from localStorage:", error);
         appMessageDialogRef.showMessageAsync(
@@ -149,13 +135,7 @@ interface SettingsProviderProps {
  * 設定Provider
  */
 export function SettingsProvider({ children }: SettingsProviderProps) {
-    const [settings, setSettings] = useState<AppSettings>(getDefaultAppSettings());
-
-    // 初回ロード
-    useEffect(() => {
-        const loaded = loadSettings();
-        setSettings(loaded);
-    }, []);
+    const [settings, setSettings] = useState<AppSettings>(loadSettings());
 
     // 設定が変更されたら保存
     useEffect(() => {

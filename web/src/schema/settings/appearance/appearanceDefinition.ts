@@ -4,7 +4,7 @@
  * 外観設定の設定項目定義です。
  */
 
-import { ObjectSettingValueInfo, StringSettingValueInfo } from "./settingsDefinition";
+import { ObjectSettingValueInfo, StringSettingValueInfo } from "../settingsDefinition";
 
 /**
  * 外観設定定義

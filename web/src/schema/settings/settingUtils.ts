@@ -56,6 +56,21 @@ export function updateErrorValue(
                 // エラーがない場合はそのまま使用
                 result[key] = fieldValue;
             }
+
+            // フィールドの型がarrayの場合はエラーの項目を削除
+        } else if (childInfo.type === "array") {
+            // 配列の場合、各要素をバリデーションし、エラーのない要素のみを残す
+            const cleanedArray = cleanArrayValue(fieldValue, childInfo);
+
+            if (cleanedArray !== null) {
+                result[key] = cleanedArray;
+            } else {
+                // 配列の修正に失敗した場合はデフォルト値を使用
+                const defaultValue = getFieldDefaultValue(childInfo);
+                if (defaultValue !== undefined) {
+                    result[key] = defaultValue;
+                }
+            }
         } else {
             // オブジェクト以外の型の場合
             const validationResult = childInfo.validate(fieldValue);
@@ -77,6 +92,36 @@ export function updateErrorValue(
     // 定義されたフィールドのみを結果に含める
 
     return result;
+}
+
+/**
+ * 配列値をクリーニング（不正な要素を削除）
+ * @returns クリーニングされた配列、または修正不可能な場合はnull
+ */
+function cleanArrayValue(fieldValue: unknown, childInfo: SettingValueInfo): unknown[] | null {
+    // 配列でない場合は修正不可能
+    if (!Array.isArray(fieldValue)) {
+        return null;
+    }
+
+    // itemSchemaが設定されている場合は各要素をバリデーション
+    let cleanedArray: unknown[];
+    if (childInfo.type === "array" && "itemSchema" in childInfo && childInfo.itemSchema) {
+        cleanedArray = fieldValue.filter((item) => {
+            const itemValidation = childInfo.itemSchema!.validate(item);
+            return !itemValidation.isError;
+        });
+    } else {
+        cleanedArray = fieldValue;
+    }
+
+    // クリーニング後の配列が制約を満たすか検証
+    const validationResult = childInfo.validate(cleanedArray);
+    if (validationResult.isError) {
+        return null;
+    }
+
+    return cleanedArray;
 }
 
 /**

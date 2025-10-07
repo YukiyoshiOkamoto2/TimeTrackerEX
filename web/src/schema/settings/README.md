@@ -7,9 +7,32 @@
 このモジュールは、TimeTracker設定の定義、バリデーション、JSON変換機能を提供します。
 Zodを使用せず、カスタムバリデーションロジックで実装されています。
 
+## ディレクトリ構造
+
+```
+settings/
+├── settingsDefinition.ts      # 基底クラスと型定義
+├── settingsDefinition.test.ts # 基底クラスのテスト (109件)
+├── settingUtils.ts            # ユーティリティ関数
+├── settingUtils.test.ts       # ユーティリティのテスト (35件)
+├── index.ts                   # エクスポート
+├── README.md
+├── app/                       # アプリ設定定義
+│   ├── appDefinition.ts
+│   └── index.ts
+├── appearance/                # 外観設定定義
+│   ├── appearanceDefinition.ts
+│   ├── appearanceDefinition.test.ts
+│   └── index.ts
+└── timetracker/               # タイムトラッカー設定定義
+    ├── timetrackerDefinition.ts
+    ├── timetrackerDefinition.test.ts
+    └── index.ts
+```
+
 ## モジュール構成
 
-### settingsDefinition.ts
+### settingsDefinition.ts (基底クラスと型定義)
 
 コアとなる設定定義のクラスとバリデーション機能を提供します。
 
@@ -25,7 +48,23 @@ Zodを使用せず、カスタムバリデーションロジックで実装さ�
 - 再帰的なオブジェクト検証: ネストされた構造に対応
 - 部分バリデーション: UI更新時の個別フィールド検証
 
-### timetrackerDefinition.ts
+### app/appDefinition.ts (アプリ設定定義)
+
+アプリケーション全体の設定定義を提供します。
+
+**エクスポート:**
+- `APP_SETTINGS_DEFINITION`: アプリケーション設定の定義（ObjectSettingValueInfoインスタンス）
+  - 外観設定とTimeTracker設定を統合
+
+### appearance/appearanceDefinition.ts (外観設定定義)
+
+外観設定の定義を提供します。
+
+**エクスポート:**
+- `APPEARANCE_SETTINGS_DEFINITION`: 外観設定の定義（ObjectSettingValueInfoインスタンス）
+  - テーマモード（light/dark/system）の設定
+
+### timetracker/timetrackerDefinition.ts (TimeTracker設定定義)
 
 TimeTracker固有の設定定義を提供します。
 
@@ -34,7 +73,7 @@ TimeTracker固有の設定定義を提供します。
   - `validate()`: 完全な設定のバリデーション
   - `validatePartial()`: 部分的な設定のバリデーション（必須チェックなし）
 
-### settingUtils.ts
+### settingUtils.ts (ユーティリティ関数)
 
 設定関連のユーティリティ関数を提供します。
 
@@ -44,10 +83,17 @@ TimeTracker固有の設定定義を提供します。
 
 ### テストファイル
 
-- **settingsDefinition.test.ts**: 71個の包括的なテストケース
+- **settingsDefinition.test.ts**: 109個の包括的なテストケース
   - 基本バリデーション（各型ごと）
   - validatePartialメソッドのテスト（16件）
+  - 新機能のテスト（disableEmpty, min/max, コンストラクタ検証）
   - エラーハンドリング
+- **settingUtils.test.ts**: 35個のテストケース
+  - getFieldDefaultValue()のテスト
+  - updateErrorValue()のテスト
+  - 実践的なユースケース
+- **appearanceDefinition.test.ts**: 外観設定のテスト
+- **timetrackerDefinition.test.ts**: TimeTracker設定のテスト
   
 - **timetrackerDefinition.test.ts**: 42個の包括的なテストケース
   - 定義の構造確認

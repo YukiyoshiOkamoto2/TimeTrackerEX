@@ -1,6 +1,4 @@
-export { AppearanceSettings } from "./AppearanceSettings";
-export { GeneralSettings } from "./GeneralSettings";
-export { IgnorableEventsSettings } from "./IgnorableEventsSettings";
-export { JsonEditorView } from "./JsonEditorView";
-export { TimeOffEventsSettings } from "./TimeOffEventsSettings";
-export { TimeTrackerSettings } from "./TimeTrackerSettings";
+export { AppearanceSettings } from "./appearance";
+export { GeneralSettings } from "./general";
+export { JsonEditorView } from "./shared";
+export { IgnorableEventsSettings, TimeOffEventsSettings, TimeTrackerSettings } from "./timetracker";

@@ -1,7 +1,7 @@
 import { makeStyles, tokens } from "@fluentui/react-components";
-import { IgnorableEventPattern } from "../../../../types/settings";
-import { SettingPageLayout, SettingSection } from "../layout";
-import { EventPatternEditor } from "../ui";
+import { IgnorableEventPattern } from "../../../../../types/settings";
+import { SettingSection, SettingPageNavigationLayout } from "../../layout";
+import { EventPatternEditor, type SettingError } from "../../ui";
 
 const useStyles = makeStyles({
     helpText: {
@@ -16,18 +16,23 @@ interface IgnorableEventsSettingsProps {
     patterns: IgnorableEventPattern[];
     onChange: (patterns: IgnorableEventPattern[]) => void;
     onBack: () => void;
+    onShowJson: () => void;
 }
 
-export function IgnorableEventsSettings({ patterns, onChange, onBack }: IgnorableEventsSettingsProps) {
+export function IgnorableEventsSettings({ patterns, onChange, onBack, onShowJson }: IgnorableEventsSettingsProps) {
     const styles = useStyles();
 
+    // TODO: 実際のバリデーションエラーを収集する
+    const errors: SettingError[] = [];
+
     return (
-        <SettingPageLayout
+        <SettingPageNavigationLayout
             title="無視可能イベント設定"
             subtitle="処理から除外するイベント名のパターンと一致モードを設定します。"
             onBack={onBack}
+            onShowJson={onShowJson}
         >
-            <SettingSection title="イベントパターン">
+            <SettingSection title="イベントパターン" errors={errors}>
                 <div className={styles.helpText}>
                     <strong>一致モードについて:</strong>
                     <br />• <strong>部分一致</strong>: パターンがイベント名のどこかに含まれていればマッチ
@@ -47,6 +52,6 @@ export function IgnorableEventsSettings({ patterns, onChange, onBack }: Ignorabl
                     addButtonText="パターンを追加"
                 />
             </SettingSection>
-        </SettingPageLayout>
+        </SettingPageNavigationLayout>
     );
 }

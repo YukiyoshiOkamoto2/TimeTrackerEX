@@ -127,7 +127,7 @@ describe("settingsDefinition2", () => {
                     name: "テスト",
                     description: "テスト説明",
                     required: true,
-                    defaultValue: "default",
+                    defaultValue: "abc",
                     maxLength: 5,
                 });
                 const result = info.validate("abcde");
@@ -139,7 +139,7 @@ describe("settingsDefinition2", () => {
                     name: "テスト",
                     description: "テスト説明",
                     required: true,
-                    defaultValue: "default",
+                    defaultValue: "abc",
                     maxLength: 5,
                 });
                 const result = info.validate("abcdef");
@@ -156,7 +156,7 @@ describe("settingsDefinition2", () => {
                     name: "テスト",
                     description: "テスト説明",
                     required: true,
-                    defaultValue: "default",
+                    defaultValue: "foo",
                     literals: ["foo", "bar", "baz"],
                 });
                 const result = info.validate("foo");
@@ -168,7 +168,7 @@ describe("settingsDefinition2", () => {
                     name: "テスト",
                     description: "テスト説明",
                     required: true,
-                    defaultValue: "default",
+                    defaultValue: "foo",
                     literals: ["foo", "bar", "baz"],
                 });
                 const result = info.validate("qux");
@@ -185,7 +185,7 @@ describe("settingsDefinition2", () => {
                     name: "テスト",
                     description: "テスト説明",
                     required: true,
-                    defaultValue: "default",
+                    defaultValue: "https://example.com",
                     isUrl: true,
                 });
                 const result = info.validate("https://example.com");
@@ -197,7 +197,7 @@ describe("settingsDefinition2", () => {
                     name: "テスト",
                     description: "テスト説明",
                     required: true,
-                    defaultValue: "default",
+                    defaultValue: "https://example.com",
                     isUrl: true,
                 });
                 const result = info.validate("not-a-url");
@@ -214,7 +214,7 @@ describe("settingsDefinition2", () => {
                     name: "テスト",
                     description: "テスト説明",
                     required: true,
-                    defaultValue: "default",
+                    defaultValue: "123-4567",
                     pattern: /^\d{3}-\d{4}$/,
                 });
                 const result = info.validate("123-4567");
@@ -226,7 +226,7 @@ describe("settingsDefinition2", () => {
                     name: "テスト",
                     description: "テスト説明",
                     required: true,
-                    defaultValue: "default",
+                    defaultValue: "123-4567",
                     pattern: /^\d{3}-\d{4}$/,
                 });
                 const result = info.validate("abc-defg");
@@ -627,8 +627,99 @@ describe("settingsDefinition2", () => {
                 expect(result.isError).toBe(true);
                 if (result.isError) {
                     expect(result.errorMessage).toBe(
-                        "テスト-> 情報-> age-> 年齢-> numberである必要があります (input: string)",
+                        "テスト-> [1]-> 情報-> age-> 年齢-> numberである必要があります (input: string)",
                     );
+                }
+            });
+        });
+
+        describe("itemType: string with itemSchema", () => {
+            it("有効な文字列配列の場合はOK", () => {
+                const stringSchema = new StringSettingValueInfo({
+                    name: "タグ",
+                    description: "タグ名",
+                    required: true,
+                    minLength: 2,
+                    maxLength: 10,
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: true,
+                    itemType: "string",
+                    itemSchema: stringSchema,
+                });
+                const result = info.validate(["tag1", "tag2", "tag3"]);
+                expect(result.isError).toBe(false);
+            });
+
+            it("無効な文字列が含まれる場合はエラー", () => {
+                const stringSchema = new StringSettingValueInfo({
+                    name: "タグ",
+                    description: "タグ名",
+                    required: true,
+                    minLength: 2,
+                    maxLength: 10,
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: true,
+                    itemType: "string",
+                    itemSchema: stringSchema,
+                });
+                const result = info.validate(["tag1", "a", "verylongtagname"]); // "a"は短すぎ、"verylongtagname"は長すぎ
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorMessage).toContain("タグ-> 最低2文字必要です");
+                    expect(result.errorMessage).toContain("タグ-> 最大10文字までです");
+                }
+            });
+        });
+
+        describe("itemType: number with itemSchema", () => {
+            it("有効な数値配列の場合はOK", () => {
+                const numberSchema = new NumberSettingValueInfo({
+                    name: "スコア",
+                    description: "スコア値",
+                    required: true,
+                    min: 0,
+                    max: 100,
+                    integer: true,
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: true,
+                    itemType: "number",
+                    itemSchema: numberSchema,
+                });
+                const result = info.validate([50, 75, 100]);
+                expect(result.isError).toBe(false);
+            });
+
+            it("無効な数値が含まれる場合はエラー", () => {
+                const numberSchema = new NumberSettingValueInfo({
+                    name: "スコア",
+                    description: "スコア値",
+                    required: true,
+                    min: 0,
+                    max: 100,
+                    integer: true,
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: true,
+                    itemType: "number",
+                    itemSchema: numberSchema,
+                });
+                const result = info.validate([50, -10, 150, 75.5]); // -10は小さすぎ、150は大きすぎ、75.5は整数でない
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorMessage).toContain("スコア-> 0以上である必要があります");
+                    expect(result.errorMessage).toContain("スコア-> 100以下である必要があります");
+                    expect(result.errorMessage).toContain("スコア-> 整数である必要があります");
                 }
             });
         });
@@ -756,7 +847,7 @@ describe("settingsDefinition2", () => {
                         name: "年齢",
                         description: "年齢説明",
                         required: true,
-                        defaultValue: 0,
+                        defaultValue: 1,
                         positive: true,
                     }),
                 };
@@ -780,14 +871,14 @@ describe("settingsDefinition2", () => {
                         name: "名前",
                         description: "名前説明",
                         required: true,
-                        defaultValue: "",
+                        defaultValue: "Alice",
                         minLength: 3,
                     }),
                     age: new NumberSettingValueInfo({
                         name: "年齢",
                         description: "年齢説明",
                         required: true,
-                        defaultValue: 0,
+                        defaultValue: 1,
                         positive: true,
                     }),
                 };
@@ -1091,14 +1182,14 @@ describe("settingsDefinition2", () => {
                             name: "名前",
                             description: "名前説明",
                             required: true,
-                            defaultValue: "",
+                            defaultValue: "Alice",
                             minLength: 3,
                         }),
                         age: new NumberSettingValueInfo({
                             name: "年齢",
                             description: "年齢説明",
                             required: true,
-                            defaultValue: 0,
+                            defaultValue: 1,
                             positive: true,
                         }),
                     };
@@ -1122,14 +1213,14 @@ describe("settingsDefinition2", () => {
                             name: "名前",
                             description: "名前説明",
                             required: true,
-                            defaultValue: "",
+                            defaultValue: "Alice",
                             minLength: 3,
                         }),
                         age: new NumberSettingValueInfo({
                             name: "年齢",
                             description: "年齢説明",
                             required: true,
-                            defaultValue: 0,
+                            defaultValue: 1,
                             positive: true,
                         }),
                     };
@@ -1243,7 +1334,7 @@ describe("settingsDefinition2", () => {
                             name: "市区町村",
                             description: "市区町村説明",
                             required: true,
-                            defaultValue: "",
+                            defaultValue: "Tokyo",
                             minLength: 2,
                         }),
                         zipCode: new StringSettingValueInfo({
@@ -1464,6 +1555,599 @@ describe("settingsDefinition2", () => {
                         },
                     });
                     expect(result.isError).toBe(false);
+                });
+            });
+        });
+    });
+
+    describe("新機能のテスト", () => {
+        describe("StringSettingValueInfo - disableEmpty", () => {
+            it("disableEmptyがfalse(デフォルト)の場合は空文字を許容", () => {
+                const info = new StringSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                });
+                const result = info.validate("");
+                expect(result.isError).toBe(false);
+            });
+
+            it("disableEmptyがtrueの場合は空文字を拒否", () => {
+                const info = new StringSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                    defaultValue: "default",
+                    disableEmpty: true,
+                });
+                const result = info.validate("");
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorMessage).toContain("空文字は許可されていません");
+                }
+            });
+
+            it("disableEmptyがtrueでもrequiredがfalseならundefinedは許容", () => {
+                const info = new StringSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                    defaultValue: "default",
+                    disableEmpty: true,
+                });
+                const result = info.validate(undefined);
+                expect(result.isError).toBe(false);
+            });
+
+            it("コンストラクタでdisableEmpty=trueかつdefaultValueが空文字の場合はエラー", () => {
+                expect(() => {
+                    new StringSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: false,
+                        defaultValue: "",
+                        disableEmpty: true,
+                    });
+                }).toThrow("defaultValue cannot be empty string");
+            });
+
+            it("コンストラクタでdisableEmpty=trueかつliteralsに空文字が含まれる場合はエラー", () => {
+                expect(() => {
+                    new StringSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: false,
+                        defaultValue: "option1",
+                        literals: ["", "option1", "option2"],
+                        disableEmpty: true,
+                    });
+                }).toThrow("literals cannot contain empty string");
+            });
+
+            it("コンストラクタでdisableEmpty=falseのliteralsに空文字が含まれるのはOK", () => {
+                expect(() => {
+                    new StringSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: false,
+                        defaultValue: "",
+                        literals: ["", "option1", "option2"],
+                        disableEmpty: false,
+                    });
+                }).not.toThrow();
+            });
+        });
+
+        describe("NumberSettingValueInfo - min/max", () => {
+            it("minより小さい値は拒否", () => {
+                const info = new NumberSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                    defaultValue: 5,
+                    min: 1,
+                });
+                const result = info.validate(0);
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorMessage).toContain("1以上である必要があります");
+                }
+            });
+
+            it("min以上の値は許容", () => {
+                const info = new NumberSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                    defaultValue: 5,
+                    min: 1,
+                });
+                const result = info.validate(1);
+                expect(result.isError).toBe(false);
+            });
+
+            it("maxより大きい値は拒否", () => {
+                const info = new NumberSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                    defaultValue: 5,
+                    max: 10,
+                });
+                const result = info.validate(11);
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorMessage).toContain("10以下である必要があります");
+                }
+            });
+
+            it("max以下の値は許容", () => {
+                const info = new NumberSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                    defaultValue: 5,
+                    max: 10,
+                });
+                const result = info.validate(10);
+                expect(result.isError).toBe(false);
+            });
+
+            it("minとmaxの範囲内の値は許容", () => {
+                const info = new NumberSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                    defaultValue: 5,
+                    min: 1,
+                    max: 10,
+                });
+                const result = info.validate(5);
+                expect(result.isError).toBe(false);
+            });
+
+            it("requiredがfalseならminが設定されていてもundefinedは許容", () => {
+                const info = new NumberSettingValueInfo({
+                    name: "テスト",
+                    description: "テスト説明",
+                    required: false,
+                    min: 1,
+                });
+                const result = info.validate(undefined);
+                expect(result.isError).toBe(false);
+            });
+
+            it("コンストラクタでmin > maxの場合はエラー", () => {
+                expect(() => {
+                    new NumberSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: false,
+                        min: 10,
+                        max: 1,
+                    });
+                }).toThrow("min (10) cannot be greater than max (1)");
+            });
+
+            it("コンストラクタでdefaultValueがminより小さい場合はエラー", () => {
+                expect(() => {
+                    new NumberSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: false,
+                        defaultValue: 0,
+                        min: 1,
+                    });
+                }).toThrow("defaultValue must be at least 1");
+            });
+
+            it("コンストラクタでdefaultValueがmaxより大きい場合はエラー", () => {
+                expect(() => {
+                    new NumberSettingValueInfo({
+                        name: "テスト",
+                        description: "テスト説明",
+                        required: false,
+                        defaultValue: 11,
+                        max: 10,
+                    });
+                }).toThrow("defaultValue must be at most 10");
+            });
+        });
+
+        describe("コンストラクタでの妥当性確認", () => {
+            describe("StringSettingValueInfo", () => {
+                it("literalsが設定されている場合、defaultValueがリストに含まれないとエラー", () => {
+                    expect(() => {
+                        new StringSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: "invalid",
+                            literals: ["option1", "option2"],
+                        });
+                    }).toThrow("defaultValue must be one of [option1, option2]");
+                });
+
+                it("minLengthが設定されている場合、defaultValueが短いとエラー", () => {
+                    expect(() => {
+                        new StringSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: "ab",
+                            minLength: 3,
+                        });
+                    }).toThrow("defaultValue length must be at least 3");
+                });
+
+                it("maxLengthが設定されている場合、defaultValueが長いとエラー", () => {
+                    expect(() => {
+                        new StringSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: "abcde",
+                            maxLength: 3,
+                        });
+                    }).toThrow("defaultValue length must be at most 3");
+                });
+
+                it("minLength > maxLengthの場合はエラー", () => {
+                    expect(() => {
+                        new StringSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            minLength: 10,
+                            maxLength: 5,
+                        });
+                    }).toThrow("minLength (10) cannot be greater than maxLength (5)");
+                });
+
+                it("isUrlがtrueでdefaultValueが無効なURLの場合はエラー", () => {
+                    expect(() => {
+                        new StringSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: "not-a-url",
+                            isUrl: true,
+                        });
+                    }).toThrow("defaultValue must be a valid URL");
+                });
+
+                it("patternが設定されていてdefaultValueがマッチしない場合はエラー", () => {
+                    expect(() => {
+                        new StringSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: "abc",
+                            pattern: /^[0-9]+$/,
+                        });
+                    }).toThrow("defaultValue does not match pattern");
+                });
+            });
+
+            describe("NumberSettingValueInfo", () => {
+                it("literalsが設定されている場合、defaultValueがリストに含まれないとエラー", () => {
+                    expect(() => {
+                        new NumberSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: 5,
+                            literals: [1, 2, 3],
+                        });
+                    }).toThrow("defaultValue must be one of [1, 2, 3]");
+                });
+
+                it("integerがtrueでdefaultValueが整数でない場合はエラー", () => {
+                    expect(() => {
+                        new NumberSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: 1.5,
+                            integer: true,
+                        });
+                    }).toThrow("defaultValue must be an integer");
+                });
+
+                it("positiveがtrueでdefaultValueが0以下の場合はエラー", () => {
+                    expect(() => {
+                        new NumberSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: 0,
+                            positive: true,
+                        });
+                    }).toThrow("defaultValue must be positive");
+                });
+
+                it("defaultValueがNaNの場合はエラー", () => {
+                    expect(() => {
+                        new NumberSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: NaN,
+                        });
+                    }).toThrow("defaultValue cannot be NaN");
+                });
+            });
+
+            describe("ArraySettingValueInfo", () => {
+                it("minItems > maxItemsの場合はエラー", () => {
+                    expect(() => {
+                        new ArraySettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            minItems: 10,
+                            maxItems: 5,
+                        });
+                    }).toThrow("minItems (10) cannot be greater than maxItems (5)");
+                });
+
+                it("defaultValueがminItemsより少ない場合はエラー", () => {
+                    expect(() => {
+                        new ArraySettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: [],
+                            minItems: 1,
+                        });
+                    }).toThrow("defaultValue length must be at least 1");
+                });
+
+                it("defaultValueがmaxItemsより多い場合はエラー", () => {
+                    expect(() => {
+                        new ArraySettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: [1, 2] as unknown as [],
+                            maxItems: 1,
+                            itemType: "number",
+                        });
+                    }).toThrow("defaultValue length must be at most 1");
+                });
+
+                it("defaultValueの配列要素の型が不正な場合はエラー", () => {
+                    expect(() => {
+                        new ArraySettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: ["a", 123, "c"] as unknown as [],
+                            itemType: "string",
+                        });
+                    }).toThrow("defaultValue[1] must be string, but got number");
+                });
+
+                it("defaultValueの配列要素がitemSchemaのバリデーションに失敗する場合はエラー", () => {
+                    const itemSchema = new StringSettingValueInfo({
+                        name: "アイテム",
+                        description: "説明",
+                        required: true,
+                        minLength: 3,
+                    });
+
+                    expect(() => {
+                        new ArraySettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: ["abc", "de", "fgh"] as unknown as [],
+                            itemType: "string",
+                            itemSchema,
+                        });
+                    }).toThrow("defaultValue[1] validation failed");
+                });
+
+                it("defaultValueのオブジェクト配列要素がitemSchemaのバリデーションに失敗する場合はエラー", () => {
+                    const itemSchema = new ObjectSettingValueInfo({
+                        name: "アイテム",
+                        description: "説明",
+                        required: true,
+                        children: {
+                            name: new StringSettingValueInfo({
+                                name: "名前",
+                                description: "説明",
+                                required: true,
+                                minLength: 2,
+                            }),
+                        },
+                    });
+
+                    expect(() => {
+                        new ArraySettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: [
+                                { name: "John" },
+                                { name: "X" }, // minLength違反
+                                { name: "Jane" },
+                            ] as unknown as [],
+                            itemType: "object",
+                            itemSchema,
+                        });
+                    }).toThrow("defaultValue[1] validation failed");
+                });
+            });
+
+            describe("ObjectSettingValueInfo", () => {
+                it("disableUnknownFieldがtrueでdefaultValueに未知のフィールドがある場合はエラー", () => {
+                    expect(() => {
+                        new ObjectSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: { unknown: "value" },
+                            children: {
+                                known: new StringSettingValueInfo({
+                                    name: "既知フィールド",
+                                    description: "説明",
+                                    required: false,
+                                }),
+                            },
+                            disableUnknownField: true,
+                        });
+                    }).toThrow("Unknown field 'unknown' in defaultValue");
+                });
+
+                it("defaultValueの子要素がバリデーションに失敗する場合はエラー", () => {
+                    expect(() => {
+                        new ObjectSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: {
+                                name: "ab", // minLength: 3に違反
+                            },
+                            children: {
+                                name: new StringSettingValueInfo({
+                                    name: "名前",
+                                    description: "説明",
+                                    required: true,
+                                    minLength: 3,
+                                }),
+                            },
+                        });
+                    }).toThrow("defaultValue validation failed");
+                });
+
+                it("defaultValueのネストされたオブジェクトがバリデーションに失敗する場合はエラー", () => {
+                    expect(() => {
+                        new ObjectSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: {
+                                user: {
+                                    name: "John",
+                                    age: -5, // positive違反
+                                },
+                            },
+                            children: {
+                                user: new ObjectSettingValueInfo({
+                                    name: "ユーザー",
+                                    description: "説明",
+                                    required: true,
+                                    children: {
+                                        name: new StringSettingValueInfo({
+                                            name: "名前",
+                                            description: "説明",
+                                            required: true,
+                                        }),
+                                        age: new NumberSettingValueInfo({
+                                            name: "年齢",
+                                            description: "説明",
+                                            required: true,
+                                            positive: true,
+                                        }),
+                                    },
+                                }),
+                            },
+                        });
+                    }).toThrow("defaultValue validation failed");
+                });
+
+                it("defaultValueが正常な場合はエラーが発生しない", () => {
+                    expect(() => {
+                        new ObjectSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: {
+                                name: "John Doe",
+                                age: 30,
+                                tags: ["developer", "typescript"],
+                            },
+                            children: {
+                                name: new StringSettingValueInfo({
+                                    name: "名前",
+                                    description: "説明",
+                                    required: true,
+                                    minLength: 2,
+                                }),
+                                age: new NumberSettingValueInfo({
+                                    name: "年齢",
+                                    description: "説明",
+                                    required: true,
+                                    positive: true,
+                                }),
+                                tags: new ArraySettingValueInfo({
+                                    name: "タグ",
+                                    description: "説明",
+                                    required: false,
+                                    itemType: "string",
+                                    minItems: 1,
+                                }),
+                            },
+                        });
+                    }).not.toThrow();
+                });
+            });
+
+            describe("BaseSettingValueInfo", () => {
+                it("defaultValueの型が不正な場合はエラー(string)", () => {
+                    expect(() => {
+                        new StringSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: 123 as unknown as string,
+                        });
+                    }).toThrow("defaultValue must be string, but got number");
+                });
+
+                it("defaultValueの型が不正な場合はエラー(number)", () => {
+                    expect(() => {
+                        new NumberSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: "123" as unknown as number,
+                        });
+                    }).toThrow("defaultValue must be number, but got string");
+                });
+
+                it("defaultValueの型が不正な場合はエラー(boolean)", () => {
+                    expect(() => {
+                        new BooleanSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: "true" as unknown as boolean,
+                        });
+                    }).toThrow("defaultValue must be boolean, but got string");
+                });
+
+                it("defaultValueの型が不正な場合はエラー(array)", () => {
+                    expect(() => {
+                        new ArraySettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: {} as unknown as [],
+                        });
+                    }).toThrow("defaultValue must be array, but got object");
+                });
+
+                it("defaultValueの型が不正な場合はエラー(object - array渡し)", () => {
+                    expect(() => {
+                        new ObjectSettingValueInfo({
+                            name: "テスト",
+                            description: "テスト説明",
+                            required: false,
+                            defaultValue: [] as unknown as Record<string, unknown>,
+                        });
+                    }).toThrow("defaultValue must be object, but got object");
                 });
             });
         });

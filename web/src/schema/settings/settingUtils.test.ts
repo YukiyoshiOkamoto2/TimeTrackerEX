@@ -149,6 +149,107 @@ describe("settingUtils", () => {
                 const result = getFieldDefaultValue(info);
                 expect(result).toBeUndefined();
             });
+
+            it("Array型のデフォルト値が設定されている場合は返す", () => {
+                const info = new ArraySettingValueInfo({
+                    name: "test",
+                    description: "Test field",
+                    required: false,
+                    defaultValue: ["item1", "item2"] as unknown as [],
+                    itemType: "string",
+                });
+
+                const result = getFieldDefaultValue(info);
+                expect(result).toEqual(["item1", "item2"]);
+            });
+
+            it("Boolean型でfalseのデフォルト値も取得できる", () => {
+                const info = new BooleanSettingValueInfo({
+                    name: "test",
+                    description: "Test field",
+                    required: false,
+                    defaultValue: false,
+                });
+
+                const result = getFieldDefaultValue(info);
+                expect(result).toBe(false);
+            });
+
+            it("Number型で0のデフォルト値も取得できる", () => {
+                const info = new NumberSettingValueInfo({
+                    name: "test",
+                    description: "Test field",
+                    required: false,
+                    defaultValue: 0,
+                });
+
+                const result = getFieldDefaultValue(info);
+                expect(result).toBe(0);
+            });
+        });
+
+        describe("複雑なネスト構造", () => {
+            it("配列を含むオブジェクトのデフォルト値を取得する", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "name",
+                            description: "Name",
+                            required: true,
+                            defaultValue: "default-name",
+                        }),
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items",
+                            required: false,
+                            defaultValue: ["a", "b"] as unknown as [],
+                            itemType: "string",
+                        }),
+                    },
+                });
+
+                const result = getFieldDefaultValue(info);
+                expect(result).toEqual({
+                    name: "default-name",
+                    items: ["a", "b"],
+                });
+            });
+
+            it("一部の子要素のみデフォルト値がある場合", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        field1: new StringSettingValueInfo({
+                            name: "field1",
+                            description: "Field 1",
+                            required: true,
+                            defaultValue: "value1",
+                        }),
+                        field2: new StringSettingValueInfo({
+                            name: "field2",
+                            description: "Field 2",
+                            required: true,
+                        }),
+                        field3: new NumberSettingValueInfo({
+                            name: "field3",
+                            description: "Field 3",
+                            required: false,
+                            defaultValue: 42,
+                        }),
+                    },
+                });
+
+                const result = getFieldDefaultValue(info);
+                expect(result).toEqual({
+                    field1: "value1",
+                    field3: 42,
+                });
+            });
         });
     });
 
@@ -662,6 +763,390 @@ describe("settingUtils", () => {
             });
         });
 
+        describe("配列型フィールドのエラー項目削除", () => {
+            it("オブジェクト配列内の不正な項目を削除し、正常な項目のみを残す", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "item",
+                    description: "Array item",
+                    required: true,
+                    children: {
+                        id: new NumberSettingValueInfo({
+                            name: "id",
+                            description: "Item ID",
+                            required: true,
+                            positive: true,
+                        }),
+                        name: new StringSettingValueInfo({
+                            name: "name",
+                            description: "Item name",
+                            required: true,
+                            minLength: 3,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items array",
+                            required: true,
+                            itemType: "object",
+                            itemSchema: itemSchema,
+                        }),
+                    },
+                });
+
+                const value = {
+                    items: [
+                        { id: 1, name: "valid-item" },
+                        { id: -1, name: "invalid-id" }, // 不正: idが負の数
+                        { id: 2, name: "ab" }, // 不正: nameが短すぎる
+                        { id: 3, name: "another-valid" },
+                    ],
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    items: [
+                        { id: 1, name: "valid-item" },
+                        { id: 3, name: "another-valid" },
+                    ],
+                });
+            });
+
+            it("すべての項目が不正な場合、空配列を返す", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "item",
+                    description: "Array item",
+                    required: true,
+                    children: {
+                        id: new NumberSettingValueInfo({
+                            name: "id",
+                            description: "Item ID",
+                            required: true,
+                            positive: true,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items array",
+                            required: true,
+                            itemType: "object",
+                            itemSchema: itemSchema,
+                        }),
+                    },
+                });
+
+                const value = {
+                    items: [{ id: -1 }, { id: -2 }, { id: -3 }],
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    items: [],
+                });
+            });
+
+            it("すべての項目が正常な場合、元の配列をそのまま返す", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "item",
+                    description: "Array item",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "name",
+                            description: "Item name",
+                            required: true,
+                            minLength: 3,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items array",
+                            required: true,
+                            itemType: "object",
+                            itemSchema: itemSchema,
+                        }),
+                    },
+                });
+
+                const value = {
+                    items: [{ name: "valid" }, { name: "also-valid" }, { name: "still-valid" }],
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    items: [{ name: "valid" }, { name: "also-valid" }, { name: "still-valid" }],
+                });
+            });
+
+            it("itemSchemaがない配列はそのまま返す", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items array",
+                            required: true,
+                            itemType: "string",
+                        }),
+                    },
+                });
+
+                const value = {
+                    items: ["any", "value", "allowed"],
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    items: ["any", "value", "allowed"],
+                });
+            });
+
+            it("配列型フィールドの値が配列でない場合、デフォルト値を使用する", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "item",
+                    description: "Item object",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "name",
+                            description: "Item name",
+                            required: true,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items array",
+                            required: true,
+                            itemType: "object",
+                            itemSchema: itemSchema,
+                            defaultValue: [],
+                        }),
+                    },
+                });
+
+                const value = {
+                    items: "not-an-array",
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    items: [],
+                });
+            });
+
+            it("ネストされたオブジェクト配列で不正な項目を削除する", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "user",
+                    description: "User object",
+                    required: true,
+                    children: {
+                        id: new NumberSettingValueInfo({
+                            name: "id",
+                            description: "User ID",
+                            required: true,
+                            positive: true,
+                        }),
+                        email: new StringSettingValueInfo({
+                            name: "email",
+                            description: "User email",
+                            required: true,
+                            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        }),
+                        age: new NumberSettingValueInfo({
+                            name: "age",
+                            description: "User age",
+                            required: true,
+                            min: 0,
+                            max: 150,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        users: new ArraySettingValueInfo({
+                            name: "users",
+                            description: "Users array",
+                            required: true,
+                            itemType: "object",
+                            itemSchema: itemSchema,
+                        }),
+                    },
+                });
+
+                const value = {
+                    users: [
+                        { id: 1, email: "user1@example.com", age: 25 },
+                        { id: -1, email: "user2@example.com", age: 30 }, // 不正: idが負
+                        { id: 2, email: "invalid-email", age: 35 }, // 不正: emailが無効
+                        { id: 3, email: "user3@example.com", age: 200 }, // 不正: ageが範囲外
+                        { id: 4, email: "user4@example.com", age: 40 },
+                    ],
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    users: [
+                        { id: 1, email: "user1@example.com", age: 25 },
+                        { id: 4, email: "user4@example.com", age: 40 },
+                    ],
+                });
+            });
+
+            it("複数の配列フィールドを同時に処理する", () => {
+                const itemSchema1 = new ObjectSettingValueInfo({
+                    name: "tagItem",
+                    description: "Tag item",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "name",
+                            description: "Tag name",
+                            required: true,
+                            minLength: 3,
+                        }),
+                    },
+                });
+
+                const itemSchema2 = new ObjectSettingValueInfo({
+                    name: "scoreItem",
+                    description: "Score item",
+                    required: true,
+                    children: {
+                        value: new NumberSettingValueInfo({
+                            name: "value",
+                            description: "Score value",
+                            required: true,
+                            positive: true,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        tags: new ArraySettingValueInfo({
+                            name: "tags",
+                            description: "Tags array",
+                            required: true,
+                            itemType: "object",
+                            itemSchema: itemSchema1,
+                        }),
+                        scores: new ArraySettingValueInfo({
+                            name: "scores",
+                            description: "Scores array",
+                            required: true,
+                            itemType: "object",
+                            itemSchema: itemSchema2,
+                        }),
+                    },
+                });
+
+                const value = {
+                    tags: [{ name: "valid" }, { name: "ab" }, { name: "also-valid" }],
+                    scores: [{ value: 10 }, { value: -5 }, { value: 20 }, { value: -3 }, { value: 30 }],
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    tags: [{ name: "valid" }, { name: "also-valid" }],
+                    scores: [{ value: 10 }, { value: 20 }, { value: 30 }],
+                });
+            });
+
+            it("配列フィールドと通常フィールドが混在する場合", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "item",
+                    description: "Item object",
+                    required: true,
+                    children: {
+                        title: new StringSettingValueInfo({
+                            name: "title",
+                            description: "Item title",
+                            required: true,
+                            minLength: 5,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "name",
+                            description: "Name field",
+                            required: true,
+                            defaultValue: "default-name",
+                            minLength: 3,
+                        }),
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items array",
+                            required: true,
+                            itemType: "object",
+                            itemSchema: itemSchema,
+                        }),
+                        count: new NumberSettingValueInfo({
+                            name: "count",
+                            description: "Count field",
+                            required: true,
+                            defaultValue: 10,
+                            positive: true,
+                        }),
+                    },
+                });
+
+                const value = {
+                    name: "ab", // 不正: 短すぎる
+                    items: [{ title: "valid-item" }, { title: "bad" }, { title: "another-valid" }],
+                    count: -5, // 不正: 負の数
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    name: "default-name",
+                    items: [{ title: "valid-item" }, { title: "another-valid" }],
+                    count: 10,
+                });
+            });
+        });
+
         describe("エッジケース", () => {
             it("デフォルト値がない不正なフィールドは削除される", () => {
                 const info = new ObjectSettingValueInfo({
@@ -701,6 +1186,382 @@ describe("settingUtils", () => {
                 const value = {};
                 const result = updateErrorValue(value, info);
                 expect(result).toEqual({ field: "default" });
+            });
+
+            it("値がundefinedのフィールドは必須の場合のみデフォルト値を設定", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        requiredField: new StringSettingValueInfo({
+                            name: "requiredField",
+                            description: "Required field",
+                            required: true,
+                            defaultValue: "required-default",
+                        }),
+                        optionalField: new StringSettingValueInfo({
+                            name: "optionalField",
+                            description: "Optional field",
+                            required: false,
+                            defaultValue: "optional-default",
+                        }),
+                    },
+                });
+
+                const value = { requiredField: undefined, optionalField: undefined };
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({ requiredField: "required-default" });
+            });
+        });
+
+        describe("配列型フィールドのminItems/maxItems制約", () => {
+            it("minItemsを満たさない配列はデフォルト値に置き換えられる", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items",
+                            required: true,
+                            defaultValue: ["default1", "default2", "default3"] as unknown as [],
+                            itemType: "string",
+                            minItems: 3,
+                        }),
+                    },
+                });
+
+                // 有効な要素が2つだけでminItems=3を満たさない
+                const value = { items: ["valid1", "valid2"] };
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    items: ["default1", "default2", "default3"],
+                });
+            });
+
+            it("maxItemsを超える配列は要素削除後も超える場合デフォルト値に", () => {
+                const itemSchema = new StringSettingValueInfo({
+                    name: "item",
+                    description: "Item",
+                    required: true,
+                    minLength: 3,
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items",
+                            required: true,
+                            defaultValue: ["def"] as unknown as [],
+                            itemType: "string",
+                            itemSchema,
+                            maxItems: 2,
+                        }),
+                    },
+                });
+
+                // 5要素中3要素が有効だが、maxItems=2を超える
+                const value = { items: ["abc", "x", "def", "y", "ghi"] };
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    items: ["def"],
+                });
+            });
+
+            it("不正な要素を削除後minItems/maxItems制約を満たす場合はOK", () => {
+                const itemSchema = new NumberSettingValueInfo({
+                    name: "item",
+                    description: "Item",
+                    required: true,
+                    positive: true,
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        scores: new ArraySettingValueInfo({
+                            name: "scores",
+                            description: "Scores",
+                            required: true,
+                            defaultValue: [1, 2, 3] as unknown as [],
+                            itemType: "number",
+                            itemSchema,
+                            minItems: 2,
+                            maxItems: 5,
+                        }),
+                    },
+                });
+
+                // 5要素中3要素が有効(正の数)で、minItems=2, maxItems=5を満たす
+                const value = { scores: [10, -5, 20, 0, 30] };
+                const result = updateErrorValue(value, info);
+                expect(result.scores).toEqual([10, 20, 30]);
+            });
+        });
+
+        describe("配列内のオブジェクト処理の詳細", () => {
+            it("配列内オブジェクトの一部フィールドだけが不正な場合も要素全体を削除", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "user",
+                    description: "User",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "name",
+                            description: "Name",
+                            required: true,
+                            minLength: 2,
+                        }),
+                        age: new NumberSettingValueInfo({
+                            name: "age",
+                            description: "Age",
+                            required: true,
+                            positive: true,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        users: new ArraySettingValueInfo({
+                            name: "users",
+                            description: "Users",
+                            required: true,
+                            defaultValue: [] as unknown as [],
+                            itemType: "object",
+                            itemSchema,
+                        }),
+                    },
+                });
+
+                const value = {
+                    users: [
+                        { name: "John", age: 25 }, // OK
+                        { name: "X", age: 30 }, // NG: name too short
+                        { name: "Jane", age: -5 }, // NG: age negative
+                        { name: "Bob", age: 40 }, // OK
+                    ],
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result.users).toEqual([
+                    { name: "John", age: 25 },
+                    { name: "Bob", age: 40 },
+                ]);
+            });
+
+            it("ネストされた配列の処理", () => {
+                const tagSchema = new StringSettingValueInfo({
+                    name: "tag",
+                    description: "Tag",
+                    required: true,
+                    minLength: 1,
+                });
+
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "item",
+                    description: "Item",
+                    required: true,
+                    children: {
+                        title: new StringSettingValueInfo({
+                            name: "title",
+                            description: "Title",
+                            required: true,
+                        }),
+                        tags: new ArraySettingValueInfo({
+                            name: "tags",
+                            description: "Tags",
+                            required: false,
+                            itemType: "string",
+                            itemSchema: tagSchema,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "items",
+                            description: "Items",
+                            required: true,
+                            defaultValue: [] as unknown as [],
+                            itemType: "object",
+                            itemSchema,
+                        }),
+                    },
+                });
+
+                // itemSchemaはオブジェクト全体をチェックするが、
+                // 配列内のネストした配列(tags)は個別には修正されない
+                const value = {
+                    items: [
+                        { title: "Item1", tags: ["valid", ""] }, // tagsに空文字
+                        { title: "Item2", tags: ["good"] },
+                    ],
+                };
+
+                const result = updateErrorValue(value, info);
+                // オブジェクト単位でバリデーションされるため、
+                // tagsに不正な要素があればアイテム全体が削除される
+                expect(result.items).toHaveLength(1);
+                expect(result.items).toEqual([{ title: "Item2", tags: ["good"] }]);
+            });
+        });
+
+        describe("Boolean型とNumber型の特殊値", () => {
+            it("Boolean falseの値は正常値として扱われる", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        enabled: new BooleanSettingValueInfo({
+                            name: "enabled",
+                            description: "Enabled",
+                            required: true,
+                            defaultValue: true,
+                        }),
+                    },
+                });
+
+                const value = { enabled: false };
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({ enabled: false });
+            });
+
+            it("Number 0の値は正常値として扱われる(positiveでない場合)", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        count: new NumberSettingValueInfo({
+                            name: "count",
+                            description: "Count",
+                            required: true,
+                            defaultValue: 10,
+                            min: 0,
+                        }),
+                    },
+                });
+
+                const value = { count: 0 };
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({ count: 0 });
+            });
+
+            it("Number NaNは不正値としてデフォルト値に置き換えられる", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        score: new NumberSettingValueInfo({
+                            name: "score",
+                            description: "Score",
+                            required: true,
+                            defaultValue: 100,
+                        }),
+                    },
+                });
+
+                const value = { score: NaN };
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({ score: 100 });
+            });
+        });
+
+        describe("複合的なエラーシナリオ", () => {
+            it("配列、オブジェクト、プリミティブ型が混在する複雑な構造", () => {
+                const addressSchema = new ObjectSettingValueInfo({
+                    name: "address",
+                    description: "Address",
+                    required: true,
+                    children: {
+                        city: new StringSettingValueInfo({
+                            name: "city",
+                            description: "City",
+                            required: true,
+                            minLength: 2,
+                        }),
+                        zip: new StringSettingValueInfo({
+                            name: "zip",
+                            description: "ZIP",
+                            required: true,
+                            pattern: /^\d{3}-\d{4}$/,
+                        }),
+                    },
+                });
+
+                const info = new ObjectSettingValueInfo({
+                    name: "test",
+                    description: "Test object",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "name",
+                            description: "Name",
+                            required: true,
+                            defaultValue: "DefaultName",
+                        }),
+                        age: new NumberSettingValueInfo({
+                            name: "age",
+                            description: "Age",
+                            required: true,
+                            defaultValue: 20,
+                            positive: true,
+                        }),
+                        address: new ObjectSettingValueInfo({
+                            name: "address",
+                            description: "Address",
+                            required: true,
+                            defaultValue: { city: "Tokyo", zip: "100-0001" },
+                            children: addressSchema.children,
+                        }),
+                        hobbies: new ArraySettingValueInfo({
+                            name: "hobbies",
+                            description: "Hobbies",
+                            required: false,
+                            defaultValue: ["reading"] as unknown as [],
+                            itemType: "string",
+                            itemSchema: new StringSettingValueInfo({
+                                name: "hobby",
+                                description: "Hobby",
+                                required: true,
+                                minLength: 2,
+                            }),
+                        }),
+                    },
+                });
+
+                const value = {
+                    name: "a", // 制約なしなのでOK
+                    age: -10, // エラー: 負の数
+                    address: { city: "A", zip: "invalid" }, // エラー: 両方不正
+                    hobbies: ["swimming", "x", "reading"], // "x"がエラー
+                };
+
+                const result = updateErrorValue(value, info);
+                expect(result).toEqual({
+                    name: "a", // 制約なしなのでOK
+                    age: 20, // デフォルト値に置き換え
+                    address: {}, // 再帰的に修正されるが、デフォルト値がないため空
+                    hobbies: ["swimming", "reading"], // "x"削除
+                });
             });
         });
     });

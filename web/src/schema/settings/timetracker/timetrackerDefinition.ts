@@ -10,7 +10,7 @@ import {
     NumberSettingValueInfo,
     ObjectSettingValueInfo,
     StringSettingValueInfo,
-} from "./settingsDefinition";
+} from "../settingsDefinition";
 
 /**
  * TimeTracker設定定義
@@ -26,18 +26,22 @@ export const TIMETRACKER_SETTINGS_DEFINITION = new ObjectSettingValueInfo({
             description: "TimeTrackerにログインするためのユーザー名",
             required: true,
             minLength: 1,
+            disableEmpty: true,
         }),
 
         baseUrl: new StringSettingValueInfo({
             name: "TimeTrackerのベースURL",
             description: "TimeTrackerのベースURL(例: https://timetracker.example.com)",
+            defaultValue: "http://10.148.28.156/TimeTrackerNX/api",
             required: true,
             isUrl: true,
+            disableEmpty: true,
         }),
 
         baseProjectId: new NumberSettingValueInfo({
             name: "プロジェクトID",
             description: "作業を登録するプロジェクトのID",
+            defaultValue: 62368,
             required: true,
             integer: true,
             positive: true,
@@ -84,6 +88,7 @@ export const TIMETRACKER_SETTINGS_DEFINITION = new ObjectSettingValueInfo({
                                 description: "イベント名のパターン",
                                 required: true,
                                 minLength: 1,
+                                disableEmpty: true,
                             }),
                             matchMode: new StringSettingValueInfo({
                                 name: "一致モード",
@@ -122,6 +127,7 @@ export const TIMETRACKER_SETTINGS_DEFINITION = new ObjectSettingValueInfo({
                         description: "イベント名のパターン",
                         required: true,
                         minLength: 1,
+                        disableEmpty: true,
                     }),
                     matchMode: new StringSettingValueInfo({
                         name: "一致モード",

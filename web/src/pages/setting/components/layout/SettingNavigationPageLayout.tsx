@@ -1,4 +1,4 @@
-﻿import { Button, makeStyles, tokens } from "@fluentui/react-components";
+import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { ArrowLeft20Regular, CodeRegular } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
 import { Page } from "../../../../components/page";
@@ -28,7 +28,7 @@ const useStyles = makeStyles({
     },
 });
 
-export interface SettingPageLayoutProps {
+export interface SettingPageNavigationLayoutProps {
     title: string;
     subtitle?: string;
     /** 戻るボタンのクリックハンドラ。指定すると戻るボタンが表示されます */
@@ -48,14 +48,14 @@ export interface SettingPageLayoutProps {
  * @example
  * ```tsx
  * // 戻るボタンなし
- * <SettingPageLayout title="設定" subtitle="アプリケーションの設定">
+ * <SettingPageNavigationLayout title="設定" subtitle="アプリケーションの設定">
  *   <SettingSection title="一般設定">
  *     {// コンテンツ}
  *   </SettingSection>
- * </SettingPageLayout>
+ * </SettingPageNavigationLayout>
  *
  * // 戻るボタンとJSON表示ボタンあり
- * <SettingPageLayout
+ * <SettingPageNavigationLayout
  *   title="無視可能イベント設定"
  *   subtitle="処理から除外するイベントを設定"
  *   onBack={() => navigate('back')}
@@ -64,10 +64,17 @@ export interface SettingPageLayoutProps {
  *   <SettingSection title="パターン設定">
  *     {// コンテンツ}
  *   </SettingSection>
- * </SettingPageLayout>
+ * </SettingPageNavigationLayout>
  * ```
  */
-export function SettingPageLayout({ title, subtitle, onBack, headerActions, onShowJson, children }: SettingPageLayoutProps) {
+export function SettingPageNavigationLayout({
+    title,
+    subtitle,
+    onBack,
+    headerActions,
+    onShowJson,
+    children,
+}: SettingPageNavigationLayoutProps) {
     const styles = useStyles();
 
     return (
@@ -90,11 +97,7 @@ export function SettingPageLayout({ title, subtitle, onBack, headerActions, onSh
                     <div className={styles.headerRight}>
                         {headerActions}
                         {onShowJson && (
-                            <Button
-                                appearance="secondary"
-                                icon={<CodeRegular />}
-                                onClick={onShowJson}
-                            >
+                            <Button appearance="secondary" icon={<CodeRegular />} onClick={onShowJson}>
                                 設定のJSON表示
                             </Button>
                         )}

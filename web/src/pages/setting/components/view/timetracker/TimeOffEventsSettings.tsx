@@ -1,9 +1,9 @@
 import { TIMETRACKER_SETTINGS_DEFINITION } from "@/schema/settings";
 import { makeStyles, tokens } from "@fluentui/react-components";
-import type { TimeOffEventPattern } from "../../../../types/settings";
-import { SettingPageLayout, SettingSection } from "../layout";
-import { AutoSettingItem } from "../ui";
-import { EventPatternEditor } from "../ui/EventPatternEditor";
+import type { TimeOffEventPattern } from "../../../../../types/settings";
+import { SettingSection, SettingPageNavigationLayout } from "../../layout";
+import { AutoSettingItem, type SettingError } from "../../ui";
+import { EventPatternEditor } from "../../ui/EventPatternEditor";
 
 const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
 const timeOffEventDef = (ttDef.timeOffEvent as any).children!;
@@ -18,30 +18,41 @@ const useStyles = makeStyles({
 });
 
 interface TimeOffEventsSettingsProps {
-    patterns: TimeOffEventPattern[];
-    workItemId: number;
+    patterns?: TimeOffEventPattern[];
+    workItemId?: number;
     onChange: (patterns: TimeOffEventPattern[], workItemId: number) => void;
     onBack: () => void;
+    onShowJson: () => void;
 }
 
-export function TimeOffEventsSettings({ patterns, workItemId, onChange, onBack }: TimeOffEventsSettingsProps) {
+export function TimeOffEventsSettings({
+    patterns,
+    workItemId,
+    onChange,
+    onBack,
+    onShowJson,
+}: TimeOffEventsSettingsProps) {
     const styles = useStyles();
 
+    // TODO: 実際のバリデーションエラーを収集する
+    const errors: SettingError[] = [];
+
     const handlePatternsChange = (newPatterns: TimeOffEventPattern[]) => {
-        onChange(newPatterns, workItemId);
+        onChange(newPatterns, workItemId ?? 0);
     };
 
     const handleWorkItemIdChange = (newWorkItemId: number) => {
-        onChange(patterns, newWorkItemId);
+        onChange(patterns ?? [], newWorkItemId);
     };
 
     return (
-        <SettingPageLayout
+        <SettingPageNavigationLayout
             title="休暇イベント設定"
             subtitle="休暇イベントとして扱うイベント名のパターンとWorkItemIDを設定します。"
             onBack={onBack}
+            onShowJson={onShowJson}
         >
-            <SettingSection title="休暇イベント名パターン">
+            <SettingSection title="休暇イベント名パターン" errors={errors}>
                 <div className={styles.helpText}>
                     <strong>一致モードについて:</strong>
                     <br />• <strong>部分一致</strong>: パターンがイベント名のどこかに含まれていればマッチ
@@ -55,7 +66,7 @@ export function TimeOffEventsSettings({ patterns, workItemId, onChange, onBack }
                     例: パターン"有給" → "午前有給"はマッチ、"有給休暇"はマッチしない
                 </div>
                 <EventPatternEditor
-                    patterns={patterns}
+                    patterns={patterns ?? []}
                     onChange={handlePatternsChange}
                     placeholder="パターン（例: 有給, 休暇）"
                     addButtonText="パターンを追加"
@@ -65,12 +76,12 @@ export function TimeOffEventsSettings({ patterns, workItemId, onChange, onBack }
             <SettingSection title="WorkItem設定">
                 <AutoSettingItem
                     definition={timeOffEventDef.workItemId}
-                    value={workItemId || 0}
+                    value={workItemId}
                     onChange={(value: unknown) => handleWorkItemIdChange(value as number)}
                     maxWidth="150px"
                     placeholder="WorkItemID"
                 />
             </SettingSection>
-        </SettingPageLayout>
+        </SettingPageNavigationLayout>
     );
 }

@@ -7,11 +7,10 @@
 // 基底クラスと型定義
 export * from "./settingsDefinition";
 
-// TimeTracker設定
-export * from "./timetrackerDefinition";
-
-// 外観設定
-export * from "./appearanceDefinition";
+// 個別の設定定義
+export * from "./app";
+export * from "./appearance";
+export * from "./timetracker";
 
 // ユーティリティ関数
 export * from "./settingUtils";

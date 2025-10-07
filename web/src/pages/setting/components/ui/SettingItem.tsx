@@ -26,6 +26,10 @@ const useStyles = makeStyles({
         fontWeight: tokens.fontWeightMedium,
         color: tokens.colorNeutralForeground1,
     },
+    itemLabelRequired: {
+        color: tokens.colorPaletteRedForeground1,
+        marginLeft: tokens.spacingHorizontalXXS,
+    },
     itemDescription: {
         fontSize: tokens.fontSizeBase200,
         color: tokens.colorNeutralForeground3,
@@ -39,15 +43,19 @@ export type SettingItemProps = {
     label: string;
     description?: string;
     control?: ReactNode;
+    required?: boolean;
 };
 
-export function SettingItem({ label, description, control }: SettingItemProps) {
+export function SettingItem({ label, description, control, required }: SettingItemProps) {
     const styles = useStyles();
 
     return (
         <div className={styles.item}>
             <div className={styles.itemContent}>
-                <div className={styles.itemLabel}>{label}</div>
+                <div className={styles.itemLabel}>
+                    {label}
+                    {required && <span className={styles.itemLabelRequired}>*</span>}
+                </div>
                 {description && <div className={styles.itemDescription}>{description}</div>}
             </div>
             {control && <div className={styles.itemControl}>{control}</div>}

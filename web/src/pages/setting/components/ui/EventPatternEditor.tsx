@@ -1,6 +1,8 @@
-import { Button, Dropdown, Input, Option, makeStyles, tokens } from "@fluentui/react-components";
+import { StringSettingValueInfo } from "@/schema";
+import { Button, Dropdown, Option, makeStyles, tokens } from "@fluentui/react-components";
 import { Add20Regular, Dismiss20Regular } from "@fluentui/react-icons";
 import type { EventPattern } from "../../../../types/settings";
+import { SettingValidatedInput } from "./SettingValidatedInput";
 
 const useStyles = makeStyles({
     patternList: {
@@ -41,6 +43,15 @@ export function EventPatternEditor({
 }: EventPatternEditorProps) {
     const styles = useStyles();
 
+    // パターン入力用の定義
+    const patternDefinition = new StringSettingValueInfo({
+        name: "パターン",
+        description: "イベント名にマッチするパターン",
+        required: true,
+        disableEmpty: true,
+        minLength: 1,
+    });
+
     const handlePatternChange = (index: number, pattern: string) => {
         const newPatterns = [...patterns];
         newPatterns[index] = { ...newPatterns[index], pattern };
@@ -54,7 +65,7 @@ export function EventPatternEditor({
     };
 
     const handleAdd = () => {
-        onChange([...patterns, { pattern: "", matchMode: "partial" }]);
+        onChange([...patterns, { pattern: "AAA", matchMode: "partial" }]);
     };
 
     const handleRemove = (index: number) => {
@@ -79,10 +90,11 @@ export function EventPatternEditor({
         <div className={styles.patternList}>
             {patterns.map((item, index) => (
                 <div key={index} className={styles.patternItem}>
-                    <Input
+                    <SettingValidatedInput
                         className={styles.patternInput}
                         value={item.pattern}
-                        onChange={(_, data) => handlePatternChange(index, data.value)}
+                        onCommit={(value) => handlePatternChange(index, value as string)}
+                        definition={patternDefinition}
                         placeholder={placeholder}
                     />
                     <Dropdown

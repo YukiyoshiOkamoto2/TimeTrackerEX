@@ -1,13 +1,20 @@
 import { ObjectSettingValueInfo, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
-import { Badge, Button } from "@fluentui/react-components";
-import { useState } from "react";
-import { useSettings } from "../../../../store/settings/SettingsProvider";
-import type { EventPattern, TimeTrackerSettings as TimeTrackerSettingsType } from "../../../../types";
-import { AutoSettingItem, SettingItem, SettingNavigationItem, SettingNavigationSection, SettingSection } from "../ui";
+import { Badge } from "@fluentui/react-components";
+import { useEffect, useState } from "react";
+import { useSettings } from "../../../../../store/settings/SettingsProvider";
+import type { EventPattern, TimeTrackerSettings as TimeTrackerSettingsType } from "../../../../../types";
+import {
+    AutoSettingItem,
+    SettingSection,
+    SettingNavigationItem,
+    SettingNavigationSection,
+    type SettingError,
+} from "../../ui";
+import { JsonEditorView } from "../shared/JsonEditorView";
 import { IgnorableEventsSettings } from "./IgnorableEventsSettings";
 import { TimeOffEventsSettings } from "./TimeOffEventsSettings";
 
-type SettingView = "main" | "ignorableEvents" | "timeOffEvents";
+type SettingView = "main" | "ignorableEvents" | "timeOffEvents" | "jsonEditor";
 
 const ttDef = TIMETRACKER_SETTINGS_DEFINITION.children!;
 const eventDuplicatePriorityDef = (ttDef.eventDuplicatePriority as ObjectSettingValueInfo).children!;
@@ -16,13 +23,38 @@ const paidLeaveInputInfoDef = (ttDef.paidLeaveInputInfo as ObjectSettingValueInf
 
 export function TimeTrackerSettings() {
     const [currentView, setCurrentView] = useState<SettingView>("main");
+    const { settings, updateSettings } = useSettings();
+
+    if (currentView === "jsonEditor") {
+        return (
+            <JsonEditorView
+                definition={TIMETRACKER_SETTINGS_DEFINITION}
+                value={settings.timetracker as unknown as Record<string, unknown>}
+                onSave={(value) => {
+                    updateSettings({ timetracker: value as unknown as TimeTrackerSettingsType });
+                    setCurrentView("main");
+                }}
+                onCancel={() => setCurrentView("main")}
+            />
+        );
+    }
 
     if (currentView === "ignorableEvents") {
-        return <TimeTrackerSettingsWithIgnorableEvents onBack={() => setCurrentView("main")} />;
+        return (
+            <TimeTrackerSettingsWithIgnorableEvents
+                onBack={() => setCurrentView("main")}
+                onShowJson={() => setCurrentView("jsonEditor")}
+            />
+        );
     }
 
     if (currentView === "timeOffEvents") {
-        return <TimeTrackerSettingsWithTimeOffEvents onBack={() => setCurrentView("main")} />;
+        return (
+            <TimeTrackerSettingsWithTimeOffEvents
+                onBack={() => setCurrentView("main")}
+                onShowJson={() => setCurrentView("jsonEditor")}
+            />
+        );
     }
 
     return (
@@ -35,9 +67,10 @@ export function TimeTrackerSettings() {
 
 interface TimeTrackerSettingsWithIgnorableEventsProps {
     onBack: () => void;
+    onShowJson: () => void;
 }
 
-function TimeTrackerSettingsWithIgnorableEvents({ onBack }: TimeTrackerSettingsWithIgnorableEventsProps) {
+function TimeTrackerSettingsWithIgnorableEvents({ onBack, onShowJson }: TimeTrackerSettingsWithIgnorableEventsProps) {
     const { settings, updateSettings } = useSettings();
     const tt = settings.timetracker as TimeTrackerSettingsType;
 
@@ -50,14 +83,22 @@ function TimeTrackerSettingsWithIgnorableEvents({ onBack }: TimeTrackerSettingsW
         });
     };
 
-    return <IgnorableEventsSettings patterns={tt?.ignorableEvents || []} onChange={handleUpdate} onBack={onBack} />;
+    return (
+        <IgnorableEventsSettings
+            patterns={tt?.ignorableEvents || []}
+            onChange={handleUpdate}
+            onBack={onBack}
+            onShowJson={onShowJson}
+        />
+    );
 }
 
 interface TimeTrackerSettingsWithTimeOffEventsProps {
     onBack: () => void;
+    onShowJson: () => void;
 }
 
-function TimeTrackerSettingsWithTimeOffEvents({ onBack }: TimeTrackerSettingsWithTimeOffEventsProps) {
+function TimeTrackerSettingsWithTimeOffEvents({ onBack, onShowJson }: TimeTrackerSettingsWithTimeOffEventsProps) {
     const { settings, updateSettings } = useSettings();
     const tt = settings.timetracker as TimeTrackerSettingsType;
 
@@ -75,10 +116,11 @@ function TimeTrackerSettingsWithTimeOffEvents({ onBack }: TimeTrackerSettingsWit
 
     return (
         <TimeOffEventsSettings
-            patterns={tt?.timeOffEvent?.namePatterns || []}
-            workItemId={tt?.timeOffEvent?.workItemId || 0}
+            patterns={tt?.timeOffEvent?.namePatterns}
+            workItemId={tt?.timeOffEvent?.workItemId}
             onChange={handleUpdate}
             onBack={onBack}
+            onShowJson={onShowJson}
         />
     );
 }
@@ -88,6 +130,33 @@ interface TimeTrackerSettingsMainProps {
     onNavigateToTimeOffEvents: () => void;
 }
 
+const getError = (setting: unknown) => {
+    const errorList: SettingError[] = [];
+    const result = TIMETRACKER_SETTINGS_DEFINITION.validate(setting as Record<string, unknown>);
+
+    if (result.isError && result.errorMessage) {
+        const lines = result.errorMessage.split("\n").filter((line) => line.trim());
+        lines.forEach((line, index) => {
+            const match = line.match(/^(.+?):\s*(.+)$/);
+            if (match) {
+                errorList.push({
+                    id: `error-${index}`,
+                    label: match[1].trim(),
+                    message: match[2].trim(),
+                });
+            } else {
+                errorList.push({
+                    id: `error-${index}`,
+                    label: "設定エラー",
+                    message: line.trim(),
+                });
+            }
+        });
+    }
+
+    return errorList;
+};
+
 function TimeTrackerSettingsMain({
     onNavigateToIgnorableEvents,
     onNavigateToTimeOffEvents,
@@ -96,6 +165,8 @@ function TimeTrackerSettingsMain({
 
     // timetracker設定を取得（階層構造に対応）
     const tt = settings.timetracker!;
+    // バリデーションエラーを収集
+    const [allErrors, setAllErrors] = useState<SettingError[]>(getError(tt));
 
     const handleUpdate = (field: string, value: string | number | boolean | undefined) => {
         if (value === undefined) return;
@@ -121,49 +192,72 @@ function TimeTrackerSettingsMain({
         });
     };
 
+    useEffect(() => {
+        setAllErrors(getError(tt));
+    }, [tt]);
+
+    // セクション別にエラーをフィルタする関数
+    const getErrorsForPath = (pathPrefix: string) => {
+        return allErrors.filter((error: SettingError) => error.label.startsWith(pathPrefix));
+    };
+
+    const baseErrors = getErrorsForPath("TimeTracker設定 -> userName").concat(
+        getErrorsForPath("TimeTracker設定 -> baseUrl"),
+        getErrorsForPath("TimeTracker設定 -> baseProjectId"),
+    );
+    const scheduleAutoInputErrors = getErrorsForPath("TimeTracker設定 -> scheduleAutoInputInfo");
+    const paidLeaveErrors = getErrorsForPath("TimeTracker設定 -> paidLeaveInputInfo");
+
     return (
         <>
             {/* 必須設定 */}
-            <SettingSection title="基本設定" description="TimeTrackerに接続するための必須項目" required={true}>
+            <SettingSection
+                title="基本設定"
+                description="TimeTrackerに接続するための必須項目"
+                required={true}
+                errors={baseErrors}
+            >
                 <AutoSettingItem
                     definition={ttDef.userName}
-                    value={tt?.userName || ""}
-                    onChange={(value) => handleUpdate("userName", value as string)}
+                    value={tt?.userName}
+                    onChange={(value: unknown) => handleUpdate("userName", value as string)}
                     minWidth="300px"
                     placeholder="ユーザー名を入力"
                 />
                 <AutoSettingItem
                     definition={ttDef.baseUrl}
-                    value={tt?.baseUrl || ""}
-                    onChange={(value) => handleUpdate("baseUrl", value as string)}
+                    value={tt?.baseUrl}
+                    onChange={(value: unknown) => handleUpdate("baseUrl", value as string)}
                     minWidth="400px"
                     placeholder="https://timetracker.example.com"
                 />
                 <AutoSettingItem
                     definition={ttDef.baseProjectId}
-                    value={tt?.baseProjectId || 0}
-                    onChange={(value) => handleUpdate("baseProjectId", value as number)}
+                    value={tt?.baseProjectId}
+                    onChange={(value: unknown) => handleUpdate("baseProjectId", value as number)}
                     maxWidth="150px"
                     placeholder="プロジェクトID"
                 />
                 <AutoSettingItem
                     definition={ttDef.isHistoryAutoInput}
-                    value={tt?.isHistoryAutoInput ?? true}
-                    onChange={(value) => handleUpdate("isHistoryAutoInput", value as boolean)}
+                    value={tt?.isHistoryAutoInput}
+                    onChange={(value: unknown) => handleUpdate("isHistoryAutoInput", value as boolean)}
                 />
             </SettingSection>
 
             <SettingSection title="イベント処理設定" description="イベントの丸め方法と重複時の優先度" required={true}>
                 <AutoSettingItem
                     definition={ttDef.roundingTimeTypeOfEvent}
-                    value={tt?.roundingTimeTypeOfEvent || "nonduplicate"}
-                    onChange={(value) => handleUpdate("roundingTimeTypeOfEvent", value as string)}
+                    value={tt?.roundingTimeTypeOfEvent}
+                    onChange={(value: unknown) => handleUpdate("roundingTimeTypeOfEvent", value as string)}
                     minWidth="250px"
                 />
                 <AutoSettingItem
                     definition={eventDuplicatePriorityDef.timeCompare}
-                    value={tt?.eventDuplicatePriority?.timeCompare || "small"}
-                    onChange={(value) => handleNestedUpdate("eventDuplicatePriority", "timeCompare", value as string)}
+                    value={tt?.eventDuplicatePriority?.timeCompare}
+                    onChange={(value: unknown) =>
+                        handleNestedUpdate("eventDuplicatePriority", "timeCompare", value as string)
+                    }
                     minWidth="250px"
                 />
             </SettingSection>
@@ -172,31 +266,38 @@ function TimeTrackerSettingsMain({
                 title="勤務時間の自動入力設定"
                 description="勤務開始・終了時間を自動入力する設定"
                 required={true}
+                errors={scheduleAutoInputErrors}
             >
                 <AutoSettingItem
                     definition={scheduleAutoInputInfoDef.startEndType}
-                    value={tt?.scheduleAutoInputInfo?.startEndType || "both"}
-                    onChange={(value) => handleNestedUpdate("scheduleAutoInputInfo", "startEndType", value as string)}
+                    value={tt?.scheduleAutoInputInfo?.startEndType}
+                    onChange={(value: unknown) =>
+                        handleNestedUpdate("scheduleAutoInputInfo", "startEndType", value as string)
+                    }
                     minWidth="250px"
                 />
                 <AutoSettingItem
                     definition={scheduleAutoInputInfoDef.roundingTimeTypeOfSchedule}
-                    value={tt?.scheduleAutoInputInfo?.roundingTimeTypeOfSchedule || "half"}
-                    onChange={(value) =>
+                    value={tt?.scheduleAutoInputInfo?.roundingTimeTypeOfSchedule}
+                    onChange={(value: unknown) =>
                         handleNestedUpdate("scheduleAutoInputInfo", "roundingTimeTypeOfSchedule", value as string)
                     }
                     minWidth="250px"
                 />
                 <AutoSettingItem
                     definition={scheduleAutoInputInfoDef.startEndTime}
-                    value={tt?.scheduleAutoInputInfo?.startEndTime || 30}
-                    onChange={(value) => handleNestedUpdate("scheduleAutoInputInfo", "startEndTime", value as number)}
+                    value={tt?.scheduleAutoInputInfo?.startEndTime}
+                    onChange={(value: unknown) =>
+                        handleNestedUpdate("scheduleAutoInputInfo", "startEndTime", value as number)
+                    }
                     maxWidth="120px"
                 />
                 <AutoSettingItem
                     definition={scheduleAutoInputInfoDef.workItemId}
-                    value={tt?.scheduleAutoInputInfo?.workItemId || 0}
-                    onChange={(value) => handleNestedUpdate("scheduleAutoInputInfo", "workItemId", value as number)}
+                    value={tt?.scheduleAutoInputInfo?.workItemId}
+                    onChange={(value: unknown) =>
+                        handleNestedUpdate("scheduleAutoInputInfo", "workItemId", value as number)
+                    }
                     maxWidth="150px"
                     placeholder="WorkItemID"
                 />
@@ -208,6 +309,7 @@ function TimeTrackerSettingsMain({
                 required={false}
                 collapsible={true}
                 enabled={tt?.paidLeaveInputInfo?.enabled ?? false}
+                errors={paidLeaveErrors}
                 onEnabledChange={(enabled: boolean) => {
                     updateSettings({
                         timetracker: {
@@ -224,26 +326,29 @@ function TimeTrackerSettingsMain({
             >
                 <AutoSettingItem
                     definition={paidLeaveInputInfoDef.workItemId}
-                    value={tt?.paidLeaveInputInfo?.workItemId || 0}
+                    value={tt?.paidLeaveInputInfo?.workItemId}
                     onChange={(value: unknown) =>
                         handleNestedUpdate("paidLeaveInputInfo", "workItemId", value as number)
                     }
                     maxWidth="150px"
                     placeholder="WorkItemID"
+                    disabled={!tt?.paidLeaveInputInfo?.enabled}
                 />
                 <AutoSettingItem
                     definition={paidLeaveInputInfoDef.startTime}
-                    value={tt?.paidLeaveInputInfo?.startTime || "09:00"}
+                    value={tt?.paidLeaveInputInfo?.startTime}
                     onChange={(value: unknown) =>
                         handleNestedUpdate("paidLeaveInputInfo", "startTime", value as string)
                     }
                     maxWidth="150px"
+                    disabled={!tt?.paidLeaveInputInfo?.enabled}
                 />
                 <AutoSettingItem
                     definition={paidLeaveInputInfoDef.endTime}
-                    value={tt?.paidLeaveInputInfo?.endTime || "17:30"}
+                    value={tt?.paidLeaveInputInfo?.endTime}
                     onChange={(value: unknown) => handleNestedUpdate("paidLeaveInputInfo", "endTime", value as string)}
                     maxWidth="150px"
+                    disabled={!tt?.paidLeaveInputInfo?.enabled}
                 />
             </SettingSection>
 
@@ -280,36 +385,6 @@ function TimeTrackerSettingsMain({
                     onClick={onNavigateToIgnorableEvents}
                 />
             </SettingNavigationSection>
-
-            <SettingSection title="データ管理" required={false}>
-                <SettingItem
-                    label="データをエクスポート"
-                    description="すべてのデータをJSONファイルとしてエクスポートします"
-                    control={
-                        <Button size="small" appearance="secondary">
-                            エクスポート
-                        </Button>
-                    }
-                />
-                <SettingItem
-                    label="データをインポート"
-                    description="バックアップからデータを復元します"
-                    control={
-                        <Button size="small" appearance="secondary">
-                            インポート
-                        </Button>
-                    }
-                />
-                <SettingItem
-                    label="すべてのデータをクリア"
-                    description="すべての設定とデータを削除します（取り消せません）"
-                    control={
-                        <Button size="small" appearance="secondary">
-                            クリア
-                        </Button>
-                    }
-                />
-            </SettingSection>
         </>
     );
 }

@@ -67,8 +67,24 @@ abstract class BaseSettingValueInfo<T extends SettingValueType> implements Setti
         readonly required: boolean,
         readonly defaultValue?: SettingValueTypeMap[T],
     ) {
-        if (defaultValue && typeof defaultValue !== type) {
-            throw new Error("defaultValue is invalid type: " + typeof defaultValue + ", type: " + type);
+        // デフォルト値の型チェック
+        if (defaultValue !== undefined) {
+            if (type === "array") {
+                if (!Array.isArray(defaultValue)) {
+                    throw new Error(`[${name}] defaultValue must be array, but got ${typeof defaultValue}`);
+                }
+            } else if (type === "object") {
+                if (typeof defaultValue !== "object" || Array.isArray(defaultValue)) {
+                    throw new Error(`[${name}] defaultValue must be object, but got ${typeof defaultValue}`);
+                }
+            } else if (typeof defaultValue !== type) {
+                throw new Error(`[${name}] defaultValue must be ${type}, but got ${typeof defaultValue}`);
+            }
+        }
+
+        // 必須項目にデフォルト値がない場合は警告(設計上は許容)
+        if (required && defaultValue === undefined) {
+            console.warn(`[${name}] Required field should have defaultValue`);
         }
     }
     validate(value: unknown): ValidationResult {
@@ -141,6 +157,8 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
     readonly maxLength?: number;
     /** URL形式かどうか */
     readonly isUrl?: boolean;
+    /** 空文字を許容しない (デフォルト: false) */
+    readonly disableEmpty?: boolean;
 
     constructor(props: {
         name: string;
@@ -152,6 +170,7 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
         minLength?: number;
         maxLength?: number;
         isUrl?: boolean;
+        disableEmpty?: boolean;
     }) {
         super("string", props.name, props.description, props.required, props.defaultValue);
         this.literals = props.literals;
@@ -159,9 +178,67 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
         this.minLength = props.minLength;
         this.maxLength = props.maxLength;
         this.isUrl = props.isUrl;
+        this.disableEmpty = props.disableEmpty ?? false;
+
+        // コンストラクタでの妥当性確認
+        // disableEmptyとliteralsの相関チェック
+        if (this.disableEmpty && this.literals && this.literals.includes("")) {
+            throw new Error(`[${props.name}] literals cannot contain empty string when disableEmpty is true`);
+        }
+
+        if (props.defaultValue !== undefined) {
+            // 空文字を許容しない場合、デフォルト値が空文字ならエラー
+            if (this.disableEmpty && props.defaultValue === "") {
+                throw new Error(`[${props.name}] defaultValue cannot be empty string when disableEmpty is true`);
+            }
+
+            // literalsが設定されている場合、デフォルト値がリストに含まれるか確認
+            if (this.literals && this.literals.length > 0 && !this.literals.includes(props.defaultValue)) {
+                throw new Error(`[${props.name}] defaultValue must be one of [${this.literals.join(", ")}]`);
+            }
+
+            // minLengthチェック
+            if (this.minLength !== undefined && props.defaultValue.length < this.minLength) {
+                throw new Error(`[${props.name}] defaultValue length must be at least ${this.minLength}`);
+            }
+
+            // maxLengthチェック
+            if (this.maxLength !== undefined && props.defaultValue.length > this.maxLength) {
+                throw new Error(`[${props.name}] defaultValue length must be at most ${this.maxLength}`);
+            }
+
+            // URL形式チェック
+            if (this.isUrl) {
+                try {
+                    new URL(props.defaultValue);
+                } catch {
+                    throw new Error(`[${props.name}] defaultValue must be a valid URL`);
+                }
+            }
+
+            // 正規表現チェック
+            if (this.pattern && !this.pattern.test(props.defaultValue)) {
+                throw new Error(`[${props.name}] defaultValue does not match pattern ${this.pattern}`);
+            }
+        }
+
+        // minLength/maxLengthの相関チェック
+        if (this.minLength !== undefined && this.maxLength !== undefined && this.minLength > this.maxLength) {
+            throw new Error(
+                `[${props.name}] minLength (${this.minLength}) cannot be greater than maxLength (${this.maxLength})`,
+            );
+        }
     }
 
     protected validateSub(value: string): ValidationResult {
+        // 空文字チェック
+        if (this.disableEmpty && value === "") {
+            return {
+                isError: true,
+                errorMessage: this.createErrorMessage(`空文字は許可されていません`),
+            };
+        }
+
         // 許可される値のチェック
         if (this.literals && this.literals.length > 0 && !this.literals.includes(value)) {
             return {
@@ -237,6 +314,10 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
     readonly integer?: boolean;
     /** 正の数のみ許可 */
     readonly positive?: boolean;
+    /** 最小値 */
+    readonly min?: number;
+    /** 最大値 */
+    readonly max?: number;
 
     constructor(props: {
         name: string;
@@ -246,11 +327,53 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
         literals?: number[];
         integer?: boolean;
         positive?: boolean;
+        min?: number;
+        max?: number;
     }) {
         super("number", props.name, props.description, props.required, props.defaultValue);
         this.literals = props.literals;
         this.integer = props.integer;
         this.positive = props.positive;
+        this.min = props.min;
+        this.max = props.max;
+
+        // コンストラクタでの妥当性確認
+        // min/maxの相関チェック
+        if (this.min !== undefined && this.max !== undefined && this.min > this.max) {
+            throw new Error(`[${props.name}] min (${this.min}) cannot be greater than max (${this.max})`);
+        }
+
+        if (props.defaultValue !== undefined) {
+            // NaNチェック
+            if (isNaN(props.defaultValue)) {
+                throw new Error(`[${props.name}] defaultValue cannot be NaN`);
+            }
+
+            // literalsチェック
+            if (this.literals && this.literals.length > 0 && !this.literals.includes(props.defaultValue)) {
+                throw new Error(`[${props.name}] defaultValue must be one of [${this.literals.join(", ")}]`);
+            }
+
+            // 整数チェック
+            if (this.integer && !Number.isInteger(props.defaultValue)) {
+                throw new Error(`[${props.name}] defaultValue must be an integer`);
+            }
+
+            // 正の数チェック
+            if (this.positive && props.defaultValue <= 0) {
+                throw new Error(`[${props.name}] defaultValue must be positive`);
+            }
+
+            // 最小値チェック
+            if (this.min !== undefined && props.defaultValue < this.min) {
+                throw new Error(`[${props.name}] defaultValue must be at least ${this.min}`);
+            }
+
+            // 最大値チェック
+            if (this.max !== undefined && props.defaultValue > this.max) {
+                throw new Error(`[${props.name}] defaultValue must be at most ${this.max}`);
+            }
+        }
     }
 
     protected validateSub(value: number): ValidationResult {
@@ -278,6 +401,22 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
             };
         }
 
+        // 最小値チェック
+        if (this.min !== undefined && value < this.min) {
+            return {
+                isError: true,
+                errorMessage: this.createErrorMessage(`${this.min}以上である必要があります`, String(value)),
+            };
+        }
+
+        // 最大値チェック
+        if (this.max !== undefined && value > this.max) {
+            return {
+                isError: true,
+                errorMessage: this.createErrorMessage(`${this.max}以下である必要があります`, String(value)),
+            };
+        }
+
         // 許可される値のチェック
         if (this.literals && this.literals.length > 0 && !this.literals.includes(value)) {
             return {
@@ -299,8 +438,8 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
 export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
     /** 配列要素の型 */
     readonly itemType?: "string" | "number" | "object";
-    /** オブジェクト型の場合の子要素定義 */
-    readonly itemSchema?: ObjectSettingValueInfo;
+    /** 配列要素のスキーマ定義 */
+    readonly itemSchema?: StringSettingValueInfo | NumberSettingValueInfo | ObjectSettingValueInfo;
     /** 最小要素数 */
     readonly minItems?: number;
     /** 最大要素数 */
@@ -312,7 +451,7 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
         required: boolean;
         defaultValue?: [] | undefined;
         itemType?: "string" | "number" | "object";
-        itemSchema?: ObjectSettingValueInfo;
+        itemSchema?: StringSettingValueInfo | NumberSettingValueInfo | ObjectSettingValueInfo;
         minItems?: number;
         maxItems?: number;
     }) {
@@ -321,6 +460,64 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
         this.itemSchema = props.itemSchema;
         this.minItems = props.minItems;
         this.maxItems = props.maxItems;
+
+        // コンストラクタでの妥当性確認
+        // minItems/maxItemsの相関チェック
+        if (this.minItems !== undefined && this.maxItems !== undefined && this.minItems > this.maxItems) {
+            throw new Error(
+                `[${props.name}] minItems (${this.minItems}) cannot be greater than maxItems (${this.maxItems})`,
+            );
+        }
+
+        // itemTypeとitemSchemaの型が一致しているか確認
+        if (this.itemType && this.itemSchema) {
+            if (this.itemType === "string" && !(this.itemSchema instanceof StringSettingValueInfo)) {
+                throw new Error(`[${props.name}] itemSchema must be StringSettingValueInfo when itemType is 'string'`);
+            }
+            if (this.itemType === "number" && !(this.itemSchema instanceof NumberSettingValueInfo)) {
+                throw new Error(`[${props.name}] itemSchema must be NumberSettingValueInfo when itemType is 'number'`);
+            }
+            if (this.itemType === "object" && !(this.itemSchema instanceof ObjectSettingValueInfo)) {
+                throw new Error(`[${props.name}] itemSchema must be ObjectSettingValueInfo when itemType is 'object'`);
+            }
+        }
+
+        if (props.defaultValue !== undefined) {
+            // minItemsチェック
+            if (this.minItems !== undefined && props.defaultValue.length < this.minItems) {
+                throw new Error(`[${props.name}] defaultValue length must be at least ${this.minItems}`);
+            }
+
+            // maxItemsチェック
+            if (this.maxItems !== undefined && props.defaultValue.length > this.maxItems) {
+                throw new Error(`[${props.name}] defaultValue length must be at most ${this.maxItems}`);
+            }
+
+            // 配列要素の型と内容の再帰的チェック
+            if (this.itemType) {
+                for (let i = 0; i < props.defaultValue.length; i++) {
+                    const item = props.defaultValue[i];
+                    const itemPath = `[${i}]`;
+
+                    // 型チェック
+                    if (this.itemType !== typeof item) {
+                        throw new Error(
+                            `[${props.name}] defaultValue${itemPath} must be ${this.itemType}, but got ${typeof item}`,
+                        );
+                    }
+
+                    // itemSchemaが設定されている場合はスキーマバリデーションを実行
+                    if (this.itemSchema) {
+                        const result = this.itemSchema.validate(item);
+                        if (result.isError) {
+                            throw new Error(
+                                `[${props.name}] defaultValue${itemPath} validation failed: ${result.errorMessage}`,
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 
     protected validateSub(value: unknown[]): ValidationResult {
@@ -352,13 +549,11 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
                     );
                     continue;
                 }
-                if (this.itemType === "object") {
-                    if (this.itemSchema) {
-                        // オブジェクト要素のバリデーション
-                        const result = this.itemSchema.validate(item);
-                        if (result.isError) {
-                            errors.push(this.createErrorMessage(`${result.errorMessage}`));
-                        }
+                // itemSchemaが設定されている場合はスキーマバリデーションを実行
+                if (this.itemSchema) {
+                    const result = this.itemSchema.validate(item);
+                    if (result.isError) {
+                        errors.push(this.createErrorMessage(`${itemPath}-> ${result.errorMessage}`));
                     }
                 }
             }
@@ -395,6 +590,39 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
         super("object", props.name, props.description, props.required, props.defaultValue);
         this.children = props.children;
         this.disableUnknownField = props.disableUnknownField;
+
+        // コンストラクタでの妥当性確認
+        if (props.defaultValue !== undefined && this.children) {
+            // defaultValueのフィールドが定義されているか確認
+            if (this.disableUnknownField) {
+                for (const key of Object.keys(props.defaultValue)) {
+                    if (!this.children[key]) {
+                        throw new Error(`[${props.name}] Unknown field '${key}' in defaultValue`);
+                    }
+                }
+            }
+
+            // 子要素のデフォルト値を再帰的に検証
+            for (const [key, childInfo] of Object.entries(this.children)) {
+                const childValue = props.defaultValue[key];
+
+                // 子要素が必須かつdefaultValueに含まれていない場合、子要素自身のdefaultValueをチェック
+                if (childValue === undefined) {
+                    if (childInfo.required && childInfo.defaultValue === undefined) {
+                        console.warn(
+                            `[${props.name}.${key}] Required field is missing in parent's defaultValue and has no defaultValue`,
+                        );
+                    }
+                    continue;
+                }
+
+                // 子要素の値を検証
+                const result = childInfo.validate(childValue as never);
+                if (result.isError) {
+                    throw new Error(`[${props.name}.${key}] defaultValue validation failed: ${result.errorMessage}`);
+                }
+            }
+        }
     }
 
     protected validateSub(value: ObjectType): ValidationResult {

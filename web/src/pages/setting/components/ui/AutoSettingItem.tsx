@@ -5,17 +5,68 @@
  * 設定値の型に応じて適切なUIコントロールを自動生成します
  */
 
-import { ValidatedInput } from "@/components/validated-input";
-import type {
-    ArraySettingValueInfo,
-    BooleanSettingValueInfo,
-    NumberSettingValueInfo,
-    ObjectSettingValueInfo,
-    SettingValueInfo,
-    StringSettingValueInfo,
-} from "@/schema/settings/settingsDefinition";
-import { Dropdown, Input, Option, Switch } from "@fluentui/react-components";
+import type { NumberSettingValueInfo, SettingValueInfo, StringSettingValueInfo } from "@/schema";
+import { Dropdown, Option, Switch } from "@fluentui/react-components";
 import { SettingItem } from "./SettingItem";
+import { SettingValidatedInput } from "./SettingValidatedInput";
+
+// ========================================
+// 共通型定義
+// ========================================
+
+/**
+ * 基本的なコントロールプロパティ（ジェネリック）
+ *
+ * @template TValue - 設定値の型
+ * @template TDefinition - 設定定義の型（SettingValueInfoを継承）
+ *
+ * @example
+ * ```typescript
+ * // 文字列型のコントロール
+ * type StringControlProps = BaseControlProps<string, StringSettingValueInfo>;
+ *
+ * // 数値型のコントロール
+ * type NumberControlProps = BaseControlProps<number, NumberSettingValueInfo>;
+ * ```
+ */
+type BaseControlProps<TValue, TDefinition extends SettingValueInfo = SettingValueInfo> = {
+    /** 設定値の定義情報 */
+    definition: TDefinition;
+    /** 現在の値 */
+    value: TValue | undefined;
+    /** 値が変更されたときのコールバック */
+    onChange: (value: TValue) => void;
+    /** スタイル */
+    style?: React.CSSProperties;
+    /** プレースホルダー */
+    placeholder?: string;
+    /** 無効化 */
+    disabled?: boolean;
+};
+
+/**
+ * スタイル関連のプロパティ
+ *
+ * AutoSettingItemで使用され、内部でReact.CSSPropertiesに変換されます。
+ */
+type StyleProps = {
+    /** コントロールの最小幅 */
+    minWidth?: string;
+    /** コントロールの最大幅 */
+    maxWidth?: string;
+};
+
+/**
+ * オーバーライド可能なプロパティ
+ *
+ * 設定定義のnameとdescriptionをUI表示時にオーバーライドできます。
+ */
+type OverrideProps = {
+    /** ラベルのオーバーライド（指定しない場合はdefinition.nameを使用） */
+    label?: string;
+    /** 説明のオーバーライド（指定しない場合はdefinition.descriptionを使用） */
+    description?: string;
+};
 
 export type AutoSettingItemProps = {
     /** 設定値の定義情報 */
@@ -24,19 +75,12 @@ export type AutoSettingItemProps = {
     value: unknown;
     /** 値が変更されたときのコールバック */
     onChange: (value: unknown) => void;
-    /** ラベルのオーバーライド（指定しない場合はdefinition.nameを使用） */
-    label?: string;
-    /** 説明のオーバーライド（指定しない場合はdefinition.descriptionを使用） */
-    description?: string;
-    /** コントロールの最小幅 */
-    minWidth?: string;
-    /** コントロールの最大幅 */
-    maxWidth?: string;
     /** プレースホルダー */
     placeholder?: string;
     /** 無効化 */
     disabled?: boolean;
-};
+} & StyleProps &
+    OverrideProps;
 
 /**
  * 設定定義から自動的にSettingItemを生成する
@@ -64,6 +108,7 @@ export function AutoSettingItem({
             label={label || definition.name}
             description={description || definition.description}
             control={control}
+            required={definition.required}
         />
     );
 }
@@ -84,8 +129,8 @@ function renderControl(
             return (
                 <StringControl
                     definition={definition as StringSettingValueInfo}
-                    value={value as string}
-                    onChange={onChange}
+                    value={value as string | undefined}
+                    onChange={(val) => onChange(val)}
                     style={style}
                     placeholder={placeholder}
                     disabled={disabled}
@@ -95,9 +140,8 @@ function renderControl(
         case "boolean":
             return (
                 <BooleanControl
-                    definition={definition as BooleanSettingValueInfo}
-                    value={value as boolean}
-                    onChange={onChange}
+                    value={value as boolean | undefined}
+                    onChange={(val) => onChange(val)}
                     disabled={disabled}
                 />
             );
@@ -106,30 +150,10 @@ function renderControl(
             return (
                 <NumberControl
                     definition={definition as NumberSettingValueInfo}
-                    value={value as number}
-                    onChange={onChange}
+                    value={value as number | undefined}
+                    onChange={(val) => onChange(val)}
                     style={style}
                     placeholder={placeholder}
-                    disabled={disabled}
-                />
-            );
-
-        case "array":
-            return (
-                <ArrayControl
-                    definition={definition as ArraySettingValueInfo}
-                    value={value as unknown[]}
-                    onChange={onChange}
-                    disabled={disabled}
-                />
-            );
-
-        case "object":
-            return (
-                <ObjectControl
-                    definition={definition as ObjectSettingValueInfo}
-                    value={value as Record<string, unknown>}
-                    onChange={onChange}
                     disabled={disabled}
                 />
             );
@@ -144,22 +168,19 @@ function renderControl(
 // 文字列型コントロール
 // ========================================
 
-type StringControlProps = {
-    definition: StringSettingValueInfo;
-    value: string;
-    onChange: (value: string) => void;
-    style?: React.CSSProperties;
-    placeholder?: string;
-    disabled?: boolean;
-};
+/**
+ * 文字列型コントロールのプロパティ
+ * BaseControlPropsを使用して型安全に定義
+ */
+type StringControlProps = BaseControlProps<string, StringSettingValueInfo>;
 
 function StringControl({ definition, value, onChange, style, placeholder, disabled }: StringControlProps) {
     // リテラル値がある場合はドロップダウン
     if (definition.literals && definition.literals.length > 0) {
         return (
             <Dropdown
-                value={value || definition.defaultValue || ""}
-                selectedOptions={[value || definition.defaultValue || ""]}
+                value={value ?? ""}
+                selectedOptions={[value ?? ""]}
                 onOptionSelect={(_, data) => onChange(data.optionValue as string)}
                 style={style}
                 disabled={disabled}
@@ -174,38 +195,13 @@ function StringControl({ definition, value, onChange, style, placeholder, disabl
         );
     }
 
-    // URL形式の場合はValidatedInput
-    if (definition.isUrl) {
-        return (
-            <ValidatedInput
-                type="url"
-                value={value || definition.defaultValue || ""}
-                onCommit={(val: string) => onChange(val)}
-                placeholder={placeholder || definition.description}
-                style={style}
-                disabled={disabled}
-            />
-        );
-    }
-
-    // パターン指定がある場合はValidatedInput
-    if (definition.pattern) {
-        return (
-            <ValidatedInput
-                value={value || definition.defaultValue || ""}
-                onCommit={(val: string) => onChange(val)}
-                placeholder={placeholder || definition.description}
-                style={style}
-                disabled={disabled}
-            />
-        );
-    }
-
-    // 通常の文字列入力
+    // すべての文字列入力でSettingValidatedInputを使用（URL、パターン、通常入力）
     return (
-        <Input
-            value={value || definition.defaultValue || ""}
-            onChange={(_, data) => onChange(data.value)}
+        <SettingValidatedInput
+            type={definition.isUrl ? "url" : "text"}
+            value={value}
+            onCommit={(val) => onChange(val as string)}
+            definition={definition}
             placeholder={placeholder || definition.description}
             style={style}
             disabled={disabled}
@@ -217,43 +213,33 @@ function StringControl({ definition, value, onChange, style, placeholder, disabl
 // ブール型コントロール
 // ========================================
 
-type BooleanControlProps = {
-    definition: BooleanSettingValueInfo;
-    value: boolean;
-    onChange: (value: boolean) => void;
-    disabled?: boolean;
-};
+/**
+ * ブール型コントロールのプロパティ
+ * BaseControlPropsから不要なプロパティを除外（Switchコントロールには不要）
+ */
+type BooleanControlProps = Omit<BaseControlProps<boolean>, "definition" | "style" | "placeholder">;
 
-function BooleanControl({ definition, value, onChange, disabled }: BooleanControlProps) {
-    return (
-        <Switch
-            checked={value ?? definition.defaultValue ?? false}
-            onChange={(_, data) => onChange(data.checked)}
-            disabled={disabled}
-        />
-    );
+function BooleanControl({ value, onChange, disabled }: BooleanControlProps) {
+    return <Switch checked={value ?? false} onChange={(_, data) => onChange(data.checked)} disabled={disabled} />;
 }
 
 // ========================================
 // 数値型コントロール
 // ========================================
 
-type NumberControlProps = {
-    definition: NumberSettingValueInfo;
-    value: number;
-    onChange: (value: number) => void;
-    style?: React.CSSProperties;
-    placeholder?: string;
-    disabled?: boolean;
-};
+/**
+ * 数値型コントロールのプロパティ
+ * BaseControlPropsを使用して型安全に定義
+ */
+type NumberControlProps = BaseControlProps<number, NumberSettingValueInfo>;
 
 function NumberControl({ definition, value, onChange, style, placeholder, disabled }: NumberControlProps) {
     // リテラル値がある場合はドロップダウン
     if (definition.literals && definition.literals.length > 0) {
         return (
             <Dropdown
-                value={value?.toString() || definition.defaultValue?.toString() || ""}
-                selectedOptions={[value?.toString() || definition.defaultValue?.toString() || ""]}
+                value={value?.toString() ?? ""}
+                selectedOptions={[value?.toString() ?? ""]}
                 onOptionSelect={(_, data) => onChange(Number(data.optionValue))}
                 style={style}
                 disabled={disabled}
@@ -268,63 +254,16 @@ function NumberControl({ definition, value, onChange, style, placeholder, disabl
         );
     }
 
-    // 通常の数値入力
+    // すべての数値入力でSettingValidatedInputを使用
     return (
-        <Input
+        <SettingValidatedInput
             type="number"
-            value={value?.toString() || definition.defaultValue?.toString() || ""}
-            onChange={(_, data) => {
-                const num = Number(data.value);
-                if (!isNaN(num)) {
-                    onChange(num);
-                }
-            }}
+            value={value}
+            onCommit={(val) => onChange(val as number)}
+            definition={definition}
             placeholder={placeholder || definition.description}
             style={style}
             disabled={disabled}
         />
-    );
-}
-
-// ========================================
-// 配列型コントロール
-// ========================================
-
-type ArrayControlProps = {
-    definition: ArraySettingValueInfo;
-    value: unknown[];
-    onChange: (value: unknown[]) => void;
-    disabled?: boolean;
-};
-
-function ArrayControl({ value, disabled }: ArrayControlProps) {
-    // 配列型は複雑なので専用のエディターが必要
-    // ここでは簡易的な表示のみ
-    return (
-        <div style={{ opacity: disabled ? 0.5 : 1 }}>
-            配列型: {value?.length || 0}個の要素 (専用エディターで編集してください)
-        </div>
-    );
-}
-
-// ========================================
-// オブジェクト型コントロール
-// ========================================
-
-type ObjectControlProps = {
-    definition: ObjectSettingValueInfo;
-    value: Record<string, unknown>;
-    onChange: (value: Record<string, unknown>) => void;
-    disabled?: boolean;
-};
-
-function ObjectControl({ value, disabled }: ObjectControlProps) {
-    // オブジェクト型は複雑なので専用のエディターが必要
-    // ここでは簡易的な表示のみ
-    const fieldCount = Object.keys(value || {}).length;
-    return (
-        <div style={{ opacity: disabled ? 0.5 : 1 }}>
-            オブジェクト型: {fieldCount}個のフィールド (専用エディターで編集してください)
-        </div>
     );
 }

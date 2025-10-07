@@ -8,6 +8,8 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Card } from "../../../../components/card";
+import type { SettingError } from "../ui/SettingErrorsSummary";
+import { SettingErrorsSummary } from "../ui/SettingErrorsSummary";
 
 const useStyles = makeStyles({
     section: {
@@ -93,6 +95,8 @@ export type SettingSectionProps = {
     onEnabledChange?: (enabled: boolean) => void;
     /** デフォルトで展開するか */
     defaultExpanded?: boolean;
+    /** 検証エラーのリスト */
+    errors?: SettingError[];
     children: ReactNode;
 };
 
@@ -104,6 +108,7 @@ export function SettingSection({
     enabled = false,
     onEnabledChange,
     defaultExpanded = false,
+    errors,
     children,
 }: SettingSectionProps) {
     const styles = useStyles();
@@ -160,6 +165,7 @@ export function SettingSection({
                         )}
                     </div>
                 </div>
+                {errors && errors.length > 0 && <SettingErrorsSummary errors={errors} />}
                 <Card className={styles.collapsibleCard}>
                     <div className={styles.collapsibleHeader} onClick={handleHeaderClick}>
                         <div className={styles.collapsibleLeft}>
@@ -209,6 +215,7 @@ export function SettingSection({
                 </div>
                 {description && <div className={styles.sectionDescription}>{description}</div>}
             </div>
+            {errors && errors.length > 0 && <SettingErrorsSummary errors={errors} />}
             <Card>{children}</Card>
         </div>
     );

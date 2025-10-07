@@ -4,8 +4,8 @@
  * TimeTracker設定定義とバリデーションのテストです。
  */
 
+import type { MatchMode, RoundingMethod, StartEndType, TimeCompare, TimeTrackerSettings } from "@/types";
 import { describe, expect, it } from "vitest";
-import type { MatchMode, RoundingMethod, StartEndType, TimeCompare, TimeTrackerSettings } from "../../types";
 import { TIMETRACKER_SETTINGS_DEFINITION } from "./timetrackerDefinition";
 
 describe("timetrackerDefinition", () => {
