@@ -14,8 +14,8 @@ import {
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
-import { Card } from "../../../components/card";
-import { InteractiveCard } from "../../../components/interactive-card";
+import { Card } from "@/components/card";
+import { InteractiveCard } from "@/components/interactive-card";
 import { ICS, PDF, UploadInfo } from "../models";
 
 const logger = getLogger("FileUploadView");

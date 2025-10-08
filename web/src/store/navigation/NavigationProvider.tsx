@@ -3,18 +3,20 @@ import React, { createContext, ReactNode, useCallback, useContext, useMemo, useS
 export const MAX_HISTORY_SIZE = 30;
 
 export interface NavigationHistoryItem {
-    pageName: string;
+    pageName: NavigationPageName;
     parameter: string | null;
     link: string | null;
 }
 
+export type NavigationPageName = "Home" | "TimeTracker" | "Settings"
+
 export interface NavigationContextType {
-    currentPageName: string;
+    currentPageName: NavigationPageName;
     parameter: string | null;
     link: string | null;
     history: NavigationHistoryItem[];
     canGoBack: boolean;
-    navigate: (pageName: string, parameter?: string | null, link?: string | null) => void;
+    navigate: (pageName: NavigationPageName, parameter?: string | null, link?: string | null) => void;
     goBack: () => void;
     clearHistory: () => void;
 }
@@ -23,7 +25,7 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 
 export interface NavigationProviderProps {
     children: ReactNode;
-    initialPageName: string;
+    initialPageName: NavigationPageName;
     initialParameter?: string | null;
     initialLink?: string | null;
 }
@@ -34,13 +36,13 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
     initialParameter = null,
     initialLink = null,
 }) => {
-    const [currentPageName, setCurrentPageName] = useState<string>(initialPageName);
+    const [currentPageName, setCurrentPageName] = useState<NavigationPageName>(initialPageName);
     const [parameter, setParameter] = useState<string | null>(initialParameter);
     const [link, setLink] = useState<string | null>(initialLink);
     const [history, setHistory] = useState<NavigationHistoryItem[]>([]);
 
     const navigate = useCallback(
-        (pageName: string, newParameter: string | null = null, newLink: string | null = null) => {
+        (pageName: NavigationPageName, newParameter: string | null = null, newLink: string | null = null) => {
             // 現在のページを履歴に追加（最大30個まで）
             setHistory((prev) => {
                 const newHistory = [

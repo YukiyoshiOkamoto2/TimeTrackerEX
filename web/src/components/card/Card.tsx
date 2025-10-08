@@ -50,12 +50,19 @@ export type CardProps = {
 export function Card({ children, hoverable = false, onClick, className, style }: CardProps) {
     const styles = useStyles();
 
-    const cardClassName = mergeClasses(
-        styles.card,
-        hoverable && styles.hoverable,
-        onClick && styles.clickable,
-        className,
-    );
+    let cardClassName = styles.card;
+
+    if (className) {
+        cardClassName = mergeClasses(cardClassName, className);
+    }
+
+    if (hoverable) {
+        cardClassName = mergeClasses(cardClassName, styles.hoverable);
+    }
+
+    if (onClick) {
+        cardClassName = mergeClasses(cardClassName, styles.clickable);
+    }
 
     return (
         <div className={cardClassName} onClick={onClick} style={style}>

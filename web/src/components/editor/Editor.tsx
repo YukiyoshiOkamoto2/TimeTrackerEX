@@ -4,15 +4,15 @@ import "monaco-editor/esm/vs/basic-languages/css/css.contribution";
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution";
 import "monaco-editor/esm/vs/basic-languages/xml/xml.contribution";
 
-// @ts-ignore
+// @ts-expect-error: Vite/ESM bundler worker import typings not provided by monaco-editor package
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-// @ts-ignore
+// @ts-expect-error: Vite/ESM bundler worker import typings not provided by monaco-editor package
 import CssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
-// @ts-ignore
+// @ts-expect-error: Vite/ESM bundler worker import typings not provided by monaco-editor package
 import HtmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
-// @ts-ignore
+// @ts-expect-error: Vite/ESM bundler worker import typings not provided by monaco-editor package
 import JsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
-// @ts-ignore
+// @ts-expect-error: Vite/ESM bundler worker import typings not provided by monaco-editor package
 import TsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import { memo, useEffect, useRef } from "react";
 
@@ -36,12 +36,12 @@ window.MonacoEnvironment = {
 
 type EditorTheme = {
     name: string;
-    data: unknown;
+    data: monaco.editor.IStandaloneThemeData;
 };
 
 const applyTheme = (
     editor: {
-        defineTheme: (name: string, data: any) => void;
+        defineTheme: (name: string, data: monaco.editor.IStandaloneThemeData) => void;
         setTheme: (name: string) => void;
     },
     theme: EditorTheme,

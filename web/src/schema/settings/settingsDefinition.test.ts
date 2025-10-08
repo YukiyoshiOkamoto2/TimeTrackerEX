@@ -37,7 +37,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(undefined);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("必須です");
+                    expect(result.errorPathInfo.message).toContain("必須です");
                 }
             });
 
@@ -51,7 +51,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(null);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("必須です");
+                    expect(result.errorPathInfo.message).toContain("必須です");
                 }
             });
 
@@ -87,7 +87,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(123);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("stringである必要があります");
+                    expect(result.errorPathInfo.message).toContain("stringである必要があります");
                 }
             });
         });
@@ -116,7 +116,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("ab");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("最低3文字必要です");
+                    expect(result.errorPathInfo.message).toContain("最低3文字必要です");
                 }
             });
         });
@@ -145,7 +145,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("abcdef");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("最大5文字までです");
+                    expect(result.errorPathInfo.message).toContain("最大5文字までです");
                 }
             });
         });
@@ -174,7 +174,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("qux");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("foo, bar, baz のいずれかである必要があります");
+                    expect(result.errorPathInfo.message).toContain("foo, bar, baz のいずれかである必要があります");
                 }
             });
         });
@@ -203,7 +203,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("not-a-url");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("有効なURLである必要があります");
+                    expect(result.errorPathInfo.message).toContain("有効なURLである必要があります");
                 }
             });
         });
@@ -232,7 +232,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("abc-defg");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("形式が不正です");
+                    expect(result.errorPathInfo.message).toContain("形式が不正です");
                 }
             });
         });
@@ -271,7 +271,7 @@ describe("settingsDefinition2", () => {
             const result = info.validate("true");
             expect(result.isError).toBe(true);
             if (result.isError) {
-                expect(result.errorMessage).toContain("booleanである必要があります");
+                expect(result.errorPathInfo.message).toContain("booleanである必要があります");
             }
         });
 
@@ -321,7 +321,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("123");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("numberである必要があります");
+                    expect(result.errorPathInfo.message).toContain("numberである必要があります");
                 }
             });
 
@@ -335,7 +335,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(NaN);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("数値である必要があります");
+                    expect(result.errorPathInfo.message).toContain("数値である必要があります");
                 }
             });
         });
@@ -364,7 +364,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(123.45);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("整数である必要があります");
+                    expect(result.errorPathInfo.message).toContain("整数である必要があります");
                 }
             });
         });
@@ -393,7 +393,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(0);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("正の数である必要があります");
+                    expect(result.errorPathInfo.message).toContain("正の数である必要があります");
                 }
             });
 
@@ -408,7 +408,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(-123);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("正の数である必要があります");
+                    expect(result.errorPathInfo.message).toContain("正の数である必要があります");
                 }
             });
         });
@@ -437,7 +437,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(4);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("1, 2, 3 のいずれかである必要があります");
+                    expect(result.errorPathInfo.message).toContain("1, 2, 3 のいずれかである必要があります");
                 }
             });
         });
@@ -456,7 +456,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("not array");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("配列である必要があります");
+                    expect(result.errorPathInfo.message).toContain("配列である必要があります");
                 }
             });
 
@@ -489,7 +489,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate([1]);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("最低2個必要です");
+                    expect(result.errorPathInfo.message).toContain("最低2個必要です");
                 }
             });
         });
@@ -516,7 +516,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate([1, 2, 3, 4]);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("最大3個までです");
+                    expect(result.errorPathInfo.message).toContain("最大3個までです");
                 }
             });
         });
@@ -543,8 +543,8 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(["a", 123, "c"]);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("[1]");
-                    expect(result.errorMessage).toContain("テスト-> [1]-> stringである必要があります (input: number)");
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.message).toContain("stringである必要があります");
                 }
             });
         });
@@ -571,8 +571,8 @@ describe("settingsDefinition2", () => {
                 const result = info.validate([1, "two", 3]);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("[1]");
-                    expect(result.errorMessage).toContain("テスト-> [1]-> numberである必要があります (input: string)");
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.message).toContain("numberである必要があります");
                 }
             });
         });
@@ -626,9 +626,9 @@ describe("settingsDefinition2", () => {
                 ]);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toBe(
-                        "テスト-> [1]-> 情報-> age-> 年齢-> numberである必要があります (input: string)",
-                    );
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.path).toContain("age");
+                    expect(result.errorPathInfo.message).toContain("numberである必要があります");
                 }
             });
         });
@@ -671,8 +671,9 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(["tag1", "a", "verylongtagname"]); // "a"は短すぎ、"verylongtagname"は長すぎ
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("タグ-> 最低2文字必要です");
-                    expect(result.errorMessage).toContain("タグ-> 最大10文字までです");
+                    expect(result.errorPathInfo.path).toContain("タグ");
+                    expect(result.errorPathInfo.message).toContain("最低2文字必要です");
+                    expect(result.errorPathInfo.message).toContain("最大10文字までです");
                 }
             });
         });
@@ -717,9 +718,10 @@ describe("settingsDefinition2", () => {
                 const result = info.validate([50, -10, 150, 75.5]); // -10は小さすぎ、150は大きすぎ、75.5は整数でない
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("スコア-> 0以上である必要があります");
-                    expect(result.errorMessage).toContain("スコア-> 100以下である必要があります");
-                    expect(result.errorMessage).toContain("スコア-> 整数である必要があります");
+                    expect(result.errorPathInfo.path).toContain("スコア");
+                    expect(result.errorPathInfo.message).toContain("0以上である必要があります");
+                    expect(result.errorPathInfo.message).toContain("100以下である必要があります");
+                    expect(result.errorPathInfo.message).toContain("整数である必要があります");
                 }
             });
         });
@@ -770,7 +772,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("not object");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("オブジェクトである必要があります");
+                    expect(result.errorPathInfo.message).toContain("オブジェクトである必要があります");
                 }
             });
 
@@ -792,7 +794,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate([1, 2, 3]);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("オブジェクトである必要があります");
+                    expect(result.errorPathInfo.message).toContain("オブジェクトである必要があります");
                 }
             });
 
@@ -860,8 +862,8 @@ describe("settingsDefinition2", () => {
                 const result = info.validate({ name: "Alice", age: -5 }); // 負の年齢
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("age");
-                    expect(result.errorMessage).toContain("正の数である必要があります");
+                    expect(result.errorPathInfo.path).toContain("age");
+                    expect(result.errorPathInfo.message).toContain("正の数である必要があります");
                 }
             });
 
@@ -891,8 +893,8 @@ describe("settingsDefinition2", () => {
                 const result = info.validate({ name: "Al", age: -5 }); // 短い名前と負の年齢
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("name");
-                    expect(result.errorMessage).toContain("age");
+                    expect(result.errorPathInfo.path).toContain("name");
+                    expect(result.errorPathInfo.path).toContain("age");
                 }
             });
         });
@@ -917,8 +919,8 @@ describe("settingsDefinition2", () => {
                 const result = info.validate({ name: "Alice", unknownField: "value" });
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("unknownField");
-                    expect(result.errorMessage).toContain("不明なフィールドです");
+                    expect(result.errorPathInfo.path).toContain("unknownField");
+                    expect(result.errorPathInfo.message).toContain("不明なフィールドです");
                 }
             });
 
@@ -1032,8 +1034,8 @@ describe("settingsDefinition2", () => {
                 });
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("address");
-                    expect(result.errorMessage).toContain("zipCode");
+                    expect(result.errorPathInfo.path).toContain("address");
+                    expect(result.errorPathInfo.path).toContain("zipCode");
                 }
             });
         });
@@ -1148,7 +1150,7 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial("not object" as any);
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("オブジェクトである必要があります");
+                        expect(result.errorPathInfo.message).toContain("オブジェクトである必要があります");
                     }
                 });
 
@@ -1170,7 +1172,7 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial([1, 2, 3] as any);
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("オブジェクトである必要があります");
+                        expect(result.errorPathInfo.message).toContain("オブジェクトである必要があります");
                     }
                 });
             });
@@ -1202,8 +1204,8 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial({ name: "Al" }); // 短い名前
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("name");
-                        expect(result.errorMessage).toContain("最低3文字必要です");
+                        expect(result.errorPathInfo.path).toContain("name");
+                        expect(result.errorPathInfo.message).toContain("最低3文字必要です");
                     }
                 });
 
@@ -1233,8 +1235,8 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial({ name: "Al", age: -5 }); // 短い名前と負の年齢
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("name");
-                        expect(result.errorMessage).toContain("age");
+                        expect(result.errorPathInfo.path).toContain("name");
+                        expect(result.errorPathInfo.path).toContain("age");
                     }
                 });
             });
@@ -1259,8 +1261,8 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial({ name: "Alice", unknownField: "value" });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("unknownField");
-                        expect(result.errorMessage).toContain("不明なフィールドです");
+                        expect(result.errorPathInfo.path).toContain("unknownField");
+                        expect(result.errorPathInfo.message).toContain("不明なフィールドです");
                     }
                 });
 
@@ -1371,8 +1373,8 @@ describe("settingsDefinition2", () => {
                     });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("address");
-                        expect(result.errorMessage).toContain("city");
+                        expect(result.errorPathInfo.path).toContain("address");
+                        expect(result.errorPathInfo.path).toContain("city");
                     }
                 });
 
@@ -1583,8 +1585,8 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial({ name: undefined });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("name");
-                        expect(result.errorMessage).toContain("必須です");
+                        expect(result.errorPathInfo.path).toContain("name");
+                        expect(result.errorPathInfo.message).toContain("必須です");
                     }
                 });
 
@@ -1606,8 +1608,8 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial({ name: null });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("name");
-                        expect(result.errorMessage).toContain("必須です");
+                        expect(result.errorPathInfo.path).toContain("name");
+                        expect(result.errorPathInfo.message).toContain("必須です");
                     }
                 });
 
@@ -1675,7 +1677,7 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial({ address: undefined });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("address");
+                        expect(result.errorPathInfo.path).toContain("address");
                     }
                 });
 
@@ -1830,9 +1832,9 @@ describe("settingsDefinition2", () => {
                     });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("contact");
-                        expect(result.errorMessage).toContain("phone");
-                        expect(result.errorMessage).toContain("countryCode");
+                        expect(result.errorPathInfo.path).toContain("contact");
+                        expect(result.errorPathInfo.path).toContain("phone");
+                        expect(result.errorPathInfo.path).toContain("countryCode");
                     }
                 });
             });
@@ -1892,8 +1894,8 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial({ tags: ["tag1", "tag2", "tag3", "tag4"] });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("tags");
-                        expect(result.errorMessage).toContain("最大3個まで");
+                        expect(result.errorPathInfo.path).toContain("tags");
+                        expect(result.errorPathInfo.message).toContain("最大3個まで");
                     }
                 });
             });
@@ -2029,12 +2031,12 @@ describe("settingsDefinition2", () => {
                     });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("profile");
-                        expect(result.errorMessage).toContain("name");
-                        expect(result.errorMessage).toContain("age");
-                        expect(result.errorMessage).toContain("settings");
-                        expect(result.errorMessage).toContain("theme");
-                        expect(result.errorMessage).toContain("fontSize");
+                        expect(result.errorPathInfo.path).toContain("profile");
+                        expect(result.errorPathInfo.path).toContain("name");
+                        expect(result.errorPathInfo.path).toContain("age");
+                        expect(result.errorPathInfo.path).toContain("settings");
+                        expect(result.errorPathInfo.path).toContain("theme");
+                        expect(result.errorPathInfo.path).toContain("fontSize");
                     }
                 });
 
@@ -2136,9 +2138,9 @@ describe("settingsDefinition2", () => {
                     });
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("name");
-                        expect(result.errorMessage).toContain("age");
-                        expect(result.errorMessage).toContain("active");
+                        expect(result.errorPathInfo.path).toContain("name");
+                        expect(result.errorPathInfo.path).toContain("age");
+                        expect(result.errorPathInfo.path).toContain("active");
                     }
                 });
 
@@ -2159,7 +2161,7 @@ describe("settingsDefinition2", () => {
                     const result = info.validatePartial(null as any);
                     expect(result.isError).toBe(true);
                     if (result.isError) {
-                        expect(result.errorMessage).toContain("必須です");
+                        expect(result.errorPathInfo.message).toContain("必須です");
                     }
                 });
             });
@@ -2189,7 +2191,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate("");
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("空文字は許可されていません");
+                    expect(result.errorPathInfo.message).toContain("空文字は許可されていません");
                 }
             });
 
@@ -2256,7 +2258,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(0);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("1以上である必要があります");
+                    expect(result.errorPathInfo.message).toContain("1以上である必要があります");
                 }
             });
 
@@ -2283,7 +2285,7 @@ describe("settingsDefinition2", () => {
                 const result = info.validate(11);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("10以下である必要があります");
+                    expect(result.errorPathInfo.message).toContain("10以下である必要があります");
                 }
             });
 
@@ -2755,6 +2757,573 @@ describe("settingsDefinition2", () => {
                         });
                     }).toThrow("defaultValue must be object, but got object");
                 });
+            });
+        });
+    });
+
+    describe("エラーパス構造とメッセージの詳細検証", () => {
+        describe("pathのネスト構造検証", () => {
+            it("単純なフィールドのpathは「親名.フィールド名」形式", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "ルート",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        field1: new StringSettingValueInfo({
+                            name: "フィールド1",
+                            description: "説明",
+                            required: true,
+                            defaultValue: "",
+                        }),
+                    },
+                });
+                const result = info.validate({ field1: null });
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorPathInfo.path).toBe("ルート.field1.フィールド1");
+                    expect(result.errorPathInfo.message).toContain("必須です");
+                }
+            });
+
+            it("2階層ネストのpathは「親名.子名.孫名」形式", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "レベル1",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        level2: new ObjectSettingValueInfo({
+                            name: "レベル2",
+                            description: "説明",
+                            required: true,
+                            children: {
+                                level3: new StringSettingValueInfo({
+                                    name: "レベル3",
+                                    description: "説明",
+                                    required: true,
+                                    defaultValue: "",
+                                }),
+                            },
+                        }),
+                    },
+                });
+                const result = info.validate({ level2: { level3: null } });
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorPathInfo.path).toBe("レベル1.level2.レベル2.level3.レベル3");
+                    expect(result.errorPathInfo.message).toContain("必須です");
+                }
+            });
+
+            it("3階層以上のネストでもpathが正しく構築される", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "L1",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        l2: new ObjectSettingValueInfo({
+                            name: "L2",
+                            description: "説明",
+                            required: true,
+                            children: {
+                                l3: new ObjectSettingValueInfo({
+                                    name: "L3",
+                                    description: "説明",
+                                    required: true,
+                                    children: {
+                                        l4: new NumberSettingValueInfo({
+                                            name: "L4",
+                                            description: "説明",
+                                            required: true,
+                                            defaultValue: 1,
+                                            positive: true,
+                                        }),
+                                    },
+                                }),
+                            },
+                        }),
+                    },
+                });
+                const result = info.validate({ l2: { l3: { l4: -5 } } });
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorPathInfo.path).toBe("L1.l2.L2.l3.L3.l4.L4");
+                    expect(result.errorPathInfo.message).toContain("正の数である必要があります");
+                }
+            });
+
+            it("配列要素のpathには[インデックス]が含まれる", () => {
+                const info = new ArraySettingValueInfo({
+                    name: "配列テスト",
+                    description: "説明",
+                    required: true,
+                    itemType: "string",
+                });
+                const result = info.validate(["valid", 123, "valid"]);
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorPathInfo.path).toContain("配列テスト");
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.message).toContain("stringである必要があります");
+                }
+            });
+
+            it("配列内のオブジェクトのpathには配列インデックスとフィールド名が含まれる", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "アイテム",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        value: new NumberSettingValueInfo({
+                            name: "値",
+                            description: "説明",
+                            required: true,
+                            defaultValue: 0,
+                        }),
+                    },
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "配列",
+                    description: "説明",
+                    required: true,
+                    itemType: "object",
+                    itemSchema,
+                });
+                const result = info.validate([{ value: 10 }, { value: "invalid" }, { value: 20 }]);
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorPathInfo.path).toContain("配列");
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.path).toContain("アイテム");
+                    expect(result.errorPathInfo.path).toContain("value");
+                    expect(result.errorPathInfo.path).toContain("値");
+                }
+            });
+
+            it("ネストされたオブジェクト内の配列のpathが正しい", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "親",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        nested: new ObjectSettingValueInfo({
+                            name: "子",
+                            description: "説明",
+                            required: true,
+                            children: {
+                                items: new ArraySettingValueInfo({
+                                    name: "項目リスト",
+                                    description: "説明",
+                                    required: true,
+                                    itemType: "number",
+                                }),
+                            },
+                        }),
+                    },
+                });
+                const result = info.validate({ nested: { items: [1, "invalid", 3] } });
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorPathInfo.path).toBe("親.nested.子.items.項目リスト.[1]");
+                    expect(result.errorPathInfo.message).toContain("numberである必要があります");
+                }
+            });
+        });
+
+        describe("配列の複数エラー検証", () => {
+            it("配列内の複数要素でエラーがある場合、すべてのエラーが報告される", () => {
+                const stringSchema = new StringSettingValueInfo({
+                    name: "文字列",
+                    description: "説明",
+                    required: true,
+                    minLength: 2,
+                    maxLength: 5,
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "配列",
+                    description: "説明",
+                    required: true,
+                    itemType: "string",
+                    itemSchema: stringSchema,
+                });
+                const result = info.validate(["ok", "x", "toolong", "y", "ok2"]);
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    // 複数のエラーパスが改行で連結されている
+                    const paths = result.errorPathInfo.path.split("\n");
+                    const messages = result.errorPathInfo.message?.split("\n") || [];
+
+                    expect(paths.length).toBeGreaterThan(1);
+                    expect(messages.length).toBeGreaterThan(1);
+
+                    // [1]のエラー（短すぎる）
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.message).toContain("最低2文字必要です");
+
+                    // [2]のエラー（長すぎる）
+                    expect(result.errorPathInfo.path).toContain("[2]");
+                    expect(result.errorPathInfo.message).toContain("最大5文字までです");
+
+                    // [3]のエラー（短すぎる）
+                    expect(result.errorPathInfo.path).toContain("[3]");
+                }
+            });
+
+            it("配列内の複数オブジェクトでエラーがある場合、すべてのエラーが報告される", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "商品",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "商品名",
+                            description: "説明",
+                            required: true,
+                            minLength: 1,
+                        }),
+                        price: new NumberSettingValueInfo({
+                            name: "価格",
+                            description: "説明",
+                            required: true,
+                            min: 0,
+                        }),
+                    },
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "商品リスト",
+                    description: "説明",
+                    required: true,
+                    itemType: "object",
+                    itemSchema,
+                });
+                const result = info.validate([
+                    { name: "商品A", price: 100 },
+                    { name: "", price: -50 }, // 両方エラー
+                    { name: "商品B", price: 200 },
+                    { name: "商品C", price: -10 }, // priceエラー
+                ]);
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    // 複数のエラーが報告される
+                    const paths = result.errorPathInfo.path.split("\n");
+                    const messages = result.errorPathInfo.message?.split("\n") || [];
+
+                    expect(paths.length).toBeGreaterThan(2); // 少なくとも3つのエラー
+                    expect(messages.length).toBeGreaterThan(2);
+
+                    // [1]のnameエラー
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.path).toContain("name");
+                    expect(result.errorPathInfo.message).toContain("最低1文字必要です");
+
+                    // [1]のpriceエラー
+                    expect(result.errorPathInfo.path).toContain("price");
+                    expect(result.errorPathInfo.message).toContain("0以上である必要があります");
+
+                    // [3]のpriceエラー
+                    expect(result.errorPathInfo.path).toContain("[3]");
+                }
+            });
+
+            it("配列内の複数要素で異なるタイプのエラーがある場合も報告される", () => {
+                const numberSchema = new NumberSettingValueInfo({
+                    name: "スコア",
+                    description: "説明",
+                    required: true,
+                    min: 0,
+                    max: 100,
+                    integer: true,
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "スコアリスト",
+                    description: "説明",
+                    required: true,
+                    itemType: "number",
+                    itemSchema: numberSchema,
+                });
+                const result = info.validate([50, -10, 75.5, 150, 80]);
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    const paths = result.errorPathInfo.path.split("\n");
+                    const messages = result.errorPathInfo.message?.split("\n") || [];
+
+                    // 3つのエラーがある（[1]: min違反, [2]: integer違反, [3]: max違反）
+                    expect(paths.length).toBe(3);
+                    expect(messages.length).toBe(3);
+
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.message).toContain("0以上である必要があります");
+
+                    expect(result.errorPathInfo.path).toContain("[2]");
+                    expect(result.errorPathInfo.message).toContain("整数である必要があります");
+
+                    expect(result.errorPathInfo.path).toContain("[3]");
+                    expect(result.errorPathInfo.message).toContain("100以下である必要があります");
+                }
+            });
+
+            it("ネストされた配列で複数エラーがある場合も正しくパスが構築される", () => {
+                const innerArrayInfo = new ArraySettingValueInfo({
+                    name: "内部配列",
+                    description: "説明",
+                    required: true,
+                    itemType: "number",
+                    minItems: 1,
+                });
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "グループ",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        values: innerArrayInfo,
+                    },
+                });
+                const info = new ArraySettingValueInfo({
+                    name: "外部配列",
+                    description: "説明",
+                    required: true,
+                    itemType: "object",
+                    itemSchema,
+                });
+                const result = info.validate([
+                    { values: [1, 2] },
+                    { values: [] }, // minItems違反
+                    { values: [3, 4] },
+                ]);
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    expect(result.errorPathInfo.path).toContain("外部配列");
+                    expect(result.errorPathInfo.path).toContain("[1]");
+                    expect(result.errorPathInfo.path).toContain("グループ");
+                    expect(result.errorPathInfo.path).toContain("values");
+                    expect(result.errorPathInfo.path).toContain("内部配列");
+                    expect(result.errorPathInfo.message).toContain("最低1個必要です");
+                }
+            });
+        });
+
+        describe("オブジェクトの複数エラー検証", () => {
+            it("オブジェクトの複数フィールドでエラーがある場合、すべてのエラーが報告される", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "ユーザー",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "説明",
+                            required: true,
+                            minLength: 2,
+                        }),
+                        age: new NumberSettingValueInfo({
+                            name: "年齢",
+                            description: "説明",
+                            required: true,
+                            min: 0,
+                            max: 150,
+                        }),
+                        email: new StringSettingValueInfo({
+                            name: "メール",
+                            description: "説明",
+                            required: true,
+                            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        }),
+                    },
+                });
+                const result = info.validate({
+                    name: "A",
+                    age: -5,
+                    email: "invalid-email",
+                });
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    const paths = result.errorPathInfo.path.split("\n");
+                    const messages = result.errorPathInfo.message?.split("\n") || [];
+
+                    expect(paths.length).toBe(3);
+                    expect(messages.length).toBe(3);
+
+                    expect(result.errorPathInfo.path).toContain("name");
+                    expect(result.errorPathInfo.message).toContain("最低2文字必要です");
+
+                    expect(result.errorPathInfo.path).toContain("age");
+                    expect(result.errorPathInfo.message).toContain("0以上である必要があります");
+
+                    expect(result.errorPathInfo.path).toContain("email");
+                    expect(result.errorPathInfo.message).toContain("形式が不正です");
+                }
+            });
+
+            it("ネストされたオブジェクトで複数エラーがある場合、パスが正しく構築される", () => {
+                const addressInfo = new ObjectSettingValueInfo({
+                    name: "住所",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        city: new StringSettingValueInfo({
+                            name: "市区町村",
+                            description: "説明",
+                            required: true,
+                            minLength: 1,
+                        }),
+                        zipCode: new StringSettingValueInfo({
+                            name: "郵便番号",
+                            description: "説明",
+                            required: true,
+                            pattern: /^\d{3}-?\d{4}$/,
+                        }),
+                    },
+                });
+                const info = new ObjectSettingValueInfo({
+                    name: "情報",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        name: new StringSettingValueInfo({
+                            name: "名前",
+                            description: "説明",
+                            required: true,
+                            minLength: 1,
+                        }),
+                        address: addressInfo,
+                    },
+                });
+                const result = info.validate({
+                    name: "",
+                    address: {
+                        city: "",
+                        zipCode: "invalid",
+                    },
+                });
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    const paths = result.errorPathInfo.path.split("\n");
+                    const messages = result.errorPathInfo.message?.split("\n") || [];
+
+                    // 3つのエラーがある
+                    expect(paths.length).toBe(3);
+                    expect(messages.length).toBe(3);
+
+                    // nameのエラー (親パス含む)
+                    expect(result.errorPathInfo.path).toContain("情報.name.名前");
+
+                    // address.cityのエラー (親パスは省略される可能性)
+                    expect(result.errorPathInfo.path).toMatch(/市区町村/);
+
+                    // address.zipCodeのエラー (親パスは省略される可能性)
+                    expect(result.errorPathInfo.path).toMatch(/郵便番号/);
+                }
+            });
+        });
+
+        describe("複合的なエラーシナリオ", () => {
+            it("配列とオブジェクトが混在した複雑な構造で複数エラーが正しく報告される", () => {
+                const itemSchema = new ObjectSettingValueInfo({
+                    name: "項目",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        id: new NumberSettingValueInfo({
+                            name: "ID",
+                            description: "説明",
+                            required: true,
+                            min: 1,
+                        }),
+                        tags: new ArraySettingValueInfo({
+                            name: "タグ",
+                            description: "説明",
+                            required: true,
+                            itemType: "string",
+                            minItems: 1,
+                        }),
+                    },
+                });
+                const info = new ObjectSettingValueInfo({
+                    name: "データ",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        items: new ArraySettingValueInfo({
+                            name: "項目リスト",
+                            description: "説明",
+                            required: true,
+                            itemType: "object",
+                            itemSchema,
+                        }),
+                    },
+                });
+                const result = info.validate({
+                    items: [
+                        { id: 1, tags: ["tag1"] },
+                        { id: -5, tags: [] }, // 両方エラー
+                        { id: 3, tags: ["tag2"] },
+                    ],
+                });
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    const paths = result.errorPathInfo.path.split("\n");
+                    const messages = result.errorPathInfo.message?.split("\n") || [];
+
+                    // 2つのエラーがある
+                    expect(paths.length).toBe(2);
+                    expect(messages.length).toBe(2);
+
+                    // items[1].idのエラー (配列インデックスとフィールド名を確認)
+                    expect(result.errorPathInfo.path).toMatch(/\[1\].*ID/);
+                    expect(result.errorPathInfo.message).toContain("1以上である必要があります");
+
+                    // items[1].tagsのエラー (配列インデックスとフィールド名を確認)
+                    expect(result.errorPathInfo.path).toMatch(/タグ/);
+                    expect(result.errorPathInfo.message).toContain("最低1個必要です");
+                }
+            });
+        });
+
+        describe("パスとメッセージの分離検証", () => {
+            it("pathにはフィールド名のみが含まれ、messageには純粋なエラー理由のみが含まれる", () => {
+                const info = new StringSettingValueInfo({
+                    name: "テストフィールド",
+                    description: "説明",
+                    required: true,
+                    minLength: 5,
+                });
+                const result = info.validate("abc");
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    // pathにはフィールド名が含まれる
+                    expect(result.errorPathInfo.path).toBe("テストフィールド");
+
+                    // messageには純粋なエラー理由のみ
+                    expect(result.errorPathInfo.message).toContain("最低5文字必要です");
+                    expect(result.errorPathInfo.message).not.toContain("テストフィールド");
+                }
+            });
+
+            it("ネストされた場合もpathとmessageが正しく分離される", () => {
+                const info = new ObjectSettingValueInfo({
+                    name: "親",
+                    description: "説明",
+                    required: true,
+                    children: {
+                        child: new NumberSettingValueInfo({
+                            name: "子",
+                            description: "説明",
+                            required: true,
+                            max: 100,
+                        }),
+                    },
+                });
+                const result = info.validate({ child: 200 });
+                expect(result.isError).toBe(true);
+                if (result.isError) {
+                    // pathには完全なパスが含まれる
+                    expect(result.errorPathInfo.path).toBe("親.child.子");
+
+                    // messageには純粋なエラー理由のみ
+                    expect(result.errorPathInfo.message).toContain("100以下である必要があります");
+                    expect(result.errorPathInfo.message).not.toContain("親");
+                    expect(result.errorPathInfo.message).not.toContain("子");
+                    expect(result.errorPathInfo.message).not.toContain("child");
+                }
             });
         });
     });

@@ -99,8 +99,12 @@ describe("HistoryManager", () => {
         });
 
         it("不正なデータをスキップする", () => {
-            // 不正なデータを直接保存 (Storageシステムは構造化データで保存するため)
-            const invalidData = "invalid-line\nkey1=value1\n=value2\nkey3=";
+            // 不正なデータを直接保存
+            const invalidData = `key,eventName,WorkItemId,itemName,useCount,lastUsedDate
+invalid-line
+key1,event1,item1,name1,count,2025-10-08 10:30
+key2,event2,item2,name2,5
+key3,event3,item3,name3,3,2025-10-08 11:45`;
             const rootData = {
                 version: 1,
                 "time-tracker-history": invalidData,
@@ -108,7 +112,7 @@ describe("HistoryManager", () => {
             localStorage.setItem("time-tracker-data", JSON.stringify(rootData));
 
             historyManager.load();
-            expect(historyManager.getSize()).toBe(1); // key1=value1 のみ有効
+            expect(historyManager.getSize()).toBe(1); // key3のみ有効（6カラム形式）
         });
     });
 
@@ -125,15 +129,84 @@ describe("HistoryManager", () => {
             expect(workItemId).toBeNull();
         });
 
-        it("同じイベントのマッピングを上書きできる", () => {
-            const workItem2: WorkItem = { ...testWorkItem, id: "work-item-999" };
-
+        it("同じイベントのマッピングを複数回設定すると使用回数がインクリメントされる", () => {
             historyManager.setHistory(testEvent, testWorkItem);
-            historyManager.setHistory(testEvent, workItem2);
+            historyManager.setHistory(testEvent, testWorkItem);
+            historyManager.setHistory(testEvent, testWorkItem);
 
-            const workItemId = historyManager.getWorkItemId(testEvent);
-            expect(workItemId).toBe(workItem2.id);
-            expect(historyManager.getSize()).toBe(1); // 上書きされるのでサイズは1
+            expect(historyManager.getSize()).toBe(1); // 同じイベントなのでサイズは1
+
+            // 使用回数を確認（getWorkItemIdを呼ばない）
+            const entries = historyManager.getAllEntries();
+            expect(entries[0].useCount).toBe(3);
+        });
+
+        it("getWorkItemIdを呼ぶと使用回数がインクリメントされる", () => {
+            historyManager.setHistory(testEvent, testWorkItem);
+
+            // 初期状態の確認
+            let entries = historyManager.getAllEntries();
+            expect(entries[0].useCount).toBe(1);
+
+            // getWorkItemIdを呼び出す
+            const workItemId1 = historyManager.getWorkItemId(testEvent);
+            expect(workItemId1).toBe(testWorkItem.id);
+
+            // 使用回数が増加していることを確認
+            entries = historyManager.getAllEntries();
+            expect(entries[0].useCount).toBe(2);
+
+            // 再度呼び出し
+            const workItemId2 = historyManager.getWorkItemId(testEvent);
+            expect(workItemId2).toBe(testWorkItem.id);
+
+            // さらに増加していることを確認
+            entries = historyManager.getAllEntries();
+            expect(entries[0].useCount).toBe(3);
+        });
+
+        it("getWorkItemIdを呼ぶと最終使用日時が更新される", () => {
+            historyManager.setHistory(testEvent, testWorkItem);
+
+            // 初期状態の日時を取得
+            const initialEntries = historyManager.getAllEntries();
+            const initialDate = initialEntries[0].lastUsedDate;
+
+            // 少し待機
+            const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+            return delay(10).then(() => {
+                // getWorkItemIdを呼び出す
+                const workItemId = historyManager.getWorkItemId(testEvent);
+                expect(workItemId).toBe(testWorkItem.id);
+
+                // 最終使用日時が更新されていることを確認
+                const updatedEntries = historyManager.getAllEntries();
+                const updatedDate = updatedEntries[0].lastUsedDate;
+
+                expect(updatedDate.getTime()).toBeGreaterThan(initialDate.getTime());
+            });
+        });
+
+        it("getWorkItemIdでの更新は保存される", () => {
+            historyManager.setHistory(testEvent, testWorkItem);
+            historyManager.dump();
+
+            // 初期の使用回数を確認
+            let entries = historyManager.getAllEntries();
+            expect(entries[0].useCount).toBe(1);
+
+            // getWorkItemIdを呼び出して使用回数を増やす
+            historyManager.getWorkItemId(testEvent);
+            historyManager.getWorkItemId(testEvent);
+            historyManager.dump();
+
+            // 新しいマネージャーで読み込み
+            const newManager = new HistoryManager();
+            newManager.load();
+
+            // 使用回数が保存されていることを確認
+            entries = newManager.getAllEntries();
+            expect(entries[0].useCount).toBe(3);
         });
 
         it("イベントキーに = が含まれていても正しく処理できる", () => {
@@ -306,49 +379,24 @@ describe("HistoryManager", () => {
             historyManager.setHistory(testEvent, testWorkItem);
 
             const event2: Event = { ...testEvent, uuid: "uuid-2", name: "イベント2" };
-            const workItem2: WorkItem = { ...testWorkItem, id: "work-item-789" };
+            const workItem2: WorkItem = { ...testWorkItem, id: "work-item-789", name: "作業項目2" };
             historyManager.setHistory(event2, workItem2);
 
             const entries = historyManager.getAllEntries();
             expect(entries).toHaveLength(2);
-            expect(entries[0]).toEqual({
-                key: "test-uuid-123|テストイベント|test@example.com",
-                itemId: "work-item-456",
-            });
-            expect(entries[1]).toEqual({
-                key: "uuid-2|イベント2|test@example.com",
-                itemId: "work-item-789",
-            });
-        });
-
-        it("キーの%3Dが=にデコードされる", () => {
-            const eventWithEquals: Event = {
-                ...testEvent,
-                name: "イベント=テスト",
-            };
-
-            historyManager.setHistory(eventWithEquals, testWorkItem);
-
-            const entries = historyManager.getAllEntries();
-            expect(entries).toHaveLength(1);
-            // キーに = が含まれている(デコード済み)
-            expect(entries[0].key).toBe("test-uuid-123|イベント=テスト|test@example.com");
+            expect(entries[0].key).toBe("test-uuid-123|テストイベント|test@example.com");
+            expect(entries[0].eventName).toBe("テストイベント");
             expect(entries[0].itemId).toBe("work-item-456");
-        });
+            expect(entries[0].itemName).toBe("テスト作業項目");
+            expect(entries[0].useCount).toBe(1);
+            expect(entries[0].lastUsedDate).toBeInstanceOf(Date);
 
-        it("複数の=を含むキーが正しくデコードされる", () => {
-            const eventWithMultipleEquals: Event = {
-                ...testEvent,
-                name: "a=b=c",
-                organizer: "test=user@example.com",
-            };
-
-            historyManager.setHistory(eventWithMultipleEquals, testWorkItem);
-
-            const entries = historyManager.getAllEntries();
-            expect(entries).toHaveLength(1);
-            expect(entries[0].key).toBe("test-uuid-123|a=b=c|test=user@example.com");
-            expect(entries[0].itemId).toBe("work-item-456");
+            expect(entries[1].key).toBe("uuid-2|イベント2|test@example.com");
+            expect(entries[1].eventName).toBe("イベント2");
+            expect(entries[1].itemId).toBe("work-item-789");
+            expect(entries[1].itemName).toBe("作業項目2");
+            expect(entries[1].useCount).toBe(1);
+            expect(entries[1].lastUsedDate).toBeInstanceOf(Date);
         });
     });
 
@@ -502,6 +550,171 @@ describe("HistoryManager", () => {
             expect(remainingEntries).toHaveLength(2);
             expect(remainingEntries[0].key).toBe("uuid-1|イベント1|test@example.com");
             expect(remainingEntries[1].key).toBe("uuid-3|イベント3|test@example.com");
+        });
+    });
+
+    describe("CSV形式の保存と読み込み", () => {
+        beforeEach(() => {
+            localStorageMock.clear();
+            historyManager = new HistoryManager();
+        });
+
+        it("CSV形式のヘッダー行が含まれる", () => {
+            historyManager.setHistory(testEvent, testWorkItem);
+            historyManager.dump();
+
+            const rootData = localStorageMock.getItem("time-tracker-data");
+            expect(rootData).not.toBeNull();
+            if (rootData) {
+                const parsed = JSON.parse(rootData);
+                const historyData = parsed["time-tracker-history"];
+                expect(historyData).toContain("key,eventName,WorkItemId,itemName,useCount,lastUsedDate");
+            }
+        });
+
+        it("key,eventName,WorkItemId,項目名,使用回数,最終使用日時の形式で保存される", () => {
+            historyManager.setHistory(testEvent, testWorkItem);
+            historyManager.dump();
+
+            const rootData = localStorageMock.getItem("time-tracker-data");
+            expect(rootData).not.toBeNull();
+            if (rootData) {
+                const parsed = JSON.parse(rootData);
+                const historyData = parsed["time-tracker-history"];
+                // CSV形式: key,eventName,WorkItemId,itemName,useCount,lastUsedDate (6カラム)
+                const lines = historyData.split("\n");
+                expect(lines[0]).toBe("key,eventName,WorkItemId,itemName,useCount,lastUsedDate");
+                expect(lines[1]).toMatch(
+                    /^test-uuid-123\|テストイベント\|test@example\.com,テストイベント,work-item-456,テスト作業項目,1,\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+                );
+            }
+        });
+
+        it("使用回数がインクリメントされて保存される", () => {
+            historyManager.setHistory(testEvent, testWorkItem);
+            historyManager.setHistory(testEvent, testWorkItem);
+            historyManager.setHistory(testEvent, testWorkItem);
+            historyManager.dump();
+
+            const rootData = localStorageMock.getItem("time-tracker-data");
+            expect(rootData).not.toBeNull();
+            if (rootData) {
+                const parsed = JSON.parse(rootData);
+                const historyData = parsed["time-tracker-history"];
+                // 使用回数が3になっている
+                expect(historyData).toMatch(/work-item-456,テスト作業項目,3,/);
+            }
+        });
+
+        it("カンマを含む項目名が正しくエスケープされる", () => {
+            const workItemWithComma: WorkItem = { ...testWorkItem, name: "作業項目1,作業項目2" };
+            historyManager.setHistory(testEvent, workItemWithComma);
+            historyManager.dump();
+
+            const rootData = localStorageMock.getItem("time-tracker-data");
+            expect(rootData).not.toBeNull();
+            if (rootData) {
+                const parsed = JSON.parse(rootData);
+                const historyData = parsed["time-tracker-history"];
+                // CSV形式でカンマがエスケープされている
+                expect(historyData).toMatch(/work-item-456,作業項目1\\,作業項目2,1,/);
+            }
+
+            // 再読み込みしても正しく復元される
+            const newManager = new HistoryManager();
+            newManager.load();
+            const entries = newManager.getAllEntries();
+            expect(entries[0].itemName).toBe("作業項目1,作業項目2");
+        });
+
+        it("CSV形式のデータを正しく保存・読み込みできる", () => {
+            // データを追加して保存
+            historyManager.setHistory(testEvent, testWorkItem);
+            historyManager.dump();
+
+            // 新しいマネージャーで読み込み
+            const newManager = new HistoryManager();
+            newManager.load();
+
+            const entries = newManager.getAllEntries();
+            expect(entries).toHaveLength(1);
+            expect(entries[0].key).toBe("test-uuid-123|テストイベント|test@example.com");
+            expect(entries[0].eventName).toBe("テストイベント");
+            expect(entries[0].itemId).toBe("work-item-456");
+            expect(entries[0].itemName).toBe("テスト作業項目");
+            expect(entries[0].useCount).toBe(1);
+            expect(entries[0].lastUsedDate).toBeInstanceOf(Date);
+
+            // CSV形式で保存されていることを確認
+            const rootData = localStorageMock.getItem("time-tracker-data");
+            expect(rootData).not.toBeNull();
+            if (rootData) {
+                const parsed = JSON.parse(rootData);
+                const historyData = parsed["time-tracker-history"];
+                const lines = historyData.split("\n");
+                expect(lines[0]).toBe("key,eventName,WorkItemId,itemName,useCount,lastUsedDate");
+                expect(lines.length).toBe(2); // ヘッダー + 1エントリ
+            }
+        });
+
+        it("使用回数の降順でソートされる", () => {
+            const event1: Event = { ...testEvent, uuid: "uuid-1" };
+            const event2: Event = { ...testEvent, uuid: "uuid-2" };
+            const event3: Event = { ...testEvent, uuid: "uuid-3" };
+
+            const workItem1: WorkItem = { ...testWorkItem, id: "item-1", name: "項目1" };
+            const workItem2: WorkItem = { ...testWorkItem, id: "item-2", name: "項目2" };
+            const workItem3: WorkItem = { ...testWorkItem, id: "item-3", name: "項目3" };
+
+            // 使用回数を変えて追加
+            historyManager.setHistory(event1, workItem1); // 1回
+            historyManager.setHistory(event2, workItem2); // 3回
+            historyManager.setHistory(event2, workItem2);
+            historyManager.setHistory(event2, workItem2);
+            historyManager.setHistory(event3, workItem3); // 2回
+            historyManager.setHistory(event3, workItem3);
+
+            const entries = historyManager.getAllEntries();
+            expect(entries).toHaveLength(3);
+            // 使用回数の降順: item-2(3回) > item-3(2回) > item-1(1回)
+            expect(entries[0].itemId).toBe("item-2");
+            expect(entries[0].useCount).toBe(3);
+            expect(entries[1].itemId).toBe("item-3");
+            expect(entries[1].useCount).toBe(2);
+            expect(entries[2].itemId).toBe("item-1");
+            expect(entries[2].useCount).toBe(1);
+        });
+
+        it("CSV形式のデータを読み込める", () => {
+            // CSV形式のデータを設定 (key,eventName,WorkItemId,itemName,useCount,lastUsedDate)
+            const csvData = `key,eventName,WorkItemId,itemName,useCount,lastUsedDate
+key1,イベント1,work-item-1,項目1,5,2025-10-08 10:30
+key2,イベント2,work-item-2,項目2,3,2025-10-08 11:45
+key3,イベント3\\,サブイベント,work-item-3,項目3\\,サブ項目,1,2025-10-08 09:15`;
+
+            const rootData = {
+                version: 1,
+                "time-tracker-history": csvData,
+            };
+            localStorageMock.setItem("time-tracker-data", JSON.stringify(rootData));
+
+            const newManager = new HistoryManager();
+            newManager.load();
+
+            const entries = newManager.getAllEntries();
+            expect(entries).toHaveLength(3);
+
+            // CSV形式から正しく読み込まれる
+            const item1 = entries.find((e) => e.itemId === "work-item-1");
+            expect(item1?.eventName).toBe("イベント1");
+            expect(item1?.itemName).toBe("項目1");
+            expect(item1?.useCount).toBe(5);
+            expect(item1?.lastUsedDate).toBeInstanceOf(Date);
+
+            // カンマがエスケープされた項目名も正しく読み込まれる
+            const item3 = entries.find((e) => e.itemId === "work-item-3");
+            expect(item3?.eventName).toBe("イベント3,サブイベント");
+            expect(item3?.itemName).toBe("項目3,サブ項目");
         });
     });
 });

@@ -47,12 +47,25 @@ export interface ValidationSuccess {
     isError: false;
 }
 
+export interface ErrorPathInfo {
+    /** ルートから name をドット連結したパス */
+    path: string;
+    /** 純粋なエラー理由（name を含めない単体メッセージを推奨） */
+    message?: string;
+}
+
+interface ErrorValueInfo {
+    exp?: string;
+    act?: string;
+}
+
 /**
  * バリデーション結果: 失敗
  */
 export interface ValidationFailure {
     isError: true;
-    errorMessage: string;
+    /** 拡張情報: どの設定要素で失敗したかのパス情報とメッセージ */
+    errorPathInfo: ErrorPathInfo;
 }
 
 /**
@@ -108,7 +121,7 @@ abstract class BaseSettingValueInfo<T extends SettingValueType> implements Setti
             logger.error(errorMessage);
             return {
                 isError: true,
-                errorMessage,
+                errorPathInfo: this.createErrorPathInfo(errorMessage),
             };
         }
     }
@@ -118,7 +131,7 @@ abstract class BaseSettingValueInfo<T extends SettingValueType> implements Setti
         if (this.required && (value === undefined || value === null)) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`必須です`),
+                errorPathInfo: this.createErrorPathInfo(`必須です`),
             };
         }
         // オプションでundefinedの場合はOK
@@ -130,28 +143,61 @@ abstract class BaseSettingValueInfo<T extends SettingValueType> implements Setti
             if (!Array.isArray(value)) {
                 return {
                     isError: true,
-                    errorMessage: this.createErrorMessage(`配列である必要があります`, typeof value),
+                    errorPathInfo: this.createErrorPathInfo(`配列である必要があります`, { act: typeof value }),
                 };
             }
         } else if (this.type === "object") {
             if (typeof value !== "object" || Array.isArray(value)) {
                 return {
                     isError: true,
-                    errorMessage: this.createErrorMessage(`オブジェクトである必要があります`, typeof value),
+                    errorPathInfo: this.createErrorPathInfo(`オブジェクトである必要があります`, { act: typeof value }),
                 };
             }
         } else if (typeof value !== this.type) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`${this.type}である必要があります`, typeof value),
+                errorPathInfo: this.createErrorPathInfo(`${this.type}である必要があります`, { act: typeof value }),
             };
         }
 
         return { isError: false };
     }
 
-    protected createErrorMessage(msg: string, value?: string): string {
-        return `${this.name}-> ${msg}${value ? ` (input: ${value})` : ""}`;
+    /**
+     * errorPathInfo を生成するprotected関数
+     * @param messageOrInner エラー理由
+     */
+    protected createErrorPathInfo(
+        messageOrInner: string | ErrorPathInfo | ErrorPathInfo[],
+        valueInfo?: ErrorValueInfo,
+    ): ErrorPathInfo {
+        let path: string;
+        let message: string;
+        if (typeof messageOrInner === "string") {
+            path = this.name;
+            message = messageOrInner;
+        } else if (Array.isArray(messageOrInner)) {
+            path = this.name + "." + messageOrInner.map((m) => m.path).join(".");
+            message = messageOrInner.find((m) => m.message)?.message ?? "";
+        } else {
+            path = this.name + "." + messageOrInner.path;
+            message = messageOrInner.message ?? "";
+        }
+
+        if (valueInfo?.exp || valueInfo?.act) {
+            message += ` ( ${valueInfo.exp ? `need: ${valueInfo.exp},` : ""}${valueInfo.act ? ` input: ${valueInfo.act}` : ""} )`;
+        }
+        return { path, message };
+    }
+
+    /**
+     *
+     */
+    protected meargePathInfo(info: ErrorPathInfo[]): ErrorPathInfo {
+        return {
+            path: info.map((i) => i.path).join("\n"),
+            message: info.map((i) => i.message ?? "").join("\n"),
+        };
     }
 
     protected abstract validateSub(value: SettingValueTypeMap[T]): ValidationResult;
@@ -249,7 +295,7 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
         if (this.disableEmpty && value === "") {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`空文字は許可されていません`),
+                errorPathInfo: this.createErrorPathInfo(`空文字は許可されていません`),
             };
         }
 
@@ -257,10 +303,10 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
         if (this.literals && this.literals.length > 0 && !this.literals.includes(value)) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(
-                    `${this.literals.join(", ")} のいずれかである必要があります`,
-                    value,
-                ),
+
+                errorPathInfo: this.createErrorPathInfo(`${this.literals.join(", ")} のいずれかである必要があります`, {
+                    act: value,
+                }),
             };
         }
 
@@ -268,7 +314,7 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
         if (this.minLength !== undefined && value.length < this.minLength) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`最低${this.minLength}文字必要です`, value),
+                errorPathInfo: this.createErrorPathInfo(`最低${this.minLength}文字必要です`, { act: value }),
             };
         }
 
@@ -276,7 +322,7 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
         if (this.maxLength !== undefined && value.length > this.maxLength) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`最大${this.maxLength}文字までです`, value),
+                errorPathInfo: this.createErrorPathInfo(`最大${this.maxLength}文字までです`, { act: value }),
             };
         }
 
@@ -287,7 +333,7 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
             } catch {
                 return {
                     isError: true,
-                    errorMessage: this.createErrorMessage(`有効なURLである必要があります`, value),
+                    errorPathInfo: this.createErrorPathInfo(`有効なURLである必要があります`, { act: value }),
                 };
             }
         }
@@ -296,7 +342,7 @@ export class StringSettingValueInfo extends BaseSettingValueInfo<"string"> {
         if (this.pattern && !this.pattern.test(value)) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`形式が不正です`, value),
+                errorPathInfo: this.createErrorPathInfo(`形式が不正です`, { exp: String(this.pattern), act: value }),
             };
         }
 
@@ -313,6 +359,8 @@ export class BooleanSettingValueInfo extends BaseSettingValueInfo<"boolean"> {
     }
 
     protected validateSub(_value: boolean): ValidationResult {
+        // 未使用引数を明示（将来的な拡張余地のため保持）
+        void _value;
         // ブール型は型チェックのみで特別な検証は不要
         return { isError: false };
     }
@@ -395,7 +443,7 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
         if (isNaN(value)) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`数値である必要があります`, String(value)),
+                errorPathInfo: this.createErrorPathInfo(`数値である必要があります`, { act: String(value) }),
             };
         }
 
@@ -403,7 +451,7 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
         if (this.integer && !Number.isInteger(value)) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`整数である必要があります`, String(value)),
+                errorPathInfo: this.createErrorPathInfo(`整数である必要があります`, { act: String(value) }),
             };
         }
 
@@ -411,7 +459,7 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
         if (this.positive && value <= 0) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`正の数である必要があります`, String(value)),
+                errorPathInfo: this.createErrorPathInfo(`正の数である必要があります`, { act: String(value) }),
             };
         }
 
@@ -419,7 +467,7 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
         if (this.min !== undefined && value < this.min) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`${this.min}以上である必要があります`, String(value)),
+                errorPathInfo: this.createErrorPathInfo(`${this.min}以上である必要があります`, { act: String(value) }),
             };
         }
 
@@ -427,7 +475,7 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
         if (this.max !== undefined && value > this.max) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`${this.max}以下である必要があります`, String(value)),
+                errorPathInfo: this.createErrorPathInfo(`${this.max}以下である必要があります`, { act: String(value) }),
             };
         }
 
@@ -435,10 +483,10 @@ export class NumberSettingValueInfo extends BaseSettingValueInfo<"number"> {
         if (this.literals && this.literals.length > 0 && !this.literals.includes(value)) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(
-                    `${this.literals.join(", ")} のいずれかである必要があります`,
-                    String(value),
-                ),
+
+                errorPathInfo: this.createErrorPathInfo(`${this.literals.join(", ")} のいずれかである必要があります`, {
+                    act: String(value),
+                }),
             };
         }
 
@@ -527,7 +575,7 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
                         const result = this.itemSchema.validate(item);
                         if (result.isError) {
                             throw new Error(
-                                `[${props.name}] defaultValue${itemPath} validation failed: ${result.errorMessage}`,
+                                `[${props.name}] defaultValue${itemPath} validation failed: ${JSON.stringify(result.errorPathInfo)}`,
                             );
                         }
                     }
@@ -541,7 +589,9 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
         if (this.minItems !== undefined && value.length < this.minItems) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`最低${this.minItems}個必要です`, `length: ${value.length}`),
+                errorPathInfo: this.createErrorPathInfo(`最低${this.minItems}個必要です`, {
+                    act: String(value.length),
+                }),
             };
         }
 
@@ -549,19 +599,24 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
         if (this.maxItems !== undefined && value.length > this.maxItems) {
             return {
                 isError: true,
-                errorMessage: this.createErrorMessage(`最大${this.maxItems}個までです`, `length: ${value.length}`),
+                errorPathInfo: this.createErrorPathInfo(`最大${this.maxItems}個までです`, {
+                    act: String(value.length),
+                }),
             };
         }
 
         // 配列要素の型チェック
         if (this.itemType) {
-            const errors: string[] = [];
+            const errors: ErrorPathInfo[] = [];
             for (let i = 0; i < value.length; i++) {
                 const item = value[i];
                 const itemPath = `[${i}]`;
                 if (this.itemType !== typeof item) {
                     errors.push(
-                        this.createErrorMessage(`${itemPath}-> ${this.itemType}である必要があります`, typeof item),
+                        this.createErrorPathInfo(
+                            { path: itemPath, message: `${this.itemType}である必要があります` },
+                            { act: typeof item },
+                        ),
                     );
                     continue;
                 }
@@ -569,15 +624,16 @@ export class ArraySettingValueInfo extends BaseSettingValueInfo<"array"> {
                 if (this.itemSchema) {
                     const result = this.itemSchema.validate(item);
                     if (result.isError) {
-                        errors.push(this.createErrorMessage(`${itemPath}-> ${result.errorMessage}`));
+                        errors.push(this.createErrorPathInfo([{ path: itemPath }, result.errorPathInfo]));
                     }
                 }
             }
 
             if (errors.length > 0) {
+                // 先頭のエラーのみ返却（複数エラー対応は要件次第で拡張可）
                 return {
                     isError: true,
-                    errorMessage: errors.join("\n"),
+                    errorPathInfo: this.meargePathInfo(errors),
                 };
             }
         }
@@ -670,7 +726,9 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
                 // 子要素の値を検証
                 const result = childInfo.validate(childValue as never);
                 if (result.isError) {
-                    throw new Error(`[${props.name}.${key}] defaultValue validation failed: ${result.errorMessage}`);
+                    throw new Error(
+                        `[${props.name}.${key}] defaultValue validation failed: ${JSON.stringify(result.errorPathInfo)}`,
+                    );
                 }
             }
         }
@@ -681,14 +739,14 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
             return { isError: false };
         }
 
-        const errors: string[] = [];
+        const errors: ErrorPathInfo[] = [];
 
         // 子要素のバリデーション
         for (const [key, childInfo] of Object.entries(this.children)) {
             const childValue = value[key];
             const result = childInfo.validate(childValue as never);
             if (result.isError) {
-                errors.push(this.createErrorMessage(`${key}-> ${result.errorMessage}`));
+                errors.push(this.createErrorPathInfo([{ path: key }, result.errorPathInfo]));
             }
         }
 
@@ -696,7 +754,7 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
         if (this.disableUnknownField) {
             for (const key of Object.keys(value)) {
                 if (!this.children[key]) {
-                    errors.push(this.createErrorMessage(`不明なフィールドです`, key));
+                    errors.push(this.createErrorPathInfo({ path: key, message: `不明なフィールドです` }));
                 }
             }
         }
@@ -704,7 +762,7 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
         if (errors.length > 0) {
             return {
                 isError: true,
-                errorMessage: errors.join("\n"),
+                errorPathInfo: this.meargePathInfo(errors),
             };
         }
 
@@ -732,26 +790,26 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
             return { isError: false };
         }
 
-        const errors = [];
+        const errors: ErrorPathInfo[] = [];
 
         // 提供された項目のみをバリデーション
-        for (const [k, v] of Object.entries(value)) {
-            const fieldDef = this.children[k];
+        for (const [key, v] of Object.entries(value)) {
+            const fieldDef = this.children[key];
             if (!fieldDef) {
                 if (this.disableUnknownField) {
-                    errors.push(this.createErrorMessage(`不明なフィールドです`, k));
+                    errors.push(this.createErrorPathInfo({ path: key, message: `不明なフィールドです` }));
                 }
                 continue;
             }
             if (fieldDef.type !== "object") {
                 const result = fieldDef.validate(v);
                 if (result.isError) {
-                    errors.push(this.createErrorMessage(result.errorMessage, k));
+                    errors.push(this.createErrorPathInfo([{ path: key }, result.errorPathInfo]));
                 }
             } else {
                 const result = fieldDef.validatePartial(v as ObjectType);
                 if (result.isError) {
-                    errors.push(this.createErrorMessage(result.errorMessage, k));
+                    errors.push(this.createErrorPathInfo([{ path: key }, result.errorPathInfo]));
                 }
             }
         }
@@ -759,7 +817,7 @@ export class ObjectSettingValueInfo extends BaseSettingValueInfo<"object"> {
         if (errors.length > 0) {
             return {
                 isError: true,
-                errorMessage: errors.join("\n"),
+                errorPathInfo: this.meargePathInfo(errors),
             };
         }
 

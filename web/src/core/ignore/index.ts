@@ -6,8 +6,4 @@
 
 export {
     IgnoreManager,
-    getIgnoreManager,
-    resetIgnoreManager,
-    type IgnoreConfig,
-    type IgnoreInfo,
 } from "./ignoreManager";

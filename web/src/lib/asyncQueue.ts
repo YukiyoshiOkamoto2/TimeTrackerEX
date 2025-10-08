@@ -48,6 +48,9 @@ export abstract class AsyncQueue<TData, TResult> {
      * キューを順次処理
      */
     private async processQueue(): Promise<void> {
+        // 意図的な永久ループ: 内部で待機(sleep)しつつキュー監視
+        // 条件式は固定 true であり抜け条件は存在しない（インスタンスライフサイクルに従う）
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             await this.sleep(this.waitTime);
 

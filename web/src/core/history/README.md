@@ -10,10 +10,32 @@ Python版の`history.py` (`TimeTrackerHistory`クラス)をTypeScriptに移植�
 
 ## 主な機能
 
-- **履歴の永続化**: LocalStorageを使用して履歴を保存・復元
+- **履歴の永続化**: CSV形式でLocalStorageに保存・復元
 - **自動提案**: イベントキーに基づいて作業項目IDを取得
+- **使用頻度トラッキング**: 同じイベントを複数回マッピングすると使用回数が増加
+- **最終使用日時の記録**: 各エントリの最終使用日時を分単位で記録
+- **頻度ベースのソート**: 使用回数が多い順に履歴をソート
 - **サイズ管理**: 最大サイズを超えると古いエントリを自動削除
 - **妥当性チェック**: 存在しない作業項目IDを持つエントリを削除
+
+## データ形式
+
+### CSV形式
+履歴は以下のCSV形式でLocalStorageに保存されます:
+
+```csv
+key,eventName,WorkItemId,itemName,useCount,lastUsedDate
+uuid-123|会議|user@example.com,定例会議,work-item-123,プロジェクトA,5,2025-10-08 14:30
+uuid-456|レビュー|user@example.com,コードレビュー,work-item-456,タスクB\,サブタスク,3,2025-10-08 15:45
+```
+
+**カラム構成:**
+- **key**: イベントの一意識別子 (`uuid|eventName|organizer`形式、`=`は`%3D`にエンコード)
+- **eventName**: イベント名(カンマは`\,`でエスケープ)
+- **WorkItemId**: 作業項目ID
+- **itemName**: 作業項目名(カンマは`\,`でエスケープ)
+- **useCount**: 使用回数
+- **lastUsedDate**: 最終使用日時(ISO 8601形式、分まで)
 
 ## 使用方法
 

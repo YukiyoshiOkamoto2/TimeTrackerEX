@@ -1,20 +1,14 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogBody,
-    DialogContent,
-    DialogSurface,
-    DialogTitle,
-    DialogTrigger,
-    makeStyles,
-    tokens,
-} from "@fluentui/react-components";
-import { useState } from "react";
+import { makeStyles, tokens } from "@fluentui/react-components";
+import { useEffect, useState } from "react";
 import { Page } from "../../components/page";
-import { CompletionView, FileUploadView, LinkingProcessView, ScheduleItem } from "./components";
+import { ScheduleItem } from "./components";
 import { ICS, PDF, UploadInfo } from "./models";
+import { useSettings } from "@/store";
+import { ValidationErrorDialog } from "@/components/validation-error-dialog";
+import { CompletionView } from "./view/CompletionView";
+import { FileUploadView } from "./view/FileUploadView";
+import { LinkingProcessView } from "./view/LinkingProcessView";
 
 const useStyles = makeStyles({
     viewContainer: {
@@ -70,23 +64,73 @@ const MOCK_DATA = {
     ],
 };
 
+type view = "upload" | "linking" | "completion";
+const views: view[] = ["upload", "linking", "completion"];
+type viewIndex = 0 | 1 | 2;
+
+const useTimeTrackerViewState = (): [
+    view,
+    "left" | "right" | "none",
+    (back?: viewIndex) => void,
+    (back?: viewIndex) => void,
+] => {
+    const [currentIndex, setCurrentIndex] = useState<viewIndex>(0);
+    const [currentView, setCurrentView] = useState<view>(views[currentIndex]);
+    const [slideDirection, setSlideDirection] = useState<"left" | "right" | "none">("none");
+
+    const backTo = (back?: viewIndex) => {
+        const backIndex = currentIndex - (back ?? 1);
+        if (backIndex < 0) {
+            throw new Error(`TimeTrackerPage invalid back.: current ${views[currentIndex]}`);
+        }
+        setCurrentIndex(backIndex as viewIndex);
+        setSlideDirection("left");
+    };
+
+    const nextTo = (next?: viewIndex) => {
+        const nextIndex = currentIndex + (next ?? 1);
+        if (nextIndex > views.length - 1) {
+            throw new Error(`TimeTrackerPage invalid next.: current ${views[currentIndex]}`);
+        }
+        setCurrentIndex(nextIndex as viewIndex);
+        setSlideDirection("right");
+    };
+
+    useEffect(() => {
+        setCurrentView(views[currentIndex]);
+    }, [currentIndex]);
+
+    return [currentView, slideDirection, backTo, nextTo];
+};
+
 export function TimeTrackerPage() {
     const styles = useStyles();
 
+    const { validationErrors } = useSettings();
+    const [isLoading, setIsLoading] = useState(false);
     const [pdf, setPdf] = useState<PDF | undefined>(undefined);
     const [ics, setIcs] = useState<ICS | undefined>(undefined);
     const [uploadInfo, setUploadInfo] = useState<UploadInfo | undefined>(undefined);
+    const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [currentView, setCurrentView] = useState<"upload" | "linking" | "completion">("upload");
-    const [isLoading, setIsLoading] = useState(false);
-    const [slideDirection, setSlideDirection] = useState<"left" | "right" | "none">("none");
+    const [currentView, slideDirection, backTo, nextTo] = useTimeTrackerViewState();
 
-    // ビュー遷移ヘルパー
-    const transitionToView = (view: typeof currentView, direction: "left" | "right") => {
-        setSlideDirection(direction);
-        setCurrentView(view);
-    };
+    // TimeTracker設定のバリデーションチェック
+    useEffect(() => {
+        const hasTimeTrackerErrors = validationErrors.timeTracker.length > 0;
+        if (hasTimeTrackerErrors) {
+            // FileUploadViewに戻る
+            if (currentView === "completion") {
+                backTo(2);
+            } else if (currentView === "linking") {
+                backTo(1);
+            }
+
+            // エラーダイアログを表示
+            setShowErrorDialog(true);
+        }
+    }, [validationErrors.timeTracker, currentView, backTo]);
+
 
     // 非同期処理ヘルパー
     const withLoading = async (fn: () => Promise<void>) => {
@@ -112,69 +156,56 @@ export function TimeTrackerPage() {
     // イベントハンドラー
     const handleFileUploadViewSubmit = (uploadInfo: UploadInfo) => {
         setUploadInfo(uploadInfo);
-        transitionToView("linking", "right");
-    };
-
-    const handleBackToUploadFromCompletion = () => {
-        transitionToView("upload", "left");
-        setUploadInfo(undefined);
+        nextTo();
     };
 
     const handleLinkingProcessSubmit = (schedules: ScheduleItem[]) =>
         withLoading(async () => {
             await new Promise((resolve) => setTimeout(resolve, 2000));
             console.log("登録実行", schedules);
-            transitionToView("completion", "right");
+            nextTo();
         });
 
     return (
-        <Page
-            title="TimeTracker"
-            subtitle="勤怠情報とスケジュールの紐づけ管理"
-            loading={isLoading}
-            loadingText="登録処理中..."
-        >
-            <div className={`${styles.viewContainer} ${getAnimationClass()}`} key={currentView}>
-                {currentView === "completion" ? (
-                    <CompletionView
-                        schedules={MOCK_DATA.completedSchedules}
-                        itemCodes={MOCK_DATA.completedItemCodes}
-                        itemCodeOptions={MOCK_DATA.itemCodeOptions}
-                        onBack={handleBackToUploadFromCompletion}
-                        onBackToLinking={() => transitionToView("linking", "left")}
-                    />
-                ) : currentView === "linking" ? (
-                    <LinkingProcessView
-                        uploadInfo={uploadInfo}
-                        setIsLoading={setIsLoading}
-                        onBack={() => transitionToView("upload", "left")}
-                        onSubmit={handleLinkingProcessSubmit}
-                    />
-                ) : (
-                    <FileUploadView
-                        pdf={pdf}
-                        ics={ics}
-                        onPdfUpdate={setPdf}
-                        onIcsUpdate={setIcs}
-                        onSubmit={handleFileUploadViewSubmit}
-                    />
-                )}
-            </div>
+        <>
+            <Page
+                title="TimeTracker"
+                subtitle="勤怠情報とスケジュールの紐づけ管理"
+                loading={isLoading}
+                loadingText="登録処理中..."
+            >
+                <div className={`${styles.viewContainer} ${getAnimationClass()}`} key={currentView}>
+                    {currentView === "completion" ? (
+                        <CompletionView
+                            schedules={MOCK_DATA.completedSchedules}
+                            itemCodes={MOCK_DATA.completedItemCodes}
+                            itemCodeOptions={MOCK_DATA.itemCodeOptions}
+                            onBack={() => backTo(2)}
+                            onBackToLinking={backTo}
+                        />
+                    ) : currentView === "linking" ? (
+                        <LinkingProcessView
+                            uploadInfo={uploadInfo}
+                            setIsLoading={setIsLoading}
+                            onBack={backTo}
+                            onSubmit={handleLinkingProcessSubmit}
+                        />
+                    ) : (
+                        <FileUploadView
+                            pdf={pdf}
+                            ics={ics}
+                            onPdfUpdate={setPdf}
+                            onIcsUpdate={setIcs}
+                            onSubmit={handleFileUploadViewSubmit}
+                        />
+                    )}
+                </div>
+            </Page>
 
-            {/* Export Success Dialog */}
-            <Dialog open={dialogOpen} onOpenChange={(_, data) => setDialogOpen(data.open)}>
-                <DialogSurface>
-                    <DialogBody>
-                        <DialogTitle>エクスポート完了</DialogTitle>
-                        <DialogContent>データのエクスポートが完了しました。</DialogContent>
-                        <DialogActions>
-                            <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="primary">閉じる</Button>
-                            </DialogTrigger>
-                        </DialogActions>
-                    </DialogBody>
-                </DialogSurface>
-            </Dialog>
-        </Page>
+            <ValidationErrorDialog
+                open={showErrorDialog}
+                errors={validationErrors.timeTracker}
+            />
+        </>
     );
 }

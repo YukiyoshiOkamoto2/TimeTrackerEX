@@ -2,43 +2,15 @@ import { themeHandler } from "@/main";
 import { APPEARANCE_SETTINGS_DEFINITION } from "@/schema/settings";
 import { useSettings } from "@/store/settings/SettingsProvider";
 import type { AppearanceSettings as AppearanceSettingsType } from "@/types/settings";
-import { useMemo } from "react";
 import { SettingPageLayout, SettingSection } from "../../layout";
-import { AutoSettingItem, type SettingError } from "../../ui";
+import { AutoSettingItem } from "../../ui";
 
 const appearanceDef = APPEARANCE_SETTINGS_DEFINITION.children!;
 
 export function AppearanceSettingsPage() {
-    const { settings, updateSettings } = useSettings();
+    const { settings, updateSettings, validationErrors } = useSettings();
     const appearance = settings.appearance as AppearanceSettingsType;
-
-    // バリデーションエラーを収集
-    const errors = useMemo(() => {
-        const errorList: SettingError[] = [];
-        const result = APPEARANCE_SETTINGS_DEFINITION.validatePartial(appearance as unknown as Record<string, unknown>);
-
-        if (result.isError && result.errorMessage) {
-            const lines = result.errorMessage.split("\n").filter((line) => line.trim());
-            lines.forEach((line, index) => {
-                const match = line.match(/^(.+?):\s*(.+)$/);
-                if (match) {
-                    errorList.push({
-                        id: `error-${index}`,
-                        label: match[1].trim(),
-                        message: match[2].trim(),
-                    });
-                } else {
-                    errorList.push({
-                        id: `error-${index}`,
-                        label: "設定エラー",
-                        message: line.trim(),
-                    });
-                }
-            });
-        }
-
-        return errorList;
-    }, [appearance]);
+    const errors = validationErrors.appearance;
 
     const handleUpdate = (field: string, value: string) => {
         updateSettings({

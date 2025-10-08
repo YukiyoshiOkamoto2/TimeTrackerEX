@@ -1,5 +1,4 @@
-import { getSettingErrors, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSettings } from "../../../../../store/settings/SettingsProvider";
 import type {
     IgnorableEventPattern,
@@ -22,9 +21,9 @@ type SettingView = "main" | "ignorableEvents" | "timeOffEvents";
 
 export function TimeTrackerSettingsPage() {
     const [currentView, setCurrentView] = useState<SettingView>("main");
-    const { settings, updateSettings } = useSettings();
+    const { settings, updateSettings, validationErrors } = useSettings();
     const tt = settings.timetracker as TimeTrackerSettingsType;
-    const [allErrors, setAllErrors] = useState(() => getSettingErrors(tt, TIMETRACKER_SETTINGS_DEFINITION));
+    const errors = validationErrors.timeTracker;
 
     const handleIgnorableEventsChange = (patterns: IgnorableEventPattern[]) => {
         // const uniquePatterns = removeDuplicateEventPatterns(patterns);
@@ -55,10 +54,6 @@ export function TimeTrackerSettingsPage() {
         });
     };
 
-    useEffect(() => {
-        setAllErrors(getSettingErrors(tt, TIMETRACKER_SETTINGS_DEFINITION));
-    }, [tt]);
-
     // 無視可能イベント設定ビュー
     if (currentView === "ignorableEvents") {
         return (
@@ -84,7 +79,7 @@ export function TimeTrackerSettingsPage() {
 
     // メイン設定ビュー
     return (
-        <SettingPageLayout errors={allErrors}>
+        <SettingPageLayout errors={errors}>
             <BasicSettings />
             <EventProcessingSettings />
             <ScheduleAutoInputSettings />

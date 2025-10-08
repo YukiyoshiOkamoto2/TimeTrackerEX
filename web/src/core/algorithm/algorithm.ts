@@ -570,6 +570,8 @@ export class TimeTrackerAlgorithm {
             let currentItem: Event | null = null;
             const resultList: Event[] = [];
 
+            // 無限ループ: nextEvent が尽きるまで探索する意図的な定常条件
+            // eslint-disable-next-line no-constant-condition
             while (true) {
                 const nextEvent = this.searchNextEvent(currentItem, events, timeCompare);
                 if (!nextEvent) {
@@ -689,7 +691,7 @@ export class TimeTrackerAlgorithm {
         }
 
         // イベントを勤務開始終了時間に合わせるor勤務時間外を消す、重複した場合は勤務時間イベントを消す
-        let mergedEventMap = this.margedScheduleEvents(scheduleEventMap, roundedEventMap);
+        const mergedEventMap = this.margedScheduleEvents(scheduleEventMap, roundedEventMap);
 
         // margedScheduleEventsで処理されなかった日付（スケジュールイベントがない日付）を追加
         for (const [dateKey, events] of roundedEventMap.entries()) {

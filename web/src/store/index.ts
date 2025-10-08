@@ -8,3 +8,4 @@ export { ContentProvider, useContent, usePageContent } from "./content/ContentPr
 export type { PageContent } from "./content/ContentProvider";
 export { NavigationProvider, useNavigation } from "./navigation/NavigationProvider";
 export { SettingsProvider, useSettings } from "./settings/SettingsProvider";
+export type { ValidationErrorInfo } from "./settings/SettingsProvider";

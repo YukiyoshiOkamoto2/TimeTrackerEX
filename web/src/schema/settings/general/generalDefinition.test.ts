@@ -55,7 +55,7 @@ describe("generalDefinition", () => {
             const result = GENERAL_SETTINGS_DEFINITION.validate(invalidSettings);
             expect(result.isError).toBe(true);
             if (result.isError) {
-                expect(result.errorMessage).toContain("言語");
+                expect(result.errorPathInfo.message).toContain("言語");
             }
         });
 
@@ -68,7 +68,7 @@ describe("generalDefinition", () => {
             const result = GENERAL_SETTINGS_DEFINITION.validate(invalidSettings);
             expect(result.isError).toBe(true);
             if (result.isError) {
-                expect(result.errorMessage).toContain("不明なフィールド");
+                expect(result.errorPathInfo.message).toContain("不明なフィールド");
             }
         });
     });

@@ -94,10 +94,14 @@ export function SettingPage() {
     const [selectedCategory, setSelectedCategory] = useState<SettingCategory>("general");
     const [showJsonEditor, setShowJsonEditor] = useState(false);
 
-    // リンクに基づいてカテゴリーを設定
+    // リンクに基づいてカテゴリーを設定（一致しない場合はエラーログ）
     useEffect(() => {
-        if (link === "timetracker") {
-            setSelectedCategory("timetracker");
+        if (typeof link !== "string" || link === "") return;
+
+        if (Object.prototype.hasOwnProperty.call(CATEGORY_CONFIG, link)) {
+            setSelectedCategory(link as SettingCategory);
+        } else {
+            console.error(`Unknown settings category link: ${String(link)}`);
         }
     }, [link]);
 

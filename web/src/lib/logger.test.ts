@@ -6,13 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureLogger, getLogger, Logger, LogLevel } from "./logger";
 
 describe("Logger", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Spyインスタンス: vi.spyOn の戻り値そのまま（MockInstance）
+    // テスト用スパイ。型安全性より簡潔さを優先（no-explicit-any は test override で無効）
     let consoleDebugSpy: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let consoleInfoSpy: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let consoleWarnSpy: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let consoleErrorSpy: any;
 
     beforeEach(() => {

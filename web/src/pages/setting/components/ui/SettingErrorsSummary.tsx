@@ -46,7 +46,9 @@ export function SettingErrorsSummary({ errors }: SettingErrorsSummaryProps) {
             {errors.map((err, index) => {
                 return (
                     <MessageBar key={index} intent="error" className={styles.errorSummary}>
-                        <MessageBarBody>{err.message}</MessageBarBody>
+                        <MessageBarBody>
+                            {err.label}: {err.message}
+                        </MessageBarBody>
                     </MessageBar>
                 );
             })}

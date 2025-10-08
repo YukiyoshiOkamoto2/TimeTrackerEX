@@ -6,6 +6,7 @@ import { HomePage } from "./pages/home";
 import { SettingPage } from "./pages/setting";
 import { TimeTrackerPage } from "./pages/timetracker";
 import { useNavigation } from "./store/navigation";
+import { NavigationPageName } from "./store/navigation/NavigationProvider";
 
 const useStyles = makeStyles({
     container: {
@@ -61,7 +62,7 @@ function App() {
     const { currentPageName, navigate } = useNavigation();
 
     const onTabSelect = (_event: SelectTabEvent, data: SelectTabData) => {
-        navigate(data.value as string);
+        navigate(data.value as NavigationPageName);
     };
 
     return (

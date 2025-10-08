@@ -51,14 +51,14 @@ export function ContentProvider({ children }: ContentProviderProps) {
 
     // 特定のページのコンテンツを取得
     const getPageContent = useCallback(
-        <T = any,>(pageName: string): T | null => {
+        <T = unknown,>(pageName: string): T | null => {
             return (content[pageName] as T) || null;
         },
         [content],
     );
 
     // 特定のページのコンテンツを更新
-    const setPageContent = useCallback(<T = any,>(pageName: string, data: T) => {
+    const setPageContent = useCallback(<T = unknown,>(pageName: string, data: T) => {
         setContent((prev) => ({
             ...prev,
             [pageName]: data,
@@ -109,7 +109,7 @@ export function useContent(): ContentContextType {
  * @param pageName ページ名
  * @returns [コンテンツ, セッター関数]
  */
-export function usePageContent<T = any>(pageName: string): [T | null, (data: T) => void, () => void] {
+export function usePageContent<T = unknown>(pageName: string): [T | null, (data: T) => void, () => void] {
     const { getPageContent, setPageContent, clearPageContent } = useContent();
 
     const pageContent = getPageContent<T>(pageName);

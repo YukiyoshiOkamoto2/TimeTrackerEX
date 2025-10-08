@@ -126,7 +126,7 @@ export function SettingValidatedInput({
 
         const validationResult = definition.validate(validatedValue);
         if (validationResult.isError) {
-            setError(validationResult.errorMessage || "Invalid value");
+            setError(validationResult.errorPathInfo.message || "Invalid value");
             return;
         }
 

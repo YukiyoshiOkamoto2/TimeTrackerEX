@@ -5,10 +5,10 @@ import {
     ClipboardTask24Regular,
     DocumentBulletList24Regular,
 } from "@fluentui/react-icons";
-import { Card } from "../../../components/card";
-import { InteractiveCard } from "../../../components/interactive-card";
-import { PageHeader } from "./PageHeader";
-import { ItemCodeOption, ScheduleItem, ScheduleTable } from "./index";
+import { Card } from "@/components/card";
+import { InteractiveCard } from "@/components/interactive-card";
+import { PageHeader } from "../components/PageHeader";
+import { ItemCodeOption, ScheduleItem, ScheduleTable } from "../components/index";
 
 const useStyles = makeStyles({
     headerContainer: {

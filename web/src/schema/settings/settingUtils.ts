@@ -20,23 +20,15 @@ export function getSettingErrors(setting: unknown, definition: ObjectSettingValu
     const errorList: SettingError[] = [];
     const result = definition.validate(setting as Record<string, unknown>);
 
-    if (result.isError && result.errorMessage) {
-        const lines = result.errorMessage.split("\n").filter((line) => line.trim());
-        lines.forEach((line, index) => {
-            const match = line.match(/^(.+?):\s*(.+)$/);
-            if (match) {
-                errorList.push({
-                    id: `error-${index}`,
-                    label: match[1].trim(),
-                    message: match[2].trim(),
-                });
-            } else {
-                errorList.push({
-                    id: `error-${index}`,
-                    label: "設定エラー",
-                    message: line.trim(),
-                });
-            }
+    if (result.isError) {
+        const paths = result.errorPathInfo.path.split("\n");
+        const messages = result.errorPathInfo.message?.split("\n") ?? [];
+        paths.forEach((path, index) => {
+            errorList.push({
+                id: `error-${index}`,
+                label: path,
+                message: messages[index] ?? "",
+            });
         });
     }
 
@@ -105,7 +97,7 @@ export function updateErrorValue(
             // 配列の場合、各要素をバリデーションし、エラーのない要素のみを残す
             const cleanedArray = cleanArrayValue(fieldValue, childInfo);
 
-            if (cleanedArray !== null) {
+            if (cleanedArray) {
                 result[key] = cleanedArray;
             } else {
                 // 配列の修正に失敗した場合はデフォルト値を使用
@@ -139,12 +131,12 @@ export function updateErrorValue(
 
 /**
  * 配列値をクリーニング（不正な要素を削除）
- * @returns クリーニングされた配列、または修正不可能な場合はnull
+ * @returns クリーニングされた配列、または修正不可能な場合はundefined
  */
-function cleanArrayValue(fieldValue: unknown, childInfo: SettingValueInfo): unknown[] | null {
+function cleanArrayValue(fieldValue: unknown, childInfo: SettingValueInfo): unknown[] | undefined {
     // 配列でない場合は修正不可能
     if (!Array.isArray(fieldValue)) {
-        return null;
+        return undefined;
     }
 
     // itemSchemaが設定されている場合は各要素をバリデーション
@@ -161,7 +153,7 @@ function cleanArrayValue(fieldValue: unknown, childInfo: SettingValueInfo): unkn
     // クリーニング後の配列が制約を満たすか検証
     const validationResult = childInfo.validate(cleanedArray);
     if (validationResult.isError) {
-        return null;
+        return undefined;
     }
 
     return cleanedArray;

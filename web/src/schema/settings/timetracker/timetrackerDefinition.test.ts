@@ -433,7 +433,7 @@ describe("timetrackerDefinition", () => {
                 const result = TIMETRACKER_SETTINGS_DEFINITION.validatePartial(partialSettings as any);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("userName");
+                    expect(result.errorPathInfo.path).toContain("userName");
                 }
             });
 
@@ -445,7 +445,7 @@ describe("timetrackerDefinition", () => {
                 const result = TIMETRACKER_SETTINGS_DEFINITION.validatePartial(partialSettings);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("baseUrl");
+                    expect(result.errorPathInfo.path).toContain("baseUrl");
                 }
             });
 
@@ -457,7 +457,7 @@ describe("timetrackerDefinition", () => {
                 const result = TIMETRACKER_SETTINGS_DEFINITION.validatePartial(partialSettings as any);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("baseProjectId");
+                    expect(result.errorPathInfo.path).toContain("baseProjectId");
                 }
             });
 
@@ -469,7 +469,7 @@ describe("timetrackerDefinition", () => {
                 const result = TIMETRACKER_SETTINGS_DEFINITION.validatePartial(partialSettings);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("roundingTimeTypeOfEvent");
+                    expect(result.errorPathInfo.path).toContain("roundingTimeTypeOfEvent");
                 }
             });
 
@@ -483,7 +483,7 @@ describe("timetrackerDefinition", () => {
                 const result = TIMETRACKER_SETTINGS_DEFINITION.validatePartial(partialSettings);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("timeCompare");
+                    expect(result.errorPathInfo.path).toContain("timeCompare");
                 }
             });
 
@@ -495,8 +495,8 @@ describe("timetrackerDefinition", () => {
                 const result = TIMETRACKER_SETTINGS_DEFINITION.validatePartial(partialSettings as any);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("unknownField");
-                    expect(result.errorMessage).toContain("不明なフィールド");
+                    expect(result.errorPathInfo.path).toContain("unknownField");
+                    expect(result.errorPathInfo.path).toContain("不明なフィールド");
                 }
             });
 
@@ -509,8 +509,8 @@ describe("timetrackerDefinition", () => {
                 const result = TIMETRACKER_SETTINGS_DEFINITION.validatePartial(partialSettings as any);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
-                    expect(result.errorMessage).toContain("userName");
-                    expect(result.errorMessage).toContain("baseUrl");
+                    expect(result.errorPathInfo.path).toContain("userName");
+                    expect(result.errorPathInfo.path).toContain("baseUrl");
                 }
             });
         });

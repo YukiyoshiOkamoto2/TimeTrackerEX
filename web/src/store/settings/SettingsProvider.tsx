@@ -6,11 +6,21 @@
  */
 
 import { appMessageDialogRef } from "@/components/message-dialog";
-import { APP_SETTINGS_DEFINITION, getFieldDefaultValue, SettingJSON, updateErrorValue } from "@/schema";
+import {
+    APP_SETTINGS_DEFINITION,
+    APPEARANCE_SETTINGS_DEFINITION,
+    GENERAL_SETTINGS_DEFINITION,
+    getFieldDefaultValue,
+    getSettingErrors,
+    SettingJSON,
+    TIMETRACKER_SETTINGS_DEFINITION,
+    updateErrorValue,
+    type SettingError,
+} from "@/schema";
 
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getStorage } from "../../lib/storage";
-import type { AppSettings } from "../../types";
+import type { AppSettings, AppearanceSettings, GeneralSettings, TimeTrackerSettings } from "../../types";
 
 /**
  * ローカルストレージのキー
@@ -23,6 +33,18 @@ const STORAGE_KEY = "settings";
 const storage = getStorage();
 
 /**
+ * バリデーションエラー情報
+ */
+export type ValidationErrorInfo = {
+    /** 一般設定のエラー */
+    general: SettingError[];
+    /** 外観設定のエラー */
+    appearance: SettingError[];
+    /** TimeTracker設定のエラー */
+    timeTracker: SettingError[];
+};
+
+/**
  * 設定コンテキストの型
  */
 interface SettingsContextType {
@@ -32,6 +54,8 @@ interface SettingsContextType {
     updateSettings: (newSettings: Partial<AppSettings>) => void;
     /** 設定をリセット */
     resetSettings: () => void;
+    /** バリデーションエラー情報 */
+    validationErrors: ValidationErrorInfo;
 }
 
 /**
@@ -114,6 +138,25 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         saveSettings(settings);
     }, [settings]);
 
+    // バリデーションエラーを計算
+    const validationErrors = useMemo<ValidationErrorInfo>(() => {
+        const general = settings.general
+            ? getSettingErrors(settings.general as GeneralSettings, GENERAL_SETTINGS_DEFINITION)
+            : [];
+        const appearance = settings.appearance
+            ? getSettingErrors(settings.appearance as AppearanceSettings, APPEARANCE_SETTINGS_DEFINITION)
+            : [];
+        const timeTracker = settings.timetracker
+            ? getSettingErrors(settings.timetracker as TimeTrackerSettings, TIMETRACKER_SETTINGS_DEFINITION)
+            : [];
+
+        return {
+            general,
+            appearance,
+            timeTracker,
+        };
+    }, [settings.general, settings.appearance, settings.timetracker]);
+
     // 設定の更新
     const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
         setSettings((prev) => ({ ...prev, ...newSettings }));
@@ -128,6 +171,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         settings,
         updateSettings,
         resetSettings,
+        validationErrors,
     };
 
     return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

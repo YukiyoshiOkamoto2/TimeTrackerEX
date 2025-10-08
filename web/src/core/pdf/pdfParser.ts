@@ -2,11 +2,17 @@ import { getLogger } from "@/lib";
 import { Schedule } from "@/types";
 import * as pdfjsLib from "pdfjs-dist";
 
+// vitest 実行環境判定用の型ガード
+function isVitestEnv(g: unknown): g is { __VITEST__: unknown } {
+    return typeof g === "object" && g !== null && "__VITEST__" in (g as Record<string, unknown>);
+}
+
 const logger = getLogger("PDFParser");
 
 // PDF.jsのワーカーを設定（テスト環境以外）
 try {
-    if (!(global as any).__VITEST__) {
+    // グローバルに __VITEST__ が無い場合のみワーカー設定（テスト環境ではスキップ）
+    if (!isVitestEnv(globalThis)) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
     }
 } catch {
@@ -48,7 +54,10 @@ async function extractTextFromPDF(file: File): Promise<string> {
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str).join("");
+        interface PDFTextItem {
+            str: string;
+        }
+        const pageText = (textContent.items as PDFTextItem[]).map((item) => item.str).join("");
         fullText += pageText + "\n";
     }
     logger.debug(`PDFテキスト抽出完了: ${fullText.length}文字`);

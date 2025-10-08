@@ -5,22 +5,22 @@ describe("NavigationProvider", () => {
     describe("型定義", () => {
         it("NavigationHistoryItemの型が正しく定義されている（null許容）", () => {
             const item1: NavigationHistoryItem = {
-                pageName: "home",
+                pageName: "Home",
                 parameter: "id=123",
                 link: "/home",
             };
 
-            expect(item1.pageName).toBe("home");
+            expect(item1.pageName).toBe("Home");
             expect(item1.parameter).toBe("id=123");
             expect(item1.link).toBe("/home");
 
             const item2: NavigationHistoryItem = {
-                pageName: "home",
+                pageName: "Home",
                 parameter: null,
                 link: null,
             };
 
-            expect(item2.pageName).toBe("home");
+            expect(item2.pageName).toBe("Home");
             expect(item2.parameter).toBeNull();
             expect(item2.link).toBeNull();
         });
@@ -73,7 +73,7 @@ describe("NavigationProvider", () => {
         it("履歴は最大30個まで保持される", () => {
             // 型チェックとして、30個以上の履歴を想定した構造をテスト
             const mockHistory: NavigationHistoryItem[] = Array.from({ length: 31 }, (_, i) => ({
-                pageName: `page${i}`,
+                pageName: `Home`,
                 parameter: `param${i}`,
                 link: `/page${i}`,
             }));
@@ -83,7 +83,7 @@ describe("NavigationProvider", () => {
             // 実際の動作では30個に制限されることを期待
             const limitedHistory = mockHistory.slice(-30);
             expect(limitedHistory.length).toBe(30);
-            expect(limitedHistory[0].pageName).toBe("page1");
+            expect(limitedHistory[0].pageName).toBe("Home");
             expect(limitedHistory[29].pageName).toBe("page30");
         });
     });
