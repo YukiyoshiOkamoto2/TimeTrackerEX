@@ -14,8 +14,20 @@ import {
     TableColumnDefinition,
     createTableColumn,
     tokens,
+    Combobox,
+    Option,
 } from "@fluentui/react-components";
-import { Sparkle24Regular } from "@fluentui/react-icons";
+import { 
+    Sparkle24Regular, 
+    Key24Regular, 
+    History24Regular,
+    Calendar20Regular,
+    CircleSmall20Filled,
+    Checkmark20Filled,
+    Warning20Filled,
+    Bot20Regular,
+    PersonEdit20Regular,
+} from "@fluentui/react-icons";
 import { useEffect, useMemo, useState } from "react";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { PageHeader } from "../components/PageHeader";
@@ -37,67 +49,140 @@ type EventTableRow = {
     inputType: string;
 };
 
-// テーブル列定義
-const eventColumns: TableColumnDefinition<EventTableRow>[] = [
-    createTableColumn<EventTableRow>({
-        columnId: "dateTime",
-        compare: (a, b) => a.event.schedule.start.getTime() - b.event.schedule.start.getTime(),
-        renderHeaderCell: () => "日時",
-        renderCell: (item) => (
-            <TableCellLayout>
-                {item.event.schedule.start.toLocaleDateString("ja-JP", {
-                    month: "numeric",
-                    day: "numeric",
-                    weekday: "short",
-                })}{" "}
-                {item.event.schedule.start.toLocaleTimeString("ja-JP", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })}
-                ~
-                {item.event.schedule.end?.toLocaleTimeString("ja-JP", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })}
-            </TableCellLayout>
-        ),
-    }),
-    createTableColumn<EventTableRow>({
-        columnId: "eventName",
-        compare: (a, b) => a.event.name.localeCompare(b.event.name),
-        renderHeaderCell: () => "イベント名",
-        renderCell: (item) => <TableCellLayout>{item.event.name}</TableCellLayout>,
-    }),
-    createTableColumn<EventTableRow>({
-        columnId: "inputType",
-        compare: (a, b) => a.inputType.localeCompare(b.inputType),
-        renderHeaderCell: () => "入力依存",
-        renderCell: (item) => <TableCellLayout>{item.inputType}</TableCellLayout>,
-    }),
-    createTableColumn<EventTableRow>({
-        columnId: "workItemId",
-        compare: (a, b) => a.workItemId.localeCompare(b.workItemId),
-        renderHeaderCell: () => "WorkItemId",
-        renderCell: (item) => <TableCellLayout>{item.workItemId}</TableCellLayout>,
-    }),
-    createTableColumn<EventTableRow>({
-        columnId: "workItemName",
-        compare: (a, b) => a.workItemName.localeCompare(b.workItemName),
-        renderHeaderCell: () => "WorkItem名",
-        renderCell: (item) => <TableCellLayout>{item.workItemName}</TableCellLayout>,
-    }),
-];
+// テーブル列定義を関数内に移動（stylesを使用するため）
+function createEventColumns(
+    styles: ReturnType<typeof useStyles>,
+    workItems: WorkItem[],
+    onWorkItemChange: (eventId: string, workItemId: string) => void,
+): TableColumnDefinition<EventTableRow>[] {
+    // 最下層のWorkItemを取得
+    const workItemOptions = workItems.flatMap((w) => getMostNestChildren(w));
+
+    return [
+        createTableColumn<EventTableRow>({
+            columnId: "dateTime",
+            compare: (a, b) => a.event.schedule.start.getTime() - b.event.schedule.start.getTime(),
+            renderHeaderCell: () => "日時",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    <div className={styles.dateTimeCell}>
+                        <Calendar20Regular />
+                        <div>
+                            {item.event.schedule.start.toLocaleDateString("ja-JP", {
+                                month: "numeric",
+                                day: "numeric",
+                                weekday: "short",
+                            })}{" "}
+                            {item.event.schedule.start.toLocaleTimeString("ja-JP", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
+                            ~
+                            {item.event.schedule.end?.toLocaleTimeString("ja-JP", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
+                        </div>
+                    </div>
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<EventTableRow>({
+            columnId: "eventName",
+            compare: (a, b) => a.event.name.localeCompare(b.event.name),
+            renderHeaderCell: () => "イベント名",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    <div className={styles.eventNameCell}>{item.event.name}</div>
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<EventTableRow>({
+            columnId: "inputType",
+            compare: (a, b) => a.inputType.localeCompare(b.inputType),
+            renderHeaderCell: () => "入力依存",
+            renderCell: (item) => {
+                const isAuto = item.inputType !== "手動入力" && item.inputType !== "-";
+                const isManual = item.inputType === "手動入力";
+                const badgeClass = isAuto
+                    ? styles.badgeAuto
+                    : isManual
+                      ? styles.badgeManual
+                      : styles.badgeUnlinked;
+
+                return (
+                    <TableCellLayout>
+                        <span className={`${styles.inputTypeBadge} ${badgeClass}`}>
+                            {isAuto ? <Bot20Regular /> : isManual ? <PersonEdit20Regular /> : <CircleSmall20Filled />}
+                            {item.inputType}
+                        </span>
+                    </TableCellLayout>
+                );
+            },
+        }),
+        createTableColumn<EventTableRow>({
+            columnId: "workItemId",
+            compare: (a, b) => a.workItemId.localeCompare(b.workItemId),
+            renderHeaderCell: () => "WorkItemId",
+            renderCell: (item) => {
+                const selectedOption = workItemOptions.find((w) => w.id === item.workItemId);
+                
+                return (
+                    <TableCellLayout>
+                        <Combobox
+                            placeholder="WorkItemを選択"
+                            value={selectedOption ? `${selectedOption.id} - ${selectedOption.name}` : ""}
+                            selectedOptions={item.workItemId ? [item.workItemId] : []}
+                            onOptionSelect={(_, data) => {
+                                if (data.optionValue) {
+                                    onWorkItemChange(item.id, data.optionValue);
+                                }
+                            }}
+                            style={{ minWidth: "200px" }}
+                        >
+                            {workItemOptions.map((workItem) => (
+                                <Option key={workItem.id} value={workItem.id} text={`${workItem.id} - ${workItem.name}`}>
+                                    <div className={styles.workItemCell}>
+                                        <Checkmark20Filled className={styles.linkedIcon} />
+                                        {workItem.id} - {workItem.name}
+                                    </div>
+                                </Option>
+                            ))}
+                        </Combobox>
+                    </TableCellLayout>
+                );
+            },
+        }),
+        createTableColumn<EventTableRow>({
+            columnId: "workItemName",
+            compare: (a, b) => a.workItemName.localeCompare(b.workItemName),
+            renderHeaderCell: () => "WorkItem名",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    <div
+                        style={{
+                            color: item.workItemName === "未紐づけ" ? tokens.colorNeutralForeground3 : undefined,
+                            fontWeight: item.workItemName === "未紐づけ" ? undefined : tokens.fontWeightSemibold,
+                        }}
+                    >
+                        {item.workItemName}
+                    </div>
+                </TableCellLayout>
+            ),
+        }),
+    ];
+}
 
 const useStyles = makeStyles({
     aiSection: {
-        marginBottom: tokens.spacingVerticalM,
+        marginBottom: tokens.spacingVerticalS,
     },
     settingRow: {
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "space-between",
-        paddingTop: tokens.spacingVerticalM,
-        paddingBottom: tokens.spacingVerticalM,
+        paddingTop: tokens.spacingVerticalS,
+        paddingBottom: tokens.spacingVerticalS,
         borderBottomWidth: "1px",
         borderBottomStyle: "solid",
         borderBottomColor: tokens.colorNeutralStroke2,
@@ -151,8 +236,8 @@ const useStyles = makeStyles({
         backgroundColor: tokens.colorNeutralBackground1,
     },
     submitButtonContainer: {
-        marginTop: tokens.spacingVerticalM,
-        paddingTop: tokens.spacingVerticalM,
+        marginTop: tokens.spacingVerticalS,
+        paddingTop: tokens.spacingVerticalS,
         borderTopWidth: "1px",
         borderTopStyle: "solid",
         borderTopColor: tokens.colorNeutralStroke2,
@@ -173,6 +258,51 @@ const useStyles = makeStyles({
     },
     historyButton: {
         minWidth: "100px",
+    },
+    // テーブルセルのスタイル
+    dateTimeCell: {
+        display: "flex",
+        alignItems: "center",
+        gap: tokens.spacingHorizontalXS,
+        fontSize: tokens.fontSizeBase200,
+    },
+    eventNameCell: {
+        fontWeight: tokens.fontWeightSemibold,
+        color: tokens.colorNeutralForeground1,
+    },
+    inputTypeBadge: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "2px 8px",
+        borderRadius: tokens.borderRadiusSmall,
+        fontSize: tokens.fontSizeBase100,
+        fontWeight: tokens.fontWeightSemibold,
+    },
+    badgeAuto: {
+        backgroundColor: tokens.colorPaletteBlueBorderActive,
+        color: tokens.colorNeutralForegroundOnBrand,
+    },
+    badgeManual: {
+        backgroundColor: tokens.colorPaletteGreenBorderActive,
+        color: tokens.colorNeutralForegroundOnBrand,
+    },
+    badgeUnlinked: {
+        backgroundColor: tokens.colorNeutralBackground5,
+        color: tokens.colorNeutralForeground3,
+    },
+    workItemCell: {
+        display: "flex",
+        alignItems: "center",
+        gap: tokens.spacingHorizontalXS,
+    },
+    linkedIcon: {
+        color: tokens.colorPaletteGreenForeground2,
+        fontSize: "16px",
+    },
+    unlinkedIcon: {
+        color: tokens.colorPaletteYellowForeground2,
+        fontSize: "16px",
     },
 });
 
@@ -244,6 +374,55 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
     const [excludedEvents, setExcludedEvents] = useState<ExcludedEventInfo[]>([]);
     const [unlinkedEvents, setUnlinkedEvents] = useState<Event[]>([]);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
+
+    // WorkItemの変更ハンドラー
+    const handleWorkItemChange = (eventId: string, workItemId: string) => {
+        const workItems = uploadInfo?.workItems || [];
+        const allWorkItems = workItems.flatMap((w) => getMostNestChildren(w));
+        const selectedWorkItem = allWorkItems.find((w) => w.id === workItemId);
+
+        if (!selectedWorkItem) return;
+
+        // eventIdから実際のイベントを取得
+        const eventIndex = linkingEventWorkItemPair.findIndex((pair, idx) => `linked-${idx}` === eventId);
+        
+        if (eventIndex >= 0) {
+            // 既存の紐づけを更新
+            const updatedPairs = [...linkingEventWorkItemPair];
+            updatedPairs[eventIndex] = {
+                ...updatedPairs[eventIndex],
+                linkingWorkItem: {
+                    workItem: selectedWorkItem,
+                    type: "manual",
+                },
+            };
+            setLinkingEventWorkItemPair(updatedPairs);
+        } else {
+            // 未紐づけから紐づけ済みに移動
+            const unlinkedIndex = Number.parseInt(eventId.replace("unlinked-", ""));
+            const event = unlinkedEvents[unlinkedIndex];
+            
+            if (event) {
+                setLinkingEventWorkItemPair([
+                    ...linkingEventWorkItemPair,
+                    {
+                        event,
+                        linkingWorkItem: {
+                            workItem: selectedWorkItem,
+                            type: "manual",
+                        },
+                    },
+                ]);
+                setUnlinkedEvents(unlinkedEvents.filter((_, idx) => idx !== unlinkedIndex));
+            }
+        }
+    };
+
+    // テーブル列定義を生成
+    const eventColumns = useMemo(
+        () => createEventColumns(styles, uploadInfo?.workItems || [], handleWorkItemChange),
+        [styles, uploadInfo?.workItems, linkingEventWorkItemPair, unlinkedEvents],
+    );
 
     // 統計データの計算
     const taskStatistics = useMemo(() => {
@@ -371,7 +550,10 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
                         {/* トークン設定 */}
                         <div className={styles.settingRow}>
                             <div className={styles.settingInfo}>
-                                <div className={styles.settingTitle}>APIトークン</div>
+                                <div className={styles.settingTitle}>
+                                    <Key24Regular className={styles.settingIcon} />
+                                    APIトークン
+                                </div>
                                 <div className={styles.settingDescription}>
                                     OpenAI APIトークンを入力してください。AIによる自動紐づけに使用されます。
                                 </div>
@@ -389,7 +571,10 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
                         {/* 履歴の参照設定 */}
                         <div className={styles.settingRow}>
                             <div className={styles.settingInfo}>
-                                <div className={styles.settingTitle}>履歴の参照</div>
+                                <div className={styles.settingTitle}>
+                                    <History24Regular className={styles.settingIcon} />
+                                    履歴の参照
+                                </div>
                                 <div className={styles.settingDescription}>
                                     過去の紐づけ履歴を参照してAIの精度を向上させます。履歴データが使用されます。
                                 </div>

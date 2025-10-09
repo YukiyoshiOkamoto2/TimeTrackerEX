@@ -33,7 +33,7 @@ export const useCommonViewStyles = makeStyles({
         fontSize: tokens.fontSizeBase400,
         fontWeight: tokens.fontWeightSemibold,
         color: tokens.colorNeutralForeground1,
-        marginBottom: tokens.spacingVerticalM,
+        marginBottom: tokens.spacingVerticalXXS,
     },
     sectionIcon: {
         fontSize: tokens.fontSizeBase400,

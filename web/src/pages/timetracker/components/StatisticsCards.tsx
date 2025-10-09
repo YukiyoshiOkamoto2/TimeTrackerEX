@@ -31,9 +31,9 @@ const useStyles = makeStyles({
         marginTop: "20px",
     },
     statCardInfo: {
-        padding: "16px 20px",
+        padding: "12px 16px",
         backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "4px",
+        borderLeftWidth: "3px",
         borderLeftStyle: "solid",
         borderLeftColor: tokens.colorBrandBackground,
         transition: "all 0.2s ease",
@@ -44,9 +44,9 @@ const useStyles = makeStyles({
         },
     },
     statCardSuccess: {
-        padding: "16px 20px",
+        padding: "12px 16px",
         backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "4px",
+        borderLeftWidth: "3px",
         borderLeftStyle: "solid",
         borderLeftColor: tokens.colorPaletteGreenBackground3,
         transition: "all 0.2s ease",
@@ -57,9 +57,9 @@ const useStyles = makeStyles({
         },
     },
     statCardWarning: {
-        padding: "16px 20px",
+        padding: "12px 16px",
         backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "4px",
+        borderLeftWidth: "3px",
         borderLeftStyle: "solid",
         borderLeftColor: tokens.colorPaletteYellowBackground3,
         transition: "all 0.2s ease",
@@ -70,9 +70,9 @@ const useStyles = makeStyles({
         },
     },
     statCardNeutral: {
-        padding: "16px 20px",
+        padding: "12px 16px",
         backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "4px",
+        borderLeftWidth: "3px",
         borderLeftStyle: "solid",
         borderLeftColor: tokens.colorNeutralStroke1,
         transition: "all 0.2s ease",
@@ -85,16 +85,16 @@ const useStyles = makeStyles({
     statCardContent: {
         display: "flex",
         flexDirection: "column",
-        gap: "6px",
+        gap: "4px",
     },
     statCardHeader: {
         display: "flex",
         alignItems: "center",
-        gap: "10px",
-        marginBottom: "4px",
+        gap: "8px",
+        marginBottom: "2px",
     },
     statIcon: {
-        fontSize: "24px",
+        fontSize: "20px",
         display: "flex",
         alignItems: "center",
     },
@@ -111,15 +111,15 @@ const useStyles = makeStyles({
         color: tokens.colorNeutralForeground3,
     },
     statLabel: {
-        fontSize: "13px",
+        fontSize: "12px",
         color: tokens.colorNeutralForeground2,
         fontWeight: "600",
         flex: 1,
     },
     statValue: {
-        fontSize: "32px",
-        color: tokens.colorNeutralForeground1,
+        fontSize: "28px",
         fontWeight: "700",
+        color: tokens.colorNeutralForeground1,
         lineHeight: "1.2",
     },
     statDate: {
@@ -228,7 +228,7 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                             休暇：{taskStatistics.linked.timeOffCount}件 / 履歴：{taskStatistics.linked.historyCount}件 / AI：{taskStatistics.linked.aiLinked}件
                         </div>
                         <div className={styles.statSubText}>
-                            手動：{taskStatistics.linked.manualCount}件
+                            勤務時間：{taskStatistics.linked.workSheduleCount}件 / 手動：{taskStatistics.linked.manualCount}件
                         </div>
                     </div>
                 </Card>
