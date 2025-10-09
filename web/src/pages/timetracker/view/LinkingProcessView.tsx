@@ -1,91 +1,178 @@
-import { Card } from "@/components/card";
+import { DataTable } from "@/components/data-table";
+import { InteractiveCard } from "@/components/interactive-card";
 import { appMessageDialogRef, MessageLevel } from "@/components/message-dialog";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
 import type { Event, Project, Schedule, TimeTrackerSettings, WorkItem } from "@/types";
 import { getMostNestChildren } from "@/types/utils";
-import { Button, makeStyles, tokens } from "@fluentui/react-components";
-import { CheckmarkCircle24Regular, History24Regular } from "@fluentui/react-icons";
+import {
+    Button,
+    Input,
+    makeStyles,
+    Switch,
+    TableCellLayout,
+    TableColumnDefinition,
+    createTableColumn,
+    tokens,
+} from "@fluentui/react-components";
+import { Sparkle24Regular } from "@fluentui/react-icons";
 import { useEffect, useMemo, useState } from "react";
-import { DetailDialog, type DetailDialogType } from "../components/DetailDialog";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { PageHeader } from "../components/PageHeader";
 import { StatisticsCards } from "../components/StatisticsCards";
 import { UploadInfo } from "../models";
 import { AutoLinkingResult, ExcludedEventInfo, LinkingEventWorkItemPair } from "../models/linking";
 import { calculateLinkingStatistics, performAutoLinking } from "../services/logic";
-import { InfoItem, ViewHeader, ViewSection } from "./components";
+import { ViewHeader, ViewSection } from "../components/ViewLayout";
+
 
 const logger = getLogger("LinkingProcessView");
 
+// イベントテーブル用の型定義
+type EventTableRow = {
+    id: string;
+    event: Event;
+    workItemId: string;
+    workItemName: string;
+    inputType: string;
+};
+
+// テーブル列定義
+const eventColumns: TableColumnDefinition<EventTableRow>[] = [
+    createTableColumn<EventTableRow>({
+        columnId: "dateTime",
+        compare: (a, b) => a.event.schedule.start.getTime() - b.event.schedule.start.getTime(),
+        renderHeaderCell: () => "日時",
+        renderCell: (item) => (
+            <TableCellLayout>
+                {item.event.schedule.start.toLocaleDateString("ja-JP", {
+                    month: "numeric",
+                    day: "numeric",
+                    weekday: "short",
+                })}{" "}
+                {item.event.schedule.start.toLocaleTimeString("ja-JP", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                })}
+                ~
+                {item.event.schedule.end?.toLocaleTimeString("ja-JP", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                })}
+            </TableCellLayout>
+        ),
+    }),
+    createTableColumn<EventTableRow>({
+        columnId: "eventName",
+        compare: (a, b) => a.event.name.localeCompare(b.event.name),
+        renderHeaderCell: () => "イベント名",
+        renderCell: (item) => <TableCellLayout>{item.event.name}</TableCellLayout>,
+    }),
+    createTableColumn<EventTableRow>({
+        columnId: "inputType",
+        compare: (a, b) => a.inputType.localeCompare(b.inputType),
+        renderHeaderCell: () => "入力依存",
+        renderCell: (item) => <TableCellLayout>{item.inputType}</TableCellLayout>,
+    }),
+    createTableColumn<EventTableRow>({
+        columnId: "workItemId",
+        compare: (a, b) => a.workItemId.localeCompare(b.workItemId),
+        renderHeaderCell: () => "WorkItemId",
+        renderCell: (item) => <TableCellLayout>{item.workItemId}</TableCellLayout>,
+    }),
+    createTableColumn<EventTableRow>({
+        columnId: "workItemName",
+        compare: (a, b) => a.workItemName.localeCompare(b.workItemName),
+        renderHeaderCell: () => "WorkItem名",
+        renderCell: (item) => <TableCellLayout>{item.workItemName}</TableCellLayout>,
+    }),
+];
+
 const useStyles = makeStyles({
-    headerContainer: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        gap: "12px",
+    aiSection: {
+        marginBottom: tokens.spacingVerticalM,
     },
-    headerLeft: {
+    settingRow: {
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        paddingTop: tokens.spacingVerticalM,
+        paddingBottom: tokens.spacingVerticalM,
+        borderBottomWidth: "1px",
+        borderBottomStyle: "solid",
+        borderBottomColor: tokens.colorNeutralStroke2,
+        "&:last-child": {
+            borderBottom: "none",
+        },
+    },
+    settingInfo: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
         flex: 1,
     },
-    section: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-    },
-    sectionTitle: {
-        fontSize: "18px",
-        fontWeight: "600",
+    settingTitle: {
+        fontSize: tokens.fontSizeBase300,
+        fontWeight: tokens.fontWeightSemibold,
         color: tokens.colorNeutralForeground1,
-        margin: "8px 0px",
-    },
-    infoContent: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-    },
-    infoItem: {
         display: "flex",
         alignItems: "center",
-        gap: "12px",
-        fontSize: "14px",
-        color: tokens.colorNeutralForeground2,
+        gap: tokens.spacingHorizontalS,
     },
-    infoIcon: {
+    settingDescription: {
+        fontSize: tokens.fontSizeBase200,
+        color: tokens.colorNeutralForeground3,
+        lineHeight: "1.3",
+    },
+    settingControl: {
+        display: "flex",
+        alignItems: "center",
+        marginLeft: tokens.spacingHorizontalL,
+    },
+    settingIcon: {
         fontSize: "18px",
+        color: tokens.colorBrandForeground1,
     },
-    infoLabel: {
-        fontWeight: "600",
-        color: tokens.colorNeutralForeground1,
-        minWidth: "120px",
+    tokenInput: {
+        minWidth: "300px",
     },
-    historyButton: {
-        minWidth: "100px",
+    tableWrapper: {
+        marginTop: tokens.spacingVerticalM,
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100vh - 520px)",
+        minHeight: "300px",
+    },
+    tableContainer: {
+        flex: 1,
+        overflow: "auto",
+        border: `1px solid ${tokens.colorNeutralStroke1}`,
+        borderRadius: tokens.borderRadiusMedium,
+        backgroundColor: tokens.colorNeutralBackground1,
     },
     submitButtonContainer: {
-        marginTop: "24px",
+        marginTop: tokens.spacingVerticalM,
+        paddingTop: tokens.spacingVerticalM,
+        borderTopWidth: "1px",
+        borderTopStyle: "solid",
+        borderTopColor: tokens.colorNeutralStroke2,
         display: "flex",
         justifyContent: "flex-end",
     },
     submitButton: {
         minWidth: "200px",
         height: "48px",
-        fontSize: "16px",
-        fontWeight: "600",
+        fontSize: tokens.fontSizeBase300,
+        fontWeight: tokens.fontWeightSemibold,
+        boxShadow: tokens.shadow8,
+        backgroundColor: tokens.colorBrandBackground,
+        "&:hover": {
+            boxShadow: tokens.shadow16,
+            backgroundColor: tokens.colorBrandBackgroundHover,
+        },
     },
-    submitButtonIcon: {
-        fontSize: "20px",
-    },
-    infoCard: {
-        padding: tokens.spacingVerticalL,
-    },
-    scheduleIcon: {
-        marginRight: tokens.spacingHorizontalXS,
-        verticalAlign: "middle",
-    },
-    // テーブルコンテナ用スタイル
-    tableContainer: {
-        marginTop: "24px",
+    historyButton: {
+        minWidth: "100px",
     },
 });
 
@@ -147,27 +234,21 @@ export type LinkingProcessViewProps = {
     onSubmit?: (linkingEventWorkItemPair: LinkingEventWorkItemPair[]) => void;
 };
 
-export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading }: LinkingProcessViewProps) {
+export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: LinkingProcessViewProps) {
     const styles = useStyles();
     const { settings } = useSettings();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [openDialog, setOpenDialog] = useState<boolean>(false);
-    const [detailDialogType, setDetailDialogType] = useState<DetailDialogType>();
+    const [token, setToken] = useState<string>("");
+    const [useHistory, setUseHistory] = useState<boolean>(false);
 
     const [excludedEvents, setExcludedEvents] = useState<ExcludedEventInfo[]>([]);
     const [unlinkedEvents, setUnlinkedEvents] = useState<Event[]>([]);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
-    const deps = [linkingEventWorkItemPair, excludedEvents, unlinkedEvents];
 
     // 統計データの計算
     const taskStatistics = useMemo(() => {
         return calculateLinkingStatistics(unlinkedEvents, linkingEventWorkItemPair, excludedEvents);
-    }, [deps]);
-
-    const handleCardClick = (type: DetailDialogType) => {
-        setDetailDialogType(type);
-        setOpenDialog(true);
-    };
+    }, [unlinkedEvents, linkingEventWorkItemPair, excludedEvents]);
 
     // 自動紐付け処理
     useEffect(() => {
@@ -239,6 +320,27 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
         // }
     };
 
+    // イベントリストを取得（紐づけ済み + 未紐づけ）
+    const allEvents = useMemo((): EventTableRow[] => {
+        const linked = linkingEventWorkItemPair.map((pair, index) => ({
+            id: `linked-${index}`,
+            event: pair.event,
+            workItemId: pair.linkingWorkItem.workItem.id,
+            workItemName: pair.linkingWorkItem.workItem.name,
+            inputType: pair.linkingWorkItem.type === "auto" ? pair.linkingWorkItem.autoMethod : "手動入力",
+        }));
+        const unlinked = unlinkedEvents.map((event, index) => ({
+            id: `unlinked-${index}`,
+            event,
+            workItemId: "",
+            workItemName: "未紐づけ",
+            inputType: "-",
+        }));
+        return [...linked, ...unlinked].sort(
+            (a, b) => a.event.schedule.start.getTime() - b.event.schedule.start.getTime(),
+        );
+    }, [linkingEventWorkItemPair, unlinkedEvents]);
+
     return (
         <>
             <ViewHeader
@@ -246,7 +348,6 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
                 right={
                     <Button
                         appearance="secondary"
-                        icon={<History24Regular />}
                         onClick={() => setIsDrawerOpen(true)}
                         className={styles.historyButton}
                     >
@@ -256,42 +357,78 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
             />
 
             <ViewSection>
-                <Card className={styles.infoCard}>
-                    <div className={styles.infoContent}>
-                        <InfoItem icon="📄" label="勤怠情報" value={uploadInfo?.pdf?.name || "未選択"} />
-                        <InfoItem icon="📅" label="スケジュール情報" value={uploadInfo?.ics?.name || "未選択"} />
+                {/* サマリーカード */}
+                <StatisticsCards taskStatistics={taskStatistics} />
+
+                {/* AIによる自動紐づけセクション */}
+                <div className={styles.aiSection}>
+                    <InteractiveCard
+                        title="AIによる自動紐づけ"
+                        description="AIを使用して未紐づけのイベントを自動的にWorkItemに紐づけます"
+                        icon={<Sparkle24Regular />}
+                        variant="expandable"
+                    >
+                        {/* トークン設定 */}
+                        <div className={styles.settingRow}>
+                            <div className={styles.settingInfo}>
+                                <div className={styles.settingTitle}>APIトークン</div>
+                                <div className={styles.settingDescription}>
+                                    OpenAI APIトークンを入力してください。AIによる自動紐づけに使用されます。
+                                </div>
+                            </div>
+                            <div className={styles.settingControl}>
+                                <Input
+                                    placeholder="トークンを入力"
+                                    value={token}
+                                    onChange={(e) => setToken(e.target.value)}
+                                    className={styles.tokenInput}
+                                />
+                            </div>
+                        </div>
+
+                        {/* 履歴の参照設定 */}
+                        <div className={styles.settingRow}>
+                            <div className={styles.settingInfo}>
+                                <div className={styles.settingTitle}>履歴の参照</div>
+                                <div className={styles.settingDescription}>
+                                    過去の紐づけ履歴を参照してAIの精度を向上させます。履歴データが使用されます。
+                                </div>
+                            </div>
+                            <div className={styles.settingControl}>
+                                <Switch checked={useHistory} onChange={(e) => setUseHistory(e.currentTarget.checked)} />
+                            </div>
+                        </div>
+                    </InteractiveCard>
+                </div>
+
+                {/* イベントテーブル */}
+                <div className={styles.tableWrapper}>
+                    <div className={styles.tableContainer}>
+                        <DataTable
+                            items={allEvents}
+                            columns={eventColumns}
+                            getRowId={(item) => item.id}
+                            sortable
+                        />
                     </div>
-                </Card>
+                </div>
+
+                {/* 登録実行ボタン */}
+                <div className={styles.submitButtonContainer}>
+                    <Button
+                        appearance="primary"
+                        size="large"
+                        className={styles.submitButton}
+                        onClick={handleSubmit}
+                        icon={<Sparkle24Regular />}
+                    >
+                        登録実行
+                    </Button>
+                </div>
             </ViewSection>
-
-            {/* 統計表示カード */}
-            {taskStatistics && (
-                <ViewSection>
-                    <StatisticsCards taskStatistics={taskStatistics} onCardClick={handleCardClick} />
-                </ViewSection>
-            )}
-
-            <div className={styles.submitButtonContainer}>
-                <Button
-                    appearance="primary"
-                    className={styles.submitButton}
-                    icon={<CheckmarkCircle24Regular className={styles.submitButtonIcon} />}
-                    onClick={handleSubmit}
-                >
-                    登録実行
-                </Button>
-            </div>
 
             {/* 履歴管理Drawer */}
             <HistoryDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} workItems={uploadInfo?.workItems ?? []} />
-
-            {/* 詳細表示ダイアログ */}
-            <DetailDialog
-                dialogType={detailDialogType}
-                openDialog={openDialog}
-                taskStatistics={taskStatistics}
-                onClose={() => setOpenDialog(false)}
-            />
         </>
     );
 }

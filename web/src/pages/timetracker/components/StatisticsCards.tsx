@@ -26,74 +26,75 @@ const useStyles = makeStyles({
     },
     statsGrid: {
         display: "grid",
-        gridTemplateColumns: "repeat(2, 1fr)",
-        gap: "24px",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: "16px",
         marginTop: "20px",
     },
     statCardInfo: {
-        padding: "32px",
+        padding: "16px 20px",
         backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "5px",
+        borderLeftWidth: "4px",
         borderLeftStyle: "solid",
         borderLeftColor: tokens.colorBrandBackground,
+        transition: "all 0.2s ease",
         "&:hover": {
-            boxShadow: tokens.shadow16,
-            transform: "translateY(-3px)",
+            boxShadow: tokens.shadow8,
+            transform: "translateY(-2px)",
             backgroundColor: tokens.colorBrandBackground2Hover,
         },
     },
     statCardSuccess: {
-        padding: "32px",
+        padding: "16px 20px",
         backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "5px",
+        borderLeftWidth: "4px",
         borderLeftStyle: "solid",
         borderLeftColor: tokens.colorPaletteGreenBackground3,
         transition: "all 0.2s ease",
         "&:hover": {
-            boxShadow: tokens.shadow16,
-            transform: "translateY(-3px)",
+            boxShadow: tokens.shadow8,
+            transform: "translateY(-2px)",
             backgroundColor: tokens.colorPaletteGreenBackground1,
         },
     },
     statCardWarning: {
-        padding: "32px",
+        padding: "16px 20px",
         backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "5px",
+        borderLeftWidth: "4px",
         borderLeftStyle: "solid",
         borderLeftColor: tokens.colorPaletteYellowBackground3,
         transition: "all 0.2s ease",
         "&:hover": {
-            boxShadow: tokens.shadow16,
-            transform: "translateY(-3px)",
+            boxShadow: tokens.shadow8,
+            transform: "translateY(-2px)",
             backgroundColor: tokens.colorPaletteYellowBackground1,
         },
     },
     statCardNeutral: {
-        padding: "32px",
+        padding: "16px 20px",
         backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "5px",
+        borderLeftWidth: "4px",
         borderLeftStyle: "solid",
         borderLeftColor: tokens.colorNeutralStroke1,
         transition: "all 0.2s ease",
         "&:hover": {
-            boxShadow: tokens.shadow16,
-            transform: "translateY(-3px)",
+            boxShadow: tokens.shadow8,
+            transform: "translateY(-2px)",
             backgroundColor: tokens.colorNeutralBackground2,
         },
     },
     statCardContent: {
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
+        gap: "6px",
     },
     statCardHeader: {
         display: "flex",
         alignItems: "center",
-        gap: "12px",
-        marginBottom: "8px",
+        gap: "10px",
+        marginBottom: "4px",
     },
     statIcon: {
-        fontSize: "32px",
+        fontSize: "24px",
         display: "flex",
         alignItems: "center",
     },
@@ -110,28 +111,28 @@ const useStyles = makeStyles({
         color: tokens.colorNeutralForeground3,
     },
     statLabel: {
-        fontSize: "16px",
+        fontSize: "13px",
         color: tokens.colorNeutralForeground2,
         fontWeight: "600",
         flex: 1,
     },
     statValue: {
-        fontSize: "48px",
+        fontSize: "32px",
         color: tokens.colorNeutralForeground1,
         fontWeight: "700",
-        lineHeight: "1.1",
+        lineHeight: "1.2",
     },
     statDate: {
-        fontSize: "14px",
-        color: tokens.colorNeutralForeground3,
-        marginTop: "4px",
-        lineHeight: "1.4",
-    },
-    statSubText: {
-        fontSize: "14px",
+        fontSize: "12px",
         color: tokens.colorNeutralForeground3,
         marginTop: "2px",
-        lineHeight: "1.4",
+        lineHeight: "1.3",
+    },
+    statSubText: {
+        fontSize: "12px",
+        color: tokens.colorNeutralForeground3,
+        marginTop: "2px",
+        lineHeight: "1.3",
     },
 });
 
@@ -155,15 +156,21 @@ export interface ExcludedStatistics {
 
 export interface StatisticsCardsProps {
     taskStatistics: TaskStatistics;
-    onCardClick: (dialogType: DetailDialogType) => void;
+    onCardClick?: (dialogType: DetailDialogType) => void;
 }
 
 export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCardsProps) {
     const styles = useStyles();
 
-    const dtargetDays = taskStatistics.day.normalDays + taskStatistics.day.paidLeaveDays;
+    const targetDays = taskStatistics.day.normalDays + taskStatistics.day.paidLeaveDays;
     const fromStr = taskStatistics.day.from.toLocaleDateString("ja-JP");
     const endStr = taskStatistics.day.end.toLocaleDateString("ja-JP");
+
+    const totalLinked = taskStatistics.linked.historyCount + taskStatistics.linked.timeOffCount + taskStatistics.linked.manualCount + taskStatistics.linked.aiLinked;
+    const totalEvents = totalLinked + taskStatistics.linked.unlinkedCount + taskStatistics.excluded.ignored + taskStatistics.excluded.outOfSchedule + taskStatistics.excluded.invalid;
+    const excludedCount = taskStatistics.excluded.ignored + taskStatistics.excluded.outOfSchedule + taskStatistics.excluded.invalid;
+    const unlinkedCount = taskStatistics.linked.unlinkedCount;
+
     return (
         <div className={styles.statsSection}>
             <h3 className={styles.sectionTitle}>自動紐づけ結果</h3>
@@ -177,9 +184,9 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                             </div>
                             <div className={styles.statLabel}>対象日数</div>
                         </div>
-                        <div className={styles.statValue}>{dtargetDays}日分</div>
+                        <div className={styles.statValue}>{targetDays}日分</div>
                         <div className={styles.statDate}>
-                            `${fromStr}～${endStr}`
+                            {fromStr}～{endStr}
                         </div>
                         <div className={styles.statSubText}>有給休暇：{taskStatistics.day.paidLeaveDays}日</div>
                     </div>
@@ -188,8 +195,8 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                 {/* 対象イベント（削除対象を含む） */}
                 <Card
                     className={styles.statCardInfo}
-                    onClick={() => onCardClick("targetEvents")}
-                    style={{ cursor: "pointer" }}
+                    onClick={onCardClick ? () => onCardClick("targetEvents") : undefined}
+                    style={{ cursor: onCardClick ? "pointer" : "default" }}
                 >
                     <div className={styles.statCardContent}>
                         <div className={styles.statCardHeader}>
@@ -198,19 +205,16 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                             </div>
                             <div className={styles.statLabel}>対象イベント</div>
                         </div>
-                        <div className={styles.statValue}>{0}件</div>
-                        <div className={styles.statSubText}>
-                            通常：{0}件 / 変換：{0}件
-                        </div>
-                        <div className={styles.statSubText}>削除対象：{0}件</div>
+                        <div className={styles.statValue}>{totalEvents}件</div>
+                        <div className={styles.statSubText}>除外：{excludedCount}件</div>
                     </div>
                 </Card>
 
                 {/* 紐づけ済み */}
                 <Card
                     className={styles.statCardSuccess}
-                    onClick={() => onCardClick("linked")}
-                    style={{ cursor: "pointer" }}
+                    onClick={onCardClick ? () => onCardClick("linked") : undefined}
+                    style={{ cursor: onCardClick ? "pointer" : "default" }}
                 >
                     <div className={styles.statCardContent}>
                         <div className={styles.statCardHeader}>
@@ -219,31 +223,34 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                             </div>
                             <div className={styles.statLabel}>紐づけ済み</div>
                         </div>
-                        <div className={styles.statValue}>{0}件</div>
+                        <div className={styles.statValue}>{totalLinked}件</div>
                         <div className={styles.statSubText}>
-                            休暇：{0}件 / 履歴：{0}件
+                            休暇：{taskStatistics.linked.timeOffCount}件 / 履歴：{taskStatistics.linked.historyCount}件 / AI：{taskStatistics.linked.aiLinked}件
+                        </div>
+                        <div className={styles.statSubText}>
+                            手動：{taskStatistics.linked.manualCount}件
                         </div>
                     </div>
                 </Card>
 
                 {/* 未紐づけ */}
                 <Card
-                    className={0 > 0 ? styles.statCardWarning : styles.statCardSuccess}
-                    onClick={() => onCardClick("unlinked")}
-                    style={{ cursor: "pointer" }}
+                    className={unlinkedCount > 0 ? styles.statCardWarning : styles.statCardSuccess}
+                    onClick={onCardClick ? () => onCardClick("unlinked") : undefined}
+                    style={{ cursor: onCardClick ? "pointer" : "default" }}
                 >
                     <div className={styles.statCardContent}>
                         <div className={styles.statCardHeader}>
                             <div
-                                className={`${styles.statIcon} ${0 > 0 ? styles.statIconWarning : styles.statIconSuccess}`}
+                                className={`${styles.statIcon} ${unlinkedCount > 0 ? styles.statIconWarning : styles.statIconSuccess}`}
                             >
-                                {0 > 0 ? <Warning24Filled /> : <Checkmark24Filled />}
+                                {unlinkedCount > 0 ? <Warning24Filled /> : <Checkmark24Filled />}
                             </div>
                             <div className={styles.statLabel}>未紐づけ</div>
                         </div>
-                        <div className={styles.statValue}>{0}件</div>
+                        <div className={styles.statValue}>{unlinkedCount}件</div>
                         <div className={styles.statSubText}>
-                            {0 > 0 ? "手動紐づけ/AIによる自動紐づけを実施してください。" : "すべて紐づけ完了"}
+                            {unlinkedCount > 0 ? "手動紐づけ/AIによる自動紐づけを実施してください。" : "すべて紐づけ完了"}
                         </div>
                     </div>
                 </Card>

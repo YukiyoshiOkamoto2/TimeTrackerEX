@@ -11,9 +11,7 @@ export { HistoryDrawer } from "./HistoryDrawer";
 export type { HistoryDrawerProps } from "./HistoryDrawer";
 
 export { DetailDialog } from "./DetailDialog";
-export type { DetailDialogStats, DetailDialogType } from "./DetailDialog";
-
-export { createUnlinkedEventsColumns } from "./UnlinkedEventsColumns";
+export type {  DetailDialogType } from "./DetailDialog";
 
 export { StatisticsCards } from "./StatisticsCards";
 export type { ExcludedStatistics, StatisticsCardsProps, StatisticsData } from "./StatisticsCards";

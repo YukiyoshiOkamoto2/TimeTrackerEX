@@ -288,7 +288,7 @@ export class TimeTrackerAlgorithm {
                         startTime = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0);
                     }
 
-                    const isLastDay = baseDate.toISOString().split("T")[0] === endDate.toISOString().split("T")[0];
+                    const isLastDay = ScheduleUtils.getDateKey(baseDate) === ScheduleUtils.getDateKey(endDate);
                     if (isLastDay) {
                         endTime = endSchedule.schedule.start;
                     } else {
@@ -618,8 +618,7 @@ export class TimeTrackerAlgorithm {
         let dayMap = new Map<string, Event[]>();
 
         for (const event of events) {
-            const eventDate = ScheduleUtils.getBaseDate(event.schedule);
-            const dateKey = eventDate.toISOString().split("T")[0];
+            const dateKey = ScheduleUtils.getBaseDateKey(event.schedule);
 
             if (!dayMap.has(dateKey)) {
                 dayMap.set(dateKey, []);
@@ -628,8 +627,7 @@ export class TimeTrackerAlgorithm {
 
             // 繰り返しイベントの処理
             for (const recurrenceEvent of this.getRecurrenceEvent(event)) {
-                const recurrenceDate = ScheduleUtils.getBaseDate(recurrenceEvent.schedule);
-                const recurrenceDateKey = recurrenceDate.toISOString().split("T")[0];
+                const recurrenceDateKey = ScheduleUtils.getBaseDateKey(recurrenceEvent.schedule);
 
                 if (!dayMap.has(recurrenceDateKey)) {
                     dayMap.set(recurrenceDateKey, []);
@@ -644,8 +642,8 @@ export class TimeTrackerAlgorithm {
             const minDate = new Date(Math.min(...scheduleDates.map((d) => d.getTime())));
             const maxDate = new Date(Math.max(...scheduleDates.map((d) => d.getTime())));
 
-            const minDateKey = minDate.toISOString().split("T")[0];
-            const maxDateKey = maxDate.toISOString().split("T")[0];
+            const minDateKey = ScheduleUtils.getDateKey(minDate);
+            const maxDateKey = ScheduleUtils.getDateKey(maxDate);
 
             for (const dateKey of Array.from(dayMap.keys())) {
                 if (dateKey < minDateKey || dateKey > maxDateKey) {
@@ -685,8 +683,7 @@ export class TimeTrackerAlgorithm {
 
         for (const schedule of schedules) {
             try {
-                const scheduleDate = ScheduleUtils.getBaseDate(schedule);
-                const scheduleDateKey = scheduleDate.toISOString().split("T")[0];
+                const scheduleDateKey = ScheduleUtils.getBaseDateKey(schedule);
                 logger.debug(`Schedule ${scheduleDateKey}の変換開始`);
 
                 const scheduleEvents = this.scheduleToEvent(schedule, this.scheduleInputInfo, allRoundedEvents);
@@ -694,8 +691,7 @@ export class TimeTrackerAlgorithm {
                 logger.debug(`Schedule ${scheduleDateKey}: 生成されたイベント数=${scheduleEvents.length}`);
 
                 for (const event of scheduleEvents) {
-                    const eventDate = ScheduleUtils.getBaseDate(event.schedule);
-                    const dateKey = eventDate.toISOString().split("T")[0];
+                    const dateKey = ScheduleUtils.getBaseDateKey(event.schedule);
 
                     if (!scheduleEventMap.has(dateKey)) {
                         scheduleEventMap.set(dateKey, []);
@@ -759,8 +755,8 @@ export class TimeTrackerAlgorithm {
                     continue;
                 }
 
-                // 終了日の日付部分を取得(ISO文字列から直接取得)
-                const eventEndDateKey = event.schedule.end.toISOString().split("T")[0];
+                // 終了日の日付部分を取得
+                const eventEndDateKey = ScheduleUtils.getDateKey(event.schedule.end);
 
                 if (dateKey === eventEndDateKey) {
                     // 終了日が基準日と同じ場合はそのまま追加
@@ -792,7 +788,7 @@ export class TimeTrackerAlgorithm {
                 for (let i = 1; i <= daysDiff; i++) {
                     const baseDate = new Date(startDate);
                     baseDate.setDate(startDate.getDate() + i);
-                    const baseDateKey = baseDate.toISOString().split("T")[0];
+                    const baseDateKey = ScheduleUtils.getDateKey(baseDate);
 
                     let endSchedule: Schedule;
                     if (baseDateKey === eventEndDateKey) {

@@ -1,5 +1,5 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
-import { ValidationErrorDialog } from "@/components/validation-error-dialog";
+
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
 import type { DayTask } from "@/types";
@@ -8,10 +8,11 @@ import { useEffect, useState } from "react";
 import { Page } from "../../components/page";
 import { ScheduleItem } from "./components";
 import { ICS, PDF, UploadInfo } from "./models";
-import { generateItemCodeOptions } from "./services";
 import { CompletionView } from "./view/CompletionView";
 import { FileUploadView } from "./view/FileUploadView";
 import { LinkingProcessView } from "./view/LinkingProcessView";
+import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
+
 
 const logger = getLogger("TimeTrackerPage");
 
@@ -151,7 +152,7 @@ export function TimeTrackerPage() {
                         <CompletionView
                             schedules={scheduleItems}
                             itemCodes={[]} // TODO: Phase 7 - 必要に応じて実装
-                            itemCodeOptions={generateItemCodeOptions(uploadInfo?.workItems || [])}
+                            itemCodeOptions={[]}
                             onBack={() => backTo(2)}
                             onBackToLinking={backTo}
                             onRegisterSuccess={() => backTo(2)} // 登録成功後FileUploadViewへ

@@ -466,7 +466,7 @@ export function calculateLinkingStatistics(
     const normalDaySet = new Set<string>();
     const paidLeaveDaysSet = new Set<string>();
     for (const e of allEvents) {
-        const key = ScheduleUtils.getBaseDate(e.schedule).toISOString().split("T")[0];
+        const key = ScheduleUtils.getBaseDateKey(e.schedule);
         if (e.schedule.isPaidLeave) {
             paidLeaveDaysSet.add(key)
         } else {

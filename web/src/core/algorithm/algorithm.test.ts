@@ -1,5 +1,5 @@
 import type { Event, EventInputInfo, Project, ScheduleInputInfo } from "@/types";
-import { createSchedule, generateUUID } from "@/types/utils";
+import { createSchedule, generateUUID, ScheduleUtils } from "@/types/utils";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TimeTrackerAlgorithm } from "./algorithm";
 
@@ -1072,12 +1072,12 @@ describe("TimeTrackerAlgorithm", () => {
             // イベントは当日のみなので、2日分のタスクが作成される
             expect(result.length).toBeGreaterThanOrEqual(2);
 
-            // baseDateがUTCベースなので、toISOStringで比較
-            const todayKey = today.toISOString().split("T")[0];
-            const tomorrowKey = tomorrow.toISOString().split("T")[0];
+            // baseDateから日付キーで比較
+            const todayKey = ScheduleUtils.getDateKey(today);
+            const tomorrowKey = ScheduleUtils.getDateKey(tomorrow);
 
-            const todayTask = result.find((task) => task.baseDate.toISOString().split("T")[0] === todayKey);
-            const tomorrowTask = result.find((task) => task.baseDate.toISOString().split("T")[0] === tomorrowKey);
+            const todayTask = result.find((task) => ScheduleUtils.getDateKey(task.baseDate) === todayKey);
+            const tomorrowTask = result.find((task) => ScheduleUtils.getDateKey(task.baseDate) === tomorrowKey);
 
             expect(todayTask).toBeDefined();
             expect(tomorrowTask).toBeDefined();
@@ -1185,7 +1185,7 @@ describe("TimeTrackerAlgorithm", () => {
             const end2 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3, 14, 0, 0);
             const event2 = createTestEvent(start2, end2, "Multi-day Event 2");
 
-            const nowDateKey = now.toISOString().split("T")[0];
+            const nowDateKey = ScheduleUtils.getDateKey(now);
             const eventMap = new Map<string, Event[]>();
             eventMap.set(nowDateKey, [event1, event2]);
 
@@ -1197,13 +1197,13 @@ describe("TimeTrackerAlgorithm", () => {
             const day0Key = nowDateKey;
             const day1 = new Date(now);
             day1.setDate(now.getDate() + 1);
-            const day1Key = day1.toISOString().split("T")[0];
+            const day1Key = ScheduleUtils.getDateKey(day1);
             const day2 = new Date(now);
             day2.setDate(now.getDate() + 2);
-            const day2Key = day2.toISOString().split("T")[0];
+            const day2Key = ScheduleUtils.getDateKey(day2);
             const day3 = new Date(now);
             day3.setDate(now.getDate() + 3);
-            const day3Key = day3.toISOString().split("T")[0];
+            const day3Key = ScheduleUtils.getDateKey(day3);
 
             // 今日は2つのイベント（両方の初日）
             expect(result.get(day0Key)?.length).toBe(2);
@@ -1281,7 +1281,7 @@ describe("TimeTrackerAlgorithm", () => {
                 "Meeting",
             );
 
-            const nowDateKey = now.toISOString().split("T")[0];
+            const nowDateKey = ScheduleUtils.getDateKey(now);
             const scheduleEventMap = new Map<string, Event[]>();
             scheduleEventMap.set(nowDateKey, [scheduleEvent1, scheduleEvent2]);
 
@@ -1322,7 +1322,7 @@ describe("TimeTrackerAlgorithm", () => {
                 "Early Meeting",
             );
 
-            const nowDateKey = now.toISOString().split("T")[0];
+            const nowDateKey = ScheduleUtils.getDateKey(now);
             const scheduleEventMap = new Map<string, Event[]>();
             scheduleEventMap.set(nowDateKey, [scheduleEvent1, scheduleEvent2]);
 
@@ -1358,7 +1358,7 @@ describe("TimeTrackerAlgorithm", () => {
             );
             scheduleEvent2.workingEventType = "end";
 
-            const nowDateKey = now.toISOString().split("T")[0];
+            const nowDateKey = ScheduleUtils.getDateKey(now);
             const scheduleEventMap = new Map<string, Event[]>();
             scheduleEventMap.set(nowDateKey, [scheduleEvent1, scheduleEvent2]);
 
@@ -1373,13 +1373,13 @@ describe("TimeTrackerAlgorithm", () => {
 
         test("should handle complex multi-day scenario with filtering", () => {
             // 複数日付にわたる複雑なシナリオ
-            const nowDateKey = now.toISOString().split("T")[0];
+            const nowDateKey = ScheduleUtils.getDateKey(now);
             const day1 = new Date(now);
             day1.setDate(now.getDate() + 1);
-            const day1Key = day1.toISOString().split("T")[0];
+            const day1Key = ScheduleUtils.getDateKey(day1);
             const day2 = new Date(now);
             day2.setDate(now.getDate() + 2);
-            const day2Key = day2.toISOString().split("T")[0];
+            const day2Key = ScheduleUtils.getDateKey(day2);
 
             // Day 0 のイベント (7つ, 3つはフィルタされる)
             const events1 = [

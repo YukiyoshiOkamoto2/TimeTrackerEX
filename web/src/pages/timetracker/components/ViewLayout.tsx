@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCommonViewStyles } from "../styles/commonStyles";
+import { useCommonViewStyles } from "../view/styles/commonStyles";
 
 /**
  * View共通レイアウトコンポーネントのProps

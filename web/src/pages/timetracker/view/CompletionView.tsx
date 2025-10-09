@@ -12,7 +12,8 @@ import {
 import { useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "../components/index";
-import { SectionTitle, ViewHeader, ViewSection } from "./components";
+import { SectionTitle, ViewHeader, ViewSection } from "../components/ViewLayout";
+
 
 const logger = getLogger("CompletionView");
 

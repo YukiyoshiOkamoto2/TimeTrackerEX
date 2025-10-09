@@ -33,6 +33,21 @@ export const ScheduleUtils = {
     },
 
     /**
+     * 基準日のキー（YYYY-MM-DD形式）を取得
+     */
+    getBaseDateKey(schedule: Schedule): string {
+        const baseDate = this.getBaseDate(schedule);
+        return baseDate.toLocaleDateString("en-CA"); // en-CA は YYYY-MM-DD 形式を返す
+    },
+
+    /**
+     * 日付オブジェクトから日付キー（YYYY-MM-DD形式）を取得
+     */
+    getDateKey(date: Date): string {
+        return date.toLocaleDateString("en-CA"); // en-CA は YYYY-MM-DD 形式を返す
+    },
+
+    /**
      * 他のスケジュールと重複しているか判定
      */
     isOverlap(schedule: Schedule, other: Schedule): boolean {

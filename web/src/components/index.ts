@@ -6,5 +6,3 @@ export { MessageDialog, appMessageDialogRef } from "./message-dialog";
 export type { AppMessageDialogRef, MessageLevel } from "./message-dialog";
 export { Page } from "./page";
 export { ValidatedInput } from "./validated-input";
-export { ValidationErrorDialog } from "./validation-error-dialog";
-export type { ValidationErrorDialogProps } from "./validation-error-dialog";
