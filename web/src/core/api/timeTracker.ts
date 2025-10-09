@@ -482,10 +482,15 @@ export async function getWorkItemsAsync(
     baseUrl: string,
     projectId: string,
     auth: TimeTrackerAuth,
+    userName?: string,
 ): Promise<WorkItem[]> {
     console.debug("Start getWorkItemsAsync.");
 
-    const response = await requestAsync(baseUrl, `/workitem/workItems/${projectId}/tree`, auth);
+    // api.pyと同じURLパターンに修正
+    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${
+        userName ? `&assignedUsers=${userName}` : ""
+    }&includeDeleted=false`;
+    const response = await requestAsync(baseUrl, uri, auth);
 
     if (isErrorResponse(response)) {
         throw new Error(`WorkItem一覧の取得でエラー応答が返却されました。: ${getErrorMessage(response)}`);
@@ -522,15 +527,15 @@ export async function registerTaskAsync(
 
     validateTimeTrackerTask(task);
 
+    // api.pyと同じJSONフィールド名・URL（camelCase）
     const jsonData = {
-        UserId: userId,
-        WorkItemId: task.workItemId,
-        StartTime: formatDateTime(task.startTime),
-        EndTime: formatDateTime(task.endTime),
-        Memo: task.memo || "",
+        workItemId: task.workItemId,
+        startTime: formatDateTime(task.startTime),
+        finishTime: formatDateTime(task.endTime),
+        memo: task.memo || "",
     };
 
-    const response = await requestAsync(baseUrl, "/workitem/createtask", auth, jsonData);
+    const response = await requestAsync(baseUrl, `/system/users/${userId}/timeEntries`, auth, jsonData);
 
     if (isErrorResponse(response)) {
         throw new Error(`タスクの登録でエラー応答が返却されました。: ${getErrorMessage(response)}`);
@@ -548,4 +553,81 @@ export function isAuthenticationError(error: unknown): boolean {
         return false;
     }
     return error.message.includes("StatusCode: 401") || error.message.includes("Not connected");
+}
+
+// ==================== Phase 7: タスク一括登録API ====================
+
+/**
+ * タスク一括登録リクエスト
+ */
+export interface RegisterTasksRequest {
+    /** パスワード */
+    password: string;
+    /** 登録するスケジュールリスト */
+    schedules: Array<{
+        /** 日付 (例: "2024/01/15") */
+        date: string;
+        /** 開始時刻 (例: "09:00") */
+        startTime: string;
+        /** 終了時刻 (例: "10:30") */
+        endTime: string;
+        /** 作業項目コード (例: "PROJ001-001") */
+        itemCode: string;
+        /** タイトル（イベント名） */
+        title: string;
+    }>;
+}
+
+/**
+ * タスク一括登録レスポンス
+ */
+export interface RegisterTasksResponse {
+    /** 成功フラグ */
+    success: boolean;
+    /** メッセージ */
+    message?: string;
+    /** 登録成功件数 */
+    registeredCount?: number;
+    /** エラー詳細 */
+    errors?: Array<{
+        /** エラーが発生した日付 */
+        date: string;
+        /** エラーメッセージ */
+        error: string;
+    }>;
+}
+
+/**
+ * タスク一括登録API
+ *
+ * CompletionViewから複数のスケジュールアイテムをまとめて登録します。
+ *
+ * @param request - 登録リクエスト
+ * @returns 登録結果
+ * @throws API呼び出しに失敗した場合
+ */
+export async function registerTasks(request: RegisterTasksRequest): Promise<RegisterTasksResponse> {
+    console.debug("Start registerTasks.", { schedulesCount: request.schedules.length });
+
+    try {
+        const response = await fetch("/api/register-task", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => "Unknown error");
+            throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        }
+
+        const data: RegisterTasksResponse = await response.json();
+        console.debug("registerTasks success.", { data });
+        return data;
+    } catch (error) {
+        console.error("タスク一括登録APIエラー", { error });
+        throw error;
+    }
 }

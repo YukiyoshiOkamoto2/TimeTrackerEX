@@ -9,6 +9,11 @@ import { ValidationErrorDialog } from "@/components/validation-error-dialog";
 import { CompletionView } from "./view/CompletionView";
 import { FileUploadView } from "./view/FileUploadView";
 import { LinkingProcessView } from "./view/LinkingProcessView";
+import { convertDayTasksToScheduleItems, generateItemCodeOptions } from "./services";
+import type { DayTask } from "@/types";
+import { getLogger } from "@/lib/logger";
+
+const logger = getLogger("TimeTrackerPage");
 
 const useStyles = makeStyles({
     viewContainer: {
@@ -48,21 +53,6 @@ const useStyles = makeStyles({
         animationFillMode: "both",
     },
 });
-
-// Mock data
-const MOCK_DATA = {
-    completedSchedules: [
-        { date: "2025/10/04", time: "09:00-10:00", name: "朝会", organizer: "田中太郎" },
-        { date: "2025/10/04", time: "13:00-14:30", name: "プロジェクト会議", organizer: "佐藤花子" },
-        { date: "2025/10/05", time: "10:00-12:00", name: "開発作業", organizer: "山田次郎" },
-    ],
-    completedItemCodes: ["PROJ-001", "PROJ-002", "PROJ-003"],
-    itemCodeOptions: [
-        { code: "PROJ-001", name: "プロジェクトA" },
-        { code: "PROJ-002", name: "プロジェクトB" },
-        { code: "PROJ-003", name: "プロジェクトC" },
-    ],
-};
 
 type view = "upload" | "linking" | "completion";
 const views: view[] = ["upload", "linking", "completion"];
@@ -112,6 +102,11 @@ export function TimeTrackerPage() {
     const [ics, setIcs] = useState<ICS | undefined>(undefined);
     const [uploadInfo, setUploadInfo] = useState<UploadInfo | undefined>(undefined);
     const [showErrorDialog, setShowErrorDialog] = useState(false);
+    
+    // Phase 6: データフロー用のstate
+    // @ts-expect-error Phase 7: TimeTracker API登録で使用予定
+    const [dayTasks, setDayTasks] = useState<DayTask[]>([]);
+    const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
 
     const [currentView, slideDirection, backTo, nextTo] = useTimeTrackerViewState();
 
@@ -132,23 +127,6 @@ export function TimeTrackerPage() {
     }, [validationErrors.timeTracker, currentView, backTo]);
 
 
-    // 非同期処理ヘルパー
-    const withLoading = async (fn: () => Promise<void>) => {
-        setIsLoading(true);
-        try {
-            await fn();
-        } catch (error) {
-            console.error("処理エラー:", error);
-            await appMessageDialogRef?.showMessageAsync(
-                "処理エラー",
-                `処理中にエラーが発生しました。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-                "ERROR",
-            );
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     // アニメーションクラス取得
     const getAnimationClass = () =>
         slideDirection === "right" ? styles.slideInRight : slideDirection === "left" ? styles.slideInLeft : "";
@@ -159,12 +137,38 @@ export function TimeTrackerPage() {
         nextTo();
     };
 
-    const handleLinkingProcessSubmit = (schedules: ScheduleItem[]) =>
-        withLoading(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            console.log("登録実行", schedules);
+    const handleLinkingProcessSubmit = (tasks: DayTask[]) => {
+        try {
+            logger.info(`LinkingProcessView完了: ${tasks.length}日分のDayTaskを受け取りました`);
+            
+            // DayTaskをScheduleItemに変換
+            const items = convertDayTasksToScheduleItems(tasks);
+            
+            if (items.length === 0) {
+                logger.warn("変換後のScheduleItemsが空です");
+                appMessageDialogRef.showMessageAsync(
+                    "データエラー",
+                    "スケジュールデータの変換に失敗しました。\n紐づけ処理画面に戻って再度お試しください。",
+                    "ERROR"
+                );
+                return;
+            }
+            
+            // stateを更新
+            setDayTasks(tasks);
+            setScheduleItems(items);
+            
+            logger.info(`CompletionViewへ遷移: ${items.length}件のScheduleItem`);
             nextTo();
-        });
+        } catch (error) {
+            logger.error("データ変換エラー:", error);
+            appMessageDialogRef.showMessageAsync(
+                "変換エラー",
+                "スケジュールデータの変換中にエラーが発生しました。\n紐づけ処理画面に戻って再度お試しください。",
+                "ERROR"
+            );
+        }
+    };
 
     return (
         <>
@@ -177,11 +181,16 @@ export function TimeTrackerPage() {
                 <div className={`${styles.viewContainer} ${getAnimationClass()}`} key={currentView}>
                     {currentView === "completion" ? (
                         <CompletionView
-                            schedules={MOCK_DATA.completedSchedules}
-                            itemCodes={MOCK_DATA.completedItemCodes}
-                            itemCodeOptions={MOCK_DATA.itemCodeOptions}
+                            schedules={scheduleItems}
+                            itemCodes={[]} // TODO: Phase 7 - 必要に応じて実装
+                            itemCodeOptions={generateItemCodeOptions(uploadInfo?.workItems || [])}
+                            password={uploadInfo?.password || ""}
                             onBack={() => backTo(2)}
                             onBackToLinking={backTo}
+                            onRegisterSuccess={() => backTo(2)} // 登録成功後FileUploadViewへ
+                            onShowMessage={(type, title, message) => {
+                                appMessageDialogRef.showMessageAsync(title, message, type === "success" ? "INFO" : "ERROR");
+                            }}
                         />
                     ) : currentView === "linking" ? (
                         <LinkingProcessView

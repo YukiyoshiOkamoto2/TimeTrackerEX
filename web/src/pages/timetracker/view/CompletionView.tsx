@@ -1,14 +1,19 @@
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import {
-    ArrowDownload24Regular,
+    ArrowLeft24Regular,
+    ArrowSync24Regular,
     CheckmarkCircle24Regular,
-    ClipboardTask24Regular,
     DocumentBulletList24Regular,
+    Warning24Regular,
 } from "@fluentui/react-icons";
+import { useState } from "react";
 import { Card } from "@/components/card";
-import { InteractiveCard } from "@/components/interactive-card";
+import { registerTasks, type RegisterTasksRequest } from "@/core/api";
+import { getLogger } from "@/lib/logger";
 import { PageHeader } from "../components/PageHeader";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "../components/index";
+
+const logger = getLogger("CompletionView");
 
 const useStyles = makeStyles({
     headerContainer: {
@@ -93,14 +98,26 @@ export type CompletionViewProps = {
     schedules: ScheduleItem[];
     itemCodes: string[];
     itemCodeOptions: ItemCodeOption[];
+    password: string;
     onBack: () => void;
     onBackToLinking: () => void;
+    onRegisterSuccess: () => void;
+    onShowMessage: (type: "success" | "error", title: string, message: string) => void;
 };
 
-export function CompletionView({ schedules, itemCodeOptions, onBack, onBackToLinking }: CompletionViewProps) {
+export function CompletionView({
+    schedules,
+    itemCodeOptions,
+    password,
+    onBack,
+    onBackToLinking,
+    onRegisterSuccess,
+    onShowMessage,
+}: CompletionViewProps) {
     const styles = useStyles();
+    const [isRegistering, setIsRegistering] = useState(false);
 
-    const breadcrumbs = ["TimeTracker", "紐づけ処理", "登録済みスケジュール"];
+    const breadcrumbs = ["TimeTracker", "紐づけ処理", "スケジュール確認"];
 
     const handleBreadcrumbClick = (index: number) => {
         if (index === 0) {
@@ -110,7 +127,80 @@ export function CompletionView({ schedules, itemCodeOptions, onBack, onBackToLin
         }
     };
 
-    const handleExport = () => {};
+    /**
+     * タスク登録処理
+     */
+    const handleRegister = async () => {
+        logger.info("タスク登録開始", { schedulesCount: schedules.length });
+        setIsRegistering(true);
+
+        try {
+            // 作業項目コード未設定チェック
+            const missingCodes = schedules.filter((s) => !s.itemCode || s.itemCode.trim() === "");
+            if (missingCodes.length > 0) {
+                const errorMsg = `${missingCodes.length}件の作業項目コードが未設定です。\n全てのスケジュールに作業項目コードを設定してください。`;
+                logger.warn("作業項目コード未設定エラー", { missingCount: missingCodes.length });
+                onShowMessage("error", "入力エラー", errorMsg);
+                return;
+            }
+
+            // ScheduleItemからAPIリクエスト形式に変換
+            const request: RegisterTasksRequest = {
+                password,
+                schedules: schedules.map((item) => {
+                    // time: "09:00-10:30" を startTime, endTime に分解
+                    const [startTime, endTime] = item.time.split("-");
+                    return {
+                        date: item.date,
+                        startTime: startTime.trim(),
+                        endTime: endTime ? endTime.trim() : startTime.trim(),
+                        itemCode: item.itemCode || "",
+                        title: item.name,
+                    };
+                }),
+            };
+
+            logger.debug("API呼び出し開始", { request });
+
+            // API呼び出し
+            const response = await registerTasks(request);
+
+            if (response.success) {
+                logger.info("タスク登録成功", {
+                    registeredCount: response.registeredCount,
+                    message: response.message,
+                });
+
+                onShowMessage(
+                    "success",
+                    "タスク登録完了",
+                    `${response.registeredCount || schedules.length}件のタスクを登録しました。`,
+                );
+
+                // 成功後、FileUploadViewへ戻る
+                onRegisterSuccess();
+            } else {
+                const errorMsg = response.message || "タスク登録に失敗しました";
+                logger.error("タスク登録失敗", { response });
+                onShowMessage("error", "タスク登録エラー", errorMsg);
+
+                // エラー詳細がある場合はログ出力
+                if (response.errors && response.errors.length > 0) {
+                    logger.error("タスク登録エラー詳細", { errors: response.errors });
+                }
+            }
+        } catch (error) {
+            logger.error("タスク登録API呼び出しエラー", { error });
+            const errorMsg = error instanceof Error ? error.message : "不明なエラーが発生しました";
+            onShowMessage("error", "タスク登録エラー", errorMsg);
+        } finally {
+            setIsRegistering(false);
+        }
+    };
+
+    // 未設定の作業項目コード数をカウント
+    const missingCodesCount = schedules.filter((s) => !s.itemCode || s.itemCode.trim() === "").length;
+    const hasErrors = missingCodesCount > 0;
 
     return (
         <>
@@ -118,45 +208,49 @@ export function CompletionView({ schedules, itemCodeOptions, onBack, onBackToLin
                 <div className={styles.headerLeft}>
                     <PageHeader breadcrumbs={breadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />
                 </div>
-                <Button
-                    appearance="primary"
-                    icon={<ArrowDownload24Regular />}
-                    onClick={handleExport}
-                    className={styles.exportButton}
-                >
-                    エクスポート
-                </Button>
+                <div style={{ display: "flex", gap: tokens.spacingHorizontalM }}>
+                    <Button appearance="secondary" icon={<ArrowLeft24Regular />} onClick={onBackToLinking}>
+                        戻る
+                    </Button>
+                    <Button
+                        appearance="primary"
+                        icon={<ArrowSync24Regular />}
+                        onClick={handleRegister}
+                        disabled={isRegistering || hasErrors}
+                    >
+                        {isRegistering ? "登録中..." : "タスク登録"}
+                    </Button>
+                </div>
             </div>
 
             <div className={styles.section}>
-                <Card className={`${styles.completionMessage} ${styles.statusCard}`}>
-                    <CheckmarkCircle24Regular className={styles.completionIcon} />
-                    <div className={styles.completionText}>登録が完了しました</div>
-                </Card>
-
-                <div className={styles.logSection}>
-                    <div className={styles.sectionTitle}>
-                        <ClipboardTask24Regular className={styles.sectionIcon} />
-                        <span>実行中の処理のログを表示</span>
-                    </div>
-                    <InteractiveCard title="ログ詳細" variant="expandable" defaultExpanded={false}>
-                        <div className={styles.logItem}>
-                            <CheckmarkCircle24Regular className={styles.logIcon} />
-                            <span>実行</span>
+                {/* 警告メッセージ */}
+                {hasErrors && (
+                    <Card className={`${styles.completionMessage} ${styles.statusCard}`}>
+                        <Warning24Regular className={styles.completionIcon} style={{ color: tokens.colorPaletteRedForeground1 }} />
+                        <div className={styles.completionText}>
+                            {missingCodesCount}件の作業項目コードが未設定です。全てのスケジュールに作業項目コードを設定してください。
                         </div>
-                        <div className={styles.logItem}>
-                            <CheckmarkCircle24Regular className={styles.logIcon} />
-                            <span>完了</span>
-                        </div>
-                    </InteractiveCard>
-                </div>
+                    </Card>
+                )}
 
+                {/* 確認メッセージ */}
+                {!hasErrors && (
+                    <Card className={`${styles.completionMessage} ${styles.statusCard}`}>
+                        <CheckmarkCircle24Regular className={styles.completionIcon} />
+                        <div className={styles.completionText}>
+                            {schedules.length}件のスケジュールを登録します。内容を確認してください。
+                        </div>
+                    </Card>
+                )}
+
+                {/* スケジュール一覧 */}
                 <div>
                     <div className={styles.sectionTitle}>
                         <DocumentBulletList24Regular className={styles.sectionIcon} />
                         <span>スケジュール一覧</span>
                     </div>
-                    <ScheduleTable schedules={schedules} itemCodeOptions={itemCodeOptions} itemCodeMode="readonly" />
+                    <ScheduleTable schedules={schedules} itemCodeOptions={itemCodeOptions} itemCodeMode="editable" />
                 </div>
             </div>
         </>

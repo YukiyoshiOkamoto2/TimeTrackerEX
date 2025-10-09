@@ -1,7 +1,22 @@
 /**
- * TimeTracker Session Management Hook
- *
- * TimeTrackerのセッション管理を行うカスタムフック
+ * TimeTracker Session Manageme    // プロジェクト・WorkItem
+    project: Project | null;
+    workItems: WorkItem[] | null;
+
+    // ローディング状態
+    isLoading: boolean;
+    isAuthenticating: boolean;
+
+    // エラー
+    error: string | null;
+
+    // パスワード入力ダイアログ
+    isPasswordDialogOpen: boolean;
+
+    // Phase 7追加: タスク登録用パスワード
+    // セッション中のみメモリに保持（sessionStorageには保存しない）
+    password: string | null;
+}* TimeTrackerのセッション管理を行うカスタムフック
  * - 認証情報の管理(sessionStorageに永続化)
  * - プロジェクト・作業項目の取得とキャッシュ
  * - タスク登録
@@ -47,6 +62,10 @@ export interface TimeTrackerSessionState {
 
     // パスワード入力ダイアログ
     isPasswordDialogOpen: boolean;
+
+    // Phase 7追加: タスク登録用パスワード
+    // セッション中のみメモリに保持（sessionStorageには保存しない）
+    password: string | null;
 }
 
 export interface TimeTrackerSessionActions {
@@ -89,6 +108,7 @@ export function useTimeTrackerSession({
     const [isAuthenticating, setIsAuthenticating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+    const [password, setPassword] = useState<string | null>(null);
 
     // 初期化: sessionStorageから復元
     useEffect(() => {
@@ -120,14 +140,15 @@ export function useTimeTrackerSession({
      * パスワードで認証
      */
     const authenticateWithPassword = useCallback(
-        async (password: string) => {
+        async (pwd: string) => {
             setIsAuthenticating(true);
             setError(null);
 
             try {
-                const newAuth = await authenticateAsync(baseUrl, userName, password);
+                const newAuth = await authenticateAsync(baseUrl, userName, pwd);
                 setAuth(newAuth);
                 saveAuth(newAuth, tokenExpirationMinutes);
+                setPassword(pwd); // Phase 7: パスワードを保持（メモリのみ）
                 setIsPasswordDialogOpen(false);
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : "認証に失敗しました";
@@ -147,6 +168,7 @@ export function useTimeTrackerSession({
         setAuth(null);
         setProject(null);
         setWorkItems(null);
+        setPassword(null); // Phase 7: パスワードもクリア
         setError(null);
         clearAllSession();
     }, []);
@@ -170,8 +192,8 @@ export function useTimeTrackerSession({
                 setProject(fetchedProject);
                 saveProject(fetchedProject);
 
-                // 作業項目取得
-                const fetchedWorkItems = await getWorkItemsAsync(baseUrl, projectId, auth);
+                // 作業項目取得（userNameを渡す）
+                const fetchedWorkItems = await getWorkItemsAsync(baseUrl, projectId, auth, userName);
                 setWorkItems(fetchedWorkItems);
                 saveWorkItems(fetchedWorkItems);
             } catch (err) {
@@ -229,6 +251,7 @@ export function useTimeTrackerSession({
     return {
         // State
         isAuthenticated: !!auth,
+        password, // Phase 7: パスワードを返す
         auth,
         project,
         workItems,

@@ -1,29 +1,35 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
 import {
     Button,
+    DataGrid,
+    DataGridBody,
+    DataGridCell,
+    DataGridHeader,
+    DataGridHeaderCell,
+    DataGridRow,
     Drawer,
     DrawerBody,
     DrawerHeader,
     DrawerHeaderTitle,
-    Input,
+    Dropdown,
+    Option,
+    TableCellLayout,
+    TableColumnDefinition,
+    createTableColumn,
     makeStyles,
-    Switch,
     tokens,
 } from "@fluentui/react-components";
 import {
     CheckmarkCircle24Regular,
     Dismiss24Regular,
-    DocumentBulletList24Regular,
     History24Regular,
-    Settings24Regular,
-    Sparkle24Regular,
+    Link24Regular,
 } from "@fluentui/react-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/card";
 import { InteractiveCard } from "@/components/interactive-card";
 import type { AutoLinkingResult, UploadInfo } from "../models";
 import { PageHeader } from "../components/PageHeader";
-import { ItemCodeOption, ScheduleItem, ScheduleTable } from "../components/index";
 import {
     autoLinkEvents,
     createPaidLeaveDayTasks,
@@ -35,7 +41,7 @@ import {
 import { useSettings } from "@/store";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
-import type { DayTask, Event, EventWorkItemPair } from "@/types";
+import type { DayTask, EventWorkItemPair } from "@/types";
 
 const logger = getLogger("LinkingProcessView");
 
@@ -174,71 +180,358 @@ const useStyles = makeStyles({
         marginRight: tokens.spacingHorizontalXS,
         verticalAlign: "middle",
     },
+    // 統計表示用スタイル
+    statsGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(2, 1fr)",
+        gap: "16px",
+        marginTop: "16px",
+    },
+    statItem: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        padding: "16px",
+        backgroundColor: tokens.colorNeutralBackground2,
+        borderRadius: tokens.borderRadiusMedium,
+    },
+    statLabel: {
+        fontSize: "13px",
+        color: tokens.colorNeutralForeground2,
+        fontWeight: "500",
+    },
+    statValue: {
+        fontSize: "24px",
+        color: tokens.colorNeutralForeground1,
+        fontWeight: "600",
+    },
+    statValueSuccess: {
+        color: tokens.colorPaletteGreenForeground1,
+    },
+    statValueWarning: {
+        color: tokens.colorPaletteYellowForeground1,
+    },
+    statSubText: {
+        fontSize: "12px",
+        color: tokens.colorNeutralForeground3,
+        marginTop: "4px",
+    },
+    // テーブルコンテナ用スタイル
+    tableContainer: {
+        marginTop: "24px",
+    },
 });
 
 export type LinkingProcessViewProps = {
     uploadInfo?: UploadInfo;
     setIsLoading: (isLoading: boolean) => void;
     onBack: () => void;
-    onSubmit?: (schedules: ScheduleItem[]) => void;
+    onSubmit?: (dayTasks: DayTask[]) => void;
 };
-
-// Mock history data
-const historyData = [
-    {
-        time: "2025年10月4日 14:30",
-        action: "自動紐づけ実行",
-        details: "59件のスケジュールを処理完了",
-    },
-    {
-        time: "2025年10月3日 16:45",
-        action: "手動紐づけ",
-        details: "15件のスケジュールを手動で紐づけ",
-    },
-    {
-        time: "2025年10月2日 10:20",
-        action: "自動紐づけ実行",
-        details: "42件のスケジュールを処理完了",
-    },
-    {
-        time: "2025年10月1日 09:15",
-        action: "詳細設定変更",
-        details: "マッチング精度を80%に設定",
-    },
-];
-
-// Mock item code options
-const itemCodeOptions: ItemCodeOption[] = [
-    { code: "001", name: "会議" },
-    { code: "002", name: "開発作業" },
-    { code: "003", name: "レビュー" },
-    { code: "004", name: "打ち合わせ" },
-    { code: "005", name: "調査" },
-];
-
-// Mock schedule data
-const schedules: ScheduleItem[] = [
-    { date: "10月20日", time: "10:00 30分", name: "スケジュール名", organizer: "a" },
-    { date: "10月21日", time: "10:00 30分", name: "スケジュール名", organizer: "b" },
-    { date: "10月22日", time: "10:00 30分", name: "スケジュール名", organizer: "c" },
-    { date: "10月23日", time: "10:00 30分", name: "スケジュール名", organizer: "d" },
-];
 
 export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading }: LinkingProcessViewProps) {
     const styles = useStyles();
     const { settings } = useSettings();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [option1Value, setOption1Value] = useState("");
-    const [option2Enabled, setOption2Enabled] = useState(true);
-    const [currentSchedules, setCurrentSchedules] = useState<ScheduleItem[]>(schedules);
     
     // 自動紐付け結果の状態
     const [linkingResult, setLinkingResult] = useState<AutoLinkingResult | null>(null);
-    const [linkedPairs, setLinkedPairs] = useState<EventWorkItemPair[]>([]);
-    const [unlinkedEvents, setUnlinkedEvents] = useState<Event[]>([]);
+    
+    // 手動紐づけ結果の状態
+    const [manuallyLinkedPairs, setManuallyLinkedPairs] = useState<EventWorkItemPair[]>([]);
+    
+    // 未紐付けイベントの選択状態
+    const [selectedWorkItems, setSelectedWorkItems] = useState<Map<string, string>>(new Map());
 
     // 日ごとのタスク分割結果の状態
     const [dayTasks, setDayTasks] = useState<DayTask[]>([]);
+
+    // 統計データの計算
+    const stats = useMemo(() => {
+        const linkedCount = linkingResult?.linked.length || 0;
+        const timeOffCount = linkingResult?.timeOffCount || 0;
+        const historyCount = linkingResult?.historyCount || 0;
+        const unlinkedCount = linkingResult?.unlinked.length || 0;
+        const manualCount = manuallyLinkedPairs.length;
+        
+        // 有給休暇タスクの日数
+        const paidLeaveDays = dayTasks.filter(task => 
+            task.events.some(e => e.name?.includes("有給") || e.name?.includes("休暇"))
+        ).length;
+        
+        // 通常タスクの日数
+        const normalTaskDays = dayTasks.filter(task =>
+            !task.events.some(e => e.name?.includes("有給") || e.name?.includes("休暇"))
+        ).length;
+
+        return {
+            linkedCount,
+            timeOffCount,
+            historyCount,
+            unlinkedCount,
+            manualCount,
+            totalLinked: linkedCount + manualCount,
+            paidLeaveDays,
+            normalTaskDays,
+            totalDays: dayTasks.length,
+        };
+    }, [linkingResult, manuallyLinkedPairs, dayTasks]);
+
+    // 紐付け済みイベントテーブルの列定義
+    type LinkedEventRow = {
+        id: string;
+        eventName: string;
+        startTime: string;
+        endTime: string;
+        workItemName: string;
+        source: string;
+    };
+
+    const linkedEventsColumns: TableColumnDefinition<LinkedEventRow>[] = [
+        createTableColumn<LinkedEventRow>({
+            columnId: "eventName",
+            compare: (a, b) => a.eventName.localeCompare(b.eventName),
+            renderHeaderCell: () => "イベント名",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    {item.eventName}
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<LinkedEventRow>({
+            columnId: "startTime",
+            compare: (a, b) => a.startTime.localeCompare(b.startTime),
+            renderHeaderCell: () => "開始時刻",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    {item.startTime}
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<LinkedEventRow>({
+            columnId: "endTime",
+            compare: (a, b) => a.endTime.localeCompare(b.endTime),
+            renderHeaderCell: () => "終了時刻",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    {item.endTime}
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<LinkedEventRow>({
+            columnId: "workItemName",
+            compare: (a, b) => a.workItemName.localeCompare(b.workItemName),
+            renderHeaderCell: () => "作業項目",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    {item.workItemName}
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<LinkedEventRow>({
+            columnId: "source",
+            compare: (a, b) => a.source.localeCompare(b.source),
+            renderHeaderCell: () => "紐付けソース",
+            renderCell: (item) => (
+                <TableCellLayout
+                    media={<Link24Regular />}
+                >
+                    {item.source}
+                </TableCellLayout>
+            ),
+        }),
+    ];
+
+    // 紐付け済みイベントのデータ変換
+    const linkedEventsRows = useMemo<LinkedEventRow[]>(() => {
+        if (!linkingResult) return [];
+        
+        const rows: LinkedEventRow[] = [];
+        
+        // 自動紐付けイベント（timeOffCountとhistoryCountを使って判定）
+        let historyCount = 0;
+        for (const pair of linkingResult.linked) {
+            // 有給・休暇イベントかどうかを判定
+            const isTimeOff = pair.event.name?.includes("有給") || pair.event.name?.includes("休暇");
+            
+            // 履歴からの紐付けかどうかを判定（timeOffでない場合で、historyCountがまだ残っている場合）
+            let source: string;
+            if (isTimeOff) {
+                source = "休暇";
+            } else if (historyCount < linkingResult.historyCount) {
+                source = "履歴";
+                historyCount++;
+            } else {
+                source = "自動";
+            }
+            
+            rows.push({
+                id: `auto-${pair.event.uuid}`,
+                eventName: pair.event.name || "無題",
+                startTime: new Date(pair.event.schedule.start).toLocaleString("ja-JP"),
+                endTime: pair.event.schedule.end 
+                    ? new Date(pair.event.schedule.end).toLocaleString("ja-JP")
+                    : "-",
+                workItemName: pair.workItem.name,
+                source,
+            });
+        }
+        
+        // 手動紐付けイベント
+        for (const pair of manuallyLinkedPairs) {
+            rows.push({
+                id: `manual-${pair.event.uuid}`,
+                eventName: pair.event.name || "無題",
+                startTime: new Date(pair.event.schedule.start).toLocaleString("ja-JP"),
+                endTime: pair.event.schedule.end
+                    ? new Date(pair.event.schedule.end).toLocaleString("ja-JP")
+                    : "-",
+                workItemName: pair.workItem.name,
+                source: "手動",
+            });
+        }
+        
+        return rows;
+    }, [linkingResult, manuallyLinkedPairs]);
+
+    // 未紐付けイベントテーブルの列定義
+    type UnlinkedEventRow = {
+        id: string;
+        eventName: string;
+        startTime: string;
+        endTime: string;
+        selectedWorkItemId?: string;
+    };
+
+    const unlinkedEventsColumns: TableColumnDefinition<UnlinkedEventRow>[] = [
+        createTableColumn<UnlinkedEventRow>({
+            columnId: "eventName",
+            compare: (a, b) => a.eventName.localeCompare(b.eventName),
+            renderHeaderCell: () => "イベント名",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    {item.eventName}
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<UnlinkedEventRow>({
+            columnId: "startTime",
+            compare: (a, b) => a.startTime.localeCompare(b.startTime),
+            renderHeaderCell: () => "開始時刻",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    {item.startTime}
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<UnlinkedEventRow>({
+            columnId: "endTime",
+            compare: (a, b) => a.endTime.localeCompare(b.endTime),
+            renderHeaderCell: () => "終了時刻",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    {item.endTime}
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<UnlinkedEventRow>({
+            columnId: "workItem",
+            renderHeaderCell: () => "作業項目を選択",
+            renderCell: (item) => {
+                const selectedWorkItemId = item.selectedWorkItemId;
+                const selectedWorkItem = workItems.find(w => w.id === selectedWorkItemId);
+                
+                return (
+                    <TableCellLayout>
+                        <Dropdown
+                            placeholder="作業項目を選択..."
+                            value={selectedWorkItem?.name || ""}
+                            selectedOptions={selectedWorkItemId ? [selectedWorkItemId] : []}
+                            onOptionSelect={(_, data) => {
+                                if (data.optionValue) {
+                                    handleWorkItemSelect(item.id, data.optionValue);
+                                }
+                            }}
+                        >
+                            {workItems.map(workItem => (
+                                <Option key={workItem.id} value={workItem.id}>
+                                    {workItem.name}
+                                </Option>
+                            ))}
+                        </Dropdown>
+                    </TableCellLayout>
+                );
+            },
+        }),
+    ];
+
+    // 未紐付けイベントのデータ変換
+    const unlinkedEventsRows = useMemo<UnlinkedEventRow[]>(() => {
+        if (!linkingResult) return [];
+        
+        return linkingResult.unlinked.map(event => ({
+            id: event.uuid,
+            eventName: event.name || "無題",
+            startTime: new Date(event.schedule.start).toLocaleString("ja-JP"),
+            endTime: event.schedule.end
+                ? new Date(event.schedule.end).toLocaleString("ja-JP")
+                : "-",
+            selectedWorkItemId: selectedWorkItems.get(event.uuid),
+        }));
+    }, [linkingResult, selectedWorkItems]);
+
+    // WorkItemリストの取得
+    const workItems = useMemo(() => {
+        return uploadInfo?.workItems || [];
+    }, [uploadInfo]);
+
+    // 手動紐付けハンドラー
+    const handleWorkItemSelect = async (eventId: string, workItemId: string) => {
+        if (!linkingResult) return;
+
+        // 選択状態を更新
+        setSelectedWorkItems(prev => {
+            const newMap = new Map(prev);
+            newMap.set(eventId, workItemId);
+            return newMap;
+        });
+
+        // イベントとWorkItemを取得
+        const event = linkingResult.unlinked.find(e => e.uuid === eventId);
+        const workItem = workItems.find(w => w.id === workItemId);
+
+        if (!event || !workItem) return;
+
+        // 手動紐付けペアを追加
+        const newPair: EventWorkItemPair = { event, workItem };
+        setManuallyLinkedPairs(prev => [...prev, newPair]);
+
+        // 履歴に保存
+        try {
+            const historyManager = new HistoryManager();
+            historyManager.setHistory(event, workItem);
+            historyManager.dump();
+            logger.info(`手動紐付けを履歴に保存しました: ${event.name} -> ${workItem.name}`);
+        } catch (error) {
+            logger.error("履歴保存エラー:", error);
+        }
+
+        // linkingResultから該当イベントを削除し、linkedに追加
+        setLinkingResult(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                linked: [...prev.linked, newPair],
+                unlinked: prev.unlinked.filter(e => e.uuid !== eventId),
+            };
+        });
+
+        appMessageDialogRef.showMessageAsync(
+            "紐付け完了",
+            `「${event.name}」を「${workItem.name}」に紐付けました`,
+            "INFO"
+        );
+    };
 
     // 自動紐付け処理
     useEffect(() => {
@@ -321,18 +614,17 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
                 const result = autoLinkEvents(processedEvents, workItems, settings.timetracker, historyManager);
 
                 setLinkingResult(result);
-                setLinkedPairs(result.linked);
-                setUnlinkedEvents(result.unlinked);
 
-                // 結果をユーザーに通知
-                if (result.timeOffCount > 0 || result.historyCount > 0) {
+                // 結果をユーザーに通知（統計情報を表示）
+                if (result.linked.length > 0 || result.unlinked.length > 0) {
                     await appMessageDialogRef?.showMessageAsync(
                         "自動紐付け完了",
-                        `以下のイベントを自動的に紐付けました:\n\n` +
-                            `・休暇イベント: ${result.timeOffCount}件\n` +
-                            `・履歴から: ${result.historyCount}件\n` +
-                            `・未紐付け: ${result.unlinked.length}件`,
-                        "INFO",
+                        `紐づけ処理が完了しました:\n\n` +
+                            `✅ 紐づけ済み: ${result.linked.length}件\n` +
+                            `   • 休暇イベント: ${result.timeOffCount}件\n` +
+                            `   • 履歴から: ${result.historyCount}件\n\n` +
+                            `${result.unlinked.length > 0 ? `❌ 未紐づけ: ${result.unlinked.length}件\n（手動で紐づけしてください）` : ""}`,
+                        result.unlinked.length > 0 ? "WARN" : "INFO",
                     );
                 }
 
@@ -352,19 +644,21 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
         performAutoLinking();
     }, [uploadInfo, settings.timetracker, setIsLoading]);
 
-    const handleScheduleChange = (updatedSchedules: ScheduleItem[]) => {
-        setCurrentSchedules(updatedSchedules);
-    };
-
-    const handleApplyAI = async () => {
-        setIsLoading(true);
-        await appMessageDialogRef.showMessageAsync("AI", "AI", "WARN");
-        setIsLoading(false);
-    };
-
     const handleSubmit = () => {
-        if (onSubmit) {
-            onSubmit(currentSchedules);
+        // TODO: Task 4 - 全イベントが紐づけられているかチェック
+        if (stats.unlinkedCount > 0) {
+            appMessageDialogRef.showMessageAsync(
+                "未紐づけイベントがあります",
+                `${stats.unlinkedCount}件のイベントがまだ紐づけられていません。\n全てのイベントを紐づけてから次へ進んでください。`,
+                "WARN"
+            );
+            return;
+        }
+
+        // CompletionViewへ遷移（dayTasksを渡す）
+        if (onSubmit && dayTasks.length > 0) {
+            logger.info(`CompletionViewへ遷移: ${dayTasks.length}日分のタスクを渡します`);
+            onSubmit(dayTasks);
         }
     };
 
@@ -401,62 +695,129 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
                 </Card>
             </div>
 
-            <div className={styles.section}>
-                <InteractiveCard
-                    title="✨ AIによる自動紐づけ"
-                    description="スケジュールとItemコードを自動的にマッチング"
-                    variant="expandable"
-                    defaultExpanded={false}
-                >
-                    <div className={styles.optionRow}>
-                        <span className={styles.optionLabel}>
-                            <Sparkle24Regular className={styles.optionIcon} />
-                            オプション 1
-                        </span>
-                        <div className={styles.optionControl}>
-                            <Input
-                                placeholder="入力"
-                                value={option1Value}
-                                onChange={(e) => setOption1Value(e.target.value)}
-                                className={styles.optionInput}
-                            />
-                        </div>
-                    </div>
-                    <div className={styles.optionRow}>
-                        <span className={styles.optionLabel}>
-                            <Settings24Regular className={styles.optionIcon} />
-                            オプション 2
-                        </span>
-                        <div className={styles.optionControl}>
-                            <Switch checked={option2Enabled} onChange={(_, data) => setOption2Enabled(data.checked)} />
-                        </div>
-                    </div>
-                    <div className={styles.autoLinkButtonContainer}>
-                        <Button
-                            appearance="primary"
-                            icon={<Sparkle24Regular />}
-                            className={styles.autoLinkButton}
-                            onClick={handleApplyAI}
-                        >
-                            適用
-                        </Button>
-                    </div>
-                </InteractiveCard>
-            </div>
+            {/* 統計表示カード */}
+            {linkingResult && (
+                <div className={styles.section}>
+                    <InteractiveCard
+                        title="📊 自動紐づけ結果"
+                        description="イベントとWorkItemの紐づけ状況"
+                        variant="expandable"
+                        defaultExpanded={true}
+                    >
+                        <div className={styles.statsGrid}>
+                            <div className={styles.statItem}>
+                                <span className={styles.statLabel}>✅ 紐づけ済み</span>
+                                <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+                                    {stats.totalLinked}件
+                                </span>
+                                <span className={styles.statSubText}>
+                                    休暇: {stats.timeOffCount}件 / 履歴: {stats.historyCount}件
+                                    {stats.manualCount > 0 && ` / 手動: ${stats.manualCount}件`}
+                                </span>
+                            </div>
 
-            <div className={styles.section}>
-                <div className={styles.sectionTitle}>
-                    <DocumentBulletList24Regular className={styles.scheduleIcon} />
-                    スケジュール一覧
+                            <div className={styles.statItem}>
+                                <span className={styles.statLabel}>❌ 未紐づけ</span>
+                                <span className={`${styles.statValue} ${stats.unlinkedCount > 0 ? styles.statValueWarning : ""}`}>
+                                    {stats.unlinkedCount}件
+                                </span>
+                                <span className={styles.statSubText}>
+                                    {stats.unlinkedCount > 0 ? "手動で紐づけしてください" : "すべて紐づけ完了"}
+                                </span>
+                            </div>
+
+                            <div className={styles.statItem}>
+                                <span className={styles.statLabel}>📅 有給休暇タスク</span>
+                                <span className={styles.statValue}>{stats.paidLeaveDays}日分</span>
+                            </div>
+
+                            <div className={styles.statItem}>
+                                <span className={styles.statLabel}>📅 通常タスク</span>
+                                <span className={styles.statValue}>{stats.totalDays}日分</span>
+                                <span className={styles.statSubText}>
+                                    合計イベント数: {stats.linkedCount + stats.unlinkedCount}件
+                                </span>
+                            </div>
+                        </div>
+                    </InteractiveCard>
                 </div>
+            )}
 
-                <ScheduleTable
-                    schedules={currentSchedules}
-                    itemCodeOptions={itemCodeOptions}
-                    itemCodeMode="editable"
-                    onScheduleChange={handleScheduleChange}
-                />
-            </div>
+            {/* 紐付け済みイベント一覧テーブル (Task 2) */}
+            {linkingResult && linkedEventsRows.length > 0 && (
+                <div className={styles.tableContainer}>
+                    <InteractiveCard
+                        title="✅ 紐付け済みイベント一覧"
+                        defaultExpanded={true}
+                    >
+                        <DataGrid
+                            items={linkedEventsRows}
+                            columns={linkedEventsColumns}
+                            sortable
+                            getRowId={(item) => item.id}
+                        >
+                            <DataGridHeader>
+                                <DataGridRow>
+                                    {({ renderHeaderCell }) => (
+                                        <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+                                    )}
+                                </DataGridRow>
+                            </DataGridHeader>
+                            <DataGridBody<LinkedEventRow>>
+                                {({ item, rowId }) => (
+                                    <DataGridRow<LinkedEventRow> key={rowId}>
+                                        {({ renderCell }) => (
+                                            <DataGridCell>{renderCell(item)}</DataGridCell>
+                                        )}
+                                    </DataGridRow>
+                                )}
+                            </DataGridBody>
+                        </DataGrid>
+                    </InteractiveCard>
+                </div>
+            )}
+            
+            {/* 未紐付けイベント一覧テーブル (Task 3) */}
+            {linkingResult && unlinkedEventsRows.length > 0 && (
+                <div className={styles.tableContainer}>
+                    <InteractiveCard
+                        title="❌ 未紐付けイベント一覧"
+                        defaultExpanded={true}
+                    >
+                        <div style={{ 
+                            marginBottom: "16px",
+                            fontSize: "13px",
+                            color: tokens.colorNeutralForeground3 
+                        }}>
+                            以下のイベントは自動紐付けできませんでした。
+                            作業項目を手動で選択してください。
+                        </div>
+                        <DataGrid
+                            items={unlinkedEventsRows}
+                            columns={unlinkedEventsColumns}
+                            sortable
+                            getRowId={(item) => item.id}
+                        >
+                            <DataGridHeader>
+                                <DataGridRow>
+                                    {({ renderHeaderCell }) => (
+                                        <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+                                    )}
+                                </DataGridRow>
+                            </DataGridHeader>
+                            <DataGridBody<UnlinkedEventRow>>
+                                {({ item, rowId }) => (
+                                    <DataGridRow<UnlinkedEventRow> key={rowId}>
+                                        {({ renderCell }) => (
+                                            <DataGridCell>{renderCell(item)}</DataGridCell>
+                                        )}
+                                    </DataGridRow>
+                                )}
+                            </DataGridBody>
+                        </DataGrid>
+                    </InteractiveCard>
+                </div>
+            )}
 
             <div className={styles.submitButtonContainer}>
                 <Button
@@ -469,6 +830,7 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
                 </Button>
             </div>
 
+            {/* TODO: 履歴機能は将来実装 */}
             <Drawer
                 type="overlay"
                 position="end"
@@ -492,13 +854,9 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
                 </DrawerHeader>
 
                 <DrawerBody>
-                    {historyData.map((item, index) => (
-                        <div key={index} className={styles.historyItem}>
-                            <div className={styles.historyTime}>{item.time}</div>
-                            <div className={styles.historyAction}>{item.action}</div>
-                            <div className={styles.historyDetails}>{item.details}</div>
-                        </div>
-                    ))}
+                    <div style={{ padding: "16px", textAlign: "center", color: "#666" }}>
+                        処理履歴機能は開発中です
+                    </div>
                 </DrawerBody>
             </Drawer>
         </>

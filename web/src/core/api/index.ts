@@ -11,10 +11,11 @@ export {
     getProjectAsync,
     getWorkItemsAsync,
     registerTaskAsync,
+    registerTasks,
     isAuthenticationError,
     validateTimeTrackerTask,
 } from "./timeTracker";
-export type { TimeTrackerAuth, TimeTrackerTask } from "./timeTracker";
+export type { TimeTrackerAuth, TimeTrackerTask, RegisterTasksRequest, RegisterTasksResponse } from "./timeTracker";
 
 // 旧クラスベースAPI（非推奨）
 export { TimeTracker } from "./timeTracker";

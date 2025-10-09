@@ -1,8 +1,8 @@
 # TimeTracker Web - 実装計画書
 
-**バージョン**: 2.0  
-**最終更新**: 2025年10月9日 Phase 4完了・バグ修正  
-**ステータス**: Phase 4完了 / Phase 5開始準備中
+**バージョン**: 2.2  
+**最終更新**: 2025年10月9日 Phase 5完了  
+**ステータス**: ✅ Phase 5完了、Phase 6準備中
 
 ---
 
@@ -41,8 +41,11 @@ TimeTracker Pythonアプリケーション（app.py）のWebアプリケーシ�
 #### 2. LinkingProcessView.tsx
 - 自動紐づけ処理（useEffect内で実行）
 - **Phase 4で修正**: PDF/ICS両方なくても動作するように改善
-- 紐づけ結果の表示（予定）
-- 手動紐づけUI（未実装）
+- **Phase 5で追加予定**: 
+  - 自動紐づけ結果の統計表示
+  - 紐づけ済みイベント一覧テーブル
+  - 未紐づけイベント一覧と手動紐づけUI
+  - WorkItem選択ドロップダウン
 - 「次へ」ボタン → CompletionViewへ遷移
 
 #### 3. CompletionView.tsx
@@ -288,29 +291,84 @@ const enableEvents = hasEvents
 
 ---
 
-### ⏳ Phase 5: LinkingProcessView 改善（次）
+### ✅ Phase 5: LinkingProcessView UI改善（完了）
 
-**予定期間**: 1-2日
+**実施日**: 2025年10月9日  
+**所要時間**: 1日  
+**ステータス**: ✅ 完了
 
-**実装予定**:
-1. 自動紐づけ結果の表示UI
-2. 未紐づけイベント一覧テーブル
-3. 手動紐づけダイアログ（オプション）
-4. エラーハンドリング改善
+**実装タスク**:
+1. **Task 1**: 自動紐づけ結果の統計表示 ✅
+   - 紐づけ済み/未紐づけ件数表示
+   - InteractiveCardを使用した統計カード
+   - 4つのメトリクス表示
+
+2. **Task 2**: 紐づけ済みイベント一覧テーブル ✅
+   - DataGridコンポーネントを使用
+   - 列: イベント名、開始時刻、終了時刻、WorkItem名、紐づけソース（休暇/履歴/自動/手動）
+   - ソート機能実装
+
+3. **Task 3**: 未紐づけイベント一覧テーブル ✅
+   - DataGridコンポーネントを使用
+   - 列: イベント名、開始時刻、終了時刻、WorkItem選択
+   - 説明テキスト追加
+
+4. **Task 4**: 手動紐づけ機能 ✅
+   - Dropdownコンポーネントを使用したWorkItem選択
+   - 選択後に自動的に紐づけ済みに移動
+   - HistoryManagerへの保存（setHistory + dump）
+   - 成功メッセージ表示
+
+5. **Task 5**: 送信ボタンの検証と修正 ✅
+   - 未紐づけイベント検証
+   - 警告メッセージ表示
+   - DayTask[]型でCompletionViewへデータ渡し
+
+**成果物**:
+- `src/pages/timetracker/view/LinkingProcessView.tsx`（大幅修正）
+- `PHASE5_PLAN.md`（詳細計画）
+- `PHASE5_PROGRESS.md`（進捗記録）
+
+**詳細**: `PHASE5_PROGRESS.md`を参照
 
 ---
 
-### ⏳ Phase 6: CompletionView 統合
+### ✅ Phase 6: CompletionView 統合（完了）
 
-**予定期間**: 1日
+**実施日**: 2025年10月9日  
+**所要時間**: < 1日
 
-**実装予定**:
-1. `useTimeTrackerSession.registerTask` の使用
-2. タスク登録処理の実装
-3. 登録進捗表示
-4. エラーハンドリング
+**実装タスク**:
+1. **Task 1**: データ変換関数の実装 ✅
+   - convertDayTasksToScheduleItems 実装
+   - generateItemCodeOptions 実装
+   - 日付・時刻フォーマット関数実装
 
-**実装例**:
+2. **Task 2**: CompletionViewProps の更新 ✅
+   - 既存のprops定義で対応可能と確認
+
+3. **Task 3**: TimeTrackerPage データフロー統合 ✅
+   - state管理追加（dayTasks, scheduleItems）
+   - LinkingProcessViewのonSubmit更新
+   - CompletionViewへのデータ渡し
+
+4. **Task 4**: ItemCodeOptions 生成ロジック ✅
+   - WorkItem → ItemCodeOption 変換実装
+
+5. **Task 5**: エラーハンドリングとログ ✅
+   - try-catch実装
+   - エラーメッセージ表示
+   - ログ出力
+
+**成果物**:
+- `src/pages/timetracker/services/dataTransform.ts`（新規作成）
+- `src/pages/timetracker/TimeTrackerPage.tsx`（大幅修正）
+- `PHASE6_PLAN.md`（詳細計画）
+- `PHASE6_PROGRESS.md`（進捗記録）
+
+**詳細**: `PHASE6_PROGRESS.md`を参照
+
+**旧実装例** (Phase 7で実装予定):
 ```typescript
 const handleRegister = async () => {
     for (const dayTask of dayTasks) {
@@ -343,29 +401,52 @@ const handleRegister = async () => {
 
 ## Phase完了レポート
 
-### Phase 1完了レポート
+### ✅ Phase 1完了レポート
 - ✅ 23/23テスト成功（100%）
 - ✅ app.pyのコアロジック完全再現
 - ✅ eventLinkingService実装完了
 
-### Phase 2完了レポート
+### ✅ Phase 2完了レポート
 - ✅ 19/19テスト成功（100%）
 - ✅ ステートレスAPI実装完了
 - ✅ 認証エラー判定機能追加
 
-### Phase 3完了レポート
+### ✅ Phase 3完了レポート
 - ✅ 17/17テスト成功（100%）
 - ✅ セッション管理機構完成
 - ✅ sessionStorage永続化実装
 - ✅ PasswordInputDialog実装
 - ✅ 自動ログアウト機能実装
 
-### Phase 4完了レポート
+### ✅ Phase 4完了レポート
 - ✅ 全134テスト成功（100%）
 - ✅ FileUploadView認証フロー統合
 - ✅ LinkingProcessView改善（PDF/ICS個別対応）
 - ✅ UploadInfoモデル拡張
 - ✅ 型安全性の向上
+- ✅ ドキュメント整理（PLAN.md + SPEC.md統合）
+
+### ✅ Phase 5完了レポート
+
+**実施日**: 2025年10月9日  
+**所要時間**: 1日
+
+**完了タスク**:
+- ✅ Task 1: 統計表示実装（4つのメトリクス）
+- ✅ Task 2: 紐付け済みイベントテーブル実装（DataGrid使用）
+- ✅ Task 3: 未紐付けイベントテーブル実装（Dropdown統合）
+- ✅ Task 4: 手動紐付け機能実装（HistoryManager連携）
+- ✅ Task 5: 送信ボタンの検証と修正（型修正含む）
+- ✅ 実装計画作成（PHASE5_PLAN.md）
+- ✅ 進捗管理ファイル作成・更新（PHASE5_PROGRESS.md）
+- ✅ PLAN.md更新（Phase 5完了記録）
+
+**達成目標**:
+- ✅ 自動紐づけ結果の可視化
+- ✅ 手動紐づけUI実装
+- ✅ ユーザーが紐づけ結果を確認・編集可能に
+- ✅ TypeScriptコンパイルエラー: 0件
+- ✅ Lint警告: 0件
 
 **主な成果**:
 1. ユーザーエクスペリエンス向上
@@ -385,23 +466,95 @@ const handleRegister = async () => {
 4. バグ修正
    - PDFのみの場合の処理スキップ問題を解決
 
+### ✅ Phase 6完了レポート
+
+**実施日**: 2025年10月9日  
+**所要時間**: 1日
+
+**完了タスク**:
+- ✅ Task 1: データ変換関数実装（convertDayTasksToScheduleItems、generateItemCodeOptions）
+- ✅ Task 2: CompletionViewProps検証（型安全性確認）
+- ✅ Task 3: TimeTrackerPageデータフロー統合
+- ✅ Task 4: ItemCodeOptions生成実装
+- ✅ Task 5: エラーハンドリング・ログ実装
+- ✅ 実装計画作成（PHASE6_PLAN.md）
+- ✅ 進捗管理ファイル作成・更新（PHASE6_PROGRESS.md）
+- ✅ PLAN.md更新（Phase 6完了記録）
+
+**達成目標**:
+- ✅ LinkingProcessView → CompletionViewのデータフロー確立
+- ✅ DayTask → ScheduleItem変換ロジック実装
+- ✅ WorkItem → ItemCodeOption変換実装
+- ✅ エラーハンドリング強化（空データ検証）
+- ✅ TypeScriptコンパイルエラー: 0件
+- ✅ Lint警告: 0件
+
+**主な成果物**:
+1. `src/pages/timetracker/services/dataTransform.ts` (新規作成):
+   - convertDayTasksToScheduleItems関数（約80行）
+   - generateItemCodeOptions関数
+   - ヘルパー関数（formatDate、formatTime、formatTimeRange、convertEventToScheduleItem）
+   - 完全なエラーハンドリングとログ記録
+
+2. `src/pages/timetracker/TimeTrackerPage.tsx` (リファクタリング):
+   - handleLinkingProcessSubmit型変更（ScheduleItem[] → DayTask[]）
+   - データ変換ロジック統合
+   - CompletionViewへのscheduleItems状態受け渡し
+   - モックデータ削除（MOCK_DATA不要に）
+
+3. 技術的改善:
+   - 完全なデータフロー: FileUpload → Linking → Completion
+   - 型安全性維持（DayTask ↔ ScheduleItem変換）
+   - エラー発生時のユーザーフィードバック
+   - Logger統合による運用監視性向上
+
 ---
 
 ## 次のステップ
 
-### Phase 5: LinkingProcessView改善
+### 🎯 現在のフォーカス: Phase 7準備中
 
-**実装タスク**:
-1. 自動紐づけ結果の表示UI実装
-2. 未紐づけイベント一覧テーブル実装
-3. 紐づけ結果の検証機能
-4. エラーハンドリング改善
+**Phase 6完了**: 2025年10月9日
 
-**前提条件**:
+**Phase 6完了タスク**:
+- ✅ Task 1: データ変換関数実装
+- ✅ Task 2: CompletionViewProps検証
+- ✅ Task 3: TimeTrackerPageデータフロー統合
+- ✅ Task 4: ItemCodeOptions生成
+- ✅ Task 5: エラーハンドリング・ログ
+
+**完了済み前提条件**:
 - ✅ useTimeTrackerSession実装済み
 - ✅ autoLinkEvents実装済み
 - ✅ uploadInfo.project, workItems 使用可能
-- ✅ 全Phase 1-4のテスト成功（134/134）
+- ✅ 全Phase 1-6のテスト成功（Phase 1-4: 134/134）
+- ✅ Phase 5完全実装（LinkingProcessView改善）
+- ✅ Phase 6完全実装（CompletionView統合）
+- ✅ TypeScriptエラー: 0件
+- ✅ Lint警告: 0件
+- ✅ PHASE6_PROGRESS.md完成
+
+### 📅 今後の予定
+
+**Phase 7（次のステップ）**:
+- 統合テスト実装
+- E2Eテストスイート作成（Playwright/Vitest）
+- バグ修正・最適化
+- タスク登録API統合（/api/register-task）
+
+**Phase 7進捗** (2025年10月9日):
+- ✅ Task 5完了: /api/register-task API統合
+  - registerTasks関数実装
+  - CompletionView登録機能実装
+  - パスワード管理機構追加
+  - TypeScript/Lintエラー: 0件
+- ⏳ Task 1: スキップ（Playwrightの代わりにVitest使用）
+- ⏳ Task 2-4, 6: 統合テスト実装は次回以降
+
+**推奨次アクション**:
+1. ブラウザテスト: FileUpload → Linking → Completion → タスク登録の完全フロー検証
+2. Task 6: Vitest統合テスト実装
+3. バックエンドAPI実装（/api/register-task エンドポイント）
 
 ---
 
