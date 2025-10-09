@@ -24,6 +24,7 @@ web/
 ├── spec/                           # 📖 仕様書・設計書
 │   ├── README.md                   # specディレクトリの案内
 │   ├── TimeTracker_SPEC.md         # TimeTracker機能仕様書
+│   ├── TimeTracker_API_SPEC.md     # バックエンドAPI仕様書
 │   └── TimeTracker_IMPLEMENTATION_STATUS.md  # 実装ステータス
 │
 ├── prompt/                         # 🤖 AI指示書
@@ -126,7 +127,7 @@ web/
   - 例: `TimeTracker_IMPLEMENTATION_STATUS.md`
   
 - **API仕様**: `{機能名}_API_SPEC.md`
-  - 例: `TimeTracker_API_SPEC.md` (将来追加)
+  - 例: `TimeTracker_API_SPEC.md`
   
 - **データモデル**: `{機能名}_DATA_MODEL.md`
   - 例: `TimeTracker_DATA_MODEL.md` (将来追加)
@@ -173,8 +174,9 @@ web/
 
 ### ✅ 整理済み
 - **plan/** - 9ファイル（計画・進捗が整理されている）
-- **spec/** - 3ファイル（仕様書が整理されている）
+- **spec/** - 4ファイル（仕様書・API仕様が整理されている）
 - **src/** - 19個のREADME（ほぼ全てのディレクトリにREADMEがある）
+- **ルート** - README.md, DOCUMENT_MAP.md（プロジェクト概要と構造マップ）
 
 ### ⚠️ 要検討・改善
 1. **prompt/** - コーディング規約とCopilot指示
@@ -187,10 +189,10 @@ web/
    - マイグレーションガイドが個別にある（今後も増える可能性）
 
 ### 📝 追加推奨ドキュメント
-1. **web/README.md** - プロジェクト全体の案内（ルートREADME）
+1. ✅ **web/README.md** - プロジェクト全体の案内（完成）
 2. **plan/ROADMAP.md** - 中長期的な計画
 3. **spec/ARCHITECTURE.md** - システムアーキテクチャ
-4. **spec/TimeTracker_API_SPEC.md** - API詳細仕様（バックエンド連携用）
+4. ✅ **spec/TimeTracker_API_SPEC.md** - API詳細仕様（完成）
 
 ---
 
@@ -198,11 +200,12 @@ web/
 
 | カテゴリ | ファイル数 | 備考 |
 |---------|-----------|------|
+| ルート | 2 | README.md, DOCUMENT_MAP.md |
 | plan/ | 9 | 計画・進捗管理 |
-| spec/ | 3 | 仕様書 |
+| spec/ | 4 | 仕様書（機能仕様、API仕様、実装ステータス） |
 | prompt/ | 2 | AI指示書 |
 | src/配下のREADME | 19 | コード説明 |
-| **合計** | **33** | |
+| **合計** | **36** | |
 
 ---
 

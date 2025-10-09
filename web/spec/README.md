@@ -13,6 +13,14 @@
   - API仕様
   - ユーザーフロー
 
+### API仕様書
+- **[TimeTracker_API_SPEC.md](./TimeTracker_API_SPEC.md)** - バックエンドAPI仕様の完全ドキュメント
+  - 全APIエンドポイント (認証、プロジェクト管理、作業項目管理、タスク登録)
+  - リクエスト/レスポンス形式の詳細
+  - エラーハンドリング仕様
+  - `/api/register-task` 完全仕様 (Phase 7実装)
+  - TypeScript/Python実装例
+
 ### 実装ステータス
 - **[TimeTracker_IMPLEMENTATION_STATUS.md](./TimeTracker_IMPLEMENTATION_STATUS.md)** - 各機能の実装状況
   - サービス層の実装状況
@@ -33,13 +41,17 @@
 - `/src/pages/timetracker/` - TimeTrackerページの実装
 - `/src/core/` - コアライブラリの実装
 
+### 外部リソース
+- **[TimeTracker公式 Web API リファレンス](https://www.timetracker.jp/support/help/web-api/webAPIList.html)** - TimeTracker公式のAPI仕様書
+
 ---
 
 ## 📝 ドキュメント更新ガイドライン
 
 ### 仕様書の更新
 - 機能追加・変更時は `TimeTracker_SPEC.md` を更新してください
-- API仕様変更時は必ず反映してください
+- API追加・変更時は `TimeTracker_API_SPEC.md` を更新してください
+- バックエンド実装時もAPI仕様書に実装状況を反映してください
 - スクリーンショットがある場合は `/spec/images/` に格納してください
 
 ### 実装ステータスの更新

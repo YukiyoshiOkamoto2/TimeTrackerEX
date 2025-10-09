@@ -1,11 +1,16 @@
-# components
+﻿# components/ - 共通コンポーネント
 
-## 共通コンポーネント
+3つ以上のページで使用される共通UIコンポーネント。
 
-### ValidatedInput
+## コンポーネント一覧
 
-確認・キャンセルボタン付きの入力コンポーネント。値の確定時にのみバリデーションが実行されます。
+- **ValidatedInput**: 確認キャンセルボタン付き入力 (遅延バリデーション)
+- **Card**: 基本カード
+- **InteractiveCard**: インタラクティブカード
+- **CheckedTable**: チェック付きテーブル
+- **MessageDialog**: メッセージダイアログ
+- **ValidationErrorDialog**: バリデーションエラーダイアログ
+- **Editor**: エディタコンポーネント
+- **Page**: ページコンテナ
 
-- URL入力など、入力中のバリデーションエラーを防止
-- キーボードショートカット対応 (Enter: 確定, Escape: キャンセル)
-- 詳細: [validated-input/README.md](./validated-input/README.md)
+詳細は各コンポーネントのREADME参照。
