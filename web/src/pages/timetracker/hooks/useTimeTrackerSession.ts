@@ -75,7 +75,7 @@ export interface TimeTrackerSessionActions {
     logout: () => void;
 
     // プロジェクト・作業項目の取得
-    fetchProjectAndWorkItems: (projectId: string) => Promise<void>;
+    fetchProjectAndWorkItems: (projectId: string, onInvalidProjectId?: () => void | Promise<void>) => Promise<void>;
 
     // タスク登録
     registerTask: (task: TimeTrackerTask) => Promise<void>;
@@ -175,9 +175,10 @@ export function useTimeTrackerSession({
 
     /**
      * プロジェクトと作業項目を取得
+     * @param onInvalidProjectId プロジェクトID取得失敗時に実行されるコールバック（設定のクリアなど）
      */
     const fetchProjectAndWorkItems = useCallback(
-        async (projectId: string) => {
+        async (projectId: string, onInvalidProjectId?: () => void | Promise<void>) => {
             if (!auth) {
                 setError("認証されていません。接続してください。");
                 return;
@@ -202,9 +203,15 @@ export function useTimeTrackerSession({
                     logout();
                     setError("認証の有効期限が切れました。再度接続してください。");
                 } else {
+                    // プロジェクトIDが無効な場合は設定をクリア
                     const errorMessage =
                         err instanceof Error ? err.message : "プロジェクト・作業項目の取得に失敗しました";
                     setError(errorMessage);
+                    
+                    // 呼び出し元で設定をクリアする
+                    if (onInvalidProjectId) {
+                        await onInvalidProjectId();
+                    }
                 }
             } finally {
                 setIsLoading(false);

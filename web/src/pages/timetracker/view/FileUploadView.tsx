@@ -265,7 +265,7 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
     const icsInputRef = useRef<HTMLInputElement>(null);
 
     // 設定を取得
-    const { settings } = useSettings();
+    const { settings, updateSettings } = useSettings();
     const timeTrackerSettings = settings.timetracker;
 
     // セッション管理
@@ -369,7 +369,21 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
             // Step 3: プロジェクトとWorkItemを取得
             if (!sessionHook.project || !sessionHook.workItems) {
                 logger.info("Fetching project and work items...");
-                await sessionHook.fetchProjectAndWorkItems(String(timeTrackerSettings.baseProjectId));
+                await sessionHook.fetchProjectAndWorkItems(String(timeTrackerSettings.baseProjectId), async () => {
+                    // プロジェクトID取得失敗時は設定をクリア
+                    logger.warn("Invalid project ID. Clearing settings...");
+                    updateSettings({
+                        timetracker: {
+                            ...timeTrackerSettings,
+                            baseProjectId: null,
+                        },
+                    });
+                    await appMessageDialogRef.showMessageAsync(
+                        "設定エラー",
+                        "プロジェクトIDが無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。",
+                        "ERROR",
+                    );
+                });
                 if (!sessionHook.project || !sessionHook.workItems) {
                     await appMessageDialogRef.showMessageAsync(
                         "データ取得エラー",

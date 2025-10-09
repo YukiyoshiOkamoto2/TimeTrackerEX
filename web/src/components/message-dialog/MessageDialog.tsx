@@ -52,15 +52,23 @@ type MessageState = {
 
 export interface AppMessageDialogRef {
     showMessageAsync: (title: string, message: string, level?: MessageLevel) => Promise<void>;
+    showConfirmAsync: (title: string, message: string, level?: MessageLevel) => Promise<boolean>;
 }
 
 class AppMessageDialogRefImpl implements AppMessageDialogRef {
     private resolve?: () => void;
+    private resolveConfirm?: (result: boolean) => void;
     private close?: () => void;
     private show?: (title: string, message: string, level?: MessageLevel) => void;
+    private showConfirm?: (title: string, message: string, level?: MessageLevel) => void;
 
-    setDelegate(show: (title: string, message: string, level?: MessageLevel) => void, close: () => void) {
+    setDelegate(
+        show: (title: string, message: string, level?: MessageLevel) => void, 
+        showConfirm: (title: string, message: string, level?: MessageLevel) => void,
+        close: () => void
+    ) {
         this.show = show;
+        this.showConfirm = showConfirm;
         this.close = close;
     }
 
@@ -69,11 +77,24 @@ class AppMessageDialogRefImpl implements AppMessageDialogRef {
         this.close?.();
     }
 
+    confirmedResult(result: boolean) {
+        this.resolveConfirm?.(result);
+        this.close?.();
+    }
+
     async showMessageAsync(title: string, message: string, level?: MessageLevel): Promise<void> {
         this.closed?.();
         return new Promise<void>((resolve) => {
             this.show?.(title, message, level);
             this.resolve = resolve;
+        });
+    }
+
+    async showConfirmAsync(title: string, message: string, level?: MessageLevel): Promise<boolean> {
+        this.confirmedResult?.(false);
+        return new Promise<boolean>((resolve) => {
+            this.showConfirm?.(title, message, level);
+            this.resolveConfirm = resolve;
         });
     }
 }
@@ -104,6 +125,7 @@ export const MessageDialog = () => {
         message: "",
         level: "INFO",
     });
+    const [isConfirm, setIsConfirm] = useState(false);
 
     _appMessageDialogRef.setDelegate(
         (title, message, level) => {
@@ -113,6 +135,16 @@ export const MessageDialog = () => {
                 message,
                 level: level ?? "INFO",
             });
+            setIsConfirm(false);
+        },
+        (title, message, level) => {
+            setState({
+                open: true,
+                title,
+                message,
+                level: level ?? "WARN",
+            });
+            setIsConfirm(true);
         },
         () => setState((prev) => ({ ...prev, open: false })),
     );
@@ -121,11 +153,15 @@ export const MessageDialog = () => {
         _appMessageDialogRef.closed();
     };
 
+    const handleConfirm = (result: boolean) => {
+        _appMessageDialogRef.confirmedResult(result);
+    };
+
     const config = LEVEL_CONFIG[state.level];
     const IconComponent = config.icon;
 
     return (
-        <Dialog open={state.open} onOpenChange={(_, data) => !data.open && handleClose()}>
+        <Dialog open={state.open} onOpenChange={(_, data) => !data.open && (isConfirm ? handleConfirm(false) : handleClose())}>
             <DialogSurface>
                 <DialogBody>
                     <DialogTitle>
@@ -138,9 +174,20 @@ export const MessageDialog = () => {
                         <div className={styles.message}>{state.message}</div>
                     </DialogContent>
                     <DialogActions>
-                        <Button appearance="primary" onClick={handleClose}>
-                            OK
-                        </Button>
+                        {isConfirm ? (
+                            <>
+                                <Button appearance="secondary" onClick={() => handleConfirm(false)}>
+                                    いいえ
+                                </Button>
+                                <Button appearance="primary" onClick={() => handleConfirm(true)}>
+                                    はい
+                                </Button>
+                            </>
+                        ) : (
+                            <Button appearance="primary" onClick={handleClose}>
+                                OK
+                            </Button>
+                        )}
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>

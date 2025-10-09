@@ -12,7 +12,6 @@ import {
     DialogContent,
     DialogSurface,
     DialogTitle,
-    DialogTrigger,
     Field,
     Input,
     makeStyles,
@@ -107,17 +106,30 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName, ba
     const handleCancel = () => {
         setPassword("");
         setError(null);
+        setIsSubmitting(false);
         onOpenChange(false);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !isSubmitting) {
             handleSubmit();
+        } else if (e.key === "Escape" && !isSubmitting) {
+            handleCancel();
         }
     };
 
     return (
-        <Dialog open={open} onOpenChange={(_, data) => onOpenChange(data.open)}>
+        <Dialog 
+            open={open} 
+            onOpenChange={(_, data) => {
+                if (!isSubmitting) {
+                    onOpenChange(data.open);
+                    if (!data.open) {
+                        handleCancel();
+                    }
+                }
+            }}
+        >
             <DialogSurface className={styles.dialogSurface}>
                 <DialogBody className={styles.dialogBody}>
                     <DialogTitle>TimeTracker 認証</DialogTitle>
@@ -153,11 +165,13 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName, ba
                         </Field>
                     </DialogContent>
                     <DialogActions>
-                        <DialogTrigger disableButtonEnhancement>
-                            <Button appearance="secondary" onClick={handleCancel} disabled={isSubmitting}>
-                                キャンセル
-                            </Button>
-                        </DialogTrigger>
+                        <Button 
+                            appearance="secondary" 
+                            onClick={handleCancel} 
+                            disabled={isSubmitting}
+                        >
+                            キャンセル
+                        </Button>
                         <Button
                             appearance="primary"
                             onClick={handleSubmit}

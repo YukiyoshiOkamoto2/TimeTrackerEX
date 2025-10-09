@@ -107,6 +107,7 @@ export type CompletionViewProps = {
 
 export function CompletionView({
     schedules,
+    itemCodes,
     itemCodeOptions,
     password,
     onBack,
@@ -140,6 +141,16 @@ export function CompletionView({
             if (missingCodes.length > 0) {
                 const errorMsg = `${missingCodes.length}件の作業項目コードが未設定です。\n全てのスケジュールに作業項目コードを設定してください。`;
                 logger.warn("作業項目コード未設定エラー", { missingCount: missingCodes.length });
+                onShowMessage("error", "入力エラー", errorMsg);
+                return;
+            }
+
+            // 作業項目コードの存在チェック
+            const invalidCodes = schedules.filter((s) => !itemCodes.includes(s.itemCode || ""));
+            if (invalidCodes.length > 0) {
+                const invalidList = invalidCodes.map((s) => `- ${s.itemCode}: ${s.name}`).join("\n");
+                const errorMsg = `${invalidCodes.length}件の作業項目コードが無効です。\n以下の作業項目コードを確認してください:\n${invalidList}`;
+                logger.warn("無効な作業項目コード", { invalidCodes: invalidCodes.map((s) => s.itemCode) });
                 onShowMessage("error", "入力エラー", errorMsg);
                 return;
             }

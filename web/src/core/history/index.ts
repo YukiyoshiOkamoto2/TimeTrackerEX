@@ -5,4 +5,4 @@
  */
 
 export { HistoryManager, getHistoryManager, resetHistoryManager } from "./historyManager";
-export type { HistoryConfig } from "./historyManager";
+export type { HistoryConfig, HistoryEntry } from "./historyManager";

@@ -7,10 +7,6 @@ import {
     DataGridHeader,
     DataGridHeaderCell,
     DataGridRow,
-    Drawer,
-    DrawerBody,
-    DrawerHeader,
-    DrawerHeaderTitle,
     Dropdown,
     Option,
     TableCellLayout,
@@ -21,7 +17,6 @@ import {
 } from "@fluentui/react-components";
 import {
     CheckmarkCircle24Regular,
-    Dismiss24Regular,
     History24Regular,
     Link24Regular,
 } from "@fluentui/react-icons";
@@ -42,6 +37,7 @@ import { useSettings } from "@/store";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import type { DayTask, EventWorkItemPair } from "@/types";
+import { HistoryDrawer } from "../components/HistoryDrawer";
 
 const logger = getLogger("LinkingProcessView");
 
@@ -89,35 +85,6 @@ const useStyles = makeStyles({
     historyButton: {
         minWidth: "100px",
     },
-    drawer: {
-        width: "480px",
-        maxWidth: "90vw",
-    },
-    historyItem: {
-        padding: "12px 16px",
-        borderBottomWidth: "1px",
-        borderBottomStyle: "solid",
-        borderBottomColor: tokens.colorNeutralStroke2,
-        "&:last-child": {
-            borderBottomWidth: "0",
-        },
-    },
-    historyTime: {
-        fontSize: "12px",
-        color: tokens.colorNeutralForeground3,
-        marginBottom: "4px",
-    },
-    historyAction: {
-        fontSize: "14px",
-        color: tokens.colorNeutralForeground1,
-        fontWeight: "500",
-    },
-    historyDetails: {
-        fontSize: "13px",
-        color: tokens.colorNeutralForeground2,
-        marginTop: "4px",
-    },
-
     submitButtonContainer: {
         marginTop: "24px",
         display: "flex",
@@ -644,20 +611,36 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
         performAutoLinking();
     }, [uploadInfo, settings.timetracker, setIsLoading]);
 
-    const handleSubmit = () => {
-        // TODO: Task 4 - 全イベントが紐づけられているかチェック
-        if (stats.unlinkedCount > 0) {
-            appMessageDialogRef.showMessageAsync(
-                "未紐づけイベントがあります",
-                `${stats.unlinkedCount}件のイベントがまだ紐づけられていません。\n全てのイベントを紐づけてから次へ進んでください。`,
-                "WARN"
+    const handleSubmit = async () => {
+        // すべてのイベントが未処理の場合は進めない
+        if (stats.totalLinked === 0) {
+            await appMessageDialogRef.showMessageAsync(
+                "紐づけが必要です",
+                "少なくとも1件以上のイベントを紐づけてから次へ進んでください。",
+                "ERROR"
             );
             return;
         }
 
+        // 未紐づけイベントがある場合は確認ダイアログを表示
+        if (stats.unlinkedCount > 0) {
+            const proceed = await appMessageDialogRef.showConfirmAsync(
+                "未紐づけイベントがあります",
+                `${stats.unlinkedCount}件のイベントがまだ紐づけられていません。\n\n` +
+                `未紐づけのイベントは登録されませんが、このまま進みますか？\n\n` +
+                `✅ 紐づけ済み: ${stats.totalLinked}件\n` +
+                `❌ 未紐づけ: ${stats.unlinkedCount}件`,
+                "WARN"
+            );
+            
+            if (!proceed) {
+                return;
+            }
+        }
+
         // CompletionViewへ遷移（dayTasksを渡す）
         if (onSubmit && dayTasks.length > 0) {
-            logger.info(`CompletionViewへ遷移: ${dayTasks.length}日分のタスクを渡します`);
+            logger.info(`CompletionViewへ遷移: ${dayTasks.length}日分のタスクを渡します（未紐づけ: ${stats.unlinkedCount}件）`);
             onSubmit(dayTasks);
         }
     };
@@ -830,35 +813,12 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
                 </Button>
             </div>
 
-            {/* TODO: 履歴機能は将来実装 */}
-            <Drawer
-                type="overlay"
-                position="end"
+            {/* 履歴管理Drawer */}
+            <HistoryDrawer 
                 open={isDrawerOpen}
-                onOpenChange={(_, { open }) => setIsDrawerOpen(open)}
-                className={styles.drawer}
-            >
-                <DrawerHeader>
-                    <DrawerHeaderTitle
-                        action={
-                            <Button
-                                appearance="subtle"
-                                aria-label="閉じる"
-                                icon={<Dismiss24Regular />}
-                                onClick={() => setIsDrawerOpen(false)}
-                            />
-                        }
-                    >
-                        処理履歴
-                    </DrawerHeaderTitle>
-                </DrawerHeader>
-
-                <DrawerBody>
-                    <div style={{ padding: "16px", textAlign: "center", color: "#666" }}>
-                        処理履歴機能は開発中です
-                    </div>
-                </DrawerBody>
-            </Drawer>
+                onOpenChange={setIsDrawerOpen}
+                workItems={workItems}
+            />
         </>
     );
 }

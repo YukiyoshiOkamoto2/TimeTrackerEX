@@ -373,6 +373,110 @@ export class HistoryManager {
         logger.debug(`削除対象のキーが見つかりません: ${key}`);
         return false;
     }
+
+    /**
+     * 複数のキーを指定して一括削除する
+     *
+     * @param keys - 削除するキーの配列
+     * @returns 削除した件数
+     *
+     * @remarks
+     * - 削除後、自動的にStorageに保存されます
+     */
+    deleteByKeys(keys: string[]): number {
+        let deletedCount = 0;
+        for (const key of keys) {
+            if (this.history.has(key)) {
+                this.history.delete(key);
+                deletedCount++;
+            }
+        }
+        if (deletedCount > 0) {
+            logger.info(`履歴を一括削除: ${deletedCount}件`);
+            this.dump();
+        }
+        return deletedCount;
+    }
+
+    /**
+     * 履歴エントリのWorkItemIdを更新する
+     *
+     * @param key - 更新するエントリのキー
+     * @param newItemId - 新しい作業項目ID
+     * @param newItemName - 新しい作業項目名
+     * @returns 更新に成功した場合はtrue
+     *
+     * @remarks
+     * - 更新後、自動的にStorageに保存されます
+     */
+    updateWorkItemId(key: string, newItemId: string, newItemName: string): boolean {
+        const entry = this.history.get(key);
+        if (entry) {
+            entry.itemId = newItemId;
+            entry.itemName = newItemName;
+            entry.lastUsedDate = new Date();
+            logger.debug(`履歴を更新: ${key} -> ${newItemId} (${newItemName})`);
+            this.dump();
+            return true;
+        }
+        logger.debug(`更新対象のキーが見つかりません: ${key}`);
+        return false;
+    }
+
+    /**
+     * 履歴をJSON文字列としてエクスポートする
+     *
+     * @returns JSON形式の履歴データ
+     */
+    exportToJSON(): string {
+        const entries = this.getAllEntries();
+        return JSON.stringify(entries, null, 2);
+    }
+
+    /**
+     * JSON文字列から履歴をインポートする
+     *
+     * @param jsonData - JSON形式の履歴データ
+     * @param merge - trueの場合は既存データとマージ、falseの場合は上書き
+     * @returns インポートされたエントリ数
+     *
+     * @remarks
+     * - インポート後、自動的にStorageに保存されます
+     */
+    importFromJSON(jsonData: string, merge: boolean = false): number {
+        try {
+            const entries = JSON.parse(jsonData) as (HistoryEntry & { key: string })[];
+            
+            if (!Array.isArray(entries)) {
+                throw new Error("Invalid JSON format: expected array");
+            }
+
+            if (!merge) {
+                this.history.clear();
+            }
+
+            let importedCount = 0;
+            for (const entry of entries) {
+                if (entry.key && entry.itemId && entry.eventName !== undefined) {
+                    this.history.set(entry.key, {
+                        eventName: entry.eventName,
+                        itemId: entry.itemId,
+                        itemName: entry.itemName,
+                        useCount: entry.useCount || 1,
+                        lastUsedDate: new Date(entry.lastUsedDate),
+                    });
+                    importedCount++;
+                }
+            }
+
+            logger.info(`履歴をインポート: ${importedCount}件 (マージ: ${merge})`);
+            this.dump();
+            return importedCount;
+        } catch (error) {
+            logger.error(`履歴のインポートに失敗: ${error}`);
+            throw error;
+        }
+    }
 }
 
 /**
