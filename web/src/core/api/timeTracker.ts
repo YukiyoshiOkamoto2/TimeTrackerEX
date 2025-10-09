@@ -35,6 +35,8 @@ export function validateTimeTrackerTask(task: TimeTrackerTask): void {
 
 /**
  * TimeTracker APIクライアント
+ *
+ * @deprecated ステートレスな関数（authenticateAsync, getProjectAsync, getWorkItemsAsync, registerTaskAsync）を使用してください
  */
 export class TimeTracker {
     private token: string | null = null;
@@ -270,4 +272,280 @@ export class TimeTracker {
         console.error(message);
         throw new Error(message);
     }
+}
+
+// ============================================================================
+// ステートレスAPI関数（推奨）
+// ============================================================================
+
+/**
+ * 認証情報
+ */
+export interface TimeTrackerAuth {
+    token: string;
+    userId: string;
+}
+
+/**
+ * エラーレスポンスかどうかをチェック
+ */
+function isErrorResponse(response: HttpRequestQueueResponse): boolean {
+    return response.status < 200 || response.status >= 300;
+}
+
+/**
+ * エラーメッセージを取得
+ */
+function getErrorMessage(response: HttpRequestQueueResponse): string {
+    let msg = `StatusCode: ${response.status}`;
+    if (response.body) {
+        try {
+            const data = JSON.parse(response.body);
+            const errorMsg = Array.isArray(data) ? data[0]?.message : null;
+            msg += `, Message: ${errorMsg || `Unknown response ${response.body}`}`;
+        } catch {
+            msg += `, Message: Unknown response ${response.body}`;
+        }
+    }
+    return msg;
+}
+
+/**
+ * HTTPリクエストを送信（ステートレス）
+ */
+async function requestAsync(
+    baseUrl: string,
+    uri: string,
+    auth: TimeTrackerAuth | null,
+    jsonData?: unknown,
+    headers?: Record<string, string>,
+): Promise<HttpRequestQueueResponse> {
+    const queue = new HttpRequestQueue(100);
+    const reqHeaders: Record<string, string> = { ...headers };
+
+    if (auth) {
+        reqHeaders.Authorization = `Bearer ${auth.token}`;
+    }
+
+    try {
+        const response = await queue.enqueueAsync({
+            url: baseUrl + uri,
+            headers: reqHeaders,
+            json: jsonData,
+        });
+        return response;
+    } catch (error) {
+        throw new Error(
+            `${uri}へのリクエスト処理に失敗しました。: ${error instanceof Error ? error.message : String(error)}`,
+        );
+    }
+}
+
+/**
+ * WorkItemをパース（ステートレス）
+ */
+function parseWorkItem(workItemDict: Record<string, unknown>, parentFolderPath?: string): WorkItem {
+    const fields = workItemDict.fields as Record<string, unknown> | undefined;
+
+    if (!fields) {
+        throw new Error(`Unknown response: ${JSON.stringify(workItemDict)}`);
+    }
+
+    const folderPath = parentFolderPath ? `${parentFolderPath}/${fields.FolderName}` : (fields.FolderName as string);
+
+    const subItemsData = (fields.SubItems as Record<string, unknown>[]) || [];
+
+    return {
+        id: fields.Id as string,
+        name: fields.Name as string,
+        folderName: fields.FolderName as string,
+        folderPath,
+        subItems: subItemsData.map((subItem) => parseWorkItem(subItem, folderPath)),
+    };
+}
+
+/**
+ * 日時をフォーマット
+ */
+function formatDateTime(date: Date): string {
+    return date.toISOString().slice(0, 19); // "2025-10-04T09:30:00"
+}
+
+/**
+ * 認証処理（ステートレス）
+ *
+ * @param baseUrl - TimeTrackerのベースURL
+ * @param userName - ユーザー名（ログイン名）
+ * @param password - パスワード
+ * @returns 認証情報（token, userId）
+ * @throws 認証に失敗した場合
+ */
+export async function authenticateAsync(
+    baseUrl: string,
+    userName: string,
+    password: string,
+): Promise<TimeTrackerAuth> {
+    console.debug("Start authenticateAsync.");
+
+    // トークン取得
+    const tokenResponse = await requestAsync(baseUrl, "/auth/token", null, { loginname: userName, password });
+
+    if (isErrorResponse(tokenResponse)) {
+        throw new Error(`TimeTrackerへの認証処理でエラー応答が返却されました。: ${getErrorMessage(tokenResponse)}`);
+    }
+
+    if (!tokenResponse.body) {
+        throw new Error("TimeTrackerへの認証処理で失敗しました。");
+    }
+
+    const tokenData = JSON.parse(tokenResponse.body);
+    const token = tokenData.token ?? null;
+
+    if (!token) {
+        throw new Error("TimeTrackerへの認証処理で失敗しました。");
+    }
+
+    // ユーザー情報取得
+    const auth: TimeTrackerAuth = { token, userId: "" };
+    const userResponse = await requestAsync(baseUrl, "/system/users/me", auth);
+
+    if (isErrorResponse(userResponse)) {
+        throw new Error(`ユーザー情報の取得でエラー応答が返却されました。: ${getErrorMessage(userResponse)}`);
+    }
+
+    if (!userResponse.body) {
+        throw new Error("ユーザー情報の取得に失敗しました。");
+    }
+
+    const userData = JSON.parse(userResponse.body);
+    if (userData.loginName !== userName) {
+        throw new Error("ユーザー情報の取得に失敗しました。");
+    }
+
+    auth.userId = userData.id ?? null;
+
+    if (!auth.userId) {
+        throw new Error("ユーザーIDの取得に失敗しました。");
+    }
+
+    return auth;
+}
+
+/**
+ * プロジェクト情報を取得（ステートレス）
+ *
+ * @param baseUrl - TimeTrackerのベースURL
+ * @param projectId - プロジェクトID
+ * @param auth - 認証情報
+ * @returns プロジェクト情報
+ * @throws プロジェクト情報の取得に失敗した場合
+ */
+export async function getProjectAsync(baseUrl: string, projectId: string, auth: TimeTrackerAuth): Promise<Project> {
+    console.debug("Start getProjectAsync.");
+
+    const response = await requestAsync(baseUrl, `/workitem/workItems/${projectId}`, auth);
+
+    if (isErrorResponse(response)) {
+        throw new Error(`プロジェクト情報の取得でエラー応答が返却されました。: ${getErrorMessage(response)}`);
+    }
+
+    if (!response.body) {
+        throw new Error("プロジェクト情報の取得に失敗しました。");
+    }
+
+    const data = JSON.parse(response.body);
+    if (!Array.isArray(data) || !data[0]?.fields) {
+        throw new Error(`プロジェクト情報の取得に失敗しました。: Unknown response ${response.body}`);
+    }
+
+    const fields = data[0].fields as Record<string, unknown>;
+
+    return {
+        id: fields.Id as string,
+        name: fields.Name as string,
+        projectId: fields.ProjectId as string,
+        projectName: fields.ProjectName as string,
+        projectCode: fields.ProjectCode as string,
+    };
+}
+
+/**
+ * WorkItem一覧を取得（ステートレス）
+ *
+ * @param baseUrl - TimeTrackerのベースURL
+ * @param projectId - プロジェクトID
+ * @param auth - 認証情報
+ * @returns WorkItem一覧
+ * @throws WorkItem一覧の取得に失敗した場合
+ */
+export async function getWorkItemsAsync(
+    baseUrl: string,
+    projectId: string,
+    auth: TimeTrackerAuth,
+): Promise<WorkItem[]> {
+    console.debug("Start getWorkItemsAsync.");
+
+    const response = await requestAsync(baseUrl, `/workitem/workItems/${projectId}/tree`, auth);
+
+    if (isErrorResponse(response)) {
+        throw new Error(`WorkItem一覧の取得でエラー応答が返却されました。: ${getErrorMessage(response)}`);
+    }
+
+    if (!response.body) {
+        throw new Error("WorkItem一覧の取得に失敗しました。");
+    }
+
+    const data = JSON.parse(response.body);
+    if (!Array.isArray(data)) {
+        throw new Error(`WorkItem一覧の取得に失敗しました。: Unknown response ${response.body}`);
+    }
+
+    return data.map((item) => parseWorkItem(item));
+}
+
+/**
+ * タスクを登録（ステートレス）
+ *
+ * @param baseUrl - TimeTrackerのベースURL
+ * @param userId - ユーザーID
+ * @param task - 登録するタスク
+ * @param auth - 認証情報
+ * @throws タスクの登録に失敗した場合
+ */
+export async function registerTaskAsync(
+    baseUrl: string,
+    userId: string,
+    task: TimeTrackerTask,
+    auth: TimeTrackerAuth,
+): Promise<void> {
+    console.debug("Start registerTaskAsync.");
+
+    validateTimeTrackerTask(task);
+
+    const jsonData = {
+        UserId: userId,
+        WorkItemId: task.workItemId,
+        StartTime: formatDateTime(task.startTime),
+        EndTime: formatDateTime(task.endTime),
+        Memo: task.memo || "",
+    };
+
+    const response = await requestAsync(baseUrl, "/workitem/createtask", auth, jsonData);
+
+    if (isErrorResponse(response)) {
+        throw new Error(`タスクの登録でエラー応答が返却されました。: ${getErrorMessage(response)}`);
+    }
+}
+
+/**
+ * 認証エラーかどうかをチェック
+ *
+ * @param error - エラーオブジェクト
+ * @returns 認証エラーの場合true
+ */
+export function isAuthenticationError(error: unknown): boolean {
+    if (!(error instanceof Error)) {
+        return false;
+    }
+    return error.message.includes("StatusCode: 401") || error.message.includes("Not connected");
 }

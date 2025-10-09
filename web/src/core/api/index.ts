@@ -5,5 +5,16 @@
  * TimeTracker APIとの通信機能を提供します。
  */
 
-export { TimeTracker, validateTimeTrackerTask } from "./timeTracker";
-export type { TimeTrackerTask } from "./timeTracker";
+// ステートレス関数（推奨）
+export {
+    authenticateAsync,
+    getProjectAsync,
+    getWorkItemsAsync,
+    registerTaskAsync,
+    isAuthenticationError,
+    validateTimeTrackerTask,
+} from "./timeTracker";
+export type { TimeTrackerAuth, TimeTrackerTask } from "./timeTracker";
+
+// 旧クラスベースAPI（非推奨）
+export { TimeTracker } from "./timeTracker";

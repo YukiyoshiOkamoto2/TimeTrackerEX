@@ -35,7 +35,7 @@ import {
 import { useSettings } from "@/store";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
-import type { DayTask, Event, EventWorkItemPair, Project, WorkItem } from "@/types";
+import type { DayTask, Event, EventWorkItemPair } from "@/types";
 
 const logger = getLogger("LinkingProcessView");
 
@@ -243,8 +243,12 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
     // 自動紐付け処理
     useEffect(() => {
         const performAutoLinking = async () => {
-            if (!uploadInfo?.ics?.event || uploadInfo.ics.event.length === 0) {
-                logger.debug("イベントが存在しないため自動紐付けをスキップ");
+            // イベントとスケジュールの存在チェック
+            const hasEvents = uploadInfo?.ics?.event && uploadInfo.ics.event.length > 0;
+            const hasSchedules = uploadInfo?.pdf?.schedule && uploadInfo.pdf.schedule.length > 0;
+
+            if (!hasEvents && !hasSchedules) {
+                logger.warn("イベントもスケジュールも存在しません");
                 return;
             }
 
@@ -259,7 +263,9 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
 
                 // 無視リストを適用
                 const ignorableEvents = settings.timetracker.ignorableEvents || [];
-                const enableEvents = getEnableEvents(uploadInfo.ics.event, ignorableEvents);
+                const enableEvents = hasEvents 
+                    ? getEnableEvents(uploadInfo.ics!.event, ignorableEvents)
+                    : [];
                 logger.debug(`有効なイベント数: ${enableEvents.length}`);
 
                 // スケジュールを取得
@@ -269,15 +275,19 @@ export function LinkingProcessView({ uploadInfo, onBack, onSubmit, setIsLoading 
                 const enableSchedules = getEnableSchedules(allSchedules);
                 logger.debug(`有効なスケジュール数: ${enableSchedules.length}`);
 
-                // TODO: Project情報とWorkItem一覧を取得（現在はモック）
-                const project: Project = {
-                    id: "1",
-                    name: "Mock Project",
-                    projectId: "MOCK001",
-                    projectName: "Mock Project",
-                    projectCode: "MOCK",
-                };
-                const workItems: WorkItem[] = [];
+                // Project情報とWorkItem一覧をuploadInfoから取得
+                const project = uploadInfo.project;
+                const workItems = uploadInfo.workItems || [];
+
+                if (!project) {
+                    logger.error("プロジェクト情報がuploadInfoに含まれていません");
+                    await appMessageDialogRef.showMessageAsync(
+                        "データエラー",
+                        "プロジェクト情報が取得できていません。\nファイルアップロード画面に戻ってください。",
+                        "ERROR",
+                    );
+                    return;
+                }
 
                 // ★1日ごとのタスク分割を実行（algorithm.ts使用）
                 logger.info("日ごとのタスク分割を開始");

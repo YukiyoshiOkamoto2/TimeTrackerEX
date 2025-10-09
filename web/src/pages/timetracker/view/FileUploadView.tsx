@@ -2,6 +2,7 @@ import { CheckedTable, CheckedTableItem } from "@/components/checked-table";
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { parseICS } from "@/core/ics";
 import { parsePDF } from "@/core/pdf";
+import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib";
 import { Event, EventUtils, Schedule, ScheduleUtils } from "@/types";
 import { Button, makeStyles, Popover, PopoverSurface, PopoverTrigger, tokens } from "@fluentui/react-components";
@@ -17,6 +18,9 @@ import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/card";
 import { InteractiveCard } from "@/components/interactive-card";
 import { ICS, PDF, UploadInfo } from "../models";
+import { useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
+import { PasswordInputDialog } from "../components/PasswordInputDialog";
+import { useSettings } from "@/store/settings/SettingsProvider";
 
 const logger = getLogger("FileUploadView");
 
@@ -195,7 +199,7 @@ const getScheduleAsync = async (file: File) => {
         return undefined;
     }
 
-    return result.schedule.filter((s) => !s.errorMessage);
+    return result.schedule.filter((s: Schedule) => !s.errorMessage);
 };
 
 const getEventAsync = async (file: File) => {
@@ -213,7 +217,7 @@ const getEventAsync = async (file: File) => {
         return undefined;
     }
 
-    const ev = result.events.filter((e) => !e.isCancelled && !e.isPrivate);
+    const ev = result.events.filter((e: Event) => !e.isCancelled && !e.isPrivate);
     if (ev.length === 0 && result.errorMessages) {
         await appMessageDialogRef?.showMessageAsync(
             "ICSファイルエラー",
@@ -259,6 +263,16 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
     const styles = useStyles();
     const pdfInputRef = useRef<HTMLInputElement>(null);
     const icsInputRef = useRef<HTMLInputElement>(null);
+
+    // 設定を取得
+    const { settings } = useSettings();
+    const timeTrackerSettings = settings.timetracker;
+
+    // セッション管理
+    const sessionHook = useTimeTrackerSession({
+        baseUrl: timeTrackerSettings?.baseUrl || "",
+        userName: timeTrackerSettings?.userName || "",
+    });
 
     // テーブルデータの状態管理
     const [scheduleTableItems, setScheduleTableItems] = useState<CheckedTableItem[]>([]);
@@ -330,35 +344,89 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
         event.stopPropagation();
     };
 
-    const handleLinkedClick = () => {
-        let newPdf;
-        if (pdf && scheduleTableItems) {
-            const enableKeys = scheduleTableItems.filter((s) => s.checked).map((s) => s.key);
-            const enable = pdf.schedule.filter((s) => enableKeys.includes(ScheduleUtils.getText(s)));
-            if (enable && enable.length > 0) {
-                newPdf = {
-                    ...pdf,
-                    schedule: enable,
-                };
+    const handleLinkedClick = async () => {
+        try {
+            // Step 1: 認証チェック
+            if (!sessionHook.isAuthenticated) {
+                logger.info("Not authenticated. Opening password dialog...");
+                await sessionHook.authenticateWithDialog();
+                if (!sessionHook.isAuthenticated) {
+                    logger.warn("Authentication cancelled or failed");
+                    return;
+                }
             }
-        }
-        let newIcs;
-        if (ics && eventTableItems) {
-            const enableKeys = eventTableItems.filter((e) => e.checked).map((e) => e.key);
-            const enable = ics.event.filter((e) => enableKeys.includes(EventUtils.getKey(e)));
-            if (enable && enable.length > 0) {
-                newIcs = {
-                    ...ics,
-                    event: enable,
-                };
-            }
-        }
 
-        if (newPdf || newIcs) {
-            onSubmit({
-                pdf: newPdf,
-                ics: newIcs,
-            });
+            // Step 2: TimeTracker設定の検証
+            if (!timeTrackerSettings?.baseProjectId) {
+                await appMessageDialogRef.showMessageAsync(
+                    "設定エラー",
+                    "TimeTrackerのプロジェクトIDが設定されていません。\n設定画面でプロジェクトIDを設定してください。",
+                    "ERROR",
+                );
+                return;
+            }
+
+            // Step 3: プロジェクトとWorkItemを取得
+            if (!sessionHook.project || !sessionHook.workItems) {
+                logger.info("Fetching project and work items...");
+                await sessionHook.fetchProjectAndWorkItems(String(timeTrackerSettings.baseProjectId));
+                if (!sessionHook.project || !sessionHook.workItems) {
+                    await appMessageDialogRef.showMessageAsync(
+                        "データ取得エラー",
+                        "TimeTrackerからプロジェクト情報を取得できませんでした。",
+                        "ERROR",
+                    );
+                    return;
+                }
+            }
+
+            // Step 4: 履歴の更新（WorkItem一覧でチェック）
+            const { project, workItems } = sessionHook;
+            const historyManager = new HistoryManager();
+            historyManager.load();
+            historyManager.checkWorkItemId(workItems);
+            historyManager.dump();
+
+            // Step 5: チェック済みデータのフィルタリング
+            let newPdf;
+            if (pdf && scheduleTableItems) {
+                const enableKeys = scheduleTableItems.filter((s) => s.checked).map((s) => s.key);
+                const enable = pdf.schedule.filter((s) => enableKeys.includes(ScheduleUtils.getText(s)));
+                if (enable && enable.length > 0) {
+                    newPdf = {
+                        ...pdf,
+                        schedule: enable,
+                    };
+                }
+            }
+            let newIcs;
+            if (ics && eventTableItems) {
+                const enableKeys = eventTableItems.filter((e) => e.checked).map((e) => e.key);
+                const enable = ics.event.filter((e) => enableKeys.includes(EventUtils.getKey(e)));
+                if (enable && enable.length > 0) {
+                    newIcs = {
+                        ...ics,
+                        event: enable,
+                    };
+                }
+            }
+
+            // Step 6: データ送信
+            if (newPdf || newIcs) {
+                onSubmit({
+                    pdf: newPdf,
+                    ics: newIcs,
+                    project,
+                    workItems,
+                });
+            }
+        } catch (error) {
+            logger.error("Error in handleLinkedClick:", error);
+            await appMessageDialogRef.showMessageAsync(
+                "処理エラー",
+                error instanceof Error ? error.message : "不明なエラーが発生しました。",
+                "ERROR",
+            );
         }
     };
 
@@ -554,6 +622,17 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                     icon={<Link24Regular />}
                 />
             </div>
+            <PasswordInputDialog
+                open={sessionHook.isPasswordDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        sessionHook.clearError();
+                    }
+                }}
+                onSubmit={sessionHook.authenticateWithPassword}
+                baseUrl={timeTrackerSettings?.baseUrl || ""}
+                userName={timeTrackerSettings?.userName || ""}
+            />
         </>
     );
 }

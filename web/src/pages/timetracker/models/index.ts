@@ -1,4 +1,4 @@
-import { Event, Schedule } from "@/types";
+import { Event, Project, Schedule, WorkItem } from "@/types";
 
 export type FileData = {
     name: string;
@@ -17,6 +17,9 @@ export type ICS = {
 export type UploadInfo = {
     pdf?: PDF;
     ics?: ICS;
+    // Phase 4で追加: TimeTrackerセッションデータ
+    project?: Project;
+    workItems?: WorkItem[];
 };
 
 export * from "./LinkingModels";
