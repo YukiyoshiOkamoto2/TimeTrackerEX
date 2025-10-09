@@ -133,7 +133,6 @@ export function CompletionView({
      * タスク登録処理
      */
     const handleRegister = async () => {
-        logger.info("タスク登録開始", { schedulesCount: schedules.length });
         setIsRegistering(true);
 
         try {
@@ -172,17 +171,10 @@ export function CompletionView({
                 }),
             };
 
-            logger.debug("API呼び出し開始", { request });
-
             // API呼び出し
             const response = await registerTasks(request);
 
             if (response.success) {
-                logger.info("タスク登録成功", {
-                    registeredCount: response.registeredCount,
-                    message: response.message,
-                });
-
                 onShowMessage(
                     "success",
                     "タスク登録完了",

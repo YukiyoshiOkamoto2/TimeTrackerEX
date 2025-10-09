@@ -137,8 +137,6 @@ export function splitEventsByDay(
     project: Project,
     settings: TimeTrackerSettings,
 ): DayTask[] {
-    logger.info(`1日ごとのタスク分割開始: イベント数=${events.length}, スケジュール数=${schedules.length}`);
-
     // EventInputInfoを作成
     const eventInputInfo: EventInputInfo = {
         eventDuplicateTimeCompare: settings.eventDuplicatePriority.timeCompare,
@@ -162,8 +160,6 @@ export function splitEventsByDay(
 
     // 1日ごとのタスクに分割
     const dayTasks = algorithm.splitOneDayTask(events, schedules);
-
-    logger.info(`1日ごとのタスク分割完了: タスク数=${dayTasks.length}`);
 
     return dayTasks;
 }
@@ -196,14 +192,12 @@ export function createPaidLeaveDayTasks(
     const paidLeaveConfig = settings.paidLeaveInputInfo;
 
     if (!paidLeaveConfig) {
-        logger.debug("有給休暇設定が未設定です");
         return [];
     }
 
     // WorkItemを取得
     const paidLeaveWorkItem = workItems.find((w) => w.id === String(paidLeaveConfig.workItemId));
     if (!paidLeaveWorkItem) {
-        logger.warn(`有給休暇WorkItem(ID: ${paidLeaveConfig.workItemId})が見つかりません`);
         return [];
     }
 
@@ -278,7 +272,6 @@ function linkTimeOffEvents(
     for (const event of events) {
         if (matchEventName(event.name, timeOffConfig.namePatterns)) {
             linked.push({ event, workItem: timeOffWorkItem });
-            logger.debug(`休暇イベントとして紐付け: ${event.name} -> ${timeOffWorkItem.name}`);
         } else {
             remaining.push(event);
         }
@@ -305,7 +298,6 @@ function linkFromHistory(
 
         if (workItem) {
             linked.push({ event, workItem });
-            logger.debug(`履歴から紐付け: ${event.name} -> ${workItem.name}`);
         } else {
             remaining.push(event);
         }
@@ -329,8 +321,6 @@ export function autoLinkEvents(
     settings: TimeTrackerSettings,
     historyManager: HistoryManager,
 ): AutoLinkingResult {
-    logger.info(`自動紐付け開始: イベント数=${events.length}, WorkItem数=${workItems.length}`);
-
     let remainingEvents = events;
     const allLinked: EventWorkItemPair[] = [];
 
@@ -346,13 +336,7 @@ export function autoLinkEvents(
         allLinked.push(...historyResult.linked);
         remainingEvents = historyResult.remaining;
         historyCount = historyResult.linked.length;
-    } else {
-        logger.debug("履歴からの自動入力が無効です");
     }
-
-    logger.info(
-        `自動紐付け完了: 休暇=${timeOffResult.linked.length}, 履歴=${historyCount}, 未紐付け=${remainingEvents.length}`,
-    );
 
     return {
         linked: allLinked,
@@ -421,16 +405,12 @@ export async function performAutoLinking(input: AutoLinkingInput): Promise<AutoL
         }
         return true;
     });
-    logger.debug(`有効なイベント数: ${enableEvents.length}, 除外イベント数: ${excludedEvents.length}`);
 
     // 2. 有効なスケジュール（休日・エラーを除く）を取得
     const enableSchedules = getEnableSchedules(schedules);
-    logger.debug(`有効なスケジュール数: ${enableSchedules.length}`);
 
     // 3. 1日ごとのタスク分割を実行
-    logger.info("日ごとのタスク分割を開始");
     const dayTasksResult = splitEventsByDay(enableEvents, enableSchedules, project, settings);
-    logger.info(`分割結果: ${dayTasksResult.length}日分のタスク`);
 
     // 4. スケジュールの日付範囲でフィルタリング（勤怠情報がある日のみ）
     // ※ スケジュールが空の場合（ICSのみ）は、すべてのイベントを処理対象とする
@@ -566,11 +546,13 @@ export function calculateLinkingStatistics(
     const totalDays = schedules.length > 0 ? schedules.length : dayTasks.length;
 
     // 通常イベントと勤務時間変換イベントの計算
-    // 各dayTaskのイベントについて、元のイベントUUIDをカウント
+    // 各dayTaskのイベント（events + scheduleEvents）について、元のイベントUUIDをカウント
     const originalEventUuids = new Set<string>();
     let totalProcessedEvents = 0;
+    let totalScheduleEvents = 0;
 
     dayTasks.forEach((task) => {
+        // 通常イベント（カレンダーイベント）
         task.events.forEach((event) => {
             // 有給休暇イベントは除外
             if (!event.schedule.isPaidLeave) {
@@ -580,14 +562,18 @@ export function calculateLinkingStatistics(
                 totalProcessedEvents++;
             }
         });
+        
+        // 勤務時間変換イベント（scheduleから生成されたイベント）
+        totalScheduleEvents += task.scheduleEvents.length;
     });
 
     // 通常イベント数 = 元のイベント数（分割前）
     const normalEventCount = originalEventUuids.size;
 
-    // 勤務時間変換イベント数 = 処理後のイベント数 - 元のイベント数
-    // （分割により増えたイベントの数）
-    const convertedEventCount = totalProcessedEvents - normalEventCount;
+    // 勤務時間変換イベント数 = scheduleEventsの合計
+    const convertedEventCount = totalScheduleEvents;
+    
+    logger.debug(`統計計算: 総日数=${totalDays}, 通常イベント=${normalEventCount}, 勤務時間変換イベント=${convertedEventCount}, dayTasks=${dayTasks.length}`);
 
     return {
         linkedCount,

@@ -225,6 +225,8 @@ export class TimeTrackerAlgorithm {
                 const isDuplicate = this.isDuplicateEventOrSchedule(roundedStartSchedule, events);
                 if (!isDuplicate) {
                     result.push(getEvent("勤務開始", roundedStartSchedule, "start"));
+                } else {
+                    logger.debug(`勤務開始イベントが既存イベントと重複のためスキップ: ${ScheduleUtils.getText(roundedStartSchedule)}`);
                 }
             }
         }
@@ -251,6 +253,8 @@ export class TimeTrackerAlgorithm {
                 const isDuplicate = this.isDuplicateEventOrSchedule(roundedEndSchedule, events);
                 if (!isDuplicate) {
                     result.push(getEvent("勤務終了", roundedEndSchedule, "end"));
+                } else {
+                    logger.debug(`勤務終了イベントが既存イベントと重複のためスキップ: ${ScheduleUtils.getText(roundedEndSchedule)}`);
                 }
             }
         }
@@ -671,9 +675,17 @@ export class TimeTrackerAlgorithm {
         const scheduleEventMap = new Map<string, Event[]>();
         const allRoundedEvents = Array.from(roundedEventMap.values()).flat();
 
+        logger.debug(`スケジュールからイベント変換開始: スケジュール数=${schedules.length}, 既存イベント数=${allRoundedEvents.length}`);
+
         for (const schedule of schedules) {
             try {
+                const scheduleDate = ScheduleUtils.getBaseDate(schedule);
+                const scheduleDateKey = scheduleDate.toISOString().split("T")[0];
+                logger.debug(`Schedule ${scheduleDateKey}の変換開始`);
+                
                 const scheduleEvents = this.scheduleToEvent(schedule, this.scheduleInputInfo, allRoundedEvents);
+                
+                logger.debug(`Schedule ${scheduleDateKey}: 生成されたイベント数=${scheduleEvents.length}`);
 
                 for (const event of scheduleEvents) {
                     const eventDate = ScheduleUtils.getBaseDate(event.schedule);
@@ -689,6 +701,8 @@ export class TimeTrackerAlgorithm {
                 logger.debug("スケジュールをスキップ:", error);
             }
         }
+        
+        logger.debug(`スケジュールからイベント変換完了: 生成された日数=${scheduleEventMap.size}`);
 
         // イベントを勤務開始終了時間に合わせるor勤務時間外を消す、重複した場合は勤務時間イベントを消す
         const mergedEventMap = this.margedScheduleEvents(scheduleEventMap, roundedEventMap);
@@ -821,7 +835,7 @@ export class TimeTrackerAlgorithm {
 
         for (const [eventDate, events] of scheduleEventMap.entries()) {
             if (events.length < 2) {
-                logger.warn(`勤務時間イベントが2つ未満のため、処理をスキップします。${eventDate}`);
+                logger.warn(`勤務時間イベントが2つ未満のため、処理をスキップします。${eventDate} (生成されたイベント数: ${events.length})`);
                 continue;
             }
 

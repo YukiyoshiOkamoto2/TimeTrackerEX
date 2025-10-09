@@ -348,10 +348,8 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
         try {
             // Step 1: 認証チェック
             if (!sessionHook.isAuthenticated) {
-                logger.info("Not authenticated. Opening password dialog...");
                 await sessionHook.authenticateWithDialog();
                 if (!sessionHook.isAuthenticated) {
-                    logger.warn("Authentication cancelled or failed");
                     return;
                 }
             }
@@ -368,10 +366,8 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
 
             // Step 3: プロジェクトとWorkItemを取得
             if (!sessionHook.project || !sessionHook.workItems) {
-                logger.info("Fetching project and work items...");
                 await sessionHook.fetchProjectAndWorkItems(String(timeTrackerSettings.baseProjectId), async () => {
                     // プロジェクトID取得失敗時は設定をクリア
-                    logger.warn("Invalid project ID. Clearing settings...");
                     updateSettings({
                         timetracker: {
                             ...timeTrackerSettings,

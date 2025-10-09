@@ -63,3 +63,67 @@ export interface AutoLinkingResult {
     /** 除外されたイベント（無視、勤務時間外、不正） */
     excluded: ExcludedEventInfo[];
 }
+
+/**
+ * 有給休暇テーブルの行
+ */
+export interface PaidLeaveRow {
+    id: string;
+    date: string;
+    dayOfWeek: string;
+}
+
+/**
+ * 対象イベントテーブルの行
+ */
+export interface TargetEventRow {
+    id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+}
+
+/**
+ * 紐付け済みイベントテーブルの行
+ */
+export interface LinkedEventRow {
+    id: string;
+    eventName: string;
+    startTime: string;
+    endTime: string;
+    workItemName: string;
+    source: string;
+}
+
+/**
+ * 未紐付けイベントテーブルの行
+ */
+export interface UnlinkedEventRow {
+    id: string;
+    eventName: string;
+    startTime: string;
+    endTime: string;
+    selectedWorkItemId?: string;
+}
+
+/**
+ * 除外されたイベントテーブルの行
+ */
+export interface ExcludedEventRow {
+    id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+    reason: string;
+    reasonDetail: string;
+}
+
+/**
+ * 除外イベントの統計
+ */
+export interface ExcludedStats {
+    ignored: number;
+    outOfSchedule: number;
+    invalid: number;
+}

@@ -218,6 +218,7 @@ describe("TimeTrackerService", () => {
                         name: "未紐づけイベント",
                     } as Event,
                 ],
+                excluded: [],
                 timeOffCount: 0,
                 historyCount: 1,
             };
