@@ -1,3 +1,6 @@
+import { Card } from "@/components/card";
+import { registerTasks, type RegisterTasksRequest } from "@/core/api";
+import { getLogger } from "@/lib/logger";
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import {
     ArrowLeft24Regular,
@@ -7,11 +10,9 @@ import {
     Warning24Regular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
-import { Card } from "@/components/card";
-import { registerTasks, type RegisterTasksRequest } from "@/core/api";
-import { getLogger } from "@/lib/logger";
 import { PageHeader } from "../components/PageHeader";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "../components/index";
+import { SectionTitle, ViewHeader, ViewSection } from "./components";
 
 const logger = getLogger("CompletionView");
 
@@ -215,32 +216,36 @@ export function CompletionView({
 
     return (
         <>
-            <div className={styles.headerContainer}>
-                <div className={styles.headerLeft}>
-                    <PageHeader breadcrumbs={breadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />
-                </div>
-                <div style={{ display: "flex", gap: tokens.spacingHorizontalM }}>
-                    <Button appearance="secondary" icon={<ArrowLeft24Regular />} onClick={onBackToLinking}>
-                        戻る
-                    </Button>
-                    <Button
-                        appearance="primary"
-                        icon={<ArrowSync24Regular />}
-                        onClick={handleRegister}
-                        disabled={isRegistering || hasErrors}
-                    >
-                        {isRegistering ? "登録中..." : "タスク登録"}
-                    </Button>
-                </div>
-            </div>
+            <ViewHeader
+                left={<PageHeader breadcrumbs={breadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />}
+                right={
+                    <>
+                        <Button appearance="secondary" icon={<ArrowLeft24Regular />} onClick={onBackToLinking}>
+                            戻る
+                        </Button>
+                        <Button
+                            appearance="primary"
+                            icon={<ArrowSync24Regular />}
+                            onClick={handleRegister}
+                            disabled={isRegistering || hasErrors}
+                        >
+                            {isRegistering ? "登録中..." : "タスク登録"}
+                        </Button>
+                    </>
+                }
+            />
 
-            <div className={styles.section}>
+            <ViewSection>
                 {/* 警告メッセージ */}
                 {hasErrors && (
                     <Card className={`${styles.completionMessage} ${styles.statusCard}`}>
-                        <Warning24Regular className={styles.completionIcon} style={{ color: tokens.colorPaletteRedForeground1 }} />
+                        <Warning24Regular
+                            className={styles.completionIcon}
+                            style={{ color: tokens.colorPaletteRedForeground1 }}
+                        />
                         <div className={styles.completionText}>
-                            {missingCodesCount}件の作業項目コードが未設定です。全てのスケジュールに作業項目コードを設定してください。
+                            {missingCodesCount}
+                            件の作業項目コードが未設定です。全てのスケジュールに作業項目コードを設定してください。
                         </div>
                     </Card>
                 )}
@@ -257,13 +262,10 @@ export function CompletionView({
 
                 {/* スケジュール一覧 */}
                 <div>
-                    <div className={styles.sectionTitle}>
-                        <DocumentBulletList24Regular className={styles.sectionIcon} />
-                        <span>スケジュール一覧</span>
-                    </div>
+                    <SectionTitle icon={<DocumentBulletList24Regular />}>スケジュール一覧</SectionTitle>
                     <ScheduleTable schedules={schedules} itemCodeOptions={itemCodeOptions} itemCodeMode="editable" />
                 </div>
-            </div>
+            </ViewSection>
         </>
     );
 }

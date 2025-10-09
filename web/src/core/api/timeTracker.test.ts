@@ -248,9 +248,7 @@ describe("TimeTracker API (Stateless)", () => {
                 memo: "テストタスク",
             };
 
-            await expect(
-                registerTaskAsync("https://test.example.com", "user-123", task, auth),
-            ).resolves.not.toThrow();
+            await expect(registerTaskAsync("https://test.example.com", "user-123", task, auth)).resolves.not.toThrow();
         });
 
         it("should throw error for invalid task", async () => {

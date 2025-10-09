@@ -23,8 +23,6 @@
  * - 自動ログアウト(トークン期限切れ時)
  */
 
-import type { Project, WorkItem } from "@/types";
-import { useCallback, useEffect, useState } from "react";
 import {
     authenticateAsync,
     getProjectAsync,
@@ -34,6 +32,8 @@ import {
     TimeTrackerAuth,
     type TimeTrackerTask,
 } from "@/core/api";
+import type { Project, WorkItem } from "@/types";
+import { useCallback, useEffect, useState } from "react";
 import {
     clearAllSession,
     loadAuth,
@@ -158,7 +158,7 @@ export function useTimeTrackerSession({
                 setIsAuthenticating(false);
             }
         },
-        [baseUrl, userName, tokenExpirationMinutes]
+        [baseUrl, userName, tokenExpirationMinutes],
     );
 
     /**
@@ -207,7 +207,7 @@ export function useTimeTrackerSession({
                     const errorMessage =
                         err instanceof Error ? err.message : "プロジェクト・作業項目の取得に失敗しました";
                     setError(errorMessage);
-                    
+
                     // 呼び出し元で設定をクリアする
                     if (onInvalidProjectId) {
                         await onInvalidProjectId();
@@ -217,7 +217,7 @@ export function useTimeTrackerSession({
                 setIsLoading(false);
             }
         },
-        [auth, baseUrl, logout]
+        [auth, baseUrl, logout],
     );
 
     /**
@@ -245,7 +245,7 @@ export function useTimeTrackerSession({
                 setIsLoading(false);
             }
         },
-        [auth, baseUrl, logout]
+        [auth, baseUrl, logout],
     );
 
     /**

@@ -20,7 +20,7 @@ import {
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getStorage } from "../../lib/storage";
-import type { AppSettings, AppearanceSettings, GeneralSettings, TimeTrackerSettings } from "../../types";
+import type { AppearanceSettings, AppSettings, GeneralSettings, TimeTrackerSettings } from "../../types";
 
 /**
  * ローカルストレージのキー

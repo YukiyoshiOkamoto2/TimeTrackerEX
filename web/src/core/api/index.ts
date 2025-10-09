@@ -10,12 +10,12 @@ export {
     authenticateAsync,
     getProjectAsync,
     getWorkItemsAsync,
+    isAuthenticationError,
     registerTaskAsync,
     registerTasks,
-    isAuthenticationError,
     validateTimeTrackerTask,
 } from "./timeTracker";
-export type { TimeTrackerAuth, TimeTrackerTask, RegisterTasksRequest, RegisterTasksResponse } from "./timeTracker";
+export type { RegisterTasksRequest, RegisterTasksResponse, TimeTrackerAuth, TimeTrackerTask } from "./timeTracker";
 
 // 旧クラスベースAPI（非推奨）
 export { TimeTracker } from "./timeTracker";

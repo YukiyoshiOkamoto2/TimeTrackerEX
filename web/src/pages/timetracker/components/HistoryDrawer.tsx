@@ -1,14 +1,17 @@
 /**
  * History Drawer Component
- * 
+ *
  * イベントと作業項目の紐づけ履歴を管理するDrawerコンポーネント
  */
 
-import { HistoryManager } from "@/core/history";
+import { appMessageDialogRef } from "@/components/message-dialog";
 import type { HistoryEntry } from "@/core/history";
+import { HistoryManager } from "@/core/history";
+import { getLogger } from "@/lib/logger";
 import type { WorkItem } from "@/types";
 import {
     Button,
+    Checkbox,
     DataGrid,
     DataGridBody,
     DataGridCell,
@@ -20,35 +23,32 @@ import {
     DrawerHeader,
     DrawerHeaderTitle,
     Dropdown,
+    Menu,
+    MenuItem,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
     Option,
     TableCellLayout,
     TableColumnDefinition,
-    createTableColumn,
-    makeStyles,
-    tokens,
-    Checkbox,
     Toolbar,
     ToolbarButton,
     ToolbarDivider,
-    Menu,
-    MenuTrigger,
-    MenuPopover,
-    MenuList,
-    MenuItem,
+    createTableColumn,
+    makeStyles,
+    tokens,
 } from "@fluentui/react-components";
 import {
-    Dismiss24Regular,
-    Delete24Regular,
-    ArrowUpload24Regular,
-    ArrowDownload24Regular,
     ArrowClockwise24Regular,
+    ArrowDownload24Regular,
+    ArrowUpload24Regular,
     CheckboxChecked24Regular,
     CheckboxUnchecked24Regular,
+    Delete24Regular,
+    Dismiss24Regular,
     MoreVertical24Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useMemo, useState } from "react";
-import { appMessageDialogRef } from "@/components/message-dialog";
-import { getLogger } from "@/lib/logger";
 
 const logger = getLogger("HistoryDrawer");
 
@@ -146,7 +146,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
         if (selectedKeys.size === historyData.length) {
             setSelectedKeys(new Set());
         } else {
-            setSelectedKeys(new Set(historyData.map(item => item.key)));
+            setSelectedKeys(new Set(historyData.map((item) => item.key)));
         }
     };
 
@@ -157,17 +157,13 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
         const confirmed = await appMessageDialogRef.showConfirmAsync(
             "履歴削除",
             `選択した${selectedKeys.size}件の履歴を削除しますか？\nこの操作は取り消せません。`,
-            "WARN"
+            "WARN",
         );
 
         if (!confirmed) return;
 
         const deletedCount = historyManager.deleteByKeys(Array.from(selectedKeys));
-        await appMessageDialogRef.showMessageAsync(
-            "削除完了",
-            `${deletedCount}件の履歴を削除しました`,
-            "INFO"
-        );
+        await appMessageDialogRef.showMessageAsync("削除完了", `${deletedCount}件の履歴を削除しました`, "INFO");
         loadHistory();
     };
 
@@ -176,17 +172,13 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
         const confirmed = await appMessageDialogRef.showConfirmAsync(
             "履歴全削除",
             "すべての履歴を削除しますか？\nこの操作は取り消せません。",
-            "ERROR"
+            "ERROR",
         );
 
         if (!confirmed) return;
 
         historyManager.clear();
-        await appMessageDialogRef.showMessageAsync(
-            "削除完了",
-            "すべての履歴を削除しました",
-            "INFO"
-        );
+        await appMessageDialogRef.showMessageAsync("削除完了", "すべての履歴を削除しました", "INFO");
         loadHistory();
     };
 
@@ -209,7 +201,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
             appMessageDialogRef.showMessageAsync(
                 "エクスポートエラー",
                 error instanceof Error ? error.message : "エクスポートに失敗しました",
-                "ERROR"
+                "ERROR",
             );
         }
     };
@@ -229,7 +221,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                 await appMessageDialogRef.showMessageAsync(
                     "インポート完了",
                     `${importedCount}件の履歴をインポートしました`,
-                    "INFO"
+                    "INFO",
                 );
                 loadHistory();
             } catch (error) {
@@ -237,7 +229,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                 await appMessageDialogRef.showMessageAsync(
                     "インポートエラー",
                     error instanceof Error ? error.message : "インポートに失敗しました",
-                    "ERROR"
+                    "ERROR",
                 );
             }
         };
@@ -246,15 +238,11 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
 
     // WorkItem変更
     const handleWorkItemChange = async (key: string, newItemId: string) => {
-        const workItem = workItems.find(w => w.id === newItemId);
+        const workItem = workItems.find((w) => w.id === newItemId);
         if (!workItem) return;
 
         historyManager.updateWorkItemId(key, newItemId, workItem.name);
-        await appMessageDialogRef.showMessageAsync(
-            "更新完了",
-            `作業項目を「${workItem.name}」に変更しました`,
-            "INFO"
-        );
+        await appMessageDialogRef.showMessageAsync("更新完了", `作業項目を「${workItem.name}」に変更しました`, "INFO");
         loadHistory();
         setEditingKey(null);
     };
@@ -293,11 +281,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                     {sortField === "eventName" && (sortDirection === "asc" ? " ↑" : " ↓")}
                 </TableCellLayout>
             ),
-            renderCell: (item) => (
-                <TableCellLayout>
-                    {item.eventName || "無題"}
-                </TableCellLayout>
-            ),
+            renderCell: (item) => <TableCellLayout>{item.eventName || "無題"}</TableCellLayout>,
         }),
         createTableColumn<HistoryRow>({
             columnId: "itemName",
@@ -324,17 +308,14 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                                 }}
                                 onBlur={() => setEditingKey(null)}
                             >
-                                {workItems.map(w => (
+                                {workItems.map((w) => (
                                     <Option key={w.id} value={w.id}>
                                         {w.name}
                                     </Option>
                                 ))}
                             </Dropdown>
                         ) : (
-                            <span
-                                onClick={() => setEditingKey(item.key)}
-                                style={{ cursor: "pointer" }}
-                            >
+                            <span onClick={() => setEditingKey(item.key)} style={{ cursor: "pointer" }}>
                                 {item.itemName}
                             </span>
                         )}
@@ -351,11 +332,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                     {sortField === "useCount" && (sortDirection === "asc" ? " ↑" : " ↓")}
                 </TableCellLayout>
             ),
-            renderCell: (item) => (
-                <TableCellLayout>
-                    {item.useCount}回
-                </TableCellLayout>
-            ),
+            renderCell: (item) => <TableCellLayout>{item.useCount}回</TableCellLayout>,
         }),
         createTableColumn<HistoryRow>({
             columnId: "lastUsedDate",
@@ -366,11 +343,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                     {sortField === "lastUsedDate" && (sortDirection === "asc" ? " ↑" : " ↓")}
                 </TableCellLayout>
             ),
-            renderCell: (item) => (
-                <TableCellLayout>
-                    {item.lastUsedDate.toLocaleString("ja-JP")}
-                </TableCellLayout>
-            ),
+            renderCell: (item) => <TableCellLayout>{item.lastUsedDate.toLocaleString("ja-JP")}</TableCellLayout>,
         }),
     ];
 
@@ -416,7 +389,13 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                 {/* ツールバー */}
                 <Toolbar className={styles.toolbar}>
                     <ToolbarButton
-                        icon={selectedKeys.size === historyData.length ? <CheckboxUnchecked24Regular /> : <CheckboxChecked24Regular />}
+                        icon={
+                            selectedKeys.size === historyData.length ? (
+                                <CheckboxUnchecked24Regular />
+                            ) : (
+                                <CheckboxChecked24Regular />
+                            )
+                        }
                         onClick={handleSelectAll}
                     >
                         {selectedKeys.size === historyData.length ? "全解除" : "全選択"}
@@ -429,10 +408,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                         選択削除
                     </ToolbarButton>
                     <ToolbarDivider />
-                    <ToolbarButton
-                        icon={<ArrowClockwise24Regular />}
-                        onClick={loadHistory}
-                    >
+                    <ToolbarButton icon={<ArrowClockwise24Regular />} onClick={loadHistory}>
                         再読み込み
                     </ToolbarButton>
                     <ToolbarButton
@@ -442,18 +418,13 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                     >
                         エクスポート
                     </ToolbarButton>
-                    <ToolbarButton
-                        icon={<ArrowUpload24Regular />}
-                        onClick={handleImport}
-                    >
+                    <ToolbarButton icon={<ArrowUpload24Regular />} onClick={handleImport}>
                         インポート
                     </ToolbarButton>
                     <ToolbarDivider />
                     <Menu>
                         <MenuTrigger disableButtonEnhancement>
-                            <ToolbarButton icon={<MoreVertical24Regular />}>
-                                その他
-                            </ToolbarButton>
+                            <ToolbarButton icon={<MoreVertical24Regular />}>その他</ToolbarButton>
                         </MenuTrigger>
                         <MenuPopover>
                             <MenuList>
@@ -467,17 +438,10 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
 
                 {/* データテーブル */}
                 {historyData.length === 0 ? (
-                    <div className={styles.emptyState}>
-                        履歴データがありません
-                    </div>
+                    <div className={styles.emptyState}>履歴データがありません</div>
                 ) : (
                     <div className={styles.tableContainer}>
-                        <DataGrid
-                            items={sortedData}
-                            columns={columns}
-                            sortable
-                            getRowId={(item) => item.key}
-                        >
+                        <DataGrid items={sortedData} columns={columns} sortable getRowId={(item) => item.key}>
                             <DataGridHeader>
                                 <DataGridRow>
                                     {({ renderHeaderCell, columnId }) => (
@@ -496,9 +460,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                             <DataGridBody<HistoryRow>>
                                 {({ item, rowId }) => (
                                     <DataGridRow<HistoryRow> key={rowId}>
-                                        {({ renderCell }) => (
-                                            <DataGridCell>{renderCell(item)}</DataGridCell>
-                                        )}
+                                        {({ renderCell }) => <DataGridCell>{renderCell(item)}</DataGridCell>}
                                     </DataGridRow>
                                 )}
                             </DataGridBody>

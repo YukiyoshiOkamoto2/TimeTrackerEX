@@ -8,7 +8,7 @@ export interface NavigationHistoryItem {
     link: string | null;
 }
 
-export type NavigationPageName = "Home" | "TimeTracker" | "Settings"
+export type NavigationPageName = "Home" | "TimeTracker" | "Settings";
 
 export interface NavigationContextType {
     currentPageName: NavigationPageName;

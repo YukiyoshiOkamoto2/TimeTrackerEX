@@ -119,8 +119,8 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName, ba
     };
 
     return (
-        <Dialog 
-            open={open} 
+        <Dialog
+            open={open}
             onOpenChange={(_, data) => {
                 if (!isSubmitting) {
                     onOpenChange(data.open);
@@ -165,11 +165,7 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName, ba
                         </Field>
                     </DialogContent>
                     <DialogActions>
-                        <Button 
-                            appearance="secondary" 
-                            onClick={handleCancel} 
-                            disabled={isSubmitting}
-                        >
+                        <Button appearance="secondary" onClick={handleCancel} disabled={isSubmitting}>
                             キャンセル
                         </Button>
                         <Button

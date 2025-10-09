@@ -446,7 +446,7 @@ export class HistoryManager {
     importFromJSON(jsonData: string, merge: boolean = false): number {
         try {
             const entries = JSON.parse(jsonData) as (HistoryEntry & { key: string })[];
-            
+
             if (!Array.isArray(entries)) {
                 throw new Error("Invalid JSON format: expected array");
             }

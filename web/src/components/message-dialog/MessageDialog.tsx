@@ -63,9 +63,9 @@ class AppMessageDialogRefImpl implements AppMessageDialogRef {
     private showConfirm?: (title: string, message: string, level?: MessageLevel) => void;
 
     setDelegate(
-        show: (title: string, message: string, level?: MessageLevel) => void, 
+        show: (title: string, message: string, level?: MessageLevel) => void,
         showConfirm: (title: string, message: string, level?: MessageLevel) => void,
-        close: () => void
+        close: () => void,
     ) {
         this.show = show;
         this.showConfirm = showConfirm;
@@ -161,7 +161,10 @@ export const MessageDialog = () => {
     const IconComponent = config.icon;
 
     return (
-        <Dialog open={state.open} onOpenChange={(_, data) => !data.open && (isConfirm ? handleConfirm(false) : handleClose())}>
+        <Dialog
+            open={state.open}
+            onOpenChange={(_, data) => !data.open && (isConfirm ? handleConfirm(false) : handleClose())}
+        >
             <DialogSurface>
                 <DialogBody>
                     <DialogTitle>

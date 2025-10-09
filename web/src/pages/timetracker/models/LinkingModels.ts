@@ -37,6 +37,18 @@ export interface EventLinking {
 }
 
 /**
+ * 除外されたイベントの情報
+ */
+export interface ExcludedEventInfo {
+    /** 除外されたイベント */
+    event: Event;
+    /** 除外理由 */
+    reason: "ignored" | "outOfSchedule" | "invalid";
+    /** 除外理由の詳細説明 */
+    reasonDetail?: string;
+}
+
+/**
  * 自動紐付け結果
  */
 export interface AutoLinkingResult {
@@ -48,4 +60,6 @@ export interface AutoLinkingResult {
     timeOffCount: number;
     /** 履歴から紐付けされた数 */
     historyCount: number;
+    /** 除外されたイベント（無視、勤務時間外、不正） */
+    excluded: ExcludedEventInfo[];
 }

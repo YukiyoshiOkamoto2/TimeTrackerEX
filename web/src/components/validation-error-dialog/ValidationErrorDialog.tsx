@@ -1,3 +1,5 @@
+import type { SettingError } from "@/schema";
+import { useNavigation } from "@/store";
 import {
     Button,
     Dialog,
@@ -9,9 +11,7 @@ import {
     makeStyles,
     tokens,
 } from "@fluentui/react-components";
-import { Dismiss24Regular, ErrorCircle24Filled, Settings24Regular } from "@fluentui/react-icons";
-import type { SettingError } from "@/schema";
-import { useNavigation } from "@/store";
+import { ErrorCircle24Filled, Settings24Regular } from "@fluentui/react-icons";
 
 const useStyles = makeStyles({
     surface: {
@@ -96,7 +96,7 @@ export function ValidationErrorDialog({ open, errors }: ValidationErrorDialogPro
     const { navigate } = useNavigation();
 
     const handleOpenSettings = () => {
-        navigate("Settings", undefined, "timetracker")
+        navigate("Settings", undefined, "timetracker");
     };
 
     return (

@@ -380,11 +380,7 @@ function formatDateTime(date: Date): string {
  * @returns 認証情報（token, userId）
  * @throws 認証に失敗した場合
  */
-export async function authenticateAsync(
-    baseUrl: string,
-    userName: string,
-    password: string,
-): Promise<TimeTrackerAuth> {
+export async function authenticateAsync(baseUrl: string, userName: string, password: string): Promise<TimeTrackerAuth> {
     console.debug("Start authenticateAsync.");
 
     // トークン取得

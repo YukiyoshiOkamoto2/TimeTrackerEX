@@ -2,11 +2,11 @@
  * Tests for useTimeTrackerSession hook
  */
 
+import * as timeTrackerApi from "@/core/api";
+import type { Project, WorkItem } from "@/types";
 import { renderHook, waitFor } from "@testing-library/react";
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as timeTrackerApi from "@/core/api";
-import type { Project, WorkItem } from "@/types";
 import * as sessionStorage from "./sessionStorage";
 import { useTimeTrackerSession } from "./useTimeTrackerSession";
 
@@ -160,7 +160,7 @@ describe("useTimeTrackerSession", () => {
 
         it("カスタムトークン有効期限を指定できる", async () => {
             const { result } = renderHook(() =>
-                useTimeTrackerSession({ baseUrl, userName, tokenExpirationMinutes: 120 })
+                useTimeTrackerSession({ baseUrl, userName, tokenExpirationMinutes: 120 }),
             );
 
             await act(async () => {
@@ -290,7 +290,12 @@ describe("useTimeTrackerSession", () => {
                 await result.current.registerTask(mockTask);
             });
 
-            expect(timeTrackerApi.registerTaskAsync).toHaveBeenCalledWith(baseUrl, mockStoredAuth.userId, mockTask, mockStoredAuth);
+            expect(timeTrackerApi.registerTaskAsync).toHaveBeenCalledWith(
+                baseUrl,
+                mockStoredAuth.userId,
+                mockTask,
+                mockStoredAuth,
+            );
         });
 
         it("未認証の場合はエラー", async () => {
@@ -299,7 +304,7 @@ describe("useTimeTrackerSession", () => {
             await expect(
                 act(async () => {
                     await result.current.registerTask(mockTask);
-                })
+                }),
             ).rejects.toThrow("認証されていません");
 
             expect(timeTrackerApi.registerTaskAsync).not.toHaveBeenCalled();

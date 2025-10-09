@@ -1,9 +1,12 @@
+import { Card } from "@/components/card";
 import { CheckedTable, CheckedTableItem } from "@/components/checked-table";
+import { InteractiveCard } from "@/components/interactive-card";
 import { appMessageDialogRef } from "@/components/message-dialog";
+import { HistoryManager } from "@/core/history";
 import { parseICS } from "@/core/ics";
 import { parsePDF } from "@/core/pdf";
-import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib";
+import { useSettings } from "@/store/settings/SettingsProvider";
 import { Event, EventUtils, Schedule, ScheduleUtils } from "@/types";
 import { Button, makeStyles, Popover, PopoverSurface, PopoverTrigger, tokens } from "@fluentui/react-components";
 import {
@@ -15,12 +18,9 @@ import {
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
-import { Card } from "@/components/card";
-import { InteractiveCard } from "@/components/interactive-card";
-import { ICS, PDF, UploadInfo } from "../models";
-import { useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { PasswordInputDialog } from "../components/PasswordInputDialog";
-import { useSettings } from "@/store/settings/SettingsProvider";
+import { useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
+import { ICS, PDF, UploadInfo } from "../models";
 
 const logger = getLogger("FileUploadView");
 
@@ -588,12 +588,27 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                                 </PopoverTrigger>
                                 <PopoverSurface>
                                     <div className={styles.popoverContent}>
-                                        <strong>処理対象日時について</strong>
+                                        <strong>📋 処理対象日時について</strong>
                                         <br />
                                         <br />
                                         勤怠PDFファイルから読み取った勤務実績の日時情報です。
                                         <br />
-                                        チェックを外した項目は処理対象から除外されます。
+                                        <br />
+                                        <strong>重要:</strong>
+                                        <br />
+                                        • チェックを外した項目は処理対象から除外されます
+                                        <br />• <strong>勤務情報に含まれない日付</strong>
+                                        のカレンダーイベントは自動的に削除されます
+                                        <br />
+                                        • 実際に出勤した日のみが登録対象となります
+                                        <br />
+                                        <br />
+                                        <strong>例:</strong>
+                                        <br />
+                                        勤務情報: 10/1, 10/2, 10/4
+                                        <br />
+                                        カレンダー: 10/1（会議）, 10/3（会議）
+                                        <br />→ 10/3の会議は削除されます
                                     </div>
                                 </PopoverSurface>
                             </Popover>
@@ -613,12 +628,27 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                                 </PopoverTrigger>
                                 <PopoverSurface>
                                     <div className={styles.popoverContent}>
-                                        <strong>スケジュール情報について</strong>
+                                        <strong>📅 スケジュール情報について</strong>
                                         <br />
                                         <br />
                                         ICSファイルから読み取ったカレンダーイベント情報です。
                                         <br />
-                                        チェックを外した項目は紐づけ処理から除外されます。
+                                        <br />
+                                        <strong>処理方法:</strong>
+                                        <br />
+                                        • チェックを外した項目は紐づけ処理から除外されます
+                                        <br />
+                                        • 勤務情報（PDF）に対応する日付のみ処理されます
+                                        <br />
+                                        • 勤務情報の日付範囲外のイベントは自動削除されます
+                                        <br />
+                                        <br />
+                                        <strong>自動削除される例:</strong>
+                                        <br />
+                                        • 休日のイベント（勤務情報に含まれない日）
+                                        <br />
+                                        • 勤務期間外のイベント
+                                        <br />• 有給休暇日のイベント（別途処理）
                                     </div>
                                 </PopoverSurface>
                             </Popover>

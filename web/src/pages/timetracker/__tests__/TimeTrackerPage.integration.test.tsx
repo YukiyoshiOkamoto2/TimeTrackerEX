@@ -1,13 +1,11 @@
 /**
  * TimeTrackerPage 統合テスト
- * 
+ *
  * FileUploadView → LinkingProcessView → CompletionView の
  * 完全なフローをテストします。
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { TimeTrackerPage } from "../TimeTrackerPage";
+import { beforeEach, describe, it, vi } from "vitest";
 
 // TODO: Mocking setup
 // - useTimeTrackerSession
