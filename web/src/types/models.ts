@@ -113,7 +113,7 @@ export interface Project {
  * @remarks
  * - get_most_nest_children()メソッドで最も深い階層にある子作業項目を取得できます
  */
-export interface WorkItem {
+export interface WorkItemChldren {
     /** 作業項目の一意の識別子 */
     id: string;
     /** 作業項目の名前 */
@@ -122,6 +122,9 @@ export interface WorkItem {
     folderName: string;
     /** 作業項目が属するフォルダのパス */
     folderPath: string;
+}
+
+export interface WorkItem extends WorkItemChldren {
     /** サブ作業項目のリスト */
     subItems?: WorkItem[] | null;
 }

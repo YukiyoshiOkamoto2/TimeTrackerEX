@@ -8,17 +8,73 @@ import { SettingSection } from "../../layout";
 import { SettingErrorsSummary } from "../../ui";
 
 const useStyles = makeStyles({
+    container: {
+        animationName: {
+            from: {
+                opacity: 0,
+                transform: "translateY(20px)",
+            },
+            to: {
+                opacity: 1,
+                transform: "translateY(0)",
+            },
+        },
+        animationDuration: "0.4s",
+        animationTimingFunction: tokens.curveEasyEase,
+        animationFillMode: "forwards",
+    },
     editor: {
         height: "420px",
+        animationName: {
+            from: {
+                opacity: 0,
+                transform: "scale(0.98)",
+            },
+            to: {
+                opacity: 1,
+                transform: "scale(1)",
+            },
+        },
+        animationDuration: "0.5s",
+        animationDelay: "0.1s",
+        animationTimingFunction: tokens.curveEasyEase,
+        animationFillMode: "backwards",
     },
     actions: {
         display: "flex",
         justifyContent: "flex-end",
         gap: tokens.spacingHorizontalM,
         marginTop: tokens.spacingVerticalL,
+        animationName: {
+            from: {
+                opacity: 0,
+                transform: "translateX(20px)",
+            },
+            to: {
+                opacity: 1,
+                transform: "translateX(0)",
+            },
+        },
+        animationDuration: "0.4s",
+        animationDelay: "0.2s",
+        animationTimingFunction: tokens.curveEasyEase,
+        animationFillMode: "backwards",
     },
     errorSection: {
         marginBottom: tokens.spacingVerticalL,
+        animationName: {
+            from: {
+                opacity: 0,
+                transform: "translateY(-10px)",
+            },
+            to: {
+                opacity: 1,
+                transform: "translateY(0)",
+            },
+        },
+        animationDuration: "0.3s",
+        animationTimingFunction: tokens.curveEasyEase,
+        animationFillMode: "forwards",
     },
 });
 
@@ -82,25 +138,31 @@ export function JsonEditorView<T extends ObjectType>({ definition, value, onSave
     };
 
     return (
-        <SettingSection
-            title="JSON設定"
-            description="設定をJSON形式で直接編集できます。不正なJSON形式で保存するとアプリケーションが正常に動作しない可能性があります。"
-        >
-            {/* バリデーションエラー表示 */}
-            {hasError && <SettingErrorsSummary errors={allErrors} title="検証エラー" />}
+        <div className={styles.container}>
+            <SettingSection
+                title="JSON設定"
+                description="設定をJSON形式で直接編集できます。不正なJSON形式で保存するとアプリケーションが正常に動作しない可能性があります。"
+            >
+                {/* バリデーションエラー表示 */}
+                {hasError && (
+                    <div className={styles.errorSection}>
+                        <SettingErrorsSummary errors={allErrors} title="検証エラー" />
+                    </div>
+                )}
 
-            {/* エディタ */}
-            <Editor className={styles.editor} value={jsonText} language="json" onTextChanged={handleEditorChange} />
+                {/* エディタ */}
+                <Editor className={styles.editor} value={jsonText} language="json" onTextChanged={handleEditorChange} />
 
-            {/* アクションボタン */}
-            <div className={styles.actions}>
-                <Button appearance="secondary" icon={<Dismiss20Regular />} onClick={onCancel}>
-                    キャンセル
-                </Button>
-                <Button appearance="primary" icon={<Save20Regular />} onClick={handleSave} disabled={hasError}>
-                    保存
-                </Button>
-            </div>
-        </SettingSection>
+                {/* アクションボタン */}
+                <div className={styles.actions}>
+                    <Button appearance="secondary" icon={<Dismiss20Regular />} onClick={onCancel}>
+                        キャンセル
+                    </Button>
+                    <Button appearance="primary" icon={<Save20Regular />} onClick={handleSave} disabled={hasError}>
+                        保存
+                    </Button>
+                </div>
+            </SettingSection>
+        </div>
     );
 }

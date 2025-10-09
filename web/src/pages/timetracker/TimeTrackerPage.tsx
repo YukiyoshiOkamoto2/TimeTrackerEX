@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Page } from "../../components/page";
 import { ScheduleItem } from "./components";
 import { ICS, PDF, UploadInfo } from "./models";
-import { convertDayTasksToScheduleItems, generateItemCodeOptions } from "./services";
+import { generateItemCodeOptions } from "./services";
 import { CompletionView } from "./view/CompletionView";
 import { FileUploadView } from "./view/FileUploadView";
 import { LinkingProcessView } from "./view/LinkingProcessView";
@@ -136,38 +136,7 @@ export function TimeTrackerPage() {
         nextTo();
     };
 
-    const handleLinkingProcessSubmit = (tasks: DayTask[]) => {
-        try {
-            logger.info(`LinkingProcessView完了: ${tasks.length}日分のDayTaskを受け取りました`);
-
-            // DayTaskをScheduleItemに変換
-            const items = convertDayTasksToScheduleItems(tasks);
-
-            if (items.length === 0) {
-                logger.warn("変換後のScheduleItemsが空です");
-                appMessageDialogRef.showMessageAsync(
-                    "データエラー",
-                    "スケジュールデータの変換に失敗しました。\n紐づけ処理画面に戻って再度お試しください。",
-                    "ERROR",
-                );
-                return;
-            }
-
-            // stateを更新
-            setDayTasks(tasks);
-            setScheduleItems(items);
-
-            logger.info(`CompletionViewへ遷移: ${items.length}件のScheduleItem`);
-            nextTo();
-        } catch (error) {
-            logger.error("データ変換エラー:", error);
-            appMessageDialogRef.showMessageAsync(
-                "変換エラー",
-                "スケジュールデータの変換中にエラーが発生しました。\n紐づけ処理画面に戻って再度お試しください。",
-                "ERROR",
-            );
-        }
-    };
+    const handleLinkingProcessSubmit = (_tasks: any[]) => {};
 
     return (
         <>
@@ -183,7 +152,6 @@ export function TimeTrackerPage() {
                             schedules={scheduleItems}
                             itemCodes={[]} // TODO: Phase 7 - 必要に応じて実装
                             itemCodeOptions={generateItemCodeOptions(uploadInfo?.workItems || [])}
-                            password={uploadInfo?.password || ""}
                             onBack={() => backTo(2)}
                             onBackToLinking={backTo}
                             onRegisterSuccess={() => backTo(2)} // 登録成功後FileUploadViewへ

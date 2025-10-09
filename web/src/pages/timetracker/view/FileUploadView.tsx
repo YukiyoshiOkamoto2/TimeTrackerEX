@@ -428,7 +428,6 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                     ics: newIcs,
                     project,
                     workItems,
-                    password: sessionHook.password || undefined, // Phase 7: パスワードを追加
                 });
             }
         } catch (error) {

@@ -557,8 +557,6 @@ export function isAuthenticationError(error: unknown): boolean {
  * タスク一括登録リクエスト
  */
 export interface RegisterTasksRequest {
-    /** パスワード */
-    password: string;
     /** 登録するスケジュールリスト */
     schedules: Array<{
         /** 日付 (例: "2024/01/15") */

@@ -1,10 +1,10 @@
 import type { WorkItem } from "@/types";
 import {
     type TableColumnDefinition,
-    TableCellLayout,
     createTableColumn,
     Dropdown,
     Option,
+    TableCellLayout,
 } from "@fluentui/react-components";
 import type { UnlinkedEventRow } from "../models";
 

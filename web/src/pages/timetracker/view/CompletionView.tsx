@@ -99,7 +99,6 @@ export type CompletionViewProps = {
     schedules: ScheduleItem[];
     itemCodes: string[];
     itemCodeOptions: ItemCodeOption[];
-    password: string;
     onBack: () => void;
     onBackToLinking: () => void;
     onRegisterSuccess: () => void;
@@ -110,7 +109,6 @@ export function CompletionView({
     schedules,
     itemCodes,
     itemCodeOptions,
-    password,
     onBack,
     onBackToLinking,
     onRegisterSuccess,
@@ -157,7 +155,6 @@ export function CompletionView({
 
             // ScheduleItemからAPIリクエスト形式に変換
             const request: RegisterTasksRequest = {
-                password,
                 schedules: schedules.map((item) => {
                     // time: "09:00-10:30" を startTime, endTime に分解
                     const [startTime, endTime] = item.time.split("-");

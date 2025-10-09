@@ -1,4 +1,4 @@
-import type { Event, Schedule } from "@/types";
+import type { Event, Schedule, WorkItem, WorkItemChldren } from "@/types";
 
 /**
  * スケジュールのユーティリティ関数
@@ -279,4 +279,11 @@ export function createSchedule(
         isPaidLeave,
         errorMessage,
     };
+}
+
+export function getMostNestChildren(workItem: WorkItem): WorkItemChldren[] {
+    if (workItem.subItems && workItem.subItems.length > 0) {
+        return workItem.subItems.flatMap((s) => getMostNestChildren(s));
+    }
+    return [workItem];
 }

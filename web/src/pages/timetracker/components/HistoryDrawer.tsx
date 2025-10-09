@@ -4,20 +4,18 @@
  * イベントと作業項目の紐づけ履歴を管理するDrawerコンポーネント
  */
 
+import { DataTable } from "@/components/data-table";
 import { appMessageDialogRef } from "@/components/message-dialog";
+import { StatCard } from "@/components/stat-card";
 import type { HistoryEntry } from "@/core/history";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import type { WorkItem } from "@/types";
 import {
+    Badge,
     Button,
     Checkbox,
-    DataGrid,
-    DataGridBody,
-    DataGridCell,
-    DataGridHeader,
-    DataGridHeaderCell,
-    DataGridRow,
+    Divider,
     Drawer,
     DrawerBody,
     DrawerHeader,
@@ -42,10 +40,13 @@ import {
     ArrowClockwise24Regular,
     ArrowDownload24Regular,
     ArrowUpload24Regular,
+    Calendar24Regular,
     CheckboxChecked24Regular,
     CheckboxUnchecked24Regular,
+    CheckmarkCircle24Regular,
     Delete24Regular,
     Dismiss24Regular,
+    History24Regular,
     MoreVertical24Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useMemo, useState } from "react";
@@ -54,30 +55,95 @@ const logger = getLogger("HistoryDrawer");
 
 const useStyles = makeStyles({
     drawer: {
-        width: "800px",
-        maxWidth: "90vw",
+        width: "900px",
+        maxWidth: "95vw",
+    },
+    drawerHeader: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        paddingBottom: tokens.spacingVerticalM,
+    },
+    headerIcon: {
+        fontSize: "32px",
+        color: tokens.colorBrandForeground1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "48px",
+        height: "48px",
+        borderRadius: tokens.borderRadiusCircular,
+        backgroundColor: tokens.colorBrandBackground2,
+    },
+    headerTitle: {
+        flex: 1,
+        fontSize: "20px",
+        fontWeight: "600",
+        color: tokens.colorNeutralForeground1,
+    },
+    statsContainer: {
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: "16px",
+        marginBottom: tokens.spacingVerticalL,
+        paddingTop: tokens.spacingVerticalM,
     },
     toolbar: {
         marginBottom: tokens.spacingVerticalM,
+        padding: "12px",
+        backgroundColor: tokens.colorNeutralBackground2,
+        borderRadius: tokens.borderRadiusMedium,
         display: "flex",
         gap: tokens.spacingHorizontalS,
+        flexWrap: "wrap",
+        border: `1px solid ${tokens.colorNeutralStroke2}`,
     },
     tableContainer: {
-        height: "calc(100vh - 200px)",
+        height: "calc(100vh - 450px)",
         overflowY: "auto",
+        border: `1px solid ${tokens.colorNeutralStroke2}`,
+        borderRadius: tokens.borderRadiusMedium,
+        backgroundColor: tokens.colorNeutralBackground1,
     },
     emptyState: {
-        padding: tokens.spacingVerticalXXL,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "16px",
+        padding: "64px 24px",
         textAlign: "center",
         color: tokens.colorNeutralForeground3,
+        minHeight: "300px",
     },
-    stats: {
-        padding: tokens.spacingVerticalM,
-        fontSize: "14px",
+    emptyIcon: {
+        fontSize: "64px",
+        opacity: 0.5,
+        color: tokens.colorNeutralForeground4,
+    },
+    emptyTitle: {
+        fontSize: "18px",
+        fontWeight: "600",
         color: tokens.colorNeutralForeground2,
-        borderBottomWidth: "1px",
-        borderBottomStyle: "solid",
-        borderBottomColor: tokens.colorNeutralStroke2,
+    },
+    emptyDescription: {
+        fontSize: "14px",
+        color: tokens.colorNeutralForeground3,
+        maxWidth: "400px",
+    },
+    divider: {
+        marginTop: tokens.spacingVerticalM,
+        marginBottom: tokens.spacingVerticalM,
+    },
+    editableCell: {
+        cursor: "pointer",
+        padding: "4px 8px",
+        borderRadius: tokens.borderRadiusSmall,
+        transition: "all 0.15s ease",
+        ":hover": {
+            backgroundColor: tokens.colorNeutralBackground1Hover,
+            color: tokens.colorBrandForeground1,
+        },
     },
 });
 
@@ -315,7 +381,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                                 ))}
                             </Dropdown>
                         ) : (
-                            <span onClick={() => setEditingKey(item.key)} style={{ cursor: "pointer" }}>
+                            <span onClick={() => setEditingKey(item.key)} className={styles.editableCell}>
                                 {item.itemName}
                             </span>
                         )}
@@ -375,20 +441,33 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                         />
                     }
                 >
-                    紐付け履歴管理
+                    <div className={styles.drawerHeader}>
+                        <div className={styles.headerIcon}>
+                            <History24Regular />
+                        </div>
+                        <div className={styles.headerTitle}>紐付け履歴管理</div>
+                    </div>
                 </DrawerHeaderTitle>
             </DrawerHeader>
 
             <DrawerBody>
-                {/* 統計情報 */}
-                <div className={styles.stats}>
-                    <div>総件数: {historyData.length}件</div>
-                    <div>選択中: {selectedKeys.size}件</div>
+                {/* 統計情報カード */}
+                <div className={styles.statsContainer}>
+                    <StatCard icon={<History24Regular />} label="総件数" value={historyData.length} unit="件" />
+                    <StatCard icon={<CheckmarkCircle24Regular />} label="選択中" value={selectedKeys.size} unit="件" />
+                    <StatCard
+                        icon={<Calendar24Regular />}
+                        label="最終更新"
+                        value={historyData.length > 0 ? "最新" : "-"}
+                    />
                 </div>
+
+                <Divider className={styles.divider} />
 
                 {/* ツールバー */}
                 <Toolbar className={styles.toolbar}>
                     <ToolbarButton
+                        appearance="primary"
                         icon={
                             selectedKeys.size === historyData.length ? (
                                 <CheckboxUnchecked24Regular />
@@ -397,15 +476,17 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                             )
                         }
                         onClick={handleSelectAll}
+                        disabled={historyData.length === 0}
                     >
                         {selectedKeys.size === historyData.length ? "全解除" : "全選択"}
                     </ToolbarButton>
                     <ToolbarButton
+                        appearance="primary"
                         icon={<Delete24Regular />}
                         onClick={handleDeleteSelected}
                         disabled={selectedKeys.size === 0}
                     >
-                        選択削除
+                        選択削除 {selectedKeys.size > 0 && <Badge appearance="filled">{selectedKeys.size}</Badge>}
                     </ToolbarButton>
                     <ToolbarDivider />
                     <ToolbarButton icon={<ArrowClockwise24Regular />} onClick={loadHistory}>
@@ -438,34 +519,28 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
 
                 {/* データテーブル */}
                 {historyData.length === 0 ? (
-                    <div className={styles.emptyState}>履歴データがありません</div>
-                ) : (
-                    <div className={styles.tableContainer}>
-                        <DataGrid items={sortedData} columns={columns} sortable getRowId={(item) => item.key}>
-                            <DataGridHeader>
-                                <DataGridRow>
-                                    {({ renderHeaderCell, columnId }) => (
-                                        <DataGridHeaderCell
-                                            onClick={() => {
-                                                if (columnId !== "checkbox") {
-                                                    handleColumnHeaderClick(columnId as SortField);
-                                                }
-                                            }}
-                                        >
-                                            {renderHeaderCell()}
-                                        </DataGridHeaderCell>
-                                    )}
-                                </DataGridRow>
-                            </DataGridHeader>
-                            <DataGridBody<HistoryRow>>
-                                {({ item, rowId }) => (
-                                    <DataGridRow<HistoryRow> key={rowId}>
-                                        {({ renderCell }) => <DataGridCell>{renderCell(item)}</DataGridCell>}
-                                    </DataGridRow>
-                                )}
-                            </DataGridBody>
-                        </DataGrid>
+                    <div className={styles.emptyState}>
+                        <History24Regular className={styles.emptyIcon} />
+                        <div className={styles.emptyTitle}>履歴データがありません</div>
+                        <div className={styles.emptyDescription}>
+                            イベントと作業項目を紐づけると、ここに履歴が表示されます。
+                            <br />
+                            履歴を活用することで、次回から自動的に同じ紐づけが適用されます。
+                        </div>
                     </div>
+                ) : (
+                    <DataTable
+                        items={sortedData}
+                        columns={columns}
+                        getRowId={(item) => item.key}
+                        sortable
+                        onColumnHeaderClick={(columnId) => {
+                            if (columnId !== "checkbox") {
+                                handleColumnHeaderClick(columnId as SortField);
+                            }
+                        }}
+                        className={styles.tableContainer}
+                    />
                 )}
             </DrawerBody>
         </Drawer>

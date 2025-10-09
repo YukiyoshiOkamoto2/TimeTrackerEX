@@ -2,128 +2,126 @@
  * LinkingProcessView用の詳細表示ダイアログコンポーネント
  */
 
+import { DataTable } from "@/components/data-table";
+import { StatCard } from "@/components/stat-card";
 import {
     Button,
-    DataGrid,
-    DataGridBody,
-    DataGridCell,
-    DataGridHeader,
-    DataGridHeaderCell,
-    DataGridRow,
     Dialog,
     DialogActions,
     DialogBody,
     DialogContent,
     DialogSurface,
     DialogTitle,
+    Divider,
     TableCellLayout,
     TableColumnDefinition,
     createTableColumn,
     makeStyles,
     tokens,
 } from "@fluentui/react-components";
-import { Link24Regular } from "@fluentui/react-icons";
-import type {
-    ExcludedEventRow,
-    ExcludedStats,
-    LinkedEventRow,
-    PaidLeaveRow,
-    TargetEventRow,
-    UnlinkedEventRow,
-} from "../models";
-
-// 型定義
-export type DetailDialogType = "paidLeave" | "targetEvents" | "deleteEvents" | "linked" | "unlinked" | null;
-
-export interface DetailDialogStats {
-    paidLeaveDays: number;
-    normalEventCount: number;
-    convertedEventCount: number;
-    totalLinked: number;
-    timeOffCount: number;
-    historyCount: number;
-    manualCount: number;
-}
-
-interface DetailDialogProps {
-    dialogType: DetailDialogType;
-    onClose: () => void;
-    stats: DetailDialogStats;
-    excludedStats: ExcludedStats;
-    paidLeaveRows: PaidLeaveRow[];
-    targetEventRows: TargetEventRow[];
-    excludedEventRows: ExcludedEventRow[];
-    linkedEventsRows: LinkedEventRow[];
-    unlinkedEventsRows: UnlinkedEventRow[];
-}
+import { CheckmarkCircle24Regular, Dismiss24Regular, Info24Regular, Link24Regular } from "@fluentui/react-icons";
+import { TaskStatistics } from "../models/statistics";
+import { LinkedEventRow, TargetEventRow, UnlinkedEventRow } from "../models/table";
 
 const useStyles = makeStyles({
+    dialogSurface: {
+        maxWidth: "900px",
+        minHeight: "500px",
+    },
     dialogContent: {
         display: "flex",
         flexDirection: "column",
-        gap: "16px",
+        gap: "24px",
+        paddingTop: "8px",
     },
-    dialogDescription: {
-        fontSize: "14px",
-        color: tokens.colorNeutralForeground2,
+    dialogHeader: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
         marginBottom: "8px",
     },
-    dialogStats: {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-        gap: "12px",
-        marginBottom: "16px",
-    },
-    dialogStatItem: {
+    dialogIcon: {
+        fontSize: "28px",
         display: "flex",
-        flexDirection: "column",
-        gap: "4px",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "48px",
+        height: "48px",
+        borderRadius: tokens.borderRadiusCircular,
+        backgroundColor: tokens.colorBrandBackground2,
+        color: tokens.colorBrandForeground1,
     },
-    dialogStatLabel: {
-        fontSize: "12px",
-        color: tokens.colorNeutralForeground3,
-    },
-    dialogStatValue: {
-        fontSize: "18px",
+    dialogTitleText: {
+        flex: 1,
+        fontSize: "20px",
         fontWeight: "600",
         color: tokens.colorNeutralForeground1,
     },
+    dialogDescription: {
+        fontSize: "14px",
+        lineHeight: "1.5",
+        color: tokens.colorNeutralForeground2,
+        padding: "12px 16px",
+        backgroundColor: tokens.colorNeutralBackground2,
+        borderRadius: tokens.borderRadiusMedium,
+        borderLeft: `3px solid ${tokens.colorBrandForeground1}`,
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "8px",
+    },
+    descriptionIcon: {
+        marginTop: "2px",
+        color: tokens.colorBrandForeground1,
+    },
+    dialogStats: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+        gap: "16px",
+        marginTop: "8px",
+    },
+    tableContainer: {
+        marginTop: "8px",
+        border: `1px solid ${tokens.colorNeutralStroke2}`,
+        borderRadius: tokens.borderRadiusMedium,
+        overflow: "hidden",
+    },
     emptyMessage: {
         textAlign: "center",
+        padding: "48px 24px",
         color: tokens.colorNeutralForeground3,
-        marginTop: "16px",
+        fontSize: "14px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "12px",
+    },
+    emptyIcon: {
+        fontSize: "48px",
+        opacity: 0.5,
+    },
+    divider: {
+        marginTop: "8px",
+        marginBottom: "8px",
     },
 });
+
+// 型定義
+export type DetailDialogType = "targetEvents" | "linked" | "unlinked" | undefined;
+
+interface DetailDialogProps {
+    dialogType: DetailDialogType;
+    openDialog: boolean;
+    taskStatistics: TaskStatistics;
+    onClose: () => void;
+}
 
 /**
  * 詳細表示ダイアログコンポーネント
  */
-export function DetailDialog({
-    dialogType,
-    onClose,
-    stats,
-    excludedStats,
-    paidLeaveRows,
-    targetEventRows,
-    excludedEventRows,
-    linkedEventsRows,
-    unlinkedEventsRows,
-}: DetailDialogProps) {
+export function DetailDialog({ dialogType, openDialog, taskStatistics, onClose }: DetailDialogProps) {
     const styles = useStyles();
 
     // テーブル列定義
-    const paidLeaveColumns: TableColumnDefinition<PaidLeaveRow>[] = [
-        createTableColumn<PaidLeaveRow>({
-            columnId: "date",
-            renderHeaderCell: () => "日付",
-            renderCell: (item) => (
-                <TableCellLayout>
-                    {item.date} {item.dayOfWeek}
-                </TableCellLayout>
-            ),
-        }),
-    ];
-
     const targetEventColumns: TableColumnDefinition<TargetEventRow>[] = [
         createTableColumn<TargetEventRow>({
             columnId: "name",
@@ -153,39 +151,6 @@ export function DetailDialog({
                     {item.status}
                 </TableCellLayout>
             ),
-        }),
-    ];
-
-    const excludedEventsColumns: TableColumnDefinition<ExcludedEventRow>[] = [
-        createTableColumn<ExcludedEventRow>({
-            columnId: "name",
-            compare: (a, b) => a.name.localeCompare(b.name),
-            renderHeaderCell: () => "イベント名",
-            renderCell: (item) => <TableCellLayout>{item.name}</TableCellLayout>,
-        }),
-        createTableColumn<ExcludedEventRow>({
-            columnId: "startTime",
-            compare: (a, b) => a.startTime.localeCompare(b.startTime),
-            renderHeaderCell: () => "開始時刻",
-            renderCell: (item) => <TableCellLayout>{item.startTime}</TableCellLayout>,
-        }),
-        createTableColumn<ExcludedEventRow>({
-            columnId: "endTime",
-            compare: (a, b) => a.endTime.localeCompare(b.endTime),
-            renderHeaderCell: () => "終了時刻",
-            renderCell: (item) => <TableCellLayout>{item.endTime}</TableCellLayout>,
-        }),
-        createTableColumn<ExcludedEventRow>({
-            columnId: "reason",
-            compare: (a, b) => a.reason.localeCompare(b.reason),
-            renderHeaderCell: () => "除外理由",
-            renderCell: (item) => <TableCellLayout>{item.reason}</TableCellLayout>,
-        }),
-        createTableColumn<ExcludedEventRow>({
-            columnId: "reasonDetail",
-            compare: (a, b) => a.reasonDetail.localeCompare(b.reasonDetail),
-            renderHeaderCell: () => "詳細",
-            renderCell: (item) => <TableCellLayout>{item.reasonDetail}</TableCellLayout>,
         }),
     ];
 
@@ -243,164 +208,68 @@ export function DetailDialog({
         }),
     ];
 
-    // ダイアログタイトルの取得
-    const getDialogTitle = () => {
+    // ダイアログタイトルとアイコンの取得
+    const getDialogInfo = () => {
         switch (dialogType) {
-            case "paidLeave":
-                return "📅 有給休暇の詳細";
             case "targetEvents":
-                return "🔗 対象イベントの詳細";
-            case "deleteEvents":
-                return "🗑️ 削除対象イベントの詳細";
+                return {
+                    title: "対象イベントの詳細",
+                    icon: <Info24Regular />,
+                };
             case "linked":
-                return "✅ 紐づけ済みイベントの詳細";
+                return {
+                    title: "紐づけ済みイベントの詳細",
+                    icon: <CheckmarkCircle24Regular />,
+                };
             case "unlinked":
-                return "❌ 未紐づけイベントの詳細";
+                return {
+                    title: "未紐づけイベントの詳細",
+                    icon: <Dismiss24Regular />,
+                };
             default:
-                return "";
+                return { title: "", icon: null };
         }
     };
 
-    return (
-        <Dialog open={dialogType !== null} onOpenChange={(_, data) => !data.open && onClose()}>
-            <DialogSurface style={{ maxWidth: "800px" }}>
-                <DialogBody>
-                    <DialogTitle>{getDialogTitle()}</DialogTitle>
-                    <DialogContent className={styles.dialogContent}>
-                        {/* 有給休暇の詳細 */}
-                        {dialogType === "paidLeave" && (
-                            <div>
-                                <div className={styles.dialogDescription}>
-                                    有給休暇として認識された日付の一覧です。これらの日は勤務実績として扱われます。
-                                </div>
-                                <div className={styles.dialogStats}>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>有給日数</div>
-                                        <div className={styles.dialogStatValue}>{stats.paidLeaveDays}日</div>
-                                    </div>
-                                </div>
-                                {paidLeaveRows.length > 0 ? (
-                                    <DataGrid
-                                        items={paidLeaveRows}
-                                        columns={paidLeaveColumns}
-                                        sortable
-                                        getRowId={(item) => item.id}
-                                    >
-                                        <DataGridHeader>
-                                            <DataGridRow>
-                                                {({ renderHeaderCell }) => (
-                                                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                                                )}
-                                            </DataGridRow>
-                                        </DataGridHeader>
-                                        <DataGridBody<PaidLeaveRow>>
-                                            {({ item, rowId }) => (
-                                                <DataGridRow<PaidLeaveRow> key={rowId}>
-                                                    {({ renderCell }) => <DataGridCell>{renderCell(item)}</DataGridCell>}
-                                                </DataGridRow>
-                                            )}
-                                        </DataGridBody>
-                                    </DataGrid>
-                                ) : (
-                                    <p className={styles.emptyMessage}>有給休暇として認識された日付はありません</p>
-                                )}
-                            </div>
-                        )}
+    const dialogInfo = getDialogInfo();
 
+    return (
+        <Dialog open={openDialog} onOpenChange={(_, data) => !data.open && onClose()}>
+            <DialogSurface className={styles.dialogSurface}>
+                <DialogBody>
+                    <DialogTitle>
+                        <div className={styles.dialogHeader}>
+                            <div className={styles.dialogIcon}>{dialogInfo.icon}</div>
+                            <div className={styles.dialogTitleText}>{dialogInfo.title}</div>
+                        </div>
+                    </DialogTitle>
+                    <DialogContent className={styles.dialogContent}>
                         {/* 対象イベントの詳細 */}
                         {dialogType === "targetEvents" && (
                             <div>
                                 <div className={styles.dialogDescription}>
-                                    処理対象となったイベントの一覧です。無視設定や勤務時間外のイベントは含まれません。
+                                    <Info24Regular className={styles.descriptionIcon} />
+                                    <span>
+                                        処理対象となったイベントの一覧です。無視設定や勤務時間外のイベントは含まれません。
+                                    </span>
                                 </div>
                                 <div className={styles.dialogStats}>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>合計イベント数</div>
-                                        <div className={styles.dialogStatValue}>{targetEventRows.length}件</div>
-                                    </div>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>元のイベント数</div>
-                                        <div className={styles.dialogStatValue}>{stats.normalEventCount}件</div>
-                                    </div>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>変換イベント数</div>
-                                        <div className={styles.dialogStatValue}>{stats.convertedEventCount}件</div>
-                                    </div>
+                                    <StatCard icon={<Info24Regular />} label="合計イベント数" value={1} unit="件" />
                                 </div>
-                                {targetEventRows.length > 0 ? (
-                                    <DataGrid
-                                        items={targetEventRows}
+                                <Divider className={styles.divider} />
+                                {[].length > 0 ? (
+                                    <DataTable
+                                        items={[]}
                                         columns={targetEventColumns}
-                                        sortable
                                         getRowId={(item) => item.id}
-                                    >
-                                        <DataGridHeader>
-                                            <DataGridRow>
-                                                {({ renderHeaderCell }) => (
-                                                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                                                )}
-                                            </DataGridRow>
-                                        </DataGridHeader>
-                                        <DataGridBody<TargetEventRow>>
-                                            {({ item, rowId }) => (
-                                                <DataGridRow<TargetEventRow> key={rowId}>
-                                                    {({ renderCell }) => <DataGridCell>{renderCell(item)}</DataGridCell>}
-                                                </DataGridRow>
-                                            )}
-                                        </DataGridBody>
-                                    </DataGrid>
-                                ) : (
-                                    <p className={styles.emptyMessage}>処理対象のイベントはありません</p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* 削除対象イベントの詳細 */}
-                        {dialogType === "deleteEvents" && (
-                            <div>
-                                <div className={styles.dialogDescription}>
-                                    以下の理由により処理から除外されたイベントです。
-                                </div>
-                                <div className={styles.dialogStats}>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>無視イベント</div>
-                                        <div className={styles.dialogStatValue}>{excludedStats.ignored}件</div>
-                                    </div>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>勤務日範囲外</div>
-                                        <div className={styles.dialogStatValue}>{excludedStats.outOfSchedule}件</div>
-                                    </div>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>不正イベント</div>
-                                        <div className={styles.dialogStatValue}>{excludedStats.invalid}件</div>
-                                    </div>
-                                </div>
-                                {excludedEventRows.length > 0 ? (
-                                    <DataGrid
-                                        items={excludedEventRows}
-                                        columns={excludedEventsColumns}
                                         sortable
-                                        resizableColumns
-                                        style={{ marginTop: "16px" }}
-                                        getRowId={(item) => item.id}
-                                    >
-                                        <DataGridHeader>
-                                            <DataGridRow>
-                                                {({ renderHeaderCell }) => (
-                                                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                                                )}
-                                            </DataGridRow>
-                                        </DataGridHeader>
-                                        <DataGridBody<ExcludedEventRow>>
-                                            {({ item, rowId }) => (
-                                                <DataGridRow<ExcludedEventRow> key={rowId}>
-                                                    {({ renderCell }) => <DataGridCell>{renderCell(item)}</DataGridCell>}
-                                                </DataGridRow>
-                                            )}
-                                        </DataGridBody>
-                                    </DataGrid>
+                                        className={styles.tableContainer}
+                                    />
                                 ) : (
-                                    <p className={styles.emptyMessage}>除外されたイベントはありません</p>
+                                    <div className={styles.emptyMessage}>
+                                        <Info24Regular className={styles.emptyIcon} />
+                                        <div>処理対象のイベントはありません</div>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -409,52 +278,28 @@ export function DetailDialog({
                         {dialogType === "linked" && (
                             <div>
                                 <div className={styles.dialogDescription}>
-                                    WorkItemに紐づけ済みのイベント一覧です。これらは登録実行時に勤務実績として記録されます。
+                                    <Info24Regular className={styles.descriptionIcon} />
+                                    <span>
+                                        WorkItemに紐づけ済みのイベント一覧です。これらは登録実行時に勤務実績として記録されます。
+                                    </span>
                                 </div>
                                 <div className={styles.dialogStats}>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>合計</div>
-                                        <div className={styles.dialogStatValue}>{stats.totalLinked}件</div>
-                                    </div>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>休暇</div>
-                                        <div className={styles.dialogStatValue}>{stats.timeOffCount}件</div>
-                                    </div>
-                                    <div className={styles.dialogStatItem}>
-                                        <div className={styles.dialogStatLabel}>履歴</div>
-                                        <div className={styles.dialogStatValue}>{stats.historyCount}件</div>
-                                    </div>
-                                    {stats.manualCount > 0 && (
-                                        <div className={styles.dialogStatItem}>
-                                            <div className={styles.dialogStatLabel}>手動</div>
-                                            <div className={styles.dialogStatValue}>{stats.manualCount}件</div>
-                                        </div>
-                                    )}
+                                    <StatCard icon={<CheckmarkCircle24Regular />} label="合計" value={2} unit="件" />
                                 </div>
-                                {linkedEventsRows.length > 0 ? (
-                                    <DataGrid
-                                        items={linkedEventsRows}
+                                <Divider className={styles.divider} />
+                                {[].length > 0 ? (
+                                    <DataTable
+                                        items={[]}
                                         columns={linkedEventsColumns}
-                                        sortable
                                         getRowId={(item) => item.id}
-                                    >
-                                        <DataGridHeader>
-                                            <DataGridRow>
-                                                {({ renderHeaderCell }) => (
-                                                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                                                )}
-                                            </DataGridRow>
-                                        </DataGridHeader>
-                                        <DataGridBody<LinkedEventRow>>
-                                            {({ item, rowId }) => (
-                                                <DataGridRow<LinkedEventRow> key={rowId}>
-                                                    {({ renderCell }) => <DataGridCell>{renderCell(item)}</DataGridCell>}
-                                                </DataGridRow>
-                                            )}
-                                        </DataGridBody>
-                                    </DataGrid>
+                                        sortable
+                                        className={styles.tableContainer}
+                                    />
                                 ) : (
-                                    <p className={styles.emptyMessage}>紐づけ済みのイベントはありません</p>
+                                    <div className={styles.emptyMessage}>
+                                        <CheckmarkCircle24Regular className={styles.emptyIcon} />
+                                        <div>紐づけ済みのイベントはありません</div>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -463,38 +308,34 @@ export function DetailDialog({
                         {dialogType === "unlinked" && (
                             <div>
                                 <div className={styles.dialogDescription}>
-                                    まだWorkItemに紐づけられていないイベントの一覧です。登録前に紐づけを完了してください。
+                                    <Info24Regular className={styles.descriptionIcon} />
+                                    <span>
+                                        まだWorkItemに紐づけられていないイベントの一覧です。登録前に紐づけを完了してください。
+                                    </span>
                                 </div>
-                                {unlinkedEventsRows.length > 0 ? (
-                                    <DataGrid
-                                        items={unlinkedEventsRows}
+                                <div className={styles.dialogStats}>
+                                    <StatCard icon={<Dismiss24Regular />} label="未紐づけ数" value={3} unit="件" />
+                                </div>
+                                <Divider className={styles.divider} />
+                                {[].length > 0 ? (
+                                    <DataTable
+                                        items={[]}
                                         columns={unlinkedEventsColumns}
-                                        sortable
                                         getRowId={(item) => item.id}
-                                    >
-                                        <DataGridHeader>
-                                            <DataGridRow>
-                                                {({ renderHeaderCell }) => (
-                                                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                                                )}
-                                            </DataGridRow>
-                                        </DataGridHeader>
-                                        <DataGridBody<UnlinkedEventRow>>
-                                            {({ item, rowId }) => (
-                                                <DataGridRow<UnlinkedEventRow> key={rowId}>
-                                                    {({ renderCell }) => <DataGridCell>{renderCell(item)}</DataGridCell>}
-                                                </DataGridRow>
-                                            )}
-                                        </DataGridBody>
-                                    </DataGrid>
+                                        sortable
+                                        className={styles.tableContainer}
+                                    />
                                 ) : (
-                                    <p className={styles.emptyMessage}>未紐づけのイベントはありません</p>
+                                    <div className={styles.emptyMessage}>
+                                        <CheckmarkCircle24Regular className={styles.emptyIcon} />
+                                        <div>未紐づけのイベントはありません</div>
+                                    </div>
                                 )}
                             </div>
                         )}
                     </DialogContent>
                     <DialogActions>
-                        <Button appearance="secondary" onClick={onClose}>
+                        <Button appearance="primary" onClick={onClose} size="large">
                             閉じる
                         </Button>
                     </DialogActions>
