@@ -1,3 +1,9 @@
+/**
+ * PageHeader Component
+ *
+ * ページヘッダーとパンくずナビゲーションを提供するコンポーネント
+ */
+
 import {
     Breadcrumb,
     BreadcrumbButton,
@@ -13,11 +19,18 @@ const useStyles = makeStyles({
 });
 
 export type PageHeaderProps = {
+    /** 戻るボタンのコールバック */
     onBack?: () => void;
+    /** パンくずリストの項目 */
     breadcrumbs?: string[];
+    /** パンくず項目クリック時のコールバック */
     onBreadcrumbClick?: (index: number) => void;
 };
 
+/**
+ * ページヘッダーコンポーネント
+ * パンくずナビゲーションを表示し、ページ間の移動を提供
+ */
 export function PageHeader({ onBack, breadcrumbs, onBreadcrumbClick }: PageHeaderProps) {
     const styles = useStyles();
 

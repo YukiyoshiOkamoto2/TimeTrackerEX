@@ -10,7 +10,7 @@ import {
     Warning24Regular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
-import { PageHeader } from "../components/PageHeader";
+import { PageHeader } from "@/components/page-header";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "../components/index";
 import { SectionTitle, ViewHeader, ViewSection } from "../components/ViewLayout";
 

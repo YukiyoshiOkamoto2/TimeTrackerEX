@@ -12,7 +12,10 @@ import {
     Warning24Filled,
 } from "@fluentui/react-icons";
 import { TaskStatistics } from "../models/statistics";
-import type { DetailDialogType } from "./DetailDialog";
+// import type { DetailDialogType } from "./DetailDialog";
+
+// DetailDialogTypeの代替定義（DetailDialogが削除されたため）
+type DetailDialogType = "targetEvents" | "linked" | "unlinked" | "excluded";
 
 const useStyles = makeStyles({
     statsSection: {
@@ -22,13 +25,12 @@ const useStyles = makeStyles({
         fontSize: "18px",
         fontWeight: "600",
         color: tokens.colorNeutralForeground1,
-        margin: "8px 0px",
     },
     statsGrid: {
         display: "grid",
         gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "16px",
-        marginTop: "20px",
+        gap: tokens.spacingVerticalM,
+        marginTop: tokens.spacingVerticalM,
     },
     statCardInfo: {
         padding: "12px 16px",

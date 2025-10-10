@@ -20,3 +20,6 @@ export type UploadInfo = {
     project?: Project;
     workItems?: WorkItem[];
 };
+
+// テーブル行の型をエクスポート
+export type { UnlinkedEventRow, LinkedEventRow, TargetEventRow } from "./table";

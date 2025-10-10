@@ -1,36 +1,16 @@
-import { DataTable } from "@/components/data-table";
-import { InteractiveCard } from "@/components/interactive-card";
 import { appMessageDialogRef, MessageLevel } from "@/components/message-dialog";
+import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
 import type { Event, Project, Schedule, TimeTrackerSettings, WorkItem } from "@/types";
 import { getMostNestChildren } from "@/types/utils";
-import {
-    Button,
-    Input,
-    makeStyles,
-    Switch,
-    TableCellLayout,
-    TableColumnDefinition,
-    createTableColumn,
-    tokens,
-    Combobox,
-    Option,
-} from "@fluentui/react-components";
-import { 
-    Sparkle24Regular, 
-    Key24Regular, 
-    History24Regular,
-    Calendar20Regular,
-    CircleSmall20Filled,
-    Checkmark20Filled,
-    Warning20Filled,
-    Bot20Regular,
-    PersonEdit20Regular,
-} from "@fluentui/react-icons";
+import { Button, makeStyles, tokens } from "@fluentui/react-components";
+import { Sparkle24Regular } from "@fluentui/react-icons";
 import { useEffect, useMemo, useState } from "react";
+import { AiLinkingSection } from "../components/AiLinkingSection";
+import { EventTable, type EventTableRow } from "../components/EventTable";
 import { HistoryDrawer } from "../components/HistoryDrawer";
-import { PageHeader } from "../components/PageHeader";
+import { PageHeader } from "@/components/page-header";
 import { StatisticsCards } from "../components/StatisticsCards";
 import { UploadInfo } from "../models";
 import { AutoLinkingResult, ExcludedEventInfo, LinkingEventWorkItemPair } from "../models/linking";
@@ -40,269 +20,12 @@ import { ViewHeader, ViewSection } from "../components/ViewLayout";
 
 const logger = getLogger("LinkingProcessView");
 
-// イベントテーブル用の型定義
-type EventTableRow = {
-    id: string;
-    event: Event;
-    workItemId: string;
-    workItemName: string;
-    inputType: string;
-};
-
-// テーブル列定義を関数内に移動（stylesを使用するため）
-function createEventColumns(
-    styles: ReturnType<typeof useStyles>,
-    workItems: WorkItem[],
-    onWorkItemChange: (eventId: string, workItemId: string) => void,
-): TableColumnDefinition<EventTableRow>[] {
-    // 最下層のWorkItemを取得
-    const workItemOptions = workItems.flatMap((w) => getMostNestChildren(w));
-
-    return [
-        createTableColumn<EventTableRow>({
-            columnId: "dateTime",
-            compare: (a, b) => a.event.schedule.start.getTime() - b.event.schedule.start.getTime(),
-            renderHeaderCell: () => "日時",
-            renderCell: (item) => (
-                <TableCellLayout>
-                    <div className={styles.dateTimeCell}>
-                        <Calendar20Regular />
-                        <div>
-                            {item.event.schedule.start.toLocaleDateString("ja-JP", {
-                                month: "numeric",
-                                day: "numeric",
-                                weekday: "short",
-                            })}{" "}
-                            {item.event.schedule.start.toLocaleTimeString("ja-JP", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                            ~
-                            {item.event.schedule.end?.toLocaleTimeString("ja-JP", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                        </div>
-                    </div>
-                </TableCellLayout>
-            ),
-        }),
-        createTableColumn<EventTableRow>({
-            columnId: "eventName",
-            compare: (a, b) => a.event.name.localeCompare(b.event.name),
-            renderHeaderCell: () => "イベント名",
-            renderCell: (item) => (
-                <TableCellLayout>
-                    <div className={styles.eventNameCell}>{item.event.name}</div>
-                </TableCellLayout>
-            ),
-        }),
-        createTableColumn<EventTableRow>({
-            columnId: "inputType",
-            compare: (a, b) => a.inputType.localeCompare(b.inputType),
-            renderHeaderCell: () => "入力依存",
-            renderCell: (item) => {
-                const isAuto = item.inputType !== "手動入力" && item.inputType !== "-";
-                const isManual = item.inputType === "手動入力";
-                const badgeClass = isAuto
-                    ? styles.badgeAuto
-                    : isManual
-                      ? styles.badgeManual
-                      : styles.badgeUnlinked;
-
-                return (
-                    <TableCellLayout>
-                        <span className={`${styles.inputTypeBadge} ${badgeClass}`}>
-                            {isAuto ? <Bot20Regular /> : isManual ? <PersonEdit20Regular /> : <CircleSmall20Filled />}
-                            {item.inputType}
-                        </span>
-                    </TableCellLayout>
-                );
-            },
-        }),
-        createTableColumn<EventTableRow>({
-            columnId: "workItemId",
-            compare: (a, b) => a.workItemId.localeCompare(b.workItemId),
-            renderHeaderCell: () => "WorkItemId",
-            renderCell: (item) => {
-                const selectedOption = workItemOptions.find((w) => w.id === item.workItemId);
-                
-                return (
-                    <TableCellLayout>
-                        <Combobox
-                            placeholder="WorkItemを選択"
-                            value={selectedOption ? `${selectedOption.id} - ${selectedOption.name}` : ""}
-                            selectedOptions={item.workItemId ? [item.workItemId] : []}
-                            onOptionSelect={(_, data) => {
-                                if (data.optionValue) {
-                                    onWorkItemChange(item.id, data.optionValue);
-                                }
-                            }}
-                            style={{ minWidth: "200px" }}
-                        >
-                            {workItemOptions.map((workItem) => (
-                                <Option key={workItem.id} value={workItem.id} text={`${workItem.id} - ${workItem.name}`}>
-                                    <div className={styles.workItemCell}>
-                                        <Checkmark20Filled className={styles.linkedIcon} />
-                                        {workItem.id} - {workItem.name}
-                                    </div>
-                                </Option>
-                            ))}
-                        </Combobox>
-                    </TableCellLayout>
-                );
-            },
-        }),
-        createTableColumn<EventTableRow>({
-            columnId: "workItemName",
-            compare: (a, b) => a.workItemName.localeCompare(b.workItemName),
-            renderHeaderCell: () => "WorkItem名",
-            renderCell: (item) => (
-                <TableCellLayout>
-                    <div
-                        style={{
-                            color: item.workItemName === "未紐づけ" ? tokens.colorNeutralForeground3 : undefined,
-                            fontWeight: item.workItemName === "未紐づけ" ? undefined : tokens.fontWeightSemibold,
-                        }}
-                    >
-                        {item.workItemName}
-                    </div>
-                </TableCellLayout>
-            ),
-        }),
-    ];
-}
-
 const useStyles = makeStyles({
-    aiSection: {
-        marginBottom: tokens.spacingVerticalS,
-    },
-    settingRow: {
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
+    // ボタンコンテナ
+    buttonContainer: {
         paddingTop: tokens.spacingVerticalS,
-        paddingBottom: tokens.spacingVerticalS,
-        borderBottomWidth: "1px",
-        borderBottomStyle: "solid",
-        borderBottomColor: tokens.colorNeutralStroke2,
-        "&:last-child": {
-            borderBottom: "none",
-        },
-    },
-    settingInfo: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "4px",
-        flex: 1,
-    },
-    settingTitle: {
-        fontSize: tokens.fontSizeBase300,
-        fontWeight: tokens.fontWeightSemibold,
-        color: tokens.colorNeutralForeground1,
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalS,
-    },
-    settingDescription: {
-        fontSize: tokens.fontSizeBase200,
-        color: tokens.colorNeutralForeground3,
-        lineHeight: "1.3",
-    },
-    settingControl: {
-        display: "flex",
-        alignItems: "center",
-        marginLeft: tokens.spacingHorizontalL,
-    },
-    settingIcon: {
-        fontSize: "18px",
-        color: tokens.colorBrandForeground1,
-    },
-    tokenInput: {
-        minWidth: "300px",
-    },
-    tableWrapper: {
-        marginTop: tokens.spacingVerticalM,
-        display: "flex",
-        flexDirection: "column",
-        height: "calc(100vh - 520px)",
-        minHeight: "300px",
-    },
-    tableContainer: {
-        flex: 1,
-        overflow: "auto",
-        border: `1px solid ${tokens.colorNeutralStroke1}`,
-        borderRadius: tokens.borderRadiusMedium,
-        backgroundColor: tokens.colorNeutralBackground1,
-    },
-    submitButtonContainer: {
-        marginTop: tokens.spacingVerticalS,
-        paddingTop: tokens.spacingVerticalS,
-        borderTopWidth: "1px",
-        borderTopStyle: "solid",
-        borderTopColor: tokens.colorNeutralStroke2,
         display: "flex",
         justifyContent: "flex-end",
-    },
-    submitButton: {
-        minWidth: "200px",
-        height: "48px",
-        fontSize: tokens.fontSizeBase300,
-        fontWeight: tokens.fontWeightSemibold,
-        boxShadow: tokens.shadow8,
-        backgroundColor: tokens.colorBrandBackground,
-        "&:hover": {
-            boxShadow: tokens.shadow16,
-            backgroundColor: tokens.colorBrandBackgroundHover,
-        },
-    },
-    historyButton: {
-        minWidth: "100px",
-    },
-    // テーブルセルのスタイル
-    dateTimeCell: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalXS,
-        fontSize: tokens.fontSizeBase200,
-    },
-    eventNameCell: {
-        fontWeight: tokens.fontWeightSemibold,
-        color: tokens.colorNeutralForeground1,
-    },
-    inputTypeBadge: {
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "4px",
-        padding: "2px 8px",
-        borderRadius: tokens.borderRadiusSmall,
-        fontSize: tokens.fontSizeBase100,
-        fontWeight: tokens.fontWeightSemibold,
-    },
-    badgeAuto: {
-        backgroundColor: tokens.colorPaletteBlueBorderActive,
-        color: tokens.colorNeutralForegroundOnBrand,
-    },
-    badgeManual: {
-        backgroundColor: tokens.colorPaletteGreenBorderActive,
-        color: tokens.colorNeutralForegroundOnBrand,
-    },
-    badgeUnlinked: {
-        backgroundColor: tokens.colorNeutralBackground5,
-        color: tokens.colorNeutralForeground3,
-    },
-    workItemCell: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalXS,
-    },
-    linkedIcon: {
-        color: tokens.colorPaletteGreenForeground2,
-        fontSize: "16px",
-    },
-    unlinkedIcon: {
-        color: tokens.colorPaletteYellowForeground2,
-        fontSize: "16px",
     },
 });
 
@@ -375,6 +98,9 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
     const [unlinkedEvents, setUnlinkedEvents] = useState<Event[]>([]);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
 
+    // 履歴マネージャーの初期化
+    const historyManager = useMemo(() => new HistoryManager(), []);
+
     // WorkItemの変更ハンドラー
     const handleWorkItemChange = (eventId: string, workItemId: string) => {
         const workItems = uploadInfo?.workItems || [];
@@ -384,24 +110,32 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
         if (!selectedWorkItem) return;
 
         // eventIdから実際のイベントを取得
-        const eventIndex = linkingEventWorkItemPair.findIndex((pair, idx) => `linked-${idx}` === eventId);
-        
+        const eventIndex = linkingEventWorkItemPair.findIndex((_, idx) => `linked-${idx}` === eventId);
+
         if (eventIndex >= 0) {
             // 既存の紐づけを更新
             const updatedPairs = [...linkingEventWorkItemPair];
+            const event = updatedPairs[eventIndex].event;
+
             updatedPairs[eventIndex] = {
                 ...updatedPairs[eventIndex],
                 linkingWorkItem: {
                     workItem: selectedWorkItem,
                     type: "manual",
+                    autoMethod: "none",
                 },
             };
             setLinkingEventWorkItemPair(updatedPairs);
+
+            // 履歴に追加
+            historyManager.setHistory(event, selectedWorkItem);
+            historyManager.dump();
+            logger.info(`履歴に追加: ${event.name} -> ${selectedWorkItem.name}`);
         } else {
             // 未紐づけから紐づけ済みに移動
             const unlinkedIndex = Number.parseInt(eventId.replace("unlinked-", ""));
             const event = unlinkedEvents[unlinkedIndex];
-            
+
             if (event) {
                 setLinkingEventWorkItemPair([
                     ...linkingEventWorkItemPair,
@@ -410,24 +144,30 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
                         linkingWorkItem: {
                             workItem: selectedWorkItem,
                             type: "manual",
+                            autoMethod: "none",
                         },
                     },
                 ]);
                 setUnlinkedEvents(unlinkedEvents.filter((_, idx) => idx !== unlinkedIndex));
+
+                // 履歴に追加
+                historyManager.setHistory(event, selectedWorkItem);
+                historyManager.dump();
+                logger.info(`履歴に追加: ${event.name} -> ${selectedWorkItem.name}`);
             }
         }
     };
-
-    // テーブル列定義を生成
-    const eventColumns = useMemo(
-        () => createEventColumns(styles, uploadInfo?.workItems || [], handleWorkItemChange),
-        [styles, uploadInfo?.workItems, linkingEventWorkItemPair, unlinkedEvents],
-    );
 
     // 統計データの計算
     const taskStatistics = useMemo(() => {
         return calculateLinkingStatistics(unlinkedEvents, linkingEventWorkItemPair, excludedEvents);
     }, [unlinkedEvents, linkingEventWorkItemPair, excludedEvents]);
+
+    // 履歴マネージャーの初期化
+    useEffect(() => {
+        historyManager.load();
+        logger.info("履歴マネージャーを初期化しました");
+    }, [historyManager]);
 
     // 自動紐付け処理
     useEffect(() => {
@@ -528,7 +268,7 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
                     <Button
                         appearance="secondary"
                         onClick={() => setIsDrawerOpen(true)}
-                        className={styles.historyButton}
+                        style={{ minWidth: "100px" }}
                     >
                         履歴
                     </Button>
@@ -540,72 +280,35 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
                 <StatisticsCards taskStatistics={taskStatistics} />
 
                 {/* AIによる自動紐づけセクション */}
-                <div className={styles.aiSection}>
-                    <InteractiveCard
-                        title="AIによる自動紐づけ"
-                        description="AIを使用して未紐づけのイベントを自動的にWorkItemに紐づけます"
-                        icon={<Sparkle24Regular />}
-                        variant="expandable"
-                    >
-                        {/* トークン設定 */}
-                        <div className={styles.settingRow}>
-                            <div className={styles.settingInfo}>
-                                <div className={styles.settingTitle}>
-                                    <Key24Regular className={styles.settingIcon} />
-                                    APIトークン
-                                </div>
-                                <div className={styles.settingDescription}>
-                                    OpenAI APIトークンを入力してください。AIによる自動紐づけに使用されます。
-                                </div>
-                            </div>
-                            <div className={styles.settingControl}>
-                                <Input
-                                    placeholder="トークンを入力"
-                                    value={token}
-                                    onChange={(e) => setToken(e.target.value)}
-                                    className={styles.tokenInput}
-                                />
-                            </div>
-                        </div>
-
-                        {/* 履歴の参照設定 */}
-                        <div className={styles.settingRow}>
-                            <div className={styles.settingInfo}>
-                                <div className={styles.settingTitle}>
-                                    <History24Regular className={styles.settingIcon} />
-                                    履歴の参照
-                                </div>
-                                <div className={styles.settingDescription}>
-                                    過去の紐づけ履歴を参照してAIの精度を向上させます。履歴データが使用されます。
-                                </div>
-                            </div>
-                            <div className={styles.settingControl}>
-                                <Switch checked={useHistory} onChange={(e) => setUseHistory(e.currentTarget.checked)} />
-                            </div>
-                        </div>
-                    </InteractiveCard>
-                </div>
+                <AiLinkingSection
+                    token={token}
+                    onTokenChange={setToken}
+                    useHistory={useHistory}
+                    onUseHistoryChange={setUseHistory}
+                    onStartLinking={async () => {
+                        // TODO: AI自動紐づけ処理を実装
+                        logger.info("AI自動紐づけを開始します");
+                    }}
+                />
 
                 {/* イベントテーブル */}
-                <div className={styles.tableWrapper}>
-                    <div className={styles.tableContainer}>
-                        <DataTable
-                            items={allEvents}
-                            columns={eventColumns}
-                            getRowId={(item) => item.id}
-                            sortable
-                        />
-                    </div>
-                </div>
+                <EventTable
+                    events={allEvents}
+                    workItems={uploadInfo?.workItems || []}
+                    onWorkItemChange={handleWorkItemChange}
+                />
 
                 {/* 登録実行ボタン */}
-                <div className={styles.submitButtonContainer}>
+                <div className={styles.buttonContainer}>
                     <Button
                         appearance="primary"
                         size="large"
-                        className={styles.submitButton}
                         onClick={handleSubmit}
                         icon={<Sparkle24Regular />}
+                        style={{
+                            minWidth: "200px",
+                            height: "48px",
+                        }}
                     >
                         登録実行
                     </Button>

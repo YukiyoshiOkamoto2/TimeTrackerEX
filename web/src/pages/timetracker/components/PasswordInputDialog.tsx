@@ -26,8 +26,10 @@ import {
     ShieldCheckmarkRegular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
+import { StatCard } from "@/components/stat-card";
 
 const useStyles = makeStyles({
+    // ダイアログ構造
     dialogSurface: {
         maxWidth: "560px",
         minWidth: "480px",
@@ -40,6 +42,8 @@ const useStyles = makeStyles({
         gap: tokens.spacingVerticalXL,
         ...shorthands.padding(tokens.spacingVerticalXXL, tokens.spacingHorizontalXL),
     },
+
+    // ヘッダーセクション
     headerSection: {
         display: "flex",
         flexDirection: "column",
@@ -49,7 +53,6 @@ const useStyles = makeStyles({
         ...shorthands.borderBottom("2px", "solid", tokens.colorNeutralStroke2),
     },
     iconContainer: {
-        position: "relative",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -59,17 +62,9 @@ const useStyles = makeStyles({
         backgroundColor: tokens.colorBrandBackground,
         boxShadow: `0 8px 24px ${tokens.colorBrandBackgroundPressed}40`,
         animationName: {
-            "0%": {
-                transform: "scale(0.9)",
-                opacity: "0",
-            },
-            "50%": {
-                transform: "scale(1.05)",
-            },
-            "100%": {
-                transform: "scale(1)",
-                opacity: "1",
-            },
+            "0%": { transform: "scale(0.9)", opacity: "0" },
+            "50%": { transform: "scale(1.05)" },
+            "100%": { transform: "scale(1)", opacity: "1" },
         },
         animationDuration: "0.6s",
         animationTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -92,56 +87,9 @@ const useStyles = makeStyles({
         textAlign: "center",
         letterSpacing: "0.3px",
     },
-    infoSection: {
-        display: "flex",
-        flexDirection: "column",
-        gap: tokens.spacingVerticalM,
-    },
-    infoCard: {
-        ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalL),
-        backgroundColor: tokens.colorNeutralBackground2,
-        ...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
-        ...shorthands.borderRadius(tokens.borderRadiusMedium),
-        boxShadow: tokens.shadow4,
-        transitionProperty: "all",
-        transitionDuration: tokens.durationNormal,
-        transitionTimingFunction: tokens.curveEasyEase,
-        ":hover": {
-            transform: "translateY(-2px)",
-            boxShadow: tokens.shadow8,
-            ...shorthands.borderColor(tokens.colorBrandStroke1),
-        },
-    },
-    infoRow: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalM,
-    },
-    infoIcon: {
-        fontSize: "20px",
-        color: tokens.colorBrandForeground1,
-    },
-    infoContent: {
-        display: "flex",
-        flexDirection: "column",
-        gap: tokens.spacingVerticalXXS,
-        flex: 1,
-    },
-    infoLabel: {
-        fontSize: tokens.fontSizeBase200,
-        color: tokens.colorNeutralForeground3,
-        fontWeight: tokens.fontWeightSemibold,
-        textTransform: "uppercase",
-        letterSpacing: "1px",
-    },
-    infoValue: {
-        fontSize: tokens.fontSizeBase400,
-        color: tokens.colorNeutralForeground1,
-        fontWeight: tokens.fontWeightSemibold,
-        wordBreak: "break-all",
-        letterSpacing: "0.3px",
-    },
-    passwordSection: {
+
+    // コンテンツセクション（共通スタイル）
+    section: {
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalM,
@@ -159,24 +107,6 @@ const useStyles = makeStyles({
             },
         },
     },
-    securityNote: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalS,
-        ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
-        backgroundColor: tokens.colorNeutralBackground3,
-        ...shorthands.borderRadius(tokens.borderRadiusMedium),
-        ...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
-    },
-    securityIcon: {
-        fontSize: "16px",
-        color: tokens.colorPaletteGreenForeground1,
-    },
-    securityText: {
-        fontSize: tokens.fontSizeBase200,
-        color: tokens.colorNeutralForeground2,
-        letterSpacing: "0.3px",
-    },
     errorMessage: {
         display: "flex",
         alignItems: "center",
@@ -189,41 +119,36 @@ const useStyles = makeStyles({
         fontWeight: tokens.fontWeightSemibold,
         letterSpacing: "0.3px",
         animationName: {
-            "0%": {
-                transform: "translateX(-10px)",
-                opacity: "0",
-            },
-            "100%": {
-                transform: "translateX(0)",
-                opacity: "1",
-            },
+            "0%": { transform: "translateX(-10px)", opacity: "0" },
+            "100%": { transform: "translateX(0)", opacity: "1" },
         },
         animationDuration: "0.3s",
     },
+
+    // アクションボタン
     actions: {
         display: "flex",
         gap: tokens.spacingHorizontalM,
         paddingTop: tokens.spacingVerticalL,
         ...shorthands.borderTop("1px", "solid", tokens.colorNeutralStroke2),
     },
-    cancelButton: {
-        flex: 1,
+    button: {
         minHeight: "44px",
         fontSize: tokens.fontSizeBase400,
-        fontWeight: tokens.fontWeightSemibold,
         letterSpacing: "0.5px",
+    },
+    cancelButton: {
+        flex: 1,
+        fontWeight: tokens.fontWeightSemibold,
     },
     submitButton: {
         flex: 2,
-        minHeight: "44px",
-        fontSize: tokens.fontSizeBase400,
         fontWeight: tokens.fontWeightBold,
         backgroundColor: tokens.colorBrandBackground,
         ...shorthands.border("none"),
         boxShadow: `0 4px 12px ${tokens.colorBrandBackgroundPressed}40`,
         transitionProperty: "all",
         transitionDuration: tokens.durationNormal,
-        letterSpacing: "0.5px",
         ":hover": {
             transform: "translateY(-2px)",
             boxShadow: `0 8px 20px ${tokens.colorBrandBackgroundPressed}50`,
@@ -238,12 +163,11 @@ const useStyles = makeStyles({
             transform: "none",
         },
     },
-    loadingContainer: {
+    iconTextContainer: {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         gap: tokens.spacingHorizontalS,
-        letterSpacing: "0.5px",
     },
 });
 
@@ -324,30 +248,13 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName, ba
 
                     <DialogContent>
                         {/* 接続情報セクション */}
-                        <div className={styles.infoSection}>
-                            <div className={styles.infoCard}>
-                                <div className={styles.infoRow}>
-                                    <GlobeRegular className={styles.infoIcon} />
-                                    <div className={styles.infoContent}>
-                                        <div className={styles.infoLabel}>接続先サーバー</div>
-                                        <div className={styles.infoValue}>{baseUrl}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={styles.infoCard}>
-                                <div className={styles.infoRow}>
-                                    <PersonRegular className={styles.infoIcon} />
-                                    <div className={styles.infoContent}>
-                                        <div className={styles.infoLabel}>ユーザー名</div>
-                                        <div className={styles.infoValue}>{userName}</div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className={styles.section}>
+                            <StatCard icon={<GlobeRegular />} label="接続先サーバー" value={baseUrl} />
+                            <StatCard icon={<PersonRegular />} label="ユーザー名" value={userName} />
                         </div>
 
                         {/* パスワード入力セクション */}
-                        <div className={styles.passwordSection}>
+                        <div className={styles.section}>
                             <Field
                                 className={styles.passwordField}
                                 label="パスワード"
@@ -374,16 +281,6 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName, ba
                                     {error}
                                 </div>
                             )}
-
-                            {/* セキュリティノート */}
-                            {!error && (
-                                <div className={styles.securityNote}>
-                                    <ShieldCheckmarkRegular className={styles.securityIcon} />
-                                    <span className={styles.securityText}>
-                                        パスワードは暗号化されて安全に送信されます
-                                    </span>
-                                </div>
-                            )}
                         </div>
                     </DialogContent>
 
@@ -393,7 +290,7 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName, ba
                             appearance="secondary"
                             onClick={handleCancel}
                             disabled={isSubmitting}
-                            className={styles.cancelButton}
+                            className={`${styles.button} ${styles.cancelButton}`}
                         >
                             キャンセル
                         </Button>
@@ -401,15 +298,15 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName, ba
                             appearance="primary"
                             onClick={handleSubmit}
                             disabled={isSubmitting || !password.trim()}
-                            className={styles.submitButton}
+                            className={`${styles.button} ${styles.submitButton}`}
                         >
                             {isSubmitting ? (
-                                <div className={styles.loadingContainer}>
+                                <div className={styles.iconTextContainer}>
                                     <Spinner size="tiny" />
                                     <span>認証中...</span>
                                 </div>
                             ) : (
-                                <div className={styles.loadingContainer}>
+                                <div className={styles.iconTextContainer}>
                                     <LockClosedRegular />
                                     <span>安全に接続</span>
                                 </div>

@@ -1,6 +1,4 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
-
-import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
 import type { DayTask } from "@/types";
 import { makeStyles, tokens } from "@fluentui/react-components";
@@ -14,13 +12,13 @@ import { LinkingProcessView } from "./view/LinkingProcessView";
 import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
 
 
-const logger = getLogger("TimeTrackerPage");
+// const logger = getLogger("TimeTrackerPage");
 
 const useStyles = makeStyles({
     viewContainer: {
         display: "flex",
         flexDirection: "column",
-        gap: tokens.spacingVerticalL,
+        gap: tokens.spacingVerticalS,
         width: "100%",
     },
     slideInRight: {
@@ -107,6 +105,7 @@ export function TimeTrackerPage() {
     // Phase 6: データフロー用のstate
     // @ts-expect-error Phase 7: TimeTracker API登録で使用予定
     const [dayTasks, setDayTasks] = useState<DayTask[]>([]);
+    // @ts-expect-error Phase 7: TimeTracker API登録で使用予定
     const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
 
     const [currentView, slideDirection, backTo, nextTo] = useTimeTrackerViewState();

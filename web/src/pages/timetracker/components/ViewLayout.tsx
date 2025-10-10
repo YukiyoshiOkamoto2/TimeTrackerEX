@@ -1,6 +1,58 @@
 import type { ReactNode } from "react";
-import { useCommonViewStyles } from "../view/styles/commonStyles";
+import { makeStyles, tokens } from "@fluentui/react-components";
+/**
+ * ViewヘッダーコンテナのProps
+ */
+export interface ViewHeaderProps {
+    left: ReactNode;
+    right?: ReactNode;
+}
 
+const useStyles = makeStyles({
+    // ヘッダーコンテナ
+    headerContainer: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: tokens.spacingVerticalL,
+    },
+    headerLeft: {
+        flex: 1,
+    },
+    headerRight: {
+        display: "flex",
+        gap: tokens.spacingHorizontalM,
+        alignItems: "center",
+    },
+
+    // セクション
+    section: {
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingVerticalL,
+    },
+    sectionTitle: {
+        display: "flex",
+        alignItems: "center",
+        gap: tokens.spacingHorizontalS,
+        fontSize: tokens.fontSizeBase400,
+        fontWeight: tokens.fontWeightSemibold,
+        color: tokens.colorNeutralForeground1,
+        marginBottom: tokens.spacingVerticalXXS,
+    },
+    sectionIcon: {
+        fontSize: tokens.fontSizeBase400,
+        color: tokens.colorNeutralForeground2,
+    },
+
+    // アクションボタンコンテナ
+    actionButtonContainer: {
+        display: "flex",
+        justifyContent: "flex-end",
+        marginTop: tokens.spacingVerticalXL,
+        gap: tokens.spacingHorizontalM,
+    },
+});
 /**
  * View共通レイアウトコンポーネントのProps
  */
@@ -17,18 +69,10 @@ export function ViewContainer({ children, className }: ViewContainerProps) {
 }
 
 /**
- * ViewヘッダーコンテナのProps
- */
-export interface ViewHeaderProps {
-    left: ReactNode;
-    right?: ReactNode;
-}
-
-/**
  * Viewヘッダーコンテナ（左右2カラム）
  */
 export function ViewHeader({ left, right }: ViewHeaderProps) {
-    const styles = useCommonViewStyles();
+    const styles = useStyles();
 
     return (
         <div className={styles.headerContainer}>
@@ -42,7 +86,7 @@ export function ViewHeader({ left, right }: ViewHeaderProps) {
  * Viewセクションコンテナ
  */
 export function ViewSection({ children, className }: ViewContainerProps) {
-    const styles = useCommonViewStyles();
+    const styles = useStyles();
 
     return <div className={`${styles.section} ${className || ""}`}>{children}</div>;
 }
@@ -59,7 +103,7 @@ export interface SectionTitleProps {
  * セクションタイトル（アイコン + テキスト）
  */
 export function SectionTitle({ icon, children }: SectionTitleProps) {
-    const styles = useCommonViewStyles();
+    const styles = useStyles();
 
     return (
         <div className={styles.sectionTitle}>
@@ -81,7 +125,7 @@ export interface ActionButtonContainerProps {
  * アクションボタンコンテナ
  */
 export function ActionButtonContainer({ children, align = "right" }: ActionButtonContainerProps) {
-    const styles = useCommonViewStyles();
+    const styles = useStyles();
 
     return (
         <div

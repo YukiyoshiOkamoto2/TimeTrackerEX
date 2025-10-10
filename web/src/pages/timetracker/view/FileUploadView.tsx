@@ -1,5 +1,5 @@
 import { Card } from "@/components/card";
-import { CheckedTable, CheckedTableItem } from "@/components/checked-table";
+import { DataTable } from "@/components/data-table";
 import { InteractiveCard } from "@/components/interactive-card";
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { HistoryManager } from "@/core/history";
@@ -18,6 +18,31 @@ import {
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
+import { createTableColumn, TableCellLayout } from "@fluentui/react-components";
+
+// CheckedTableItemの型定義（DataTable移行用）
+type CheckedTableItem = {
+    key: string;
+    content: string;
+    checked: boolean;
+};
+
+// テーブル列定義
+const scheduleColumns = [
+    createTableColumn<CheckedTableItem>({
+        columnId: "content",
+        renderHeaderCell: () => "日付情報",
+        renderCell: (item) => <TableCellLayout>{item.content}</TableCellLayout>,
+    }),
+];
+
+const eventColumns = [
+    createTableColumn<CheckedTableItem>({
+        columnId: "content",
+        renderHeaderCell: () => "日付情報",
+        renderCell: (item) => <TableCellLayout>{item.content}</TableCellLayout>,
+    }),
+];
 import { PasswordInputDialog } from "../components/PasswordInputDialog";
 import { useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { ICS, PDF, UploadInfo } from "../models";
@@ -277,9 +302,10 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
     // テーブルデータの状態管理
     const [scheduleTableItems, setScheduleTableItems] = useState<CheckedTableItem[]>([]);
     const [eventTableItems, setEventTableItems] = useState<CheckedTableItem[]>([]);
+    const [selectedScheduleKeys, setSelectedScheduleKeys] = useState<Set<string>>(new Set());
+    const [selectedEventKeys, setSelectedEventKeys] = useState<Set<string>>(new Set());
 
-    const canProcess =
-        scheduleTableItems.filter((s) => s.checked).length > 0 || eventTableItems.filter((e) => e.checked).length > 0;
+    const canProcess = selectedScheduleKeys.size > 0 || selectedEventKeys.size > 0;
 
     const clearPdfFile = (e?: React.MouseEvent) => {
         e?.stopPropagation();
@@ -397,11 +423,10 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
             historyManager.checkWorkItemId(workItems);
             historyManager.dump();
 
-            // Step 5: チェック済みデータのフィルタリング
+            // Step 5: 選択済みデータのフィルタリング
             let newPdf;
-            if (pdf && scheduleTableItems) {
-                const enableKeys = scheduleTableItems.filter((s) => s.checked).map((s) => s.key);
-                const enable = pdf.schedule.filter((s) => enableKeys.includes(ScheduleUtils.getText(s)));
+            if (pdf && scheduleTableItems.length > 0) {
+                const enable = pdf.schedule.filter((s) => selectedScheduleKeys.has(ScheduleUtils.getText(s)));
                 if (enable && enable.length > 0) {
                     newPdf = {
                         ...pdf,
@@ -410,9 +435,8 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                 }
             }
             let newIcs;
-            if (ics && eventTableItems) {
-                const enableKeys = eventTableItems.filter((e) => e.checked).map((e) => e.key);
-                const enable = ics.event.filter((e) => enableKeys.includes(EventUtils.getKey(e)));
+            if (ics && eventTableItems.length > 0) {
+                const enable = ics.event.filter((e) => selectedEventKeys.has(EventUtils.getKey(e)));
                 if (enable && enable.length > 0) {
                     newIcs = {
                         ...ics,
@@ -443,18 +467,26 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
     // PDFデータが変更されたらテーブルデータを更新
     useEffect(() => {
         if (pdf?.schedule && pdf.schedule.length > 0) {
-            setScheduleTableItems(scheduleToCheckItem(pdf.schedule));
+            const items = scheduleToCheckItem(pdf.schedule);
+            setScheduleTableItems(items);
+            // デフォルトで全選択
+            setSelectedScheduleKeys(new Set(items.map((item) => item.key)));
         } else {
             setScheduleTableItems([]);
+            setSelectedScheduleKeys(new Set());
         }
     }, [pdf]);
 
     // ICSデータが変更されたらテーブルデータを更新
     useEffect(() => {
         if (ics?.event && ics.event.length > 0) {
-            setEventTableItems(eventToCheckItem(ics.event));
+            const items = eventToCheckItem(ics.event);
+            setEventTableItems(items);
+            // デフォルトで全選択
+            setSelectedEventKeys(new Set(items.map((item) => item.key)));
         } else {
             setEventTableItems([]);
+            setSelectedEventKeys(new Set());
         }
     }, [ics]);
 
@@ -609,7 +641,15 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                             </Popover>
                         </div>
                         {scheduleTableItems.length > 0 && (
-                            <CheckedTable items={scheduleTableItems} onItemUpdate={setScheduleTableItems} />
+                            <DataTable
+                                items={scheduleTableItems}
+                                columns={scheduleColumns}
+                                getRowId={(item) => item.key}
+                                selectable
+                                selectedKeys={selectedScheduleKeys}
+                                onSelectionChange={setSelectedScheduleKeys}
+                                selectionHeader="選択中"
+                            />
                         )}
                     </div>
 
@@ -649,7 +689,15 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                             </Popover>
                         </div>
                         {eventTableItems.length > 0 && (
-                            <CheckedTable items={eventTableItems} onItemUpdate={setEventTableItems} />
+                            <DataTable
+                                items={eventTableItems}
+                                columns={eventColumns}
+                                getRowId={(item) => item.key}
+                                selectable
+                                selectedKeys={selectedEventKeys}
+                                onSelectionChange={setSelectedEventKeys}
+                                selectionHeader="選択中"
+                            />
                         )}
                     </div>
                 </div>

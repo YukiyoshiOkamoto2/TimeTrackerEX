@@ -1,8 +1,11 @@
 export { Card } from "./card";
-export { CheckedTable } from "./checked-table";
+export { DataTable } from "./data-table";
+export type { DataTableProps } from "./data-table";
 export { Editor } from "./editor";
 export { InteractiveCard } from "./interactive-card";
 export { MessageDialog, appMessageDialogRef } from "./message-dialog";
 export type { AppMessageDialogRef, MessageLevel } from "./message-dialog";
 export { Page } from "./page";
+export { PageHeader } from "./page-header";
+export type { PageHeaderProps } from "./page-header";
 export { ValidatedInput } from "./validated-input";

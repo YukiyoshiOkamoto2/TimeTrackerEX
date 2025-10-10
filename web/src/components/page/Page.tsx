@@ -22,8 +22,8 @@ const useStyles = makeStyles({
         overflow: "hidden",
     },
     header: {
-        paddingTop: tokens.spacingVerticalXXL,
-        paddingBottom: tokens.spacingVerticalXXL,
+        paddingTop: tokens.spacingVerticalL,
+        paddingBottom: tokens.spacingVerticalL,
         paddingLeft: tokens.spacingHorizontalXXXL,
         paddingRight: tokens.spacingHorizontalXXXL,
         borderBottomWidth: tokens.strokeWidthThin,
@@ -56,8 +56,8 @@ const useStyles = makeStyles({
         marginTop: tokens.spacingVerticalXXS,
     },
     body: {
-        paddingTop: tokens.spacingVerticalXXXL,
-        paddingBottom: tokens.spacingVerticalXXXL,
+        paddingTop: tokens.spacingVerticalL,
+        paddingBottom: tokens.spacingVerticalL,
         paddingLeft: tokens.spacingHorizontalXXXL,
         paddingRight: tokens.spacingHorizontalXXXL,
         display: "flex",
