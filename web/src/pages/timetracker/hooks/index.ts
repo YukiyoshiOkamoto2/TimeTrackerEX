@@ -21,5 +21,5 @@ export {
     saveAuth,
     saveProject,
     saveWorkItems,
-} from "./sessionStorage";
-export type { StoredAuth } from "./sessionStorage";
+    type StoredAuth,
+} from "./timeTrackerSessionHelper";

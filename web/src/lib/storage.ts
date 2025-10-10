@@ -416,3 +416,173 @@ export function getStorage(prefix: string = ""): IStorage {
 export function resetStorage(): void {
     defaultStorage = null;
 }
+
+/**
+ * SessionStorageストレージ実装
+ *
+ * ブラウザのSessionStorageを使用した一時ストレージ実装です。
+ *
+ * @remarks
+ * - データはJSON形式でシリアライズされます
+ * - タブ/ウィンドウを閉じるとデータは消失します
+ * - データは構造化され、1つのルートキーに保存されます
+ */
+export class SessionStorageStorage implements IStorage {
+    private rootKey: string;
+
+    /**
+     * コンストラクタ
+     *
+     * @param prefix - キーのプレフィックス（オプション、デフォルトは空文字列）
+     */
+    constructor(prefix: string = "") {
+        this.rootKey = `${prefix}${ROOT_STORAGE_KEY}`;
+        logger.debug(`SessionStorageStorage初期化: prefix=${prefix}, rootKey=${this.rootKey}`);
+    }
+
+    /**
+     * ルートデータを読み込む
+     */
+    private loadRootData(): StorageData {
+        try {
+            const item = sessionStorage.getItem(this.rootKey);
+            if (item === null) {
+                const initialData: StorageData = { version: 1 };
+                this.saveRootData(initialData);
+                return initialData;
+            }
+            return JSON.parse(item) as StorageData;
+        } catch (error) {
+            logger.error(`ルートデータの読み込みに失敗しました: error=${error}`);
+            return { version: 1 };
+        }
+    }
+
+    /**
+     * ルートデータを保存する
+     */
+    private saveRootData(data: StorageData): void {
+        try {
+            const item = JSON.stringify(data);
+            sessionStorage.setItem(this.rootKey, item);
+            logger.debug("ルートデータを保存しました");
+        } catch (error) {
+            logger.error(`ルートデータの保存に失敗しました: error=${error}`);
+        }
+    }
+
+    getValue<T = unknown>(key: string): T | null {
+        try {
+            const rootData = this.loadRootData();
+
+            if (!(key in rootData)) {
+                logger.debug(`値が見つかりません: ${key}`);
+                return null;
+            }
+
+            const value = rootData[key] as T;
+            logger.debug(`値を取得: ${key}`);
+            return value;
+        } catch (error) {
+            logger.error(`値の取得に失敗しました: ${key}, error=${error}`);
+            return null;
+        }
+    }
+
+    setValue<T = unknown>(key: string, value: T): boolean {
+        try {
+            const rootData = this.loadRootData();
+            rootData[key] = value;
+            this.saveRootData(rootData);
+            logger.debug(`値を設定: ${key}`);
+            return true;
+        } catch (error) {
+            logger.error(`値の設定に失敗しました: ${key}, error=${error}`);
+            return false;
+        }
+    }
+
+    removeValue(key: string): boolean {
+        try {
+            const rootData = this.loadRootData();
+            delete rootData[key];
+            this.saveRootData(rootData);
+            logger.debug(`値を削除: ${key}`);
+            return true;
+        } catch (error) {
+            logger.error(`値の削除に失敗しました: ${key}, error=${error}`);
+            return false;
+        }
+    }
+
+    getAllKeys(): string[] {
+        try {
+            const rootData = this.loadRootData();
+            const keys = Object.keys(rootData).filter((key) => key !== "version");
+            logger.debug(`すべてのキーを取得: ${keys.length}件`);
+            return keys;
+        } catch (error) {
+            logger.error(`キーの取得に失敗しました: error=${error}`);
+            return [];
+        }
+    }
+
+    clear(): boolean {
+        try {
+            const initialData: StorageData = { version: 1 };
+            this.saveRootData(initialData);
+            logger.info("ストレージをクリア");
+            return true;
+        } catch (error) {
+            logger.error(`クリアに失敗しました: error=${error}`);
+            return false;
+        }
+    }
+
+    hasKey(key: string): boolean {
+        const rootData = this.loadRootData();
+        return key in rootData;
+    }
+}
+
+/**
+ * デフォルトのセッションストレージインスタンス
+ */
+let defaultSessionStorage: IStorage | null = null;
+
+/**
+ * デフォルトのセッションストレージを取得する
+ *
+ * @param prefix - キーのプレフィックス（オプション）
+ * @returns セッションストレージインスタンス
+ *
+ * @remarks
+ * - SessionStorageが使用可能な場合はSessionStorageStorageを返します
+ * - SessionStorageが使用できない場合はMemoryStorageを返します
+ * - シングルトンパターンで実装されています
+ */
+export function getSessionStorage(prefix: string = ""): IStorage {
+    if (!defaultSessionStorage) {
+        try {
+            // SessionStorageの動作確認
+            const testKey = "__session_storage_test__";
+            sessionStorage.setItem(testKey, "test");
+            sessionStorage.removeItem(testKey);
+
+            defaultSessionStorage = new SessionStorageStorage(prefix);
+            logger.info("SessionStorageを使用します");
+        } catch (error) {
+            logger.warn("SessionStorageが使用できません。MemoryStorageを使用します");
+            defaultSessionStorage = new MemoryStorage(prefix);
+        }
+    }
+
+    return defaultSessionStorage;
+}
+
+/**
+ * デフォルトのセッションストレージをリセットする（テスト用）
+ */
+export function resetSessionStorage(): void {
+    defaultSessionStorage = null;
+}

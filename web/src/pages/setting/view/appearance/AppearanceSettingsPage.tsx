@@ -2,8 +2,7 @@ import { themeHandler } from "@/main";
 import { APPEARANCE_SETTINGS_DEFINITION } from "@/schema/settings";
 import { useSettings } from "@/store/settings/SettingsProvider";
 import type { AppearanceSettings as AppearanceSettingsType } from "@/types/settings";
-import { SettingPageLayout, SettingSection } from "../../layout";
-import { AutoSettingItem } from "../../ui";
+import { AutoSettingItem, SettingPageLayout, SettingSection } from "../../components";
 
 const appearanceDef = APPEARANCE_SETTINGS_DEFINITION.children!;
 

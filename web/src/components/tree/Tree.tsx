@@ -139,12 +139,12 @@ export const TreeView = ({
             <FlatTree {...flatTree.getTreeProps()} aria-label="Tree View" checkedItems={checkedItemValues}>
                 {Array.from(flatTree.items(), (flatTreeItem) => {
                     const { header, ...treeItemProps } = flatTreeItem.getTreeItemProps();
-                    
+
                     // value が null または undefined の場合はスキップ
                     if (treeItemProps.value == null) {
                         return null;
                     }
-                    
+
                     const treeItemValue = treeItemProps.value.toString();
                     const isLeaf = flatTreeItem.childrenValues.length === 0;
                     const isSelected = treeItemValue === selectItemValue;

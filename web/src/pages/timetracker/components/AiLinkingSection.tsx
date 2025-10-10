@@ -2,7 +2,7 @@
  * AI自動紐づけセクションコンポーネント
  */
 
-import { InteractiveCard } from "@/components/interactive-card";
+import { InteractiveCard } from "@/components/card";
 import { Button, Input, makeStyles, Switch, tokens } from "@fluentui/react-components";
 import { History24Regular, Key24Regular, Sparkle24Regular } from "@fluentui/react-icons";
 

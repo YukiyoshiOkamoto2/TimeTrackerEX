@@ -1,5 +1,5 @@
 import { Card } from "@/components/card";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/page";
 import { registerTasks, type RegisterTasksRequest } from "@/core/api";
 import { getLogger } from "@/lib/logger";
 import { Button, makeStyles, tokens } from "@fluentui/react-components";

@@ -1,7 +1,7 @@
 import { useSettings } from "@/store/settings/SettingsProvider";
 import type { Language } from "@/types/settings";
 import { Field, makeStyles, Radio, RadioGroup, tokens } from "@fluentui/react-components";
-import { SettingPageLayout, SettingSection } from "../../layout";
+import { SettingPageLayout, SettingSection } from "../../components";
 
 const useStyles = makeStyles({
     field: {

@@ -1,5 +1,5 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/page";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";

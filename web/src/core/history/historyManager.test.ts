@@ -505,7 +505,7 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             // 残っているエントリを確認
             const remainingEntries = historyManager.getAllEntries();
             expect(remainingEntries).toHaveLength(1);
-            
+
             // 2番目のエントリは残っている
             // Note: entries[0]とevent2が同じイベントの場合は削除されてしまうため、
             // 残っているエントリのitemIdを確認

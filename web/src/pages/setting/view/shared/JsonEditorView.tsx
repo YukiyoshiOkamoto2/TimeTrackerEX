@@ -4,8 +4,7 @@ import { getSettingErrors, SettingJSON, type ObjectSettingValueInfo, type Object
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { Dismiss20Regular, Save20Regular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
-import { SettingSection } from "../../layout";
-import { SettingErrorsSummary } from "../../ui";
+import { SettingErrorsSummary, SettingSection } from "../../components";
 
 const useStyles = makeStyles({
     container: {

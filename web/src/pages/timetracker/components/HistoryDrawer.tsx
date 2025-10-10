@@ -4,9 +4,9 @@
  * イベントと作業項目の紐づけ履歴を管理するDrawerコンポーネント
  */
 
+import { StatCard } from "@/components/card";
 import { DataTable } from "@/components/data-table";
 import { appMessageDialogRef } from "@/components/message-dialog";
-import { StatCard } from "@/components/stat-card";
 import type { HistoryEntry } from "@/core/history";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
@@ -371,14 +371,14 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                         value={
                             historyData.length > 0
                                 ? new Date(
-                                    Math.max(...historyData.map((h) => h.lastUsedDate.getTime())),
-                                ).toLocaleString("ja-JP", {
-                                    year: "numeric",
-                                    month: "2-digit",
-                                    day: "2-digit",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })
+                                      Math.max(...historyData.map((h) => h.lastUsedDate.getTime())),
+                                  ).toLocaleString("ja-JP", {
+                                      year: "numeric",
+                                      month: "2-digit",
+                                      day: "2-digit",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                  })
                                 : "-"
                         }
                     />

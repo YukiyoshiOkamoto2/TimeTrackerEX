@@ -37,31 +37,37 @@ import {
     registerTaskWithAuthCheckAsync,
 } from "./timeTrackerSessionHelper";
 
+export type TimeTrackerAPIFailuer = {
+    isError: true;
+    errorMessage: string;
+};
+
+export type TimeTrackerAPISuccess<T> = {
+    isError: false;
+    content: T;
+};
+
+export type TimeTrackerAPIResult<T = undefined> = TimeTrackerAPIFailuer | TimeTrackerAPISuccess<T>;
+
+export type ProjectAndWorkItem = {
+    project: Project;
+    workItem: WorkItem[];
+};
+
 export interface TimeTrackerSessionState {
     // 認証状態
     isAuthenticated: boolean;
-    auth: TimeTrackerAuth | null;
-
-    // プロジェクト・作業項目
-    project: Project | null;
-    workItems: WorkItem[] | null;
-
     // ローディング状態
     isLoading: boolean;
-    isAuthenticating: boolean;
-
-    // パスワード入力ダイアログ
-    isPasswordDialogOpen: boolean;
 }
 
 export interface TimeTrackerSessionActions {
     // 認証
-    authenticateWithDialog: () => void;
-    authenticateWithPassword: (password: string) => Promise<void>;
+    authenticateAsync: () => Promise<TimeTrackerAPIResult>;
     logout: () => void;
 
     // プロジェクト・作業項目の取得
-    fetchProjectAndWorkItems: (projectId: string, onInvalidProjectId?: () => void | Promise<void>) => Promise<void>;
+    fetchProjectAndWorkItems: (projectId: string) => Promise<TimeTrackerAPIResult<ProjectAndWorkItem>>;
 
     // タスク登録
     registerTask: (task: TimeTrackerTask) => Promise<void>;

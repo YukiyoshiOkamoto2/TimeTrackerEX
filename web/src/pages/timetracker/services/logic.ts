@@ -393,6 +393,85 @@ function filterSheduleRangeEvent(
 }
 
 /**
+ * WorkItemとProjectの存在を検証し、無効な設定をクリアした新しい設定を返す
+ *
+ * @param settings - 検証対象のTimeTracker設定
+ * @param workItems - 有効なWorkItemのリスト
+ * @param projects - 有効なProjectのリスト（オプション）
+ * @returns 更新された設定とクリアされた項目数
+ */
+export function validateAndCleanupSettings(
+    settings: TimeTrackerSettings,
+    workItems: WorkItemChldren[],
+    projects?: Project[],
+): { settings: TimeTrackerSettings; cleanedCount: number } {
+    let cleanedCount = 0;
+    const updates: Partial<TimeTrackerSettings> = {};
+
+    // WorkItemIDのセット（高速検索用）
+    const validWorkItemIds = new Set(workItems.map((wi) => Number(wi.id)));
+
+    // 1. baseProjectId の検証
+    if (settings.baseProjectId !== null) {
+        // プロジェクトリストが提供されている場合のみ検証
+        if (projects && projects.length > 0) {
+            const projectExists = projects.some((p) => Number(p.projectId) === settings.baseProjectId);
+            if (!projectExists) {
+                logger.warn(`baseProjectId (${settings.baseProjectId}) が存在しないため、nullに設定します`);
+                updates.baseProjectId = null;
+                cleanedCount++;
+            }
+        }
+    }
+
+    // 2. timeOffEvent.workItemId の検証
+    if (settings.timeOffEvent?.workItemId) {
+        if (!validWorkItemIds.has(settings.timeOffEvent.workItemId)) {
+            logger.warn(`timeOffEvent.workItemId (${settings.timeOffEvent.workItemId}) が存在しないため、削除します`);
+            updates.timeOffEvent = undefined;
+            cleanedCount++;
+        }
+    }
+
+    // 3. scheduleAutoInputInfo.workItemId の検証
+    if (settings.scheduleAutoInputInfo?.workItemId) {
+        if (!validWorkItemIds.has(settings.scheduleAutoInputInfo.workItemId)) {
+            logger.warn(
+                `scheduleAutoInputInfo.workItemId (${settings.scheduleAutoInputInfo.workItemId}) が存在しないため、workItemIdを0に設定します`,
+            );
+            updates.scheduleAutoInputInfo = {
+                ...settings.scheduleAutoInputInfo,
+                workItemId: 0,
+            };
+            cleanedCount++;
+        }
+    }
+
+    // 4. paidLeaveInputInfo.workItemId の検証
+    if (settings.paidLeaveInputInfo?.workItemId) {
+        if (!validWorkItemIds.has(settings.paidLeaveInputInfo.workItemId)) {
+            logger.warn(
+                `paidLeaveInputInfo.workItemId (${settings.paidLeaveInputInfo.workItemId}) が存在しないため、削除します`,
+            );
+            updates.paidLeaveInputInfo = undefined;
+            cleanedCount++;
+        }
+    }
+
+    if (cleanedCount > 0) {
+        logger.info(`${cleanedCount}件の無効な設定をクリアしました`);
+    }
+
+    return {
+        settings: {
+            ...settings,
+            ...updates,
+        },
+        cleanedCount,
+    };
+}
+
+/**
  * 自動紐付け処理を実行する
  *
  * @param input - 自動紐付け処理の入力データ

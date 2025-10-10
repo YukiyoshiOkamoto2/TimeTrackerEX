@@ -1,6 +1,5 @@
-import { Card } from "@/components/card";
+import { Card, InteractiveCard } from "@/components/card";
 import { DataTable } from "@/components/data-table";
-import { InteractiveCard } from "@/components/interactive-card";
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { HistoryManager } from "@/core/history";
 import { parseICS } from "@/core/ics";

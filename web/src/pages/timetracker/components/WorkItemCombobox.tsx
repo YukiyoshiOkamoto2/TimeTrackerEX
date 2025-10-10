@@ -1,6 +1,8 @@
-import { EventUtils, type WorkItem } from "@/types";
 import { TreeView } from "@/components/tree/Tree";
 import type { TreeItem } from "@/components/tree/TreeItem";
+import { treeViewHelper } from "@/components/tree/TreeViewHelper";
+import { getLogger } from "@/lib/logger";
+import { type WorkItem } from "@/types";
 import {
     Button,
     Input,
@@ -21,8 +23,6 @@ import {
 } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { getLogger } from "@/lib/logger";
-import { treeViewHelper } from "@/components/tree/TreeViewHelper";
 
 const logger = getLogger("WorkItemCombobox");
 
@@ -74,10 +74,9 @@ function convertWorkItemsToTree(
     onSelect: (folderPath: string) => void,
 ): TreeItem[] {
     return items.map((item) => {
-
         const isSelected = item.id === selectedId;
         const hasChildren = !!item.subItems?.length;
-        const itemValue = treeViewHelper.getPath([item.folderPath, item.folderName, item.name])
+        const itemValue = treeViewHelper.getPath([item.folderPath, item.folderName, item.name]);
 
         const header: ReactNode = hasChildren ? (
             <TreeItemLayout iconBefore={<Folder20Regular />}>{item.name}</TreeItemLayout>
@@ -86,9 +85,7 @@ function convertWorkItemsToTree(
                 iconBefore={<Document20Regular />}
                 iconAfter={
                     isSelected ? (
-                        <Checkmark20Filled
-                            style={{ color: tokens.colorPaletteGreenForeground2, marginLeft: "auto" }}
-                        />
+                        <Checkmark20Filled style={{ color: tokens.colorPaletteGreenForeground2, marginLeft: "auto" }} />
                     ) : undefined
                 }
                 className={isSelected ? "selected-item" : undefined}
@@ -164,7 +161,7 @@ export function WorkItemCombobox({ workItems, selectedWorkItemId, onWorkItemChan
         for (const item of items) {
             // value が null または undefined の場合はスキップ
             if (!item.value) {
-                logger.error("TreeItemの値がNULLです。")
+                logger.error("TreeItemの値がNULLです。");
                 continue;
             }
 
@@ -175,18 +172,15 @@ export function WorkItemCombobox({ workItems, selectedWorkItemId, onWorkItemChan
             const filteredChildren = hasChildren ? filterTreeItems(item.children!, lowerQuery) : undefined;
 
             // 自身が検索にマッチするか、子要素にマッチがある場合は含める
-            const matchesSelf = !hasChildren && (
+            const matchesSelf =
+                !hasChildren &&
                 workItems.some((wi) => {
                     // folderPath または id で一致するかチェック
                     const itemValue = wi.folderPath ?? wi.id;
                     const matchesPath = itemValue === value;
                     if (!matchesPath) return false;
-                    return (
-                        wi.id.toLowerCase().includes(lowerQuery) ||
-                        wi.name.toLowerCase().includes(lowerQuery)
-                    );
-                })
-            );
+                    return wi.id.toLowerCase().includes(lowerQuery) || wi.name.toLowerCase().includes(lowerQuery);
+                });
 
             const hasMatchingChildren = filteredChildren && filteredChildren.length > 0;
 

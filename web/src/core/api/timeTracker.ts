@@ -351,7 +351,7 @@ function parseWorkItem(workItemDict: Record<string, unknown>, parentFolderPath?:
         throw new Error(`Unknown response: ${JSON.stringify(workItemDict)}`);
     }
 
-    const folderName = fields.FolderName ? fields.FolderName as string : ""
+    const folderName = fields.FolderName ? (fields.FolderName as string) : "";
     const folderPath = parentFolderPath ? `${parentFolderPath}/${folderName}` : folderName;
     const subItemsData = (fields.SubItems as Record<string, unknown>[]) || [];
 
@@ -483,8 +483,9 @@ export async function getWorkItemsAsync(
     console.debug("Start getWorkItemsAsync.");
 
     // api.pyと同じURLパターンに修正
-    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${userName ? `&assignedUsers=${userName}` : ""
-        }&includeDeleted=false`;
+    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${
+        userName ? `&assignedUsers=${userName}` : ""
+    }&includeDeleted=false`;
     const response = await requestAsync(baseUrl, uri, auth);
 
     if (isErrorResponse(response)) {
