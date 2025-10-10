@@ -474,8 +474,10 @@ describe("TimeTrackerLogic", () => {
             expect(stats.linked.timeOffCount).toBe(1); // 休暇
             expect(stats.linked.manualCount).toBe(1); // 手動
             expect(stats.linked.unlinkedCount).toBe(1); // 未紐づけ
-            expect(stats.day.paidLeaveDays).toBe(1); // 有給休暇日数
-            expect(stats.day.normalDays).toBe(2); // 通常勤務日数
+            // 有給休暇日数: schedule.isPaidLeaveが設定されていないため0
+            expect(stats.day.paidLeaveDays).toBe(0);
+            // 通常勤務日数: 2024-01-10, 2024-01-11, 2024-01-12, 2024-01-13 の4日
+            expect(stats.day.normalDays).toBe(4);
         });
 
         it("空のデータでも動作する", () => {

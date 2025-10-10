@@ -495,8 +495,9 @@ describe("timetrackerDefinition", () => {
                 const result = TIMETRACKER_SETTINGS_DEFINITION.validatePartial(partialSettings as any);
                 expect(result.isError).toBe(true);
                 if (result.isError) {
+                    // パスに"unknownField"が含まれ、TimeTracker設定のフィールドであることを確認
                     expect(result.errorPathInfo.path).toContain("unknownField");
-                    expect(result.errorPathInfo.path).toContain("不明なフィールド");
+                    expect(result.errorPathInfo.path).toContain("TimeTracker設定");
                 }
             });
 

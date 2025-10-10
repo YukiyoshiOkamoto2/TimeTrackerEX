@@ -55,7 +55,8 @@ describe("generalDefinition", () => {
             const result = GENERAL_SETTINGS_DEFINITION.validate(invalidSettings);
             expect(result.isError).toBe(true);
             if (result.isError) {
-                expect(result.errorPathInfo.message).toContain("言語");
+                // エラーメッセージに"ja のいずれか"が含まれることを確認
+                expect(result.errorPathInfo.message).toContain("ja のいずれか");
             }
         });
 

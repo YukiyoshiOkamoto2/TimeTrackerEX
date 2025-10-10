@@ -36,7 +36,6 @@ import {
     tokens,
 } from "@fluentui/react-components";
 import {
-    ArrowClockwise24Regular,
     ArrowDownload24Regular,
     ArrowUpload24Regular,
     Calendar24Regular,
@@ -171,7 +170,11 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
     // 初回読み込み
     useEffect(() => {
         if (open) {
-            loadHistory();
+            historyManager.load();
+            const entries = historyManager.getAllEntries();
+            setHistoryData(entries);
+            setSelectedKeys(new Set());
+            logger.info(`履歴を読み込み: ${entries.length}件`);
         }
     }, [open]);
 
@@ -368,14 +371,14 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                         value={
                             historyData.length > 0
                                 ? new Date(
-                                      Math.max(...historyData.map((h) => h.lastUsedDate.getTime())),
-                                  ).toLocaleString("ja-JP", {
-                                      year: "numeric",
-                                      month: "2-digit",
-                                      day: "2-digit",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                  })
+                                    Math.max(...historyData.map((h) => h.lastUsedDate.getTime())),
+                                ).toLocaleString("ja-JP", {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })
                                 : "-"
                         }
                     />
@@ -394,9 +397,6 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                         選択削除 {selectedKeys.size > 0 && <Badge appearance="filled">{selectedKeys.size}</Badge>}
                     </ToolbarButton>
                     <ToolbarDivider />
-                    <ToolbarButton icon={<ArrowClockwise24Regular />} onClick={loadHistory}>
-                        再読み込み
-                    </ToolbarButton>
                     <ToolbarButton
                         icon={<ArrowDownload24Regular />}
                         onClick={handleExport}

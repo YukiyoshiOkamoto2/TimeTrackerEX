@@ -210,7 +210,7 @@ describe("useTimeTrackerSession", () => {
             });
 
             expect(timeTrackerApi.getProjectAsync).toHaveBeenCalledWith(baseUrl, "proj-1", mockStoredAuth);
-            expect(timeTrackerApi.getWorkItemsAsync).toHaveBeenCalledWith(baseUrl, "proj-1", mockStoredAuth);
+            expect(timeTrackerApi.getWorkItemsAsync).toHaveBeenCalledWith(baseUrl, "proj-1", mockStoredAuth, userName);
             expect(result.current.project).toEqual(mockProject);
             expect(result.current.workItems).toEqual(mockWorkItems);
             expect(sessionStorage.saveProject).toHaveBeenCalledWith(mockProject);

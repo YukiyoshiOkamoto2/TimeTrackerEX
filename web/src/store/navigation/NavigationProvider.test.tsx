@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { NavigationPageName } from "./NavigationProvider";
 import { NavigationHistoryItem, NavigationProvider, useNavigation } from "./NavigationProvider";
 
 describe("NavigationProvider", () => {
@@ -72,19 +73,20 @@ describe("NavigationProvider", () => {
     describe("履歴サイズ制限", () => {
         it("履歴は最大30個まで保持される", () => {
             // 型チェックとして、30個以上の履歴を想定した構造をテスト
+            const pages: NavigationPageName[] = ["Home", "TimeTracker", "Settings"];
             const mockHistory: NavigationHistoryItem[] = Array.from({ length: 31 }, (_, i) => ({
-                pageName: `Home`,
+                pageName: pages[i % pages.length],
                 parameter: `param${i}`,
                 link: `/page${i}`,
             }));
 
             expect(mockHistory.length).toBe(31);
 
-            // 実際の動作では30個に制限されることを期待
+            // 実際の動作では30個に制限されることを期待（最新30件）
             const limitedHistory = mockHistory.slice(-30);
             expect(limitedHistory.length).toBe(30);
-            expect(limitedHistory[0].pageName).toBe("Home");
-            expect(limitedHistory[29].pageName).toBe("page30");
+            expect(limitedHistory[0].pageName).toBe(pages[1 % pages.length]); // page1 = "TimeTracker"
+            expect(limitedHistory[29].pageName).toBe(pages[30 % pages.length]); // page30 = "Home"
         });
     });
 });
