@@ -168,9 +168,19 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
     const fromStr = taskStatistics.day.from.toLocaleDateString("ja-JP");
     const endStr = taskStatistics.day.end.toLocaleDateString("ja-JP");
 
-    const totalLinked = taskStatistics.linked.historyCount + taskStatistics.linked.timeOffCount + taskStatistics.linked.manualCount + taskStatistics.linked.aiLinked;
-    const totalEvents = totalLinked + taskStatistics.linked.unlinkedCount + taskStatistics.excluded.ignored + taskStatistics.excluded.outOfSchedule + taskStatistics.excluded.invalid;
-    const excludedCount = taskStatistics.excluded.ignored + taskStatistics.excluded.outOfSchedule + taskStatistics.excluded.invalid;
+    const totalLinked =
+        taskStatistics.linked.historyCount +
+        taskStatistics.linked.timeOffCount +
+        taskStatistics.linked.manualCount +
+        taskStatistics.linked.aiLinked;
+    const totalEvents =
+        totalLinked +
+        taskStatistics.linked.unlinkedCount +
+        taskStatistics.excluded.ignored +
+        taskStatistics.excluded.outOfSchedule +
+        taskStatistics.excluded.invalid;
+    const excludedCount =
+        taskStatistics.excluded.ignored + taskStatistics.excluded.outOfSchedule + taskStatistics.excluded.invalid;
     const unlinkedCount = taskStatistics.linked.unlinkedCount;
 
     return (
@@ -227,10 +237,12 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                         </div>
                         <div className={styles.statValue}>{totalLinked}件</div>
                         <div className={styles.statSubText}>
-                            休暇：{taskStatistics.linked.timeOffCount}件 / 履歴：{taskStatistics.linked.historyCount}件 / AI：{taskStatistics.linked.aiLinked}件
+                            休暇：{taskStatistics.linked.timeOffCount}件 / 履歴：{taskStatistics.linked.historyCount}件
+                            / AI：{taskStatistics.linked.aiLinked}件
                         </div>
                         <div className={styles.statSubText}>
-                            勤務時間：{taskStatistics.linked.workSheduleCount}件 / 手動：{taskStatistics.linked.manualCount}件
+                            勤務時間：{taskStatistics.linked.workSheduleCount}件 / 手動：
+                            {taskStatistics.linked.manualCount}件
                         </div>
                     </div>
                 </Card>
@@ -252,7 +264,9 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                         </div>
                         <div className={styles.statValue}>{unlinkedCount}件</div>
                         <div className={styles.statSubText}>
-                            {unlinkedCount > 0 ? "手動紐づけ/AIによる自動紐づけを実施してください。" : "すべて紐づけ完了"}
+                            {unlinkedCount > 0
+                                ? "手動紐づけ/AIによる自動紐づけを実施してください。"
+                                : "すべて紐づけ完了"}
                         </div>
                     </div>
                 </Card>

@@ -14,3 +14,6 @@ export { AiLinkingSection } from "./AiLinkingSection";
 export type { AiLinkingSectionProps } from "./AiLinkingSection";
 export { EventTable } from "./EventTable";
 export type { EventTableProps, EventTableRow } from "./EventTable";
+
+export { WorkItemCombobox } from "./WorkItemCombobox";
+export type { WorkItemComboboxProps } from "./WorkItemCombobox";

@@ -1,4 +1,5 @@
-import { appMessageDialogRef, MessageLevel } from "@/components/message-dialog";
+import { appMessageDialogRef } from "@/components/message-dialog";
+import { PageHeader } from "@/components/page-header";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
@@ -8,15 +9,14 @@ import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { Sparkle24Regular } from "@fluentui/react-icons";
 import { useEffect, useMemo, useState } from "react";
 import { AiLinkingSection } from "../components/AiLinkingSection";
+import { AutoLinkingResultDialog } from "../components/AutoLinkingResultDialog";
 import { EventTable, type EventTableRow } from "../components/EventTable";
 import { HistoryDrawer } from "../components/HistoryDrawer";
-import { PageHeader } from "@/components/page-header";
 import { StatisticsCards } from "../components/StatisticsCards";
+import { ViewHeader, ViewSection } from "../components/ViewLayout";
 import { UploadInfo } from "../models";
 import { AutoLinkingResult, ExcludedEventInfo, LinkingEventWorkItemPair } from "../models/linking";
 import { calculateLinkingStatistics, performAutoLinking } from "../services/logic";
-import { ViewHeader, ViewSection } from "../components/ViewLayout";
-
 
 const logger = getLogger("LinkingProcessView");
 
@@ -28,27 +28,6 @@ const useStyles = makeStyles({
         justifyContent: "flex-end",
     },
 });
-
-function cresteAutoLinkedMessage(result: AutoLinkingResult) {
-    const title = "😎 自動紐付け完了";
-    if (result.linked.length === 0 && result.unlinked.length === 0) {
-        return {
-            title,
-            message: `紐づけ対象がありません。\n\n` + `❌ 対象外: ${result.excluded.length}件\n`,
-            type: "ERROR",
-        };
-    }
-
-    const hasUnlinked = result.unlinked.length > 0;
-    return {
-        title,
-        message:
-            `紐づけ処理が完了しました。\n\n` +
-            `✅ 紐づけ済み: ${result.linked.length}件\n` +
-            `${hasUnlinked ? `❌ 未紐づけ: ${result.unlinked.length}件\n（手動で紐づけしてください）` : ""}`,
-        type: hasUnlinked ? "WARN" : "INFO",
-    };
-}
 
 async function runAutoLinkingAsync(
     events: Event[],
@@ -70,7 +49,7 @@ async function runAutoLinkingAsync(
     }
 
     // 自動紐付けサービスを実行
-    const workItemChirdren = workItems.flatMap((w) => getMostNestChildren(w));
+    const workItemChirdren = getMostNestChildren(workItems);
     return await performAutoLinking({
         events,
         schedules,
@@ -98,13 +77,17 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
     const [unlinkedEvents, setUnlinkedEvents] = useState<Event[]>([]);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
 
+    // 自動紐付け結果ダイアログの状態
+    const [autoLinkingResult, setAutoLinkingResult] = useState<AutoLinkingResult | null>(null);
+    const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
+
     // 履歴マネージャーの初期化
     const historyManager = useMemo(() => new HistoryManager(), []);
 
     // WorkItemの変更ハンドラー
     const handleWorkItemChange = (eventId: string, workItemId: string) => {
         const workItems = uploadInfo?.workItems || [];
-        const allWorkItems = workItems.flatMap((w) => getMostNestChildren(w));
+        const allWorkItems = getMostNestChildren(workItems);
         const selectedWorkItem = allWorkItems.find((w) => w.id === workItemId);
 
         if (!selectedWorkItem) return;
@@ -187,16 +170,12 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
                 setUnlinkedEvents(result.unlinked);
                 setLinkingEventWorkItemPair(result.linked);
 
-                // ユーザーに結果を通知
-                const message = cresteAutoLinkedMessage(result);
-                await appMessageDialogRef?.showMessageAsync(
-                    message.title,
-                    message.message,
-                    message.type as MessageLevel,
-                );
+                // 結果ダイアログを表示
+                setAutoLinkingResult(result);
+                setIsResultDialogOpen(true);
             } catch (error) {
                 logger.error("自動紐付けエラー:", error);
-                await appMessageDialogRef?.showMessageAsync(
+                await appMessageDialogRef.showMessageAsync(
                     "自動紐付けエラー",
                     `自動紐付け処理中にエラーが発生しました。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
                     "ERROR",
@@ -243,21 +222,17 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
     const allEvents = useMemo((): EventTableRow[] => {
         const linked = linkingEventWorkItemPair.map((pair, index) => ({
             id: `linked-${index}`,
-            event: pair.event,
-            workItemId: pair.linkingWorkItem.workItem.id,
-            workItemName: pair.linkingWorkItem.workItem.name,
-            inputType: pair.linkingWorkItem.type === "auto" ? pair.linkingWorkItem.autoMethod : "手動入力",
+            item: pair,
         }));
         const unlinked = unlinkedEvents.map((event, index) => ({
             id: `unlinked-${index}`,
-            event,
-            workItemId: "",
-            workItemName: "未紐づけ",
-            inputType: "-",
+            item: event,
         }));
-        return [...linked, ...unlinked].sort(
-            (a, b) => a.event.schedule.start.getTime() - b.event.schedule.start.getTime(),
-        );
+        return [...linked, ...unlinked].sort((a, b) => {
+            const aEvent = "event" in a.item ? a.item.event : a.item;
+            const bEvent = "event" in b.item ? b.item.event : b.item;
+            return aEvent.schedule.start.getTime() - bEvent.schedule.start.getTime();
+        });
     }, [linkingEventWorkItemPair, unlinkedEvents]);
 
     return (
@@ -265,11 +240,7 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
             <ViewHeader
                 left={<PageHeader onBack={onBack} breadcrumbs={["TimeTracker", "紐づけ処理"]} />}
                 right={
-                    <Button
-                        appearance="secondary"
-                        onClick={() => setIsDrawerOpen(true)}
-                        style={{ minWidth: "100px" }}
-                    >
+                    <Button appearance="secondary" onClick={() => setIsDrawerOpen(true)} style={{ minWidth: "100px" }}>
                         履歴
                     </Button>
                 }
@@ -317,6 +288,13 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
 
             {/* 履歴管理Drawer */}
             <HistoryDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} workItems={uploadInfo?.workItems ?? []} />
+
+            {/* 自動紐付け結果ダイアログ */}
+            <AutoLinkingResultDialog
+                open={isResultDialogOpen}
+                result={autoLinkingResult}
+                onClose={() => setIsResultDialogOpen(false)}
+            />
         </>
     );
 }

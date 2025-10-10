@@ -1,30 +1,30 @@
 import { DataTable } from "@/components/data-table";
-import { getMostNestChildren } from "@/types/utils";
 import type { Event, WorkItem } from "@/types";
+import { EventUtils } from "@/types/utils";
 import {
+    createTableColumn,
     makeStyles,
     TableCellLayout,
     TableColumnDefinition,
-    createTableColumn,
     tokens,
-    Combobox,
-    Option,
+    Tooltip,
 } from "@fluentui/react-components";
-import {
-    Calendar20Regular,
-    CircleSmall20Filled,
-    Checkmark20Filled,
-    Bot20Regular,
-    PersonEdit20Regular,
-} from "@fluentui/react-icons";
+import { Bot20Regular, Calendar20Regular, CircleSmall20Filled, PersonEdit20Regular } from "@fluentui/react-icons";
+import { LinkingEventWorkItemPair } from "../models/linking";
+import { WorkItemCombobox } from "./WorkItemCombobox";
 
 // イベントテーブル用の型定義
-export type EventTableRow = {
+type TableRow = {
     id: string;
     event: Event;
     workItemId: string;
     workItemName: string;
     inputType: string;
+};
+
+export type EventTableRow = {
+    id: string;
+    item: Event | LinkingEventWorkItemPair;
 };
 
 export type EventTableProps = {
@@ -38,7 +38,7 @@ const useStyles = makeStyles({
     tableWrapper: {
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 520px)",
+        height: "calc(100vh - 540px)",
         minHeight: "300px",
     },
     tableContainer: {
@@ -52,15 +52,27 @@ const useStyles = makeStyles({
         alignItems: "center",
         gap: tokens.spacingHorizontalXS,
     },
+    centeredCell: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+        overflow: "hidden",
+    },
     dateTimeCell: {
         display: "flex",
         alignItems: "center",
         gap: tokens.spacingHorizontalXS,
-        fontSize: tokens.fontSizeBase200,
+        fontSize: tokens.fontSizeBase300,
     },
     eventNameCell: {
         fontWeight: tokens.fontWeightSemibold,
         color: tokens.colorNeutralForeground1,
+        cursor: "help",
+        textDecoration: "underline",
+        textDecorationStyle: "dotted",
+        textDecorationColor: tokens.colorNeutralForeground3,
+        textUnderlineOffset: "2px",
     },
     // バッジ（共通スタイル）
     inputTypeBadge: {
@@ -84,32 +96,24 @@ const useStyles = makeStyles({
         backgroundColor: tokens.colorNeutralBackground5,
         color: tokens.colorNeutralForeground3,
     },
-    // アイコン
-    linkedIcon: {
-        color: tokens.colorPaletteGreenForeground2,
-        fontSize: "16px",
-    },
 });
 
 const columnSizingOptions = {
     dateTime: { minWidth: 150, idealWidth: 200 },
-    eventName: { minWidth: 200, idealWidth: 300 },
-    inputType: { minWidth: 120, idealWidth: 120 },
-    workItemId: { minWidth: 250, idealWidth: 250 },
-    workItemName: { minWidth: 250, idealWidth: 300 },
-}
+    eventName: { minWidth: 250, idealWidth: 400 },
+    inputType: { minWidth: 120, idealWidth: 140 },
+    workItemId: { minWidth: 120, idealWidth: 160 },
+    workItemName: { minWidth: 250, idealWidth: 400 },
+};
 
 // テーブル列定義を生成
 function createEventColumns(
     styles: ReturnType<typeof useStyles>,
     workItems: WorkItem[],
     onWorkItemChange: (eventId: string, workItemId: string) => void,
-): TableColumnDefinition<EventTableRow>[] {
-    // 最下層のWorkItemを取得
-    const workItemOptions = workItems.flatMap((w) => getMostNestChildren(w));
-
+): TableColumnDefinition<TableRow>[] {
     return [
-        createTableColumn<EventTableRow>({
+        createTableColumn<TableRow>({
             columnId: "dateTime",
             compare: (a, b) => a.event.schedule.start.getTime() - b.event.schedule.start.getTime(),
             renderHeaderCell: () => "日時",
@@ -137,76 +141,59 @@ function createEventColumns(
                 </TableCellLayout>
             ),
         }),
-        createTableColumn<EventTableRow>({
+        createTableColumn<TableRow>({
             columnId: "eventName",
             compare: (a, b) => a.event.name.localeCompare(b.event.name),
             renderHeaderCell: () => "イベント名",
             renderCell: (item) => (
                 <TableCellLayout>
-                    <div className={styles.eventNameCell}>{item.event.name}</div>
+                    <Tooltip content={EventUtils.getText(item.event)} relationship="description">
+                        <div className={styles.eventNameCell}>{item.event.name}</div>
+                    </Tooltip>
                 </TableCellLayout>
             ),
         }),
-        createTableColumn<EventTableRow>({
+        createTableColumn<TableRow>({
             columnId: "inputType",
             compare: (a, b) => a.inputType.localeCompare(b.inputType),
-            renderHeaderCell: () => "入力依存",
+            renderHeaderCell: () => "入力状況",
             renderCell: (item) => {
                 const isAuto = item.inputType !== "手動入力" && item.inputType !== "-";
                 const isManual = item.inputType === "手動入力";
-                const badgeClass = isAuto
-                    ? styles.badgeAuto
-                    : isManual
-                        ? styles.badgeManual
-                        : styles.badgeUnlinked;
+                const badgeClass = isAuto ? styles.badgeAuto : isManual ? styles.badgeManual : styles.badgeUnlinked;
 
                 return (
-                    <TableCellLayout>
+                    <div className={styles.centeredCell}>
                         <span className={`${styles.inputTypeBadge} ${badgeClass}`}>
                             {isAuto ? <Bot20Regular /> : isManual ? <PersonEdit20Regular /> : <CircleSmall20Filled />}
                             {item.inputType}
                         </span>
-                    </TableCellLayout>
+                    </div>
                 );
             },
         }),
-        createTableColumn<EventTableRow>({
+        createTableColumn<TableRow>({
             columnId: "workItemId",
             compare: (a, b) => a.workItemId.localeCompare(b.workItemId),
-            renderHeaderCell: () => "WorkItemId",
+            renderHeaderCell: () => "コード",
             renderCell: (item) => {
-                const selectedOption = workItemOptions.find((w) => w.id === item.workItemId);
-
                 return (
                     <TableCellLayout>
-                        <Combobox
-                            placeholder="WorkItemを選択"
-                            value={selectedOption ? `${selectedOption.id} - ${selectedOption.name}` : ""}
-                            selectedOptions={item.workItemId ? [item.workItemId] : []}
-                            onOptionSelect={(_, data) => {
-                                if (data.optionValue) {
-                                    onWorkItemChange(item.id, data.optionValue);
-                                }
-                            }}
-                            style={{ minWidth: "200px" }}
-                        >
-                            {workItemOptions.map((workItem) => (
-                                <Option key={workItem.id} value={workItem.id} text={`${workItem.id} - ${workItem.name}`}>
-                                    <div className={styles.cellWithIcon}>
-                                        <Checkmark20Filled className={styles.linkedIcon} />
-                                        {workItem.id} - {workItem.name}
-                                    </div>
-                                </Option>
-                            ))}
-                        </Combobox>
+                        <div className={styles.centeredCell}>
+                            <WorkItemCombobox
+                                workItems={workItems}
+                                selectedWorkItemId={item.workItemId}
+                                onWorkItemChange={(workItemId) => onWorkItemChange(item.id, workItemId)}
+                            />
+                        </div>
                     </TableCellLayout>
                 );
             },
         }),
-        createTableColumn<EventTableRow>({
+        createTableColumn<TableRow>({
             columnId: "workItemName",
             compare: (a, b) => a.workItemName.localeCompare(b.workItemName),
-            renderHeaderCell: () => "WorkItem名",
+            renderHeaderCell: () => "コード名称",
             renderCell: (item) => (
                 <TableCellLayout>
                     <div
@@ -223,16 +210,74 @@ function createEventColumns(
     ];
 }
 
+// EventTableRowをTableRowに変換するヘルパー関数
+function convertToTableRow(row: EventTableRow): TableRow {
+    const { id, item } = row;
+
+    // LinkingEventWorkItemPairの場合
+    if ("linkingWorkItem" in item) {
+        const pair = item as LinkingEventWorkItemPair;
+        const workItem = pair.linkingWorkItem.workItem;
+
+        // inputTypeの決定
+        let inputType: string;
+        if (pair.linkingWorkItem.type === "manual") {
+            inputType = "手動入力";
+        } else if (pair.linkingWorkItem.type === "auto") {
+            switch (pair.linkingWorkItem.autoMethod) {
+                case "ai":
+                    inputType = "AI自動";
+                    break;
+                case "history":
+                    inputType = "履歴";
+                    break;
+                case "workShedule":
+                    inputType = "勤務予定";
+                    break;
+                case "timeOff":
+                    inputType = "休暇";
+                    break;
+                default:
+                    inputType = "自動";
+            }
+        } else {
+            inputType = "-";
+        }
+
+        const workItemName = workItem.name + " ( " + workItem.folderPath.split("/").pop() + " ) ";
+        return {
+            id,
+            event: pair.event,
+            workItemId: workItem.id,
+            workItemName,
+            inputType,
+        };
+    }
+
+    // Eventの場合（未紐づけ）
+    const event = item as Event;
+    return {
+        id,
+        event,
+        workItemId: "",
+        workItemName: "未紐づけ",
+        inputType: "-",
+    };
+}
+
 export function EventTable({ events, workItems, onWorkItemChange }: EventTableProps) {
     const styles = useStyles();
 
     const eventColumns = createEventColumns(styles, workItems, onWorkItemChange);
 
+    // EventTableRowをTableRowに変換
+    const tableRows: TableRow[] = events.map(convertToTableRow);
+
     return (
         <div className={styles.tableWrapper}>
             <div className={styles.tableContainer}>
                 <DataTable
-                    items={events}
+                    items={tableRows}
                     columns={eventColumns}
                     getRowId={(item) => item.id}
                     sortable

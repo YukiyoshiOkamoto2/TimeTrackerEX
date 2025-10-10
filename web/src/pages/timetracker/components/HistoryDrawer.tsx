@@ -14,7 +14,6 @@ import type { WorkItem } from "@/types";
 import {
     Badge,
     Button,
-    Checkbox,
     Divider,
     Drawer,
     DrawerBody,
@@ -41,15 +40,13 @@ import {
     ArrowDownload24Regular,
     ArrowUpload24Regular,
     Calendar24Regular,
-    CheckboxChecked24Regular,
-    CheckboxUnchecked24Regular,
     CheckmarkCircle24Regular,
     Delete24Regular,
     Dismiss24Regular,
     History24Regular,
     MoreVertical24Regular,
 } from "@fluentui/react-icons";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 const logger = getLogger("HistoryDrawer");
 
@@ -155,16 +152,11 @@ export type HistoryDrawerProps = {
 
 type HistoryRow = HistoryEntry & { key: string };
 
-type SortField = "useCount" | "lastUsedDate" | "eventName" | "itemName";
-type SortDirection = "asc" | "desc";
-
 export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerProps) {
     const styles = useStyles();
     const [historyManager] = useState(() => new HistoryManager());
     const [historyData, setHistoryData] = useState<HistoryRow[]>([]);
     const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
-    const [sortField, setSortField] = useState<SortField>("useCount");
-    const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
     const [editingKey, setEditingKey] = useState<string | null>(null);
 
     // 履歴データを読み込む
@@ -182,39 +174,6 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
             loadHistory();
         }
     }, [open]);
-
-    // ソート済みデータ
-    const sortedData = useMemo(() => {
-        const sorted = [...historyData];
-        sorted.sort((a, b) => {
-            let comparison = 0;
-            switch (sortField) {
-                case "useCount":
-                    comparison = b.useCount - a.useCount;
-                    break;
-                case "lastUsedDate":
-                    comparison = b.lastUsedDate.getTime() - a.lastUsedDate.getTime();
-                    break;
-                case "eventName":
-                    comparison = a.eventName.localeCompare(b.eventName);
-                    break;
-                case "itemName":
-                    comparison = a.itemName.localeCompare(b.itemName);
-                    break;
-            }
-            return sortDirection === "asc" ? -comparison : comparison;
-        });
-        return sorted;
-    }, [historyData, sortField, sortDirection]);
-
-    // 全選択/解除
-    const handleSelectAll = () => {
-        if (selectedKeys.size === historyData.length) {
-            setSelectedKeys(new Set());
-        } else {
-            setSelectedKeys(new Set(historyData.map((item) => item.key)));
-        }
-    };
 
     // 選択削除
     const handleDeleteSelected = async () => {
@@ -316,48 +275,15 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
     // テーブル列定義
     const columns: TableColumnDefinition<HistoryRow>[] = [
         createTableColumn<HistoryRow>({
-            columnId: "checkbox",
-            renderHeaderCell: () => (
-                <Checkbox
-                    checked={selectedKeys.size === historyData.length && historyData.length > 0}
-                    onChange={handleSelectAll}
-                />
-            ),
-            renderCell: (item) => (
-                <Checkbox
-                    checked={selectedKeys.has(item.key)}
-                    onChange={() => {
-                        const newSelected = new Set(selectedKeys);
-                        if (newSelected.has(item.key)) {
-                            newSelected.delete(item.key);
-                        } else {
-                            newSelected.add(item.key);
-                        }
-                        setSelectedKeys(newSelected);
-                    }}
-                />
-            ),
-        }),
-        createTableColumn<HistoryRow>({
             columnId: "eventName",
             compare: (a, b) => a.eventName.localeCompare(b.eventName),
-            renderHeaderCell: () => (
-                <TableCellLayout>
-                    イベント名
-                    {sortField === "eventName" && (sortDirection === "asc" ? " ↑" : " ↓")}
-                </TableCellLayout>
-            ),
+            renderHeaderCell: () => <TableCellLayout>イベント名</TableCellLayout>,
             renderCell: (item) => <TableCellLayout>{item.eventName || "無題"}</TableCellLayout>,
         }),
         createTableColumn<HistoryRow>({
             columnId: "itemName",
             compare: (a, b) => a.itemName.localeCompare(b.itemName),
-            renderHeaderCell: () => (
-                <TableCellLayout>
-                    作業項目
-                    {sortField === "itemName" && (sortDirection === "asc" ? " ↑" : " ↓")}
-                </TableCellLayout>
-            ),
+            renderHeaderCell: () => <TableCellLayout>作業項目</TableCellLayout>,
             renderCell: (item) => {
                 const isEditing = editingKey === item.key;
                 return (
@@ -392,35 +318,16 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
         createTableColumn<HistoryRow>({
             columnId: "useCount",
             compare: (a, b) => b.useCount - a.useCount,
-            renderHeaderCell: () => (
-                <TableCellLayout>
-                    使用回数
-                    {sortField === "useCount" && (sortDirection === "asc" ? " ↑" : " ↓")}
-                </TableCellLayout>
-            ),
+            renderHeaderCell: () => <TableCellLayout>使用回数</TableCellLayout>,
             renderCell: (item) => <TableCellLayout>{item.useCount}回</TableCellLayout>,
         }),
         createTableColumn<HistoryRow>({
             columnId: "lastUsedDate",
             compare: (a, b) => b.lastUsedDate.getTime() - a.lastUsedDate.getTime(),
-            renderHeaderCell: () => (
-                <TableCellLayout>
-                    最終使用日時
-                    {sortField === "lastUsedDate" && (sortDirection === "asc" ? " ↑" : " ↓")}
-                </TableCellLayout>
-            ),
+            renderHeaderCell: () => <TableCellLayout>最終使用日時</TableCellLayout>,
             renderCell: (item) => <TableCellLayout>{item.lastUsedDate.toLocaleString("ja-JP")}</TableCellLayout>,
         }),
     ];
-
-    const handleColumnHeaderClick = (field: SortField) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-        } else {
-            setSortField(field);
-            setSortDirection("desc");
-        }
-    };
 
     return (
         <Drawer
@@ -458,7 +365,19 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                     <StatCard
                         icon={<Calendar24Regular />}
                         label="最終更新"
-                        value={historyData.length > 0 ? "最新" : "-"}
+                        value={
+                            historyData.length > 0
+                                ? new Date(
+                                      Math.max(...historyData.map((h) => h.lastUsedDate.getTime())),
+                                  ).toLocaleString("ja-JP", {
+                                      year: "numeric",
+                                      month: "2-digit",
+                                      day: "2-digit",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                  })
+                                : "-"
+                        }
                     />
                 </div>
 
@@ -466,20 +385,6 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
 
                 {/* ツールバー */}
                 <Toolbar className={styles.toolbar}>
-                    <ToolbarButton
-                        appearance="primary"
-                        icon={
-                            selectedKeys.size === historyData.length ? (
-                                <CheckboxUnchecked24Regular />
-                            ) : (
-                                <CheckboxChecked24Regular />
-                            )
-                        }
-                        onClick={handleSelectAll}
-                        disabled={historyData.length === 0}
-                    >
-                        {selectedKeys.size === historyData.length ? "全解除" : "全選択"}
-                    </ToolbarButton>
                     <ToolbarButton
                         appearance="primary"
                         icon={<Delete24Regular />}
@@ -530,15 +435,13 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                     </div>
                 ) : (
                     <DataTable
-                        items={sortedData}
+                        items={historyData}
                         columns={columns}
                         getRowId={(item) => item.key}
                         sortable
-                        onColumnHeaderClick={(columnId) => {
-                            if (columnId !== "checkbox") {
-                                handleColumnHeaderClick(columnId as SortField);
-                            }
-                        }}
+                        selectable
+                        selectedKeys={selectedKeys}
+                        onSelectionChange={setSelectedKeys}
                         className={styles.tableContainer}
                     />
                 )}

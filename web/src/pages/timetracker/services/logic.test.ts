@@ -488,6 +488,5 @@ describe("TimeTrackerLogic", () => {
             expect(stats.day.normalDays).toBe(0);
             expect(stats.day.paidLeaveDays).toBe(0);
         });
-
     });
 });

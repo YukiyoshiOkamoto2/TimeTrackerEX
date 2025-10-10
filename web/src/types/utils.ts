@@ -296,7 +296,10 @@ export function createSchedule(
     };
 }
 
-export function getMostNestChildren(workItem: WorkItem): WorkItemChldren[] {
+export function getMostNestChildren(workItem: WorkItem | WorkItem[]): WorkItemChldren[] {
+    if (Array.isArray(workItem)) {
+        return workItem.flatMap((item) => getMostNestChildren(item));
+    }
     if (workItem.subItems && workItem.subItems.length > 0) {
         return workItem.subItems.flatMap((s) => getMostNestChildren(s));
     }

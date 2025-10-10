@@ -10,6 +10,7 @@
  * - 履歴のサイズ制限があり、古いエントリから自動削除されます
  */
 
+import { getMostNestChildren } from "@/types/utils";
 import { getLogger } from "../../lib/logger";
 import { getStorage } from "../../lib/storage";
 import type { Event, WorkItem } from "../../types";
@@ -208,7 +209,7 @@ export class HistoryManager {
      * - 作業項目リストに存在しないIDを持つエントリは削除されます
      */
     checkWorkItemId(workItems: WorkItem[]): void {
-        const workItemMap = new Map(workItems.map((item) => [item.id, item]));
+        const workItemMap = new Map(getMostNestChildren(workItems).map((item) => [item.id, item]));
         const invalidKeys: string[] = [];
 
         for (const [key, entry] of this.history.entries()) {

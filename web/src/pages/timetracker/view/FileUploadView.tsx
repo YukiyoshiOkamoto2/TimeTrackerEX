@@ -7,8 +7,17 @@ import { parseICS } from "@/core/ics";
 import { parsePDF } from "@/core/pdf";
 import { getLogger } from "@/lib";
 import { useSettings } from "@/store/settings/SettingsProvider";
-import { Event, EventUtils, Schedule, ScheduleUtils } from "@/types";
-import { Button, makeStyles, Popover, PopoverSurface, PopoverTrigger, tokens } from "@fluentui/react-components";
+import { Event, Schedule, ScheduleUtils } from "@/types";
+import {
+    Button,
+    createTableColumn,
+    makeStyles,
+    Popover,
+    PopoverSurface,
+    PopoverTrigger,
+    TableCellLayout,
+    tokens,
+} from "@fluentui/react-components";
 import {
     ArrowUpload20Regular,
     Calendar24Regular,
@@ -18,34 +27,28 @@ import {
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
-import { createTableColumn, TableCellLayout } from "@fluentui/react-components";
-
-// CheckedTableItemの型定義（DataTable移行用）
-type CheckedTableItem = {
-    key: string;
-    content: string;
-    checked: boolean;
-};
-
-// テーブル列定義
-const scheduleColumns = [
-    createTableColumn<CheckedTableItem>({
-        columnId: "content",
-        renderHeaderCell: () => "日付情報",
-        renderCell: (item) => <TableCellLayout>{item.content}</TableCellLayout>,
-    }),
-];
-
-const eventColumns = [
-    createTableColumn<CheckedTableItem>({
-        columnId: "content",
-        renderHeaderCell: () => "日付情報",
-        renderCell: (item) => <TableCellLayout>{item.content}</TableCellLayout>,
-    }),
-];
 import { PasswordInputDialog } from "../components/PasswordInputDialog";
 import { useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { ICS, PDF, UploadInfo } from "../models";
+
+// CheckedTableItemの型定義
+type CheckedTableItem = {
+    key: string;
+    content: string;
+};
+
+// テーブル列定義（共通）
+const tableColumns = [
+    createTableColumn<CheckedTableItem>({
+        columnId: "content",
+        renderHeaderCell: () => "日付情報",
+        renderCell: (item) => <TableCellLayout>{item.content}</TableCellLayout>,
+    }),
+];
+
+const columnSizingOptions = {
+    content: { minWidth: 300, idealWidth: 520 },
+};
 
 const logger = getLogger("FileUploadView");
 
@@ -114,18 +117,7 @@ const useStyles = makeStyles({
         fontSize: tokens.fontSizeBase200,
         color: tokens.colorNeutralForeground2,
         wordBreak: "break-all",
-        borderBottomWidth: tokens.strokeWidthThin,
-        borderBottomStyle: "solid",
-        borderBottomColor: tokens.colorNeutralStroke2,
-        borderTopWidth: tokens.strokeWidthThin,
-        borderTopStyle: "solid",
-        borderTopColor: tokens.colorNeutralStroke2,
-        borderLeftWidth: tokens.strokeWidthThin,
-        borderLeftStyle: "solid",
-        borderLeftColor: tokens.colorNeutralStroke2,
-        borderRightWidth: tokens.strokeWidthThin,
-        borderRightStyle: "solid",
-        borderRightColor: tokens.colorNeutralStroke2,
+        border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
         lineHeight: tokens.lineHeightBase400,
     },
     actionSection: {
@@ -144,7 +136,13 @@ const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalM,
-        maxHeight: "420px",
+        maxHeight: "520px",
+        overflow: "hidden",
+    },
+    tableWrapper: {
+        flex: 1,
+        overflow: "auto",
+        maxHeight: "360px",
     },
     infoSectionHeader: {
         fontSize: tokens.fontSizeBase400,
@@ -177,6 +175,7 @@ export type FileUploadViewProps = {
     ics?: ICS;
     onPdfUpdate: (pdf?: PDF) => void;
     onIcsUpdate: (ics?: ICS) => void;
+    setIsLoading: (isLoading: boolean) => void;
     onSubmit: (info: UploadInfo) => void;
 };
 
@@ -184,7 +183,7 @@ export type FileUploadViewProps = {
 const isPdfFile = (file: File) => file.type === "application/pdf";
 const isIcsFile = (file: File) => file.name.endsWith(".ics") || file.type === "text/calendar";
 
-// 日付フォーマット用ヘルパー
+// 日付フォーマット用ヘルパー（共通）
 const formatDateTime = (start: Date, end: Date | null) => {
     const dateStr = start.toLocaleDateString("ja-JP", {
         year: "numeric",
@@ -197,7 +196,7 @@ const formatDateTime = (start: Date, end: Date | null) => {
         ? `${start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}～${end.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`
         : start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
 
-    return { dateStr, timeStr };
+    return `${dateStr}　${timeStr}`;
 };
 
 const getScheduleAsync = async (file: File) => {
@@ -255,36 +254,61 @@ const getEventAsync = async (file: File) => {
     return ev;
 };
 
-const scheduleToCheckItem = (schedule: Schedule[]) => {
-    return schedule.map((s) => {
-        const { dateStr, timeStr } = formatDateTime(new Date(s.start), s.end ? new Date(s.end) : null);
+// イベントキー生成（共通）
+const getEventKey = (e: Event) => {
+    const dateTime = formatDateTime(new Date(e.schedule.start), e.schedule.end ? new Date(e.schedule.end) : null);
+    return `${dateTime}　${e.name}`;
+};
 
+// スケジュールをテーブルアイテムに変換
+const scheduleToCheckItem = (schedule: Schedule[]): CheckedTableItem[] => {
+    return schedule.map((s) => {
+        const dateTime = formatDateTime(new Date(s.start), s.end ? new Date(s.end) : null);
         const status = s.isHoliday ? (s.isPaidLeave ? "（有給休暇）" : "（休日）") : "";
 
         return {
             key: ScheduleUtils.getText(s),
-            content: `${dateStr}　${timeStr} ${status}`,
-            checked: status === "",
+            content: `${dateTime} ${status}`,
         };
     });
 };
 
-const eventToCheckItem = (event: Event[]) => {
-    return event.map((e) => {
-        const { dateStr, timeStr } = formatDateTime(
-            new Date(e.schedule.start),
-            e.schedule.end ? new Date(e.schedule.end) : null,
-        );
-
-        return {
-            key: EventUtils.getKey(e),
-            content: `${dateStr}　${timeStr}　${e.name}`,
-            checked: true,
-        };
-    });
+// イベントをテーブルアイテムに変換
+const eventToCheckItem = (event: Event[]): CheckedTableItem[] => {
+    return event.map((e) => ({
+        key: getEventKey(e),
+        content: getEventKey(e),
+    }));
 };
 
-export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }: FileUploadViewProps) {
+// ヘルプコンテンツ（共通）
+const helpContent = (
+    <>
+        <strong>📅 スケジュール情報について</strong>
+        <br />
+        <br />
+        ICSファイルから読み取ったカレンダーイベント情報です。
+        <br />
+        <br />
+        <strong>処理方法:</strong>
+        <br />
+        • チェックを外した項目は紐づけ処理から除外されます
+        <br />
+        • 勤務情報（PDF）に対応する日付のみ処理されます
+        <br />
+        • 勤務情報の日付範囲外のイベントは自動削除されます
+        <br />
+        <br />
+        <strong>自動削除される例:</strong>
+        <br />
+        • 休日のイベント（勤務情報に含まれない日）
+        <br />
+        • 勤務期間外のイベント
+        <br />• 有給休暇日のイベント（別途処理）
+    </>
+);
+
+export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoading, onSubmit }: FileUploadViewProps) {
     const styles = useStyles();
     const pdfInputRef = useRef<HTMLInputElement>(null);
     const icsInputRef = useRef<HTMLInputElement>(null);
@@ -370,88 +394,113 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
         event.stopPropagation();
     };
 
+    // 認証チェック
+    const ensureAuthenticated = async (): Promise<boolean> => {
+        if (sessionHook.isAuthenticated) return true;
+
+        await sessionHook.authenticateWithDialog();
+        return sessionHook.isAuthenticated;
+    };
+
+    // プロジェクトID検証
+    const validateProjectId = async (): Promise<string | null> => {
+        if (!timeTrackerSettings?.baseProjectId) {
+            await appMessageDialogRef.showMessageAsync(
+                "設定エラー",
+                "TimeTrackerのプロジェクトIDが設定されていません。\n設定画面でプロジェクトIDを設定してください。",
+                "ERROR",
+            );
+            return null;
+        }
+        return String(timeTrackerSettings.baseProjectId);
+    };
+
+    // プロジェクト情報取得
+    const fetchProjectData = async (projectId: string): Promise<boolean> => {
+        if (sessionHook.project && sessionHook.workItems) return true;
+
+        await sessionHook.fetchProjectAndWorkItems(projectId, async () => {
+            // プロジェクトID取得失敗時は設定をクリア
+            if (timeTrackerSettings) {
+                updateSettings({
+                    timetracker: {
+                        ...timeTrackerSettings,
+                        baseProjectId: null,
+                    },
+                });
+            }
+            await appMessageDialogRef.showMessageAsync(
+                "設定エラー",
+                "プロジェクトIDが無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。",
+                "ERROR",
+            );
+        });
+
+        if (!sessionHook.project || !sessionHook.workItems) {
+            await appMessageDialogRef.showMessageAsync(
+                "データ取得エラー",
+                "TimeTrackerからプロジェクト情報を取得できませんでした。",
+                "ERROR",
+            );
+            return false;
+        }
+
+        return true;
+    };
+
+    // 履歴管理の更新
+    const updateHistory = (workItems: typeof sessionHook.workItems) => {
+        const historyManager = new HistoryManager();
+        historyManager.load();
+        historyManager.checkWorkItemId(workItems!);
+        historyManager.dump();
+    };
+
+    // 選択済みスケジュールのフィルタリング
+    const filterSelectedSchedule = (): PDF | undefined => {
+        if (!pdf || scheduleTableItems.length === 0) return undefined;
+
+        const enabledSchedule = pdf.schedule.filter((s) => selectedScheduleKeys.has(ScheduleUtils.getText(s)));
+
+        return enabledSchedule.length > 0 ? { ...pdf, schedule: enabledSchedule } : undefined;
+    };
+
+    // 選択済みイベントのフィルタリング
+    const filterSelectedEvents = (): ICS | undefined => {
+        if (!ics || eventTableItems.length === 0) return undefined;
+
+        const enabledEvents = ics.event.filter((e) => selectedEventKeys.has(getEventKey(e)));
+
+        return enabledEvents.length > 0 ? { ...ics, event: enabledEvents } : undefined;
+    };
+
     const handleLinkedClick = async () => {
+        setIsLoading(true);
         try {
             // Step 1: 認証チェック
-            if (!sessionHook.isAuthenticated) {
-                await sessionHook.authenticateWithDialog();
-                if (!sessionHook.isAuthenticated) {
-                    return;
-                }
-            }
+            if (!(await ensureAuthenticated())) return;
 
-            // Step 2: TimeTracker設定の検証
-            if (!timeTrackerSettings?.baseProjectId) {
-                await appMessageDialogRef.showMessageAsync(
-                    "設定エラー",
-                    "TimeTrackerのプロジェクトIDが設定されていません。\n設定画面でプロジェクトIDを設定してください。",
-                    "ERROR",
-                );
-                return;
-            }
+            // Step 2: プロジェクトID検証
+            const projectId = await validateProjectId();
+            if (!projectId) return;
 
-            // Step 3: プロジェクトとWorkItemを取得
-            if (!sessionHook.project || !sessionHook.workItems) {
-                await sessionHook.fetchProjectAndWorkItems(String(timeTrackerSettings.baseProjectId), async () => {
-                    // プロジェクトID取得失敗時は設定をクリア
-                    updateSettings({
-                        timetracker: {
-                            ...timeTrackerSettings,
-                            baseProjectId: null,
-                        },
-                    });
-                    await appMessageDialogRef.showMessageAsync(
-                        "設定エラー",
-                        "プロジェクトIDが無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。",
-                        "ERROR",
-                    );
-                });
-                if (!sessionHook.project || !sessionHook.workItems) {
-                    await appMessageDialogRef.showMessageAsync(
-                        "データ取得エラー",
-                        "TimeTrackerからプロジェクト情報を取得できませんでした。",
-                        "ERROR",
-                    );
-                    return;
-                }
-            }
+            // Step 3: プロジェクト情報取得
+            if (!(await fetchProjectData(projectId))) return;
 
-            // Step 4: 履歴の更新（WorkItem一覧でチェック）
-            const { project, workItems } = sessionHook;
-            const historyManager = new HistoryManager();
-            historyManager.load();
-            historyManager.checkWorkItemId(workItems);
-            historyManager.dump();
+            // Step 4: 履歴の更新
+            updateHistory(sessionHook.workItems);
 
             // Step 5: 選択済みデータのフィルタリング
-            let newPdf;
-            if (pdf && scheduleTableItems.length > 0) {
-                const enable = pdf.schedule.filter((s) => selectedScheduleKeys.has(ScheduleUtils.getText(s)));
-                if (enable && enable.length > 0) {
-                    newPdf = {
-                        ...pdf,
-                        schedule: enable,
-                    };
-                }
-            }
-            let newIcs;
-            if (ics && eventTableItems.length > 0) {
-                const enable = ics.event.filter((e) => selectedEventKeys.has(EventUtils.getKey(e)));
-                if (enable && enable.length > 0) {
-                    newIcs = {
-                        ...ics,
-                        event: enable,
-                    };
-                }
-            }
+            const filteredPdf = filterSelectedSchedule();
+            const filteredIcs = filterSelectedEvents();
 
             // Step 6: データ送信
-            if (newPdf || newIcs) {
+            if (filteredPdf || filteredIcs) {
                 onSubmit({
-                    pdf: newPdf,
-                    ics: newIcs,
-                    project,
-                    workItems,
+                    pdf: filteredPdf,
+                    ics: filteredIcs,
+                    project: sessionHook.project!,
+                    workItems: sessionHook.workItems!,
                 });
             }
         } catch (error) {
@@ -461,6 +510,8 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                 error instanceof Error ? error.message : "不明なエラーが発生しました。",
                 "ERROR",
             );
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -614,42 +665,22 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                                     <QuestionCircle20Regular className={styles.helpIcon} />
                                 </PopoverTrigger>
                                 <PopoverSurface>
-                                    <div className={styles.popoverContent}>
-                                        <strong>📋 処理対象日時について</strong>
-                                        <br />
-                                        <br />
-                                        勤怠PDFファイルから読み取った勤務実績の日時情報です。
-                                        <br />
-                                        <br />
-                                        <strong>重要:</strong>
-                                        <br />
-                                        • チェックを外した項目は処理対象から除外されます
-                                        <br />• <strong>勤務情報に含まれない日付</strong>
-                                        のカレンダーイベントは自動的に削除されます
-                                        <br />
-                                        • 実際に出勤した日のみが登録対象となります
-                                        <br />
-                                        <br />
-                                        <strong>例:</strong>
-                                        <br />
-                                        勤務情報: 10/1, 10/2, 10/4
-                                        <br />
-                                        カレンダー: 10/1（会議）, 10/3（会議）
-                                        <br />→ 10/3の会議は削除されます
-                                    </div>
+                                    <div className={styles.popoverContent}>{helpContent}</div>
                                 </PopoverSurface>
                             </Popover>
                         </div>
                         {scheduleTableItems.length > 0 && (
-                            <DataTable
-                                items={scheduleTableItems}
-                                columns={scheduleColumns}
-                                getRowId={(item) => item.key}
-                                selectable
-                                selectedKeys={selectedScheduleKeys}
-                                onSelectionChange={setSelectedScheduleKeys}
-                                selectionHeader="選択中"
-                            />
+                            <div className={styles.tableWrapper}>
+                                <DataTable
+                                    items={scheduleTableItems}
+                                    columns={tableColumns}
+                                    getRowId={(item) => item.key}
+                                    selectable
+                                    columnSizingOptions={columnSizingOptions}
+                                    selectedKeys={selectedScheduleKeys}
+                                    onSelectionChange={setSelectedScheduleKeys}
+                                />
+                            </div>
                         )}
                     </div>
 
@@ -662,42 +693,22 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, onSubmit }:
                                     <QuestionCircle20Regular className={styles.helpIcon} />
                                 </PopoverTrigger>
                                 <PopoverSurface>
-                                    <div className={styles.popoverContent}>
-                                        <strong>📅 スケジュール情報について</strong>
-                                        <br />
-                                        <br />
-                                        ICSファイルから読み取ったカレンダーイベント情報です。
-                                        <br />
-                                        <br />
-                                        <strong>処理方法:</strong>
-                                        <br />
-                                        • チェックを外した項目は紐づけ処理から除外されます
-                                        <br />
-                                        • 勤務情報（PDF）に対応する日付のみ処理されます
-                                        <br />
-                                        • 勤務情報の日付範囲外のイベントは自動削除されます
-                                        <br />
-                                        <br />
-                                        <strong>自動削除される例:</strong>
-                                        <br />
-                                        • 休日のイベント（勤務情報に含まれない日）
-                                        <br />
-                                        • 勤務期間外のイベント
-                                        <br />• 有給休暇日のイベント（別途処理）
-                                    </div>
+                                    <div className={styles.popoverContent}>{helpContent}</div>
                                 </PopoverSurface>
                             </Popover>
                         </div>
                         {eventTableItems.length > 0 && (
-                            <DataTable
-                                items={eventTableItems}
-                                columns={eventColumns}
-                                getRowId={(item) => item.key}
-                                selectable
-                                selectedKeys={selectedEventKeys}
-                                onSelectionChange={setSelectedEventKeys}
-                                selectionHeader="選択中"
-                            />
+                            <div className={styles.tableWrapper}>
+                                <DataTable
+                                    items={eventTableItems}
+                                    columns={tableColumns}
+                                    getRowId={(item) => item.key}
+                                    selectable
+                                    columnSizingOptions={columnSizingOptions}
+                                    selectedKeys={selectedEventKeys}
+                                    onSelectionChange={setSelectedEventKeys}
+                                />
+                            </div>
                         )}
                     </div>
                 </div>

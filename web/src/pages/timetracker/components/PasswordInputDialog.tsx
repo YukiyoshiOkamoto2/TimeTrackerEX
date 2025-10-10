@@ -5,6 +5,7 @@
  * リッチなデザインとアニメーションを備えた認証UI
  */
 
+import { StatCard } from "@/components/stat-card";
 import {
     Button,
     Dialog,
@@ -26,7 +27,6 @@ import {
     ShieldCheckmarkRegular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
-import { StatCard } from "@/components/stat-card";
 
 const useStyles = makeStyles({
     // ダイアログ構造

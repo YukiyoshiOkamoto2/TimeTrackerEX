@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import { makeStyles, tokens } from "@fluentui/react-components";
+import type { ReactNode } from "react";
 /**
  * ViewヘッダーコンテナのProps
  */

@@ -1,4 +1,5 @@
 import { Card } from "@/components/card";
+import { PageHeader } from "@/components/page-header";
 import { registerTasks, type RegisterTasksRequest } from "@/core/api";
 import { getLogger } from "@/lib/logger";
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
@@ -10,10 +11,8 @@ import {
     Warning24Regular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
-import { PageHeader } from "@/components/page-header";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "../components/index";
 import { SectionTitle, ViewHeader, ViewSection } from "../components/ViewLayout";
-
 
 const logger = getLogger("CompletionView");
 

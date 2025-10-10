@@ -22,4 +22,4 @@ export type UploadInfo = {
 };
 
 // テーブル行の型をエクスポート
-export type { UnlinkedEventRow, LinkedEventRow, TargetEventRow } from "./table";
+export type { LinkedEventRow, TargetEventRow, UnlinkedEventRow } from "./table";

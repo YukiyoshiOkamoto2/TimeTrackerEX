@@ -5,12 +5,11 @@ import { makeStyles, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Page } from "../../components/page";
 import { ScheduleItem } from "./components";
+import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
 import { ICS, PDF, UploadInfo } from "./models";
 import { CompletionView } from "./view/CompletionView";
 import { FileUploadView } from "./view/FileUploadView";
 import { LinkingProcessView } from "./view/LinkingProcessView";
-import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
-
 
 // const logger = getLogger("TimeTrackerPage");
 
@@ -176,6 +175,7 @@ export function TimeTrackerPage() {
                             ics={ics}
                             onPdfUpdate={setPdf}
                             onIcsUpdate={setIcs}
+                            setIsLoading={setIsLoading}
                             onSubmit={handleFileUploadViewSubmit}
                         />
                     )}
