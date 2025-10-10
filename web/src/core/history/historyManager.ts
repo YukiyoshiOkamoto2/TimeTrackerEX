@@ -259,6 +259,13 @@ export class HistoryManager {
      * - 既存のエントリがある場合は使用回数をインクリメントし、最終使用日時を更新します
      */
     setHistory(event: Event, workItem: WorkItem): void {
+
+        // 勤務時間は対象外
+        if (event.workingEventType) {
+            logger.warn("勤務時間は対象外")
+            return;
+        }
+
         const key = this.getEventKey(event);
         const existingEntry = this.history.get(key);
         const now = new Date();

@@ -1,4 +1,6 @@
-import type { WorkItem } from "@/types";
+import { EventUtils, type WorkItem } from "@/types";
+import { TreeView } from "@/components/tree/Tree";
+import type { TreeItem } from "@/components/tree/TreeItem";
 import {
     Button,
     Input,
@@ -7,10 +9,8 @@ import {
     PopoverSurface,
     PopoverTrigger,
     tokens,
-    Tree,
-    TreeItem,
     TreeItemLayout,
-    useHeadlessFlatTree_unstable,
+    TreeItemValue,
 } from "@fluentui/react-components";
 import {
     Checkmark20Filled,
@@ -19,7 +19,12 @@ import {
     Document20Regular,
     Folder20Regular,
 } from "@fluentui/react-icons";
-import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { getLogger } from "@/lib/logger";
+import { treeViewHelper } from "@/components/tree/TreeViewHelper";
+
+const logger = getLogger("WorkItemCombobox");
 
 export type WorkItemComboboxProps = {
     workItems: WorkItem[];
@@ -60,78 +65,182 @@ const useStyles = makeStyles({
     },
     header: { display: "flex", gap: tokens.spacingHorizontalS, alignItems: "center" },
     tree: { overflowY: "auto", maxHeight: "520px" },
-    selected: { backgroundColor: tokens.colorNeutralBackground1Selected },
-    item: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalXS },
-    id: { fontWeight: tokens.fontWeightSemibold, color: tokens.colorBrandForeground1 },
-    icon: { color: tokens.colorPaletteGreenForeground2, marginLeft: "auto" },
 });
 
-// WorkItemをフラットなツリー構造に変換
-type FlatWorkItem = {
-    value: string;
-    parentValue?: string;
-    workItem: WorkItem;
-    isLeaf: boolean;
-};
+// WorkItem を TreeItem に変換
+function convertWorkItemsToTree(
+    items: WorkItem[],
+    selectedId: string,
+    onSelect: (folderPath: string) => void,
+): TreeItem[] {
+    return items.map((item) => {
 
-function flattenWorkItems(items: WorkItem[], parentValue = ""): FlatWorkItem[] {
-    const result: FlatWorkItem[] = [];
-
-    items.forEach((item) => {
-        const value = item.folderPath;
+        const isSelected = item.id === selectedId;
         const hasChildren = !!item.subItems?.length;
+        const itemValue = treeViewHelper.getPath([item.folderPath, item.folderName, item.name])
 
-        result.push({
-            value,
-            parentValue: parentValue || undefined,
-            workItem: item,
-            isLeaf: !hasChildren,
-        });
+        const header: ReactNode = hasChildren ? (
+            <TreeItemLayout iconBefore={<Folder20Regular />}>{item.name}</TreeItemLayout>
+        ) : (
+            <TreeItemLayout
+                iconBefore={<Document20Regular />}
+                iconAfter={
+                    isSelected ? (
+                        <Checkmark20Filled
+                            style={{ color: tokens.colorPaletteGreenForeground2, marginLeft: "auto" }}
+                        />
+                    ) : undefined
+                }
+                className={isSelected ? "selected-item" : undefined}
+                onClick={() => onSelect(itemValue)}
+                style={{ cursor: "pointer" }}
+            >
+                <div style={{ display: "flex", alignItems: "center", gap: tokens.spacingHorizontalXS }}>
+                    <span style={{ fontWeight: tokens.fontWeightSemibold, color: tokens.colorBrandForeground1 }}>
+                        {item.id}
+                    </span>
+                    {" - "}
+                    <span>{item.name}</span>
+                </div>
+            </TreeItemLayout>
+        );
 
-        if (hasChildren) {
-            result.push(...flattenWorkItems(item.subItems!, value));
-        }
+        return {
+            header,
+            value: itemValue,
+            children: hasChildren ? convertWorkItemsToTree(item.subItems!, selectedId, onSelect) : undefined,
+        };
     });
-
-    return result;
 }
 
 export function WorkItemCombobox({ workItems, selectedWorkItemId, onWorkItemChange }: WorkItemComboboxProps) {
     const styles = useStyles();
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
+    const [openItemValues, setOpenItemValues] = useState<TreeItemValue[]>([]);
 
-    // フラット化されたツリー構造
-    const flatItems = useMemo(() => flattenWorkItems(workItems), [workItems]);
+    // TreeItem の value から WorkItem を取得
+    const getWorkItemFromValue = useCallback(
+        (value: TreeItemValue): WorkItem | undefined => {
+            const findWorkItem = (items: WorkItem[]): WorkItem | undefined => {
+                for (const item of items) {
+                    // folderPath または id で一致するかチェック
+                    const itemValue = item.folderPath ?? item.id;
+                    if (itemValue === value) return item;
+                    if (item.subItems) {
+                        const found = findWorkItem(item.subItems);
+                        if (found) return found;
+                    }
+                }
+                return undefined;
+            };
+            return findWorkItem(workItems);
+        },
+        [workItems],
+    );
 
-    // 検索フィルタリング
-    const filteredItems = useMemo(() => {
-        if (!query) return flatItems;
+    const handleSelect = useCallback(
+        (value: TreeItemValue) => {
+            const workItem = getWorkItemFromValue(value);
+            if (workItem) {
+                onWorkItemChange(workItem.id);
+                setOpen(false);
+                setQuery("");
+            }
+        },
+        [getWorkItemFromValue, onWorkItemChange],
+    );
+
+    // WorkItem を TreeItem に変換
+    const treeItems = useMemo(
+        () => convertWorkItemsToTree(workItems[0].subItems ?? [], selectedWorkItemId, handleSelect),
+        [workItems, selectedWorkItemId, handleSelect],
+    );
+
+    // 検索フィルタリング用の関数
+    const filterTreeItems = (items: TreeItem[], lowerQuery: string): TreeItem[] => {
+        const filtered: TreeItem[] = [];
+
+        for (const item of items) {
+            // value が null または undefined の場合はスキップ
+            if (!item.value) {
+                logger.error("TreeItemの値がNULLです。")
+                continue;
+            }
+
+            const value = item.value as string;
+            const hasChildren = !!item.children?.length;
+
+            // 子要素を再帰的にフィルタリング
+            const filteredChildren = hasChildren ? filterTreeItems(item.children!, lowerQuery) : undefined;
+
+            // 自身が検索にマッチするか、子要素にマッチがある場合は含める
+            const matchesSelf = !hasChildren && (
+                workItems.some((wi) => {
+                    // folderPath または id で一致するかチェック
+                    const itemValue = wi.folderPath ?? wi.id;
+                    const matchesPath = itemValue === value;
+                    if (!matchesPath) return false;
+                    return (
+                        wi.id.toLowerCase().includes(lowerQuery) ||
+                        wi.name.toLowerCase().includes(lowerQuery)
+                    );
+                })
+            );
+
+            const hasMatchingChildren = filteredChildren && filteredChildren.length > 0;
+
+            if (matchesSelf || hasMatchingChildren) {
+                filtered.push({
+                    ...item,
+                    children: hasMatchingChildren ? filteredChildren : undefined,
+                });
+            }
+        }
+
+        return filtered;
+    };
+
+    const filteredTreeItems = useMemo(() => {
+        if (!query) return treeItems;
         const lowerQuery = query.toLowerCase();
-        return flatItems.filter(
-            (item) =>
-                item.workItem.id.toLowerCase().includes(lowerQuery) ||
-                item.workItem.name.toLowerCase().includes(lowerQuery),
-        );
-    }, [flatItems, query]);
+        return filterTreeItems(treeItems, lowerQuery);
+    }, [treeItems, query]);
 
-    const flatTree = useHeadlessFlatTree_unstable(filteredItems, {
-        defaultOpenItems: [],
-    });
+    // 検索時は全て展開
+    const getAllValues = (items: TreeItem[]): TreeItemValue[] => {
+        return items.flatMap((item) => {
+            const values: TreeItemValue[] = [item.value];
+            if (item.children) {
+                values.push(...getAllValues(item.children));
+            }
+            return values;
+        });
+    };
 
+    useMemo(() => {
+        if (query) {
+            setOpenItemValues(getAllValues(filteredTreeItems));
+        } else {
+            setOpenItemValues([]);
+        }
+    }, [query, filteredTreeItems]);
+
+    // 選択された WorkItem を取得
     const selectedItem = useMemo(() => {
         if (!selectedWorkItemId) return undefined;
-        const item = flatItems.find((item) => item.workItem.id === selectedWorkItemId);
-        return item?.workItem;
-    }, [flatItems, selectedWorkItemId]);
-
-    const handleSelect = (item: FlatWorkItem) => {
-        if (item.isLeaf) {
-            onWorkItemChange(item.workItem.id);
-            setOpen(false);
-            setQuery("");
-        }
-    };
+        const findWorkItem = (items: WorkItem[]): WorkItem | undefined => {
+            for (const item of items) {
+                if (item.id === selectedWorkItemId) return item;
+                if (item.subItems) {
+                    const found = findWorkItem(item.subItems);
+                    if (found) return found;
+                }
+            }
+            return undefined;
+        };
+        return findWorkItem(workItems);
+    }, [workItems, selectedWorkItemId]);
 
     const handleClear = () => {
         onWorkItemChange("");
@@ -161,40 +270,14 @@ export function WorkItemCombobox({ workItems, selectedWorkItemId, onWorkItemChan
                         未選択
                     </Button>
                 </div>
-                <div className={styles.tree}>
-                    <Tree {...flatTree.getTreeProps()} aria-label="作業項目">
-                        {Array.from(flatTree.items(), (item) => {
-                            const flatItem = filteredItems.find((fi) => fi.value === item.value);
-                            if (!flatItem) return null;
-
-                            const { workItem, isLeaf } = flatItem;
-                            const isSelected = isLeaf && workItem.id === selectedWorkItemId;
-
-                            return (
-                                <TreeItem {...(item.getTreeItemProps() as any)} key={item.value}>
-                                    <TreeItemLayout
-                                        iconBefore={isLeaf ? <Document20Regular /> : <Folder20Regular />}
-                                        iconAfter={
-                                            isSelected ? <Checkmark20Filled className={styles.icon} /> : undefined
-                                        }
-                                        onClick={() => handleSelect(flatItem)}
-                                        className={isSelected ? styles.selected : undefined}
-                                        style={{ cursor: isLeaf ? "pointer" : "default" }}
-                                    >
-                                        {isLeaf ? (
-                                            <div className={styles.item}>
-                                                <span className={styles.id}>{workItem.id}</span> -{" "}
-                                                <span>{workItem.name}</span>
-                                            </div>
-                                        ) : (
-                                            workItem.name
-                                        )}
-                                    </TreeItemLayout>
-                                </TreeItem>
-                            );
-                        })}
-                    </Tree>
-                </div>
+                <TreeView
+                    items={filteredTreeItems}
+                    openItemValues={openItemValues}
+                    onOpenChanged={setOpenItemValues}
+                    selectItemValue={selectedItem ? (selectedItem.folderPath ?? selectedItem.id) : undefined}
+                    onSelectItemChanged={handleSelect}
+                    className={styles.tree}
+                />
             </PopoverSurface>
         </Popover>
     );

@@ -136,7 +136,7 @@ export class HttpRequestQueue extends AsyncQueue<HttpRequestData, HttpRequestQue
             headers = { ...headers, ...this.headers };
         }
 
-        logger.debug("Request:", url);
+        logger.info("Request:", url);
         logger.debug("Headers:", headers);
         logger.debug("json:", json);
 
@@ -184,7 +184,7 @@ export class HttpRequestQueue extends AsyncQueue<HttpRequestData, HttpRequestQue
             }
         }
 
-        logger.debug("Response:", qResponse);
+        logger.info("Response:", qResponse);
         return qResponse;
     }
 }

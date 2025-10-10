@@ -729,7 +729,6 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
                     }
                 }}
                 onSubmit={sessionHook.authenticateWithPassword}
-                baseUrl={timeTrackerSettings?.baseUrl || ""}
                 userName={timeTrackerSettings?.userName || ""}
             />
         </>

@@ -57,7 +57,7 @@ export class TimeTracker {
      * 認証処理
      */
     async connectAsync(password: string): Promise<void> {
-        console.debug("Start connectAsync.");
+        console.info("Start connectAsync.");
 
         if (this.token) {
             console.info("Already connected");
@@ -93,7 +93,7 @@ export class TimeTracker {
      * プロジェクト情報を取得
      */
     async getProjectsAsync(): Promise<Project> {
-        console.debug("Start getProjectsAsync.");
+        console.info("Start getProjectsAsync.");
 
         const response = await this.requestAsync(`/workitem/workItems/${this.projectId}`, true);
 
@@ -120,7 +120,7 @@ export class TimeTracker {
      * 作業項目を取得
      */
     async getWorkItemsAsync(): Promise<WorkItem[]> {
-        console.debug("Start getWorkItemsAsync");
+        console.info("Start getWorkItemsAsync");
 
         const response = await this.requestAsync(
             `/workitem/workItems/${this.projectId}/subItems?fields=FolderName,Name&assignedUsers=${this.userName}&includeDeleted=false`,
@@ -145,7 +145,7 @@ export class TimeTracker {
      * タスクを登録
      */
     async registerTaskAsync(task: TimeTrackerTask): Promise<string> {
-        console.debug("Start registerTaskAsync");
+        console.info("Start registerTaskAsync");
 
         validateTimeTrackerTask(task);
 
@@ -351,14 +351,14 @@ function parseWorkItem(workItemDict: Record<string, unknown>, parentFolderPath?:
         throw new Error(`Unknown response: ${JSON.stringify(workItemDict)}`);
     }
 
-    const folderPath = parentFolderPath ? `${parentFolderPath}/${fields.FolderName}` : (fields.FolderName as string);
-
+    const folderName = fields.FolderName ? fields.FolderName as string : ""
+    const folderPath = parentFolderPath ? `${parentFolderPath}/${folderName}` : folderName;
     const subItemsData = (fields.SubItems as Record<string, unknown>[]) || [];
 
     return {
         id: fields.Id as string,
         name: fields.Name as string,
-        folderName: fields.FolderName as string,
+        folderName,
         folderPath,
         subItems: subItemsData.map((subItem) => parseWorkItem(subItem, folderPath)),
     };
@@ -483,9 +483,8 @@ export async function getWorkItemsAsync(
     console.debug("Start getWorkItemsAsync.");
 
     // api.pyと同じURLパターンに修正
-    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${
-        userName ? `&assignedUsers=${userName}` : ""
-    }&includeDeleted=false`;
+    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${userName ? `&assignedUsers=${userName}` : ""
+        }&includeDeleted=false`;
     const response = await requestAsync(baseUrl, uri, auth);
 
     if (isErrorResponse(response)) {
