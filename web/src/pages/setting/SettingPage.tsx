@@ -15,7 +15,7 @@ import { Button, makeStyles, SelectTabData, SelectTabEvent, Tab, TabList, tokens
 import { CodeRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 import { Page } from "../../components/page";
-import { AppearanceSettingsPage, GeneralSettingsPage, JsonEditorView, TimeTrackerSettingsPage } from "./components";
+import { AppearanceSettingsPage, GeneralSettingsPage, JsonEditorView, TimeTrackerSettingsPage } from "./view";
 
 const useStyles = makeStyles({
     pageContainer: {

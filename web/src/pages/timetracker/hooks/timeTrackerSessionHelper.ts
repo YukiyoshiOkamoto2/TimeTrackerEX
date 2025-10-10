@@ -19,9 +19,18 @@ import type { Project, WorkItem } from "@/types";
 
 const TIMETRACKER_STORAGE_KEYS = {
     AUTH: "timetracker_auth",
-    PROJECT: "timetracker_project",
-    WORK_ITEMS: "timetracker_workitems",
 } as const;
+
+/**
+ * 認証エラークラス
+ * API実行時に認証が必要または認証が失敗した場合にスローされる
+ */
+export class AuthError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "AuthError";
+    }
+}
 
 /**
  * 認証情報（有効期限付き）
@@ -89,116 +98,28 @@ export function clearAuth(): void {
 }
 
 /**
- * セッションストレージからプロジェクト情報を取得
- */
-export function loadProject(): Project | null {
-    try {
-        const storage = getSessionStorage();
-        return storage.getValue<Project>(TIMETRACKER_STORAGE_KEYS.PROJECT);
-    } catch (error) {
-        console.error("Failed to load project from sessionStorage:", error);
-        return null;
-    }
-}
-
-/**
- * プロジェクト情報をセッションストレージに保存
- */
-export function saveProject(project: Project): void {
-    try {
-        const storage = getSessionStorage();
-        storage.setValue(TIMETRACKER_STORAGE_KEYS.PROJECT, project);
-    } catch (error) {
-        console.error("Failed to save project to sessionStorage:", error);
-    }
-}
-
-/**
- * プロジェクト情報をセッションストレージから削除
- */
-export function clearProject(): void {
-    try {
-        const storage = getSessionStorage();
-        storage.removeValue(TIMETRACKER_STORAGE_KEYS.PROJECT);
-    } catch (error) {
-        console.error("Failed to clear project from sessionStorage:", error);
-    }
-}
-
-/**
- * セッションストレージからWorkItem一覧を取得
- */
-export function loadWorkItems(): WorkItem[] | null {
-    try {
-        const storage = getSessionStorage();
-        return storage.getValue<WorkItem[]>(TIMETRACKER_STORAGE_KEYS.WORK_ITEMS);
-    } catch (error) {
-        console.error("Failed to load work items from sessionStorage:", error);
-        return null;
-    }
-}
-
-/**
- * WorkItem一覧をセッションストレージに保存
- */
-export function saveWorkItems(workItems: WorkItem[]): void {
-    try {
-        const storage = getSessionStorage();
-        storage.setValue(TIMETRACKER_STORAGE_KEYS.WORK_ITEMS, workItems);
-    } catch (error) {
-        console.error("Failed to save work items to sessionStorage:", error);
-    }
-}
-
-/**
- * WorkItem一覧をセッションストレージから削除
- */
-export function clearWorkItems(): void {
-    try {
-        const storage = getSessionStorage();
-        storage.removeValue(TIMETRACKER_STORAGE_KEYS.WORK_ITEMS);
-    } catch (error) {
-        console.error("Failed to clear work items from sessionStorage:", error);
-    }
-}
-
-/**
  * 全てのセッション情報をクリア
  */
 export function clearAllSession(): void {
     clearAuth();
-    clearProject();
-    clearWorkItems();
+}
+
+/**
+ * 認証情報を取得（認証チェック付き）
+ *
+ * @throws {AuthError} 認証されていない、または認証の有効期限が切れている場合
+ */
+function getAuthOrThrow(): TimeTrackerAuth {
+    const auth = loadAuth();
+    if (!auth) {
+        throw new AuthError("認証されていません。接続してください。");
+    }
+    return auth;
 }
 
 // ========================================
 // Business Logic Functions
 // ========================================
-
-/**
- * 認証エラーのハンドリング結果
- */
-export interface AuthErrorHandlingResult {
-    shouldLogout: boolean;
-    errorMessage: string;
-}
-
-/**
- * 認証エラーをハンドリング
- */
-export function handleAuthenticationError(error: unknown): AuthErrorHandlingResult {
-    if (isAuthenticationError(error)) {
-        return {
-            shouldLogout: true,
-            errorMessage: "認証の有効期限が切れました。再度接続してください。",
-        };
-    }
-
-    return {
-        shouldLogout: false,
-        errorMessage: error instanceof Error ? error.message : "エラーが発生しました",
-    };
-}
 
 /**
  * パスワードで認証を実行
@@ -225,25 +146,34 @@ export async function authenticateWithPasswordAsync(
  *
  * @param baseUrl - TimeTracker のベースURL
  * @param projectId - プロジェクトID
- * @param auth - 認証情報
  * @param userName - ユーザー名
  * @returns プロジェクトと作業項目
+ * @throws {AuthError} 認証されていない、または認証エラーが発生した場合
  */
 export async function fetchProjectAndWorkItemsAsync(
     baseUrl: string,
     projectId: string,
-    auth: TimeTrackerAuth,
     userName: string,
 ): Promise<{ project: Project; workItems: WorkItem[] }> {
-    // プロジェクト取得
-    const project = await getProjectAsync(baseUrl, projectId, auth);
-    saveProject(project);
+    // 認証情報を取得（未認証の場合はAuthErrorをスロー）
+    const auth = getAuthOrThrow();
 
-    // 作業項目取得
-    const workItems = await getWorkItemsAsync(baseUrl, projectId, auth, userName);
-    saveWorkItems(workItems);
+    try {
+        // プロジェクト取得
+        const project = await getProjectAsync(baseUrl, projectId, auth);
 
-    return { project, workItems };
+        // 作業項目取得
+        const workItems = await getWorkItemsAsync(baseUrl, projectId, auth, userName);
+
+        return { project, workItems };
+    } catch (error) {
+        // 認証エラーの場合はセッションをクリアしてAuthErrorをスロー
+        if (isAuthenticationError(error)) {
+            clearAuth();
+            throw new AuthError("認証の有効期限が切れました。再度接続してください。");
+        }
+        throw error;
+    }
 }
 
 /**
@@ -251,13 +181,20 @@ export async function fetchProjectAndWorkItemsAsync(
  *
  * @param baseUrl - TimeTracker のベースURL
  * @param task - 登録するタスク
- * @param auth - 認証情報
- * @throws 認証エラーの場合はエラーをスロー
+ * @throws {AuthError} 認証されていない、または認証エラーが発生した場合
  */
-export async function registerTaskWithAuthCheckAsync(
-    baseUrl: string,
-    task: TimeTrackerTask,
-    auth: TimeTrackerAuth,
-): Promise<void> {
-    await registerTaskAsync(baseUrl, auth.userId, task, auth);
+export async function registerTaskWithAuthCheckAsync(baseUrl: string, task: TimeTrackerTask): Promise<void> {
+    // 認証情報を取得（未認証の場合はAuthErrorをスロー）
+    const auth = getAuthOrThrow();
+
+    try {
+        await registerTaskAsync(baseUrl, auth.userId, task, auth);
+    } catch (error) {
+        // 認証エラーの場合はセッションをクリアしてAuthErrorをスロー
+        if (isAuthenticationError(error)) {
+            clearAuth();
+            throw new AuthError("認証の有効期限が切れました。再度接続してください。");
+        }
+        throw error;
+    }
 }

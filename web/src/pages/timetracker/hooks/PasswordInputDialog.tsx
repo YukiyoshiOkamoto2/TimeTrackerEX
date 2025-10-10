@@ -134,12 +134,12 @@ const useStyles = makeStyles({
 
 export interface PasswordInputDialogProps {
     open: boolean;
-    onOpenChange: (open: boolean) => void;
-    onSubmit: (password: string) => Promise<void>;
+    onCancel: () => void;
+    onSubmit: (password: string) => Promise<{ isError: boolean }>;
     userName: string;
 }
 
-export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName }: PasswordInputDialogProps) {
+export function PasswordInputDialog({ open, onCancel, onSubmit, userName }: PasswordInputDialogProps) {
     const styles = useStyles();
     const [password, setPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -153,12 +153,16 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName }: 
 
         setIsSubmitting(true);
         setError(null);
-
         try {
-            await onSubmit(password);
-            // 成功したらダイアログを閉じる
-            setPassword("");
-            onOpenChange(false);
+            const result = await onSubmit(password);
+            if (result.isError) {
+                setError((result as any).errorMessage);
+            } else {
+                // 成功したらダイアログを閉じる（状態をリセット）
+                setPassword("");
+                setError(null);
+                // 注意: onCancelは呼ばない（親コンポーネントで制御される）
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : "認証に失敗しました");
         } finally {
@@ -169,8 +173,7 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName }: 
     const handleCancel = () => {
         setPassword("");
         setError(null);
-        setIsSubmitting(false);
-        onOpenChange(false);
+        onCancel();
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -182,17 +185,7 @@ export function PasswordInputDialog({ open, onOpenChange, onSubmit, userName }: 
     };
 
     return (
-        <Dialog
-            open={open}
-            onOpenChange={(_, data) => {
-                if (!isSubmitting) {
-                    onOpenChange(data.open);
-                    if (!data.open) {
-                        handleCancel();
-                    }
-                }
-            }}
-        >
+        <Dialog open={open}>
             <DialogSurface className={styles.dialogSurface}>
                 <DialogBody className={styles.dialogBody}>
                     {/* ヘッダーセクション */}

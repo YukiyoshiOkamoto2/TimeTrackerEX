@@ -19,10 +19,12 @@ export abstract class AsyncQueue<TData, TResult> {
         reject: (error: Error) => void;
     }> = [];
     protected waitTime: number;
+    protected timeoutMs: number;
     private processing = false;
 
-    constructor(waitTimeMs: number) {
+    constructor(waitTimeMs: number, timeoutMs = 30000) {
         this.waitTime = waitTimeMs;
+        this.timeoutMs = timeoutMs;
         this.startProcessing();
     }
 
@@ -60,8 +62,14 @@ export abstract class AsyncQueue<TData, TResult> {
 
                 const item = this.queue.shift();
                 if (item) {
+                    const abortController = new AbortController();
+                    const timeoutId = setTimeout(() => {
+                        logger.warn(`Task timeout (${this.timeoutMs}ms). Aborting...`);
+                        abortController.abort();
+                    }, this.timeoutMs);
+
                     try {
-                        const result = await this.execute(item.data);
+                        const result = await this.execute(item.data, abortController);
                         item.resolve(result);
                     } catch (error) {
                         logger.error("Queue task error:", error);
@@ -70,6 +78,7 @@ export abstract class AsyncQueue<TData, TResult> {
                         }
                         item.reject(error instanceof Error ? error : new Error(String(error)));
                     } finally {
+                        clearTimeout(timeoutId);
                         logger.debug("End Queue task.");
                         this.processing = false;
                     }
@@ -88,7 +97,7 @@ export abstract class AsyncQueue<TData, TResult> {
     /**
      * 実際の処理を実装する抽象メソッド
      */
-    protected abstract execute(data: TData): Promise<TResult>;
+    protected abstract execute(data: TData, abort: AbortController): Promise<TResult>;
 }
 
 /**
@@ -115,8 +124,8 @@ export class HttpRequestQueue extends AsyncQueue<HttpRequestData, HttpRequestQue
     private headers?: Record<string, string>;
     private retryCount: number;
 
-    constructor(waitTimeMs: number, retryCount = 2, headers?: Record<string, string>) {
-        super(waitTimeMs);
+    constructor(waitTimeMs: number, retryCount = 2, headers?: Record<string, string>, timeoutMs = 30000) {
+        super(waitTimeMs, timeoutMs);
         this.headers = headers;
         this.retryCount = retryCount;
     }
@@ -124,7 +133,10 @@ export class HttpRequestQueue extends AsyncQueue<HttpRequestData, HttpRequestQue
     /**
      * HTTPリクエストを実行
      */
-    protected async execute(data: HttpRequestData): Promise<HttpRequestQueueResponse> {
+    protected async execute(
+        data: HttpRequestData,
+        abortController: AbortController,
+    ): Promise<HttpRequestQueueResponse> {
         if (!data.url) {
             throw new Error("url is required");
         }
@@ -152,6 +164,7 @@ export class HttpRequestQueue extends AsyncQueue<HttpRequestData, HttpRequestQue
                     response = await fetch(url, {
                         method: "GET",
                         headers,
+                        signal: abortController.signal,
                     });
                 } else {
                     // POST request
@@ -160,6 +173,7 @@ export class HttpRequestQueue extends AsyncQueue<HttpRequestData, HttpRequestQue
                         method: "POST",
                         headers,
                         body: JSON.stringify(json),
+                        signal: abortController.signal,
                     });
                 }
 
@@ -169,6 +183,12 @@ export class HttpRequestQueue extends AsyncQueue<HttpRequestData, HttpRequestQue
                     body: await response.text(),
                 };
             } catch (error) {
+                // AbortErrorの場合は即座にスロー
+                if (error instanceof Error && error.name === "AbortError") {
+                    logger.error("Request aborted due to timeout");
+                    throw new Error("Request timeout");
+                }
+
                 logger.error("Request error:", error);
                 if (error instanceof Error) {
                     logger.error("Stack:", error.stack);

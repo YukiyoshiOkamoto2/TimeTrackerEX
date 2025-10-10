@@ -10,16 +10,4 @@ export type {
     UseTimeTrackerSessionOptions,
 } from "./useTimeTrackerSession";
 
-export {
-    clearAllSession,
-    clearAuth,
-    clearProject,
-    clearWorkItems,
-    loadAuth,
-    loadProject,
-    loadWorkItems,
-    saveAuth,
-    saveProject,
-    saveWorkItems,
-    type StoredAuth,
-} from "./timeTrackerSessionHelper";
+export { clearAllSession, clearAuth, loadAuth, saveAuth, type StoredAuth } from "./timeTrackerSessionHelper";

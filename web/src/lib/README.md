@@ -6,7 +6,7 @@
 
 | モジュール | 説明 | テスト |
 |-----------|------|-------|
-| **asyncQueue** | 非同期タスクのキュー管理 (HTTP通信) | - |
+| **asyncQueue** | 非同期タスクのキュー管理 (HTTP通信、タイムアウト対応) | 10 |
 | **logger** | ログ出力とレベル管理 | 20 |
 | **storage** | localStorage抽象化 | 33 |
 
@@ -31,6 +31,14 @@ const value = storage.getValue<T>('key')
 ### asyncQueue
 ```typescript
 import { HttpRequestQueue } from '@/lib'
-const queue = new HttpRequestQueue()
-await queue.enqueueAsync({ url, method, data? })
+
+// waitTime: キュー処理間隔(ms), retryCount: リトライ回数, headers: 共通ヘッダー, timeout: タイムアウト時間(ms)
+const queue = new HttpRequestQueue(100, 2, {}, 30000)
+
+// タスクをキューに追加（AbortControllerによるタイムアウト対応）
+const response = await queue.enqueueAsync({ 
+  url: 'https://api.example.com',
+  headers: { 'Authorization': 'Bearer token' },
+  json: { data: 'value' }  // POSTの場合
+})
 ```

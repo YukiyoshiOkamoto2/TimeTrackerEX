@@ -1,9 +1,7 @@
 import { TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION } from "@/schema/settings";
+import { TimeOffEventPattern } from "@/types";
 import { makeStyles, tokens } from "@fluentui/react-components";
-import type { TimeOffEventPattern } from "../../../../../types/settings";
-import { SettingNavigationPageLayout, SettingSection } from "../../layout";
-import { AutoSettingItem } from "../../ui";
-import { EventPatternEditor } from "../../ui/EventPatternEditor";
+import { AutoSettingItem, EventPatternEditor, SettingNavigationPageLayout, SettingSection } from "../../components";
 
 const timeOffEventDef = TIMETRACKER_TIME_OFF_EVNT_SETTINGS_DEFINITION.getTypedChildren()!;
 const patternDefinition = timeOffEventDef.namePatterns;

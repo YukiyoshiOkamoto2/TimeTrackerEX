@@ -1,12 +1,8 @@
 import { useState } from "react";
-import { useSettings } from "../../../../../store/settings/SettingsProvider";
-import type {
-    IgnorableEventPattern,
-    TimeOffEventPattern,
-    TimeTrackerSettings as TimeTrackerSettingsType,
-} from "../../../../../types";
-import { SettingPageLayout } from "../../layout";
 
+import { useSettings } from "@/store";
+import { IgnorableEventPattern, TimeOffEventPattern, TimeTrackerSettings } from "@/types";
+import { SettingPageLayout } from "../../components";
 import { IgnorableEventsNavigationPage } from "./IgnorableEventsNavigationPage";
 import { TimeOffEventsNavigationPage } from "./TimeOffEventsNavigationPage";
 import {
@@ -22,7 +18,7 @@ type SettingView = "main" | "ignorableEvents" | "timeOffEvents";
 export function TimeTrackerSettingsPage() {
     const [currentView, setCurrentView] = useState<SettingView>("main");
     const { settings, updateSettings, validationErrors } = useSettings();
-    const tt = settings.timetracker as TimeTrackerSettingsType;
+    const tt = settings.timetracker as TimeTrackerSettings;
     const errors = validationErrors.timeTracker;
 
     const handleIgnorableEventsChange = (patterns: IgnorableEventPattern[]) => {

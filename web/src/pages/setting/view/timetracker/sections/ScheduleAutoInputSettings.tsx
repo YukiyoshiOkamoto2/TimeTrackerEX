@@ -2,9 +2,8 @@
  * 勤務時間自動入力設定セクション
  */
 
+import { AutoSettingItem, SettingSection } from "@/pages/setting/components";
 import { TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO } from "@/schema";
-import { SettingSection } from "../../../layout";
-import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
 const scheduleAutoInputInfoDef = TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO.getTypedChildren()!;
