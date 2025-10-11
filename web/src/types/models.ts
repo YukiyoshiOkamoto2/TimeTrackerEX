@@ -140,8 +140,6 @@ export interface WorkItem extends WorkItemChldren {
 export interface DayTask {
     /** 基準日 */
     baseDate: Date;
-    /** プロジェクト情報 */
-    project: Project;
     /** 通常イベントのリスト */
     events: Event[];
     /** 勤務時間イベントのリスト */

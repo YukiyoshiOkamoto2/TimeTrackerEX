@@ -17,6 +17,7 @@ import {
     PaidLeaveInputInfo,
     ScheduleAutoInputInfo,
     ScheduleUtils,
+    WorkItem,
     WorkItemChldren,
     type DayTask,
     type Event,
@@ -36,6 +37,7 @@ import {
     LinkingWorkItem,
 } from "../models/linking";
 import { LinkingStatistics, TaskStatistics } from "../models/statistics";
+import { getMostNestChildren } from "@/types/utils";
 
 const logger = getLogger("TimeTrackerLogic");
 
@@ -152,7 +154,6 @@ function splitEventsByDay(
 function createPaidLeaveDayTasks(
     schedules: Schedule[],
     paidLeaveConfig: PaidLeaveInputInfo | undefined,
-    project: Project,
     workItems: WorkItemChldren[],
 ): DayTask[] {
     if (!paidLeaveConfig) {
@@ -200,7 +201,6 @@ function createPaidLeaveDayTasks(
         // DayTaskを作成
         dayTasks.push({
             baseDate: ScheduleUtils.getBaseDate(paidLeaveEvent.schedule),
-            project,
             events: [paidLeaveEvent],
             scheduleEvents: [],
         });
@@ -395,82 +395,66 @@ function filterSheduleRangeEvent(
     return [filteredDayTasks, excludedEvents];
 }
 
+type ValidateItem = "timeOffEvent" | "scheduleAutoInput" | "paidLeaveInput"
 /**
  * WorkItemとProjectの存在を検証し、無効な設定をクリアした新しい設定を返す
  *
  * @param settings - 検証対象のTimeTracker設定
  * @param workItems - 有効なWorkItemのリスト
- * @param projects - 有効なProjectのリスト（オプション）
  * @returns 更新された設定とクリアされた項目数
  */
 export function validateAndCleanupSettings(
     settings: TimeTrackerSettings,
-    workItems: WorkItemChldren[],
-    projects?: Project[],
-): { settings: TimeTrackerSettings; cleanedCount: number } {
-    let cleanedCount = 0;
+    workItems: WorkItem[],
+): { settings: TimeTrackerSettings; items: ValidateItem[] } {
+    const items: ValidateItem[] = [];
     const updates: Partial<TimeTrackerSettings> = {};
+    const validWorkItemIds = new Set(getMostNestChildren(workItems).map(w => w.id));
 
-    // WorkItemIDのセット（高速検索用）
-    const validWorkItemIds = new Set(workItems.map((wi) => Number(wi.id)));
-
-    // 1. baseProjectId の検証
-    if (settings.baseProjectId !== null) {
-        // プロジェクトリストが提供されている場合のみ検証
-        if (projects && projects.length > 0) {
-            const projectExists = projects.some((p) => Number(p.projectId) === settings.baseProjectId);
-            if (!projectExists) {
-                logger.warn(`baseProjectId (${settings.baseProjectId}) が存在しないため、nullに設定します`);
-                updates.baseProjectId = null;
-                cleanedCount++;
-            }
-        }
-    }
-
-    // 2. timeOffEvent.workItemId の検証
+    // 1. timeOffEvent.workItemId の検証
     if (settings.timeOffEvent?.workItemId) {
-        if (!validWorkItemIds.has(settings.timeOffEvent.workItemId)) {
+        if (!validWorkItemIds.has(String(settings.timeOffEvent.workItemId))) {
             logger.warn(`timeOffEvent.workItemId (${settings.timeOffEvent.workItemId}) が存在しないため、削除します`);
             updates.timeOffEvent = undefined;
-            cleanedCount++;
+            items.push("timeOffEvent")
         }
     }
 
-    // 3. scheduleAutoInputInfo.workItemId の検証
+    // 2. scheduleAutoInputInfo.workItemId の検証
     if (settings.scheduleAutoInputInfo?.workItemId) {
-        if (!validWorkItemIds.has(settings.scheduleAutoInputInfo.workItemId)) {
+        if (!validWorkItemIds.has(String(settings.scheduleAutoInputInfo.workItemId))) {
             logger.warn(
                 `scheduleAutoInputInfo.workItemId (${settings.scheduleAutoInputInfo.workItemId}) が存在しないため、workItemIdを0に設定します`,
             );
             updates.scheduleAutoInputInfo = {
                 ...settings.scheduleAutoInputInfo,
-                workItemId: 0,
+                workItemId: -1,
             };
-            cleanedCount++;
+            items.push("scheduleAutoInput")
         }
     }
 
-    // 4. paidLeaveInputInfo.workItemId の検証
+    // 3. paidLeaveInputInfo.workItemId の検証
     if (settings.paidLeaveInputInfo?.workItemId) {
-        if (!validWorkItemIds.has(settings.paidLeaveInputInfo.workItemId)) {
+        if (!validWorkItemIds.has(String(settings.paidLeaveInputInfo.workItemId))) {
             logger.warn(
                 `paidLeaveInputInfo.workItemId (${settings.paidLeaveInputInfo.workItemId}) が存在しないため、削除します`,
             );
             updates.paidLeaveInputInfo = undefined;
-            cleanedCount++;
+            items.push("paidLeaveInput")
         }
     }
 
-    if (cleanedCount > 0) {
-        logger.info(`${cleanedCount}件の無効な設定をクリアしました`);
+    if (items.length > 0) {
+        logger.warn(`${items.length}件の無効な設定をクリアしました`);
     }
 
     return {
+        items,
         settings: {
             ...settings,
             ...updates,
         },
-        cleanedCount,
     };
 }
 
@@ -500,7 +484,7 @@ export async function performAutoLinking(input: AutoLinkingInput): Promise<AutoL
     const [filteredDayTasks, excludedScheduleEvents] = filterSheduleRangeEvent(dayTasksResult, enableSchedules);
 
     // 5. 有給休暇の日別タスクを生成
-    const paidLeaveDayTasks = createPaidLeaveDayTasks(schedules, settings.paidLeaveInputInfo, project, workItems);
+    const paidLeaveDayTasks = createPaidLeaveDayTasks(schedules, settings.paidLeaveInputInfo, workItems);
     logger.info(`有給休暇タスク: ${paidLeaveDayTasks.length}日分`);
 
     // 6. 通常のタスクと有給休暇タスクを結合

@@ -101,8 +101,8 @@ const useStyles = makeStyles({
 const columnSizingOptions = {
     dateTime: { minWidth: 150, idealWidth: 200 },
     eventName: { minWidth: 250, idealWidth: 400 },
-    inputType: { minWidth: 120, idealWidth: 140 },
-    workItemId: { minWidth: 120, idealWidth: 160 },
+    inputType: { minWidth: 120, idealWidth: 120 },
+    workItemId: { minWidth: 140, idealWidth: 160 },
     workItemName: { minWidth: 250, idealWidth: 400 },
 };
 

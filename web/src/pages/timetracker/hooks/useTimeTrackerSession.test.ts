@@ -59,7 +59,6 @@ function expectOk<T>(r: APIResult<T>): asserts r is { isError: false; content: T
 }
 function expectErr(r: APIResult): asserts r is { isError: true; errorMessage: string } {
     expect(r.isError).toBe(true);
-    // @ts-expect-error 型ナロー
     expect(r.errorMessage).toBeTruthy();
 }
 async function withAct<T>(fn: () => Promise<T>): Promise<T> {

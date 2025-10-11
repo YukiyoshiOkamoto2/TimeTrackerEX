@@ -43,6 +43,35 @@ export function formatDateKey(date: Date): string {
 }
 
 /**
+ * 日付と時刻を日本語形式でフォーマット
+ * 
+ * @param start - 開始日時
+ * @param end - 終了日時（nullの場合は開始時刻のみ表示）
+ * @returns フォーマットされた日時文字列
+ * 
+ * @example
+ * formatDateTime(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 18, 0))
+ * // "2024/2/3 (土)　09:00～18:00"
+ * 
+ * formatDateTime(new Date(2024, 1, 3, 9, 0), null)
+ * // "2024/2/3 (土)　09:00"
+ */
+export function formatDateTime(start: Date, end: Date | null): string {
+    const dateStr = start.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        weekday: "short",
+    });
+
+    const timeStr = end
+        ? `${start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}～${end.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`
+        : start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+
+    return `${dateStr}　${timeStr}`;
+}
+
+/**
  * 日付の時刻部分を00:00:00.000にリセット
  * 
  * @param date - リセットする日付

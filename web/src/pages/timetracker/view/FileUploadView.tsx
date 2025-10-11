@@ -6,7 +6,7 @@ import { parseICS } from "@/core/ics";
 import { parsePDF } from "@/core/pdf";
 import { getLogger } from "@/lib";
 import { useSettings } from "@/store/settings/SettingsProvider";
-import { Event, Schedule, ScheduleUtils } from "@/types";
+import { Event, Schedule, ScheduleUtils, WorkItem } from "@/types";
 import {
     Button,
     createTableColumn,
@@ -26,8 +26,10 @@ import {
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
-import { useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
+import { ProjectAndWorkItem, useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { ICS, PDF, UploadInfo } from "../models";
+import { formatDateTime } from "@/lib/dateUtil";
+import { validateAndCleanupSettings } from "../services";
 
 // CheckedTableItemの型定義
 type CheckedTableItem = {
@@ -181,22 +183,6 @@ export type FileUploadViewProps = {
 const isPdfFile = (file: File) => file.type === "application/pdf";
 const isIcsFile = (file: File) => file.name.endsWith(".ics") || file.type === "text/calendar";
 
-// 日付フォーマット用ヘルパー（共通）
-const formatDateTime = (start: Date, end: Date | null) => {
-    const dateStr = start.toLocaleDateString("ja-JP", {
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        weekday: "short",
-    });
-
-    const timeStr = end
-        ? `${start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}～${end.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`
-        : start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
-
-    return `${dateStr}　${timeStr}`;
-};
-
 const getScheduleAsync = async (file: File) => {
     let result;
     try {
@@ -313,10 +299,10 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
 
     // 設定を取得
     const { settings, updateSettings } = useSettings();
-    const timeTrackerSettings = settings.timetracker;
+    const timeTrackerSettings = settings.timetracker!;
 
     // セッション管理
-    const sessionHook = useTimeTrackerSession({
+    const { Dialog, isAuthenticated, ...sessionHook } = useTimeTrackerSession({
         baseUrl: timeTrackerSettings?.baseUrl || "",
         userName: timeTrackerSettings?.userName || "",
     });
@@ -392,62 +378,40 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
         event.stopPropagation();
     };
 
-    // 認証チェック
-    const ensureAuthenticated = async (): Promise<boolean> => {
-        if (sessionHook.isAuthenticated) return true;
-
-        await sessionHook.authenticateWithDialog();
-        return sessionHook.isAuthenticated;
-    };
-
-    // プロジェクトID検証
-    const validateProjectId = async (): Promise<string | null> => {
-        if (!timeTrackerSettings?.baseProjectId) {
-            await appMessageDialogRef.showMessageAsync(
-                "設定エラー",
-                "TimeTrackerのプロジェクトIDが設定されていません。\n設定画面でプロジェクトIDを設定してください。",
-                "ERROR",
-            );
-            return null;
-        }
-        return String(timeTrackerSettings.baseProjectId);
-    };
-
     // プロジェクト情報取得
-    const fetchProjectData = async (projectId: string): Promise<boolean> => {
-        if (sessionHook.project && sessionHook.workItems) return true;
+    const fetchProjectData = async (projectId: string): Promise<ProjectAndWorkItem | undefined> => {
 
-        await sessionHook.fetchProjectAndWorkItems(projectId, async () => {
+        const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId, async () => {
             // プロジェクトID取得失敗時は設定をクリア
             if (timeTrackerSettings) {
                 updateSettings({
                     timetracker: {
                         ...timeTrackerSettings,
-                        baseProjectId: null,
+                        baseProjectId: -1,
                     },
                 });
             }
             await appMessageDialogRef.showMessageAsync(
                 "設定エラー",
-                "プロジェクトIDが無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。",
+                `プロジェクトID ( ${projectId} ) が無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。`,
                 "ERROR",
             );
         });
 
-        if (!sessionHook.project || !sessionHook.workItems) {
+        if (result.isError) {
             await appMessageDialogRef.showMessageAsync(
-                "データ取得エラー",
-                "TimeTrackerからプロジェクト情報を取得できませんでした。",
+                "TimeTrackerデータ取得エラー",
+                result.errorMessage,
                 "ERROR",
             );
-            return false;
+            return;
         }
 
-        return true;
+        return result.content;
     };
 
     // 履歴管理の更新
-    const updateHistory = (workItems: typeof sessionHook.workItems) => {
+    const updateHistory = (workItems: WorkItem[]) => {
         const historyManager = new HistoryManager();
         historyManager.load();
         historyManager.checkWorkItemId(workItems!);
@@ -475,18 +439,40 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
     const handleLinkedClick = async () => {
         setIsLoading(true);
         try {
-            // Step 1: 認証チェック
-            if (!(await ensureAuthenticated())) return;
 
-            // Step 2: プロジェクトID検証
-            const projectId = await validateProjectId();
-            if (!projectId) return;
+            if (!isAuthenticated) {
+                // 認証チェック
+                const authResult = await sessionHook.authenticateAsync();
+                if (authResult.isError) {
+                    await appMessageDialogRef.showMessageAsync(
+                        "認証エラー",
+                        "TimeTrackerの認証に失敗しました。",
+                        "ERROR",
+                    );
+                    return;
+                }
+            }
 
-            // Step 3: プロジェクト情報取得
-            if (!(await fetchProjectData(projectId))) return;
+            // プロジェクト情報取得
+            const itemResult = await fetchProjectData(String(timeTrackerSettings.baseProjectId))
+            if (!itemResult) {
+                return;
+            }
 
-            // Step 4: 履歴の更新
-            updateHistory(sessionHook.workItems);
+            // 履歴の更新
+            updateHistory(itemResult.workItems);
+
+            // 設定の更新
+            const cleanResult = validateAndCleanupSettings(timeTrackerSettings, itemResult.workItems)
+            if (cleanResult.items.length > 0) {
+                await appMessageDialogRef.showMessageAsync(
+                    "設定エラー",
+                    `設定項目に不正なIDが存在します。削除しました。（ ${cleanResult.items.length}件 ）\n\n` +
+                    cleanResult.items.map(i => "・ " + i).join("\n"),
+                    "ERROR",
+                );
+                return;
+            }
 
             // Step 5: 選択済みデータのフィルタリング
             const filteredPdf = filterSelectedSchedule();
@@ -497,8 +483,8 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
                 onSubmit({
                     pdf: filteredPdf,
                     ics: filteredIcs,
-                    project: sessionHook.project!,
-                    workItems: sessionHook.workItems!,
+                    project: itemResult.project,
+                    workItems: itemResult.workItems,
                 });
             }
         } catch (error) {
@@ -719,16 +705,7 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
                     icon={<Link24Regular />}
                 />
             </div>
-            {/* <PasswordInputDialog
-                open={sessionHook.isPasswordDialogOpen}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        sessionHook.clearError();
-                    }
-                }}
-                onSubmit={sessionHook.authenticateWithPassword}
-                userName={timeTrackerSettings?.userName || ""}
-            /> */}
+            <Dialog />
         </>
     );
 }

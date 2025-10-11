@@ -59,7 +59,7 @@ export type ProjectAndWorkItem = {
 export interface TimeTrackerSessionHook {
     // コンポーネント
     /** パスワード入力ダイアログ */
-    dialog: () => JSX.Element;
+    Dialog: () => JSX.Element;
 
     // 状態
     /** 認証済みかどうか */
@@ -149,11 +149,11 @@ export function useTimeTrackerSession({
     /**
      * パスワード入力ダイアログコンポーネント
      */
-    const dialog = useCallback(() => {
+    const Dialog = useCallback(() => {
         /**
          * パスワードによる認証処理
          */
-        const authenticateWithPassword = async (pwd: string): Promise<TimeTrackerAPIResult> => {
+        const authenticateWithPassword = async (pwd: string): Promise<void> => {
             try {
                 // 認証実行（sessionStorageに保存される）
                 await authenticateWithPasswordAsync(baseUrl, userName, pwd, tokenExpirationMinutes);
@@ -172,15 +172,12 @@ export function useTimeTrackerSession({
                     authenticateResolveRef.current(result);
                     authenticateResolveRef.current = null;
                 }
-                return result;
+                return;
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : "認証に失敗しました";
                 logger.error("認証に失敗しました:", errorMessage);
                 // 認証失敗はダイアログ内でエラー表示するだけで、Promiseは解決しない
-                return {
-                    isError: true,
-                    errorMessage,
-                };
+                throw new Error("errorMessage");
             }
         };
 
@@ -316,7 +313,7 @@ export function useTimeTrackerSession({
 
     return {
         // Component
-        dialog,
+        Dialog,
 
         // State
         isAuthenticated,

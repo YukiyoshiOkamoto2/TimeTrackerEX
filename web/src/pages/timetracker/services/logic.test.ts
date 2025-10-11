@@ -6,7 +6,7 @@
 
 import type { DayTask, Event, EventWorkItemPair, Project, Schedule, WorkItem } from "@/types";
 import type { TimeTrackerSettings } from "@/types/settings";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AutoLinkingInput, AutoLinkingResult, LinkingEventWorkItemPair } from "../models/linking";
 import { calculateLinkingStatistics, performAutoLinking } from "./logic";
 
@@ -54,13 +54,6 @@ vi.mock("@/core/algorithm", () => ({
                     baseDate.setHours(0, 0, 0, 0);
                     taskMap.set(dateKey, {
                         baseDate,
-                        project: {
-                            id: "project-1",
-                            name: "テストプロジェクト",
-                            projectId: "1",
-                            projectName: "テストプロジェクト",
-                            projectCode: "TEST",
-                        },
                         events: [],
                         scheduleEvents: [],
                     });
@@ -972,23 +965,19 @@ describe("TimeTrackerLogic", () => {
                 { id: "3", name: "WI3", folderName: "Folder3", folderPath: "/Folder3" },
             ];
 
-            const projects: Project[] = [
-                { id: "100", projectId: "100", name: "Project1", projectName: "Project1", projectCode: "P1" },
-            ];
+            const result = validateAndCleanupSettings(settings, workItems);
 
-            const result = validateAndCleanupSettings(settings, workItems, projects);
-
-            expect(result.cleanedCount).toBe(0);
+            expect(result.items.length).toBe(0);
             expect(result.settings).toEqual(settings);
         });
 
-        it("存在しないbaseProjectIdをnullに設定する", async () => {
+        it("存在しないbaseProjectIdは検証対象外(削除済み)", async () => {
             const { validateAndCleanupSettings } = await import("./logic");
 
             const settings: TimeTrackerSettings = {
                 ...mockSettings,
-                baseProjectId: 999, // 存在しないプロジェクト
-                timeOffEvent: undefined, // 他の設定をクリア
+                baseProjectId: 999, // baseProjectIdは検証されない
+                timeOffEvent: undefined,
                 paidLeaveInputInfo: undefined,
                 scheduleAutoInputInfo: {
                     ...mockSettings.scheduleAutoInputInfo,
@@ -997,14 +986,11 @@ describe("TimeTrackerLogic", () => {
             };
 
             const workItems = [{ id: "1", name: "WI1", folderName: "Folder1", folderPath: "/Folder1" }];
-            const projects: Project[] = [
-                { id: "100", projectId: "100", name: "Project1", projectName: "Project1", projectCode: "P1" },
-            ];
 
-            const result = validateAndCleanupSettings(settings, workItems, projects);
+            const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(1);
-            expect(result.settings.baseProjectId).toBeNull();
+            expect(result.items.length).toBe(0);
+            expect(result.settings.baseProjectId).toBe(999); // 変更なし
         });
 
         it("存在しないtimeOffEvent.workItemIdを削除する", async () => {
@@ -1012,7 +998,7 @@ describe("TimeTrackerLogic", () => {
 
             const settings: TimeTrackerSettings = {
                 ...mockSettings,
-                baseProjectId: null,
+                baseProjectId: 1,
                 timeOffEvent: { namePatterns: [], workItemId: 999 }, // 存在しないWorkItem
                 paidLeaveInputInfo: undefined,
                 scheduleAutoInputInfo: {
@@ -1025,16 +1011,16 @@ describe("TimeTrackerLogic", () => {
 
             const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(1);
+            expect(result.items.length).toBe(1);
             expect(result.settings.timeOffEvent).toBeUndefined();
         });
 
-        it("存在しないscheduleAutoInputInfo.workItemIdを0に設定する", async () => {
+        it("存在しないscheduleAutoInputInfo.workItemIdを-1に設定する", async () => {
             const { validateAndCleanupSettings } = await import("./logic");
 
             const settings: TimeTrackerSettings = {
                 ...mockSettings,
-                baseProjectId: null,
+                baseProjectId: 1,
                 timeOffEvent: undefined,
                 paidLeaveInputInfo: undefined,
                 scheduleAutoInputInfo: {
@@ -1047,8 +1033,8 @@ describe("TimeTrackerLogic", () => {
 
             const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(1);
-            expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(0);
+            expect(result.items.length).toBe(1);
+            expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(-1);
         });
 
         it("存在しないpaidLeaveInputInfo.workItemIdを削除する", async () => {
@@ -1056,7 +1042,7 @@ describe("TimeTrackerLogic", () => {
 
             const settings: TimeTrackerSettings = {
                 ...mockSettings,
-                baseProjectId: null,
+                baseProjectId: 1,
                 timeOffEvent: undefined,
                 paidLeaveInputInfo: { workItemId: 999, startTime: "09:00", endTime: "18:00" }, // 存在しないWorkItem
                 scheduleAutoInputInfo: {
@@ -1069,7 +1055,7 @@ describe("TimeTrackerLogic", () => {
 
             const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(1);
+            expect(result.items.length).toBe(1);
             expect(result.settings.paidLeaveInputInfo).toBeUndefined();
         });
 
@@ -1088,25 +1074,21 @@ describe("TimeTrackerLogic", () => {
             };
 
             const workItems = [{ id: "1", name: "WI1", folderName: "Folder1", folderPath: "/Folder1" }];
-            const projects: Project[] = [
-                { id: "100", projectId: "100", name: "Project1", projectName: "Project1", projectCode: "P1" },
-            ];
 
-            const result = validateAndCleanupSettings(settings, workItems, projects);
+            const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(4);
-            expect(result.settings.baseProjectId).toBeNull();
+            expect(result.items.length).toBe(3);
             expect(result.settings.timeOffEvent).toBeUndefined();
-            expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(0);
+            expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(-1);
             expect(result.settings.paidLeaveInputInfo).toBeUndefined();
         });
 
-        it("baseProjectIdがnullの場合は検証をスキップする", async () => {
+        it("すべての設定が有効な場合は何もクリアしない", async () => {
             const { validateAndCleanupSettings } = await import("./logic");
 
             const settings: TimeTrackerSettings = {
                 ...mockSettings,
-                baseProjectId: null,
+                baseProjectId: 1,
                 timeOffEvent: { namePatterns: [], workItemId: 1 }, // 存在するWorkItem
                 paidLeaveInputInfo: { workItemId: 1, startTime: "09:00", endTime: "18:00" },
                 scheduleAutoInputInfo: {
@@ -1116,22 +1098,19 @@ describe("TimeTrackerLogic", () => {
             };
 
             const workItems = [{ id: "1", name: "WI1", folderName: "Folder1", folderPath: "/Folder1" }];
-            const projects: Project[] = [
-                { id: "100", projectId: "100", name: "Project1", projectName: "Project1", projectCode: "P1" },
-            ];
 
-            const result = validateAndCleanupSettings(settings, workItems, projects);
+            const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(0);
-            expect(result.settings.baseProjectId).toBeNull();
+            expect(result.items.length).toBe(0);
+            expect(result.settings.baseProjectId).toBe(1);
         });
 
-        it("プロジェクトリストが提供されない場合はbaseProjectIdの検証をスキップする", async () => {
+        it("baseProjectIdは検証対象外", async () => {
             const { validateAndCleanupSettings } = await import("./logic");
 
             const settings: TimeTrackerSettings = {
                 ...mockSettings,
-                baseProjectId: 999, // 存在しないが検証されない
+                baseProjectId: 999, // baseProjectIdは検証されない
                 timeOffEvent: { namePatterns: [], workItemId: 1 }, // 存在するWorkItem
                 paidLeaveInputInfo: { workItemId: 1, startTime: "09:00", endTime: "18:00" },
                 scheduleAutoInputInfo: {
@@ -1142,13 +1121,13 @@ describe("TimeTrackerLogic", () => {
 
             const workItems = [{ id: "1", name: "WI1", folderName: "Folder1", folderPath: "/Folder1" }];
 
-            const result = validateAndCleanupSettings(settings, workItems); // projectsを渡さない
+            const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(0);
+            expect(result.items.length).toBe(0);
             expect(result.settings.baseProjectId).toBe(999);
         });
 
-        it("空のプロジェクトリストの場合はbaseProjectIdの検証をスキップする", async () => {
+        it("WorkItem設定のみを検証する", async () => {
             const { validateAndCleanupSettings } = await import("./logic");
 
             const settings: TimeTrackerSettings = {
@@ -1163,11 +1142,10 @@ describe("TimeTrackerLogic", () => {
             };
 
             const workItems = [{ id: "1", name: "WI1", folderName: "Folder1", folderPath: "/Folder1" }];
-            const projects: Project[] = []; // 空のリスト
 
-            const result = validateAndCleanupSettings(settings, workItems, projects);
+            const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(0);
+            expect(result.items.length).toBe(0);
             expect(result.settings.baseProjectId).toBe(999);
         });
 
@@ -1176,7 +1154,7 @@ describe("TimeTrackerLogic", () => {
 
             const settings: TimeTrackerSettings = {
                 ...mockSettings,
-                baseProjectId: null,
+                baseProjectId: 1,
                 timeOffEvent: undefined,
                 paidLeaveInputInfo: undefined,
                 scheduleAutoInputInfo: {
@@ -1189,7 +1167,7 @@ describe("TimeTrackerLogic", () => {
 
             const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(0);
+            expect(result.items.length).toBe(0);
             expect(result.settings.timeOffEvent).toBeUndefined();
             expect(result.settings.paidLeaveInputInfo).toBeUndefined();
         });
@@ -1198,7 +1176,7 @@ describe("TimeTrackerLogic", () => {
             const { validateAndCleanupSettings } = await import("./logic");
             const settings: TimeTrackerSettings = {
                 ...mockSettings,
-                baseProjectId: null,
+                baseProjectId: 1,
                 timeOffEvent: { namePatterns: [], workItemId: 1 },
                 paidLeaveInputInfo: { workItemId: 1, startTime: "09:00", endTime: "18:00" },
                 scheduleAutoInputInfo: {
@@ -1213,7 +1191,7 @@ describe("TimeTrackerLogic", () => {
 
             const result = validateAndCleanupSettings(settings, workItems);
 
-            expect(result.cleanedCount).toBe(0);
+            expect(result.items.length).toBe(0);
             expect(result.settings.timeOffEvent?.workItemId).toBe(1);
         });
     });
@@ -1466,15 +1444,15 @@ describe("TimeTrackerLogic Additional Branch Cases", () => {
         const { validateAndCleanupSettings } = await import("./logic");
         const settings: TimeTrackerSettings = {
             ...baseSettings,
-            baseProjectId: null,
+            baseProjectId: 1,
             timeOffEvent: { namePatterns: [], workItemId: 10 },
             scheduleAutoInputInfo: { ...baseSettings.scheduleAutoInputInfo, workItemId: 11 },
             paidLeaveInputInfo: { workItemId: 12, startTime: "09:00", endTime: "18:00" },
         };
         const result = validateAndCleanupSettings(settings, []); // workItems 空
-        expect(result.cleanedCount).toBe(3);
+        expect(result.items.length).toBe(3);
         expect(result.settings.timeOffEvent).toBeUndefined();
-        expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(0);
+        expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(-1);
         expect(result.settings.paidLeaveInputInfo).toBeUndefined();
     });
 });
@@ -1706,7 +1684,7 @@ describe("TimeTrackerLogic 境界値テスト", () => {
             paidLeaveInputInfo: { workItemId: 400, startTime: "09:00", endTime: "18:00" },
         };
         const result = validateAndCleanupSettings(settings, workItems);
-        expect(result.cleanedCount).toBe(0);
+        expect(result.items.length).toBe(0);
         expect(result.settings.timeOffEvent?.workItemId).toBe(10);
         expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(11);
         expect(result.settings.paidLeaveInputInfo?.workItemId).toBe(400);

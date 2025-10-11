@@ -24,7 +24,6 @@ export const ScheduleUtils = {
 
     /**
      * 基準日を取得
-     * @deprecated Use resetTime from @/lib/dateUtil instead
      */
     getBaseDate(schedule: Schedule): Date {
         const date = schedule.start || schedule.end;

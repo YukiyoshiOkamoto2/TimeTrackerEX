@@ -135,7 +135,7 @@ const useStyles = makeStyles({
 export interface PasswordInputDialogProps {
     open: boolean;
     onCancel: () => void;
-    onSubmit: (password: string) => Promise<{ isError: boolean }>;
+    onSubmit: (password: string) => Promise<void>;
     userName: string;
 }
 
@@ -154,15 +154,9 @@ export function PasswordInputDialog({ open, onCancel, onSubmit, userName }: Pass
         setIsSubmitting(true);
         setError(null);
         try {
-            const result = await onSubmit(password);
-            if (result.isError) {
-                setError((result as any).errorMessage);
-            } else {
-                // 成功したらダイアログを閉じる（状態をリセット）
-                setPassword("");
-                setError(null);
-                // 注意: onCancelは呼ばない（親コンポーネントで制御される）
-            }
+            await onSubmit(password);
+            setPassword("");
+            setError(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : "認証に失敗しました");
         } finally {

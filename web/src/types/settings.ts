@@ -79,7 +79,7 @@ export interface TimeTrackerSettings {
     /** TimeTrackerのベースURL */
     baseUrl: string;
     /** プロジェクトID (無効な場合はnull) */
-    baseProjectId: number | null;
+    baseProjectId: number;
     /** 履歴からのスケジュール自動入力 */
     isHistoryAutoInput?: boolean;
     /** イベント時間の丸め方法 */

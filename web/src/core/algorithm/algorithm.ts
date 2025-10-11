@@ -1,4 +1,4 @@
-import { getCurrentDate, getLogger } from "@/lib";
+import { formatDateKey, getCurrentDate, getLogger } from "@/lib";
 import type {
     DayTask,
     Event,
@@ -11,20 +11,31 @@ import type {
     WorkingEventType,
 } from "@/types";
 import { createEvent, EventUtils, ScheduleUtils } from "@/types/utils";
+import { resetTime } from '../../lib/dateUtil';
 
 const logger = getLogger("TimeTrackerAlgorithm");
+
+const debug = false
+const debugLog = (str: string) => {
+    if (debug) {
+        logger.info(str)
+    }
+}
 
 /**
  * TimeTracker アルゴリズム
  */
 export class TimeTrackerAlgorithm {
+    private readonly maxTime = 6 * 60 * 60 * 1000; // 6時間
+    private readonly maxOld = 30; // 30日
     private readonly roundingTimeUnit = 30;
     private readonly project: Project;
     private readonly eventInputInfo: EventInputInfo;
     private readonly scheduleInputInfo: ScheduleInputInfo;
 
     constructor(project: Project, eventInputInfo: EventInputInfo, scheduleInputInfo: ScheduleInputInfo) {
-        logger.info(`アルゴリズム初期化: プロジェクト=${project.name}`);
+        logger.info(`アルゴリズム初期化: プロジェクト=${project.name}, 設定: 丸め単位=${this.roundingTimeUnit}分, 開始終了時間=${scheduleInputInfo.startEndTime}分`);
+
         this.project = project;
         this.eventInputInfo = eventInputInfo;
         this.scheduleInputInfo = scheduleInputInfo;
@@ -39,14 +50,12 @@ export class TimeTrackerAlgorithm {
             logger.error(errorMsg);
             throw new Error(errorMsg);
         }
-
-        logger.debug(`設定: 丸め単位=${this.roundingTimeUnit}分, 開始終了時間=${scheduleInputInfo.startEndTime}分`);
     }
 
     /**
      * イベントまたはスケジュールが重複しているかを判定
      */
-    private isDuplicateEventOrSchedule(eventOrSchedule: Event | Schedule, events: Event[]): boolean {
+    public isDuplicateEventOrSchedule(eventOrSchedule: Event | Schedule, events: Event[]): boolean {
         const isTypeEvent = "uuid" in eventOrSchedule;
         const targetSchedule = isTypeEvent ? eventOrSchedule.schedule : eventOrSchedule;
 
@@ -88,6 +97,7 @@ export class TimeTrackerAlgorithm {
         roundingTimeType: RoundingTimeType,
         events: Event[] = [],
     ): Schedule | null {
+
         if (roundingTimeType === "nonduplicate" && !events) {
             throw new Error("イベントが未設定です。");
         }
@@ -170,6 +180,11 @@ export class TimeTrackerAlgorithm {
             }
         }
 
+        debugLog(`===スケジュールの丸め込み処理 ( Type: ${roundingTimeType}, Event: ${events.length}件 )===`)
+        debugLog(`BEFORE: ${ScheduleUtils.getText(schedule)}`)
+        debugLog(`AFTER: ${ScheduleUtils.getText({ ...schedule, start, end })}`)
+        debugLog(`======================================================`)
+
         if (
             start.getTime() === end.getTime() ||
             start > end ||
@@ -192,7 +207,7 @@ export class TimeTrackerAlgorithm {
     public scheduleToEvent(schedule: Schedule, scheduleInputInfo: ScheduleInputInfo, events: Event[]): Event[] {
         if (schedule.isHoliday || !schedule.end || schedule.errorMessage) {
             const errorMsg = "スケジュールが休日またはエラーのためイベントに変換できません。";
-            logger.debug(errorMsg);
+            logger.error(errorMsg);
             throw new Error(errorMsg);
         }
 
@@ -222,14 +237,7 @@ export class TimeTrackerAlgorithm {
                     };
                 }
 
-                const isDuplicate = this.isDuplicateEventOrSchedule(roundedStartSchedule, events);
-                if (!isDuplicate) {
-                    result.push(getEvent("勤務開始", roundedStartSchedule, "start"));
-                } else {
-                    logger.debug(
-                        `勤務開始イベントが既存イベントと重複のためスキップ: ${ScheduleUtils.getText(roundedStartSchedule)}`,
-                    );
-                }
+                result.push(getEvent("勤務開始", roundedStartSchedule, "start"));
             }
         }
 
@@ -252,14 +260,7 @@ export class TimeTrackerAlgorithm {
                     };
                 }
 
-                const isDuplicate = this.isDuplicateEventOrSchedule(roundedEndSchedule, events);
-                if (!isDuplicate) {
-                    result.push(getEvent("勤務終了", roundedEndSchedule, "end"));
-                } else {
-                    logger.debug(
-                        `勤務終了イベントが既存イベントと重複のためスキップ: ${ScheduleUtils.getText(roundedEndSchedule)}`,
-                    );
-                }
+                result.push(getEvent("勤務終了", roundedEndSchedule, "end"));
             }
         }
 
@@ -344,6 +345,12 @@ export class TimeTrackerAlgorithm {
             }
         }
 
+        debugLog(`===スケジュールtoイベント変換 ( Type: ${startEndType}, Event: ${events.length}件 )===`)
+        debugLog(`BASE: ${ScheduleUtils.getText(schedule)}`)
+        debugLog(`RESULT: ${result.length}件`)
+        result.forEach(r => debugLog(`---> ${EventUtils.getText(r)}`))
+        debugLog(`===================================================================================`)
+
         return result;
     }
 
@@ -376,13 +383,13 @@ export class TimeTrackerAlgorithm {
                 ),
                 end: event.schedule.end
                     ? new Date(
-                          recurrence.getFullYear(),
-                          recurrence.getMonth(),
-                          recurrence.getDate(),
-                          event.schedule.end.getHours(),
-                          event.schedule.end.getMinutes(),
-                          event.schedule.end.getSeconds(),
-                      )
+                        recurrence.getFullYear(),
+                        recurrence.getMonth(),
+                        recurrence.getDate(),
+                        event.schedule.end.getHours(),
+                        event.schedule.end.getMinutes(),
+                        event.schedule.end.getSeconds(),
+                    )
                     : undefined,
             };
 
@@ -391,6 +398,11 @@ export class TimeTrackerAlgorithm {
             result.push(newEvent);
         }
 
+        debugLog(`===繰り返しイベントを取得 ( ${EventUtils.getText(event)} )===`)
+        debugLog(`RESULT: ${result.length}件`)
+        result.forEach(r => debugLog(`---> ${EventUtils.getText(r)}`))
+        debugLog(`============================================================`)
+
         return result;
     }
 
@@ -398,28 +410,30 @@ export class TimeTrackerAlgorithm {
      * イベントのチェック処理
      */
     private checkEvent(events: Event[]): Event[] {
-        const maxTime = 6 * 60 * 60 * 1000; // 6時間
-        const maxOld = 30; // 30日
         const now = getCurrentDate();
-        const old = new Date(now.getTime() - maxOld * 24 * 60 * 60 * 1000);
+        const old = new Date(now.getTime() - this.maxOld * 24 * 60 * 60 * 1000);
 
         const result: Event[] = [];
+        const logText = [];
 
         for (const event of events) {
             const range = ScheduleUtils.getRange(event.schedule);
 
             // 6時間以上のイベントは削除
-            if (range && range > maxTime) {
+            if (range && range > this.maxTime) {
+                logText.push(`6時間以上: ${EventUtils.getText(event)}`)
                 continue;
             }
 
             // 未来のイベントは削除（開始時刻が現在より未来）
             if (event.schedule.start > now) {
+                logText.push(`未来のイベント: ${EventUtils.getText(event)}`)
                 continue;
             }
 
             // 30日以上前のイベントは削除
             if (event.schedule.end && event.schedule.end < old) {
+                logText.push(`30日以上前のイベント: ${EventUtils.getText(event)}`)
                 continue;
             }
 
@@ -429,11 +443,17 @@ export class TimeTrackerAlgorithm {
                 event.schedule.start.getTime() === event.schedule.end.getTime() ||
                 (range && range < this.roundingTimeUnit * 60 * 1000)
             ) {
+                logText.push(`開始時間と終了時間が同じ、または丸め単位よりも小さい: ${EventUtils.getText(event)}`)
                 continue;
             }
 
             result.push(event);
         }
+
+        debugLog(`===イベントのチェック処理 ( ${events.length}件 )===`)
+        debugLog(`RESULT: ${result.length}件`)
+        logText.forEach(t => debugLog(`---> ${t}`))
+        debugLog(`=================================================`)
 
         return result;
     }
@@ -559,9 +579,11 @@ export class TimeTrackerAlgorithm {
     public cleanDuplicateEvent(eventMap: Map<string, Event[]>, timeCompare: TimeCompareType): Map<string, Event[]> {
         const resultMap = new Map<string, Event[]>();
 
+        const logText = [];
         for (const [eventDate, events] of eventMap.entries()) {
             if (!events || events.length === 0) {
                 resultMap.set(eventDate, []);
+                logText.push(`${eventDate}: 0件`)
                 continue;
             }
 
@@ -589,37 +611,29 @@ export class TimeTrackerAlgorithm {
                 currentItem = nextEvent;
             }
 
+            const excluded = events.filter(e => !resultList.find(r => r.uuid === e.uuid))
+            logText.push(`${eventDate}: ${resultList.length}件, 除外: ${excluded.length} ( ${excluded.map(e => EventUtils.getText(e)).join(", ")} )`)
             resultMap.set(eventDate, resultList);
         }
+
+        debugLog(`===イベントの重複解消処理 ( ${eventMap.size}日 )===`)
+        debugLog(`RESULT: ${resultMap.size}件`)
+        logText.forEach(t => debugLog(`---> ${t}`))
+        debugLog(`=================================================`)
 
         return resultMap;
     }
 
     /**
-     * 1日のタスクを分割する処理
+     * イベントを日ごとに分割します（勤務日外のイベントは削除）
+     * @param events 
+     * @param schedules 
      */
-    public splitOneDayTask(events: Event[], schedules: Schedule[]): DayTask[] {
-        logger.info(`1日タスク分割開始: イベント数=${events?.length || 0}, スケジュール数=${schedules?.length || 0}`);
-
-        if (!events || events.length === 0) {
-            logger.warn("イベントが存在しません。");
-        }
-
-        if (!schedules || schedules.length === 0) {
-            logger.warn("勤務時間が存在しません。");
-        }
-
-        events.sort((a, b) => {
-            const aDate = ScheduleUtils.getBaseDate(a.schedule);
-            const bDate = ScheduleUtils.getBaseDate(b.schedule);
-            return aDate.getTime() - bDate.getTime();
-        });
-
-        let dayMap = new Map<string, Event[]>();
+    public getEventDayMap(events: Event[], schedules: Schedule[]) {
+        const dayMap = new Map<string, Event[]>();
 
         for (const event of events) {
             const dateKey = ScheduleUtils.getBaseDateKey(event.schedule);
-
             if (!dayMap.has(dateKey)) {
                 dayMap.set(dateKey, []);
             }
@@ -636,14 +650,21 @@ export class TimeTrackerAlgorithm {
             }
         }
 
-        // 勤務時間範囲外のイベントは削除
+        const logMap = Array.from(dayMap.keys()).map(k => {
+            return {
+                key: k,
+                log: `${k}: ${dayMap.get(k)?.length}件`
+            }
+        })
+
+        // 勤務日外のイベントは削除
         if (schedules.length > 0) {
             const scheduleDates = schedules.map((s) => ScheduleUtils.getBaseDate(s));
             const minDate = new Date(Math.min(...scheduleDates.map((d) => d.getTime())));
             const maxDate = new Date(Math.max(...scheduleDates.map((d) => d.getTime())));
 
-            const minDateKey = ScheduleUtils.getDateKey(minDate);
-            const maxDateKey = ScheduleUtils.getDateKey(maxDate);
+            const minDateKey = formatDateKey(minDate);
+            const maxDateKey = formatDateKey(maxDate);
 
             for (const dateKey of Array.from(dayMap.keys())) {
                 if (dateKey < minDateKey || dateKey > maxDateKey) {
@@ -652,89 +673,12 @@ export class TimeTrackerAlgorithm {
             }
         }
 
-        // イベントの終了日が基準日と異なる場合、終了日までの日付毎に分割したものを追加
-        dayMap = this.addStartToEndDate(dayMap);
-
-        // イベント丸め処理
-        const roundedEventMap = new Map<string, Event[]>();
-        for (const [dateKey, eventsForDate] of dayMap.entries()) {
-            const roundedEvents: Event[] = [];
-            for (const event of eventsForDate) {
-                const allEvents = Array.from(dayMap.values()).flat();
-                const roundedSchedule = this.roundingSchedule(
-                    event.schedule,
-                    this.eventInputInfo.roundingTimeType,
-                    allEvents,
-                );
-                if (roundedSchedule) {
-                    roundedEvents.push(EventUtils.scheduled(event, roundedSchedule));
-                }
-            }
-            roundedEventMap.set(dateKey, roundedEvents);
-        }
-
-        // 勤務時間をイベントに変換
-        const scheduleEventMap = new Map<string, Event[]>();
-        const allRoundedEvents = Array.from(roundedEventMap.values()).flat();
-
-        logger.info(
-            `スケジュールからイベント変換開始: スケジュール数=${schedules.length}, 既存イベント数=${allRoundedEvents.length}`,
-        );
-
-        for (const schedule of schedules) {
-            try {
-                const scheduleDateKey = ScheduleUtils.getBaseDateKey(schedule);
-                logger.debug(`Schedule ${scheduleDateKey}の変換開始`);
-
-                const scheduleEvents = this.scheduleToEvent(schedule, this.scheduleInputInfo, allRoundedEvents);
-
-                logger.debug(`Schedule ${scheduleDateKey}: 生成されたイベント数=${scheduleEvents.length}`);
-
-                for (const event of scheduleEvents) {
-                    const dateKey = ScheduleUtils.getBaseDateKey(event.schedule);
-
-                    if (!scheduleEventMap.has(dateKey)) {
-                        scheduleEventMap.set(dateKey, []);
-                    }
-                    scheduleEventMap.get(dateKey)!.push(event);
-                }
-            } catch (error) {
-                // スケジュールが休日やエラーの場合はスキップ
-                logger.info("スケジュールをスキップ:", error);
-            }
-        }
-
-        logger.info(`スケジュールからイベント変換完了: 生成された日数=${scheduleEventMap.size}`);
-
-        // イベントを勤務開始終了時間に合わせるor勤務時間外を消す、重複した場合は勤務時間イベントを消す
-        const mergedEventMap = this.margedScheduleEvents(scheduleEventMap, roundedEventMap);
-
-        // margedScheduleEventsで処理されなかった日付（スケジュールイベントがない日付）を追加
-        for (const [dateKey, events] of roundedEventMap.entries()) {
-            if (!mergedEventMap.has(dateKey)) {
-                mergedEventMap.set(dateKey, events);
-            }
-        }
-
-        // 重複を解消
-        const cleanedEventMap = this.cleanDuplicateEvent(mergedEventMap, this.eventInputInfo.eventDuplicateTimeCompare);
-
-        const result: DayTask[] = [];
-
-        for (const [dateKey, eventsForDate] of cleanedEventMap.entries()) {
-            const checkedEvents = this.checkEvent(eventsForDate);
-            const baseDate = new Date(dateKey);
-
-            result.push({
-                baseDate,
-                project: this.project,
-                events: checkedEvents.filter((e) => !e.workingEventType),
-                scheduleEvents: checkedEvents.filter((e) => e.workingEventType),
-            });
-        }
-
-        logger.info(`1日タスク分割完了: 生成されたタスク数=${result.length}`);
-        return result;
+        debugLog(`===イベントを日ごとに分割 (イベント: ${events.length}件, スケジュール: ${schedules.length}日)===`)
+        debugLog(`RESULT: ${dayMap.size}件`)
+        const keys = Array.from(dayMap.keys());
+        logMap.forEach(l => keys.includes(l.key) ? debugLog(`---> ${l.log}`) : debugLog(`---> 【DELETE】 ${l.log}`))
+        debugLog(`=================================================`)
+        return dayMap;
     }
 
     /**
@@ -780,10 +724,10 @@ export class TimeTrackerAlgorithm {
                 };
                 resultMap.get(dateKey)!.push(EventUtils.scheduled(event, firstSchedule));
 
-                // 開始日と終了日の日数差を計算(ISO文字列から日付を取得)
-                const startDate = new Date(dateKey + "T00:00:00.000Z");
-                const endDate = new Date(eventEndDateKey + "T00:00:00.000Z");
-                const daysDiff = Math.round((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+                // 開始日と終了日の日数差を計算
+                const startDate = resetTime(event.schedule.start)
+                const endDate = resetTime(event.schedule.end);
+                const daysDiff = Math.floor((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
 
                 for (let i = 1; i <= daysDiff; i++) {
                     const baseDate = new Date(startDate);
@@ -822,6 +766,13 @@ export class TimeTrackerAlgorithm {
                 }
             }
         }
+
+        debugLog(`===終了日までの日付毎に分割したイベントマップ (入力: ${eventMap.size}日分)===`)
+        debugLog(`RESULT: ${resultMap.size}日分`)
+        for (const [dateKey, events] of resultMap.entries()) {
+            debugLog(`---> ${dateKey}: ${events.length}件`)
+        }
+        debugLog(`=================================================`)
 
         return resultMap;
     }
@@ -864,7 +815,8 @@ export class TimeTrackerAlgorithm {
                     if (
                         !startItem.schedule.end ||
                         !endItem.schedule.end ||
-                        startItem.schedule.start >= event.schedule.end! ||
+                        !event.schedule.end ||
+                        startItem.schedule.start >= event.schedule.end ||
                         endItem.schedule.end <= event.schedule.start
                     ) {
                         continue;
@@ -908,7 +860,118 @@ export class TimeTrackerAlgorithm {
 
             resultMap.set(eventDate, resultEvents);
         }
+        
+        debugLog(`===勤務時間イベントと通常イベントを統合 (勤務時間: ${scheduleEventMap.size}日分, 通常: ${eventMap.size}日分)===`)
+        debugLog(`RESULT: ${resultMap.size}日分`)
+        for (const [dateKey, events] of resultMap.entries()) {
+            debugLog(`---> ${dateKey}: ${events.length}件`)
+        }
+        debugLog(`=================================================`)
 
         return resultMap;
+    }
+
+    /**
+ * 1日のタスクを分割する処理
+ */
+    public splitOneDayTask(events: Event[], schedules: Schedule[]): DayTask[] {
+        logger.info(`★1日タスク分割開始: イベント数=${events?.length || 0}, スケジュール数=${schedules?.length || 0}`);
+
+        if (!events || events.length === 0) {
+            logger.warn("イベントが存在しません。");
+        }
+
+        if (!schedules || schedules.length === 0) {
+            logger.warn("勤務時間が存在しません。");
+        }
+
+        events.sort((a, b) => {
+            const aDate = ScheduleUtils.getBaseDate(a.schedule);
+            const bDate = ScheduleUtils.getBaseDate(b.schedule);
+            return aDate.getTime() - bDate.getTime();
+        });
+
+        // イベントを日ごとに分割（勤務日外のイベントは削除）
+        let dayMap = this.getEventDayMap(events, schedules);
+
+        // イベントの終了日が基準日と異なる場合、終了日までの日付毎に分割したものを追加
+        dayMap = this.addStartToEndDate(dayMap);
+
+        // イベント丸め処理
+        const roundedEventMap = new Map<string, Event[]>();
+        for (const [dateKey, eventsForDate] of dayMap.entries()) {
+            const roundedEvents: Event[] = [];
+            for (const event of eventsForDate) {
+                const allEvents = Array.from(dayMap.values()).flat();
+                const roundedSchedule = this.roundingSchedule(
+                    event.schedule,
+                    this.eventInputInfo.roundingTimeType,
+                    allEvents,
+                );
+                if (roundedSchedule) {
+                    roundedEvents.push(EventUtils.scheduled(event, roundedSchedule));
+                }
+            }
+            roundedEventMap.set(dateKey, roundedEvents);
+        }
+
+        // 勤務時間をイベントに変換
+        const scheduleEventMap = new Map<string, Event[]>();
+        const allRoundedEvents = Array.from(roundedEventMap.values()).flat();
+
+        debugLog(
+            `スケジュールからイベント変換開始: スケジュール数=${schedules.length}, 既存イベント数=${allRoundedEvents.length}`,
+        );
+        for (const schedule of schedules) {
+            try {
+                const scheduleDateKey = ScheduleUtils.getBaseDateKey(schedule);
+                logger.info(`Schedule ${scheduleDateKey}の変換開始`);
+
+                const scheduleEvents = this.scheduleToEvent(schedule, this.scheduleInputInfo, allRoundedEvents);
+
+                logger.info(`Schedule ${scheduleDateKey}: 生成されたイベント数=${scheduleEvents.length}`);
+
+                for (const event of scheduleEvents) {
+                    const dateKey = ScheduleUtils.getBaseDateKey(event.schedule);
+
+                    if (!scheduleEventMap.has(dateKey)) {
+                        scheduleEventMap.set(dateKey, []);
+                    }
+                    scheduleEventMap.get(dateKey)!.push(event);
+                }
+            } catch (error) {
+                // スケジュールが休日やエラーの場合はスキップ
+                logger.warn("スケジュールをスキップ:", error);
+            }
+        }
+        debugLog(`スケジュールからイベント変換完了: 生成された日数=${scheduleEventMap.size}`);
+
+        // イベントを勤務開始終了時間に合わせるor勤務時間外を消す、重複した場合は勤務時間イベントを消す
+        const mergedEventMap = this.margedScheduleEvents(scheduleEventMap, roundedEventMap);
+
+        // margedScheduleEventsで処理されなかった日付（スケジュールイベントがない日付）を追加
+        // for (const [dateKey, events] of roundedEventMap.entries()) {
+        //     if (!mergedEventMap.has(dateKey)) {
+        //         mergedEventMap.set(dateKey, events);
+        //     }
+        // }
+
+        // 重複を解消
+        const cleanedEventMap = this.cleanDuplicateEvent(mergedEventMap, this.eventInputInfo.eventDuplicateTimeCompare);
+
+        const result: DayTask[] = [];
+        for (const [dateKey, eventsForDate] of cleanedEventMap.entries()) {
+            const checkedEvents = this.checkEvent(eventsForDate);
+            const baseDate = new Date(dateKey);
+            result.push({
+                baseDate,
+                events: checkedEvents.filter((e) => !e.workingEventType),
+                scheduleEvents: checkedEvents.filter((e) => e.workingEventType),
+            });
+        }
+
+        logger.info(`★1日タスク分割完了: 生成された日数=${result.length}`);
+        logger.info(result.map(r => `${formatDateKey(r.baseDate)} -> Event: ${r.events.length}件, Schdule: ${r.scheduleEvents.length}件`).join("\n"));
+        return result;
     }
 }
