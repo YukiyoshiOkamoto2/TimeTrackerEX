@@ -1,6 +1,3 @@
-// View Components
-export * from "./view";
-
 // Layout Components
 export * from "./layout";
 

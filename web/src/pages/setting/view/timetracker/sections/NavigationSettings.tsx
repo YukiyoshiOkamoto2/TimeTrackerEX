@@ -2,10 +2,9 @@
  * ナビゲーション設定セクション(休暇イベント、無視可能イベント)
  */
 
+import { SettingNavigationItem, SettingNavigationSection } from "@/pages/setting/components";
 import { TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
 import { Badge } from "@fluentui/react-components";
-import { SettingNavigationSection } from "../../../layout";
-import { SettingNavigationItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
 const ttDef = TIMETRACKER_SETTINGS_DEFINITION.getTypedChildren()!;

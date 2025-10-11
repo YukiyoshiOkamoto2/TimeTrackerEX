@@ -49,8 +49,11 @@ vi.mock("@/core/algorithm", () => ({
             events.forEach((event) => {
                 const dateKey = event.schedule.start.toLocaleDateString("en-CA");
                 if (!taskMap.has(dateKey)) {
+                    // baseDateを00:00:00の時刻で作成
+                    const baseDate = new Date(event.schedule.start);
+                    baseDate.setHours(0, 0, 0, 0);
                     taskMap.set(dateKey, {
-                        baseDate: new Date(dateKey),
+                        baseDate,
                         project: {
                             id: "project-1",
                             name: "テストプロジェクト",
@@ -1213,5 +1216,265 @@ describe("TimeTrackerLogic", () => {
             expect(result.cleanedCount).toBe(0);
             expect(result.settings.timeOffEvent?.workItemId).toBe(1);
         });
+    });
+});
+
+// ===================== Additional Edge / Branch Coverage Tests =====================
+// ケースID方針: ALxx (AutoLinking), STxx (Statistics), VCxx (Validation/Cleanup)
+describe("TimeTrackerLogic Additional Branch Cases", () => {
+    // 既存モック環境を利用
+    const baseProject: Project = {
+        id: "p-1",
+        name: "P1",
+        projectId: "1",
+        projectName: "P1",
+        projectCode: "P1",
+    };
+
+    const baseSettings: TimeTrackerSettings = {
+        userName: "u",
+        baseUrl: "https://example.com",
+        baseProjectId: 1,
+        ignorableEvents: [],
+        isHistoryAutoInput: false,
+        timeOffEvent: {
+            namePatterns: [{ pattern: "休暇", matchMode: "partial" }],
+            workItemId: 200,
+        },
+        eventDuplicatePriority: { timeCompare: "small" },
+        roundingTimeTypeOfEvent: "backward",
+        scheduleAutoInputInfo: {
+            roundingTimeTypeOfSchedule: "backward",
+            startEndType: "both",
+            startEndTime: 30,
+            workItemId: 300,
+        },
+        paidLeaveInputInfo: {
+            workItemId: 400,
+            startTime: "09:00",
+            endTime: "18:00",
+        },
+    };
+
+    const createEvent = (id: string, name: string, start: string, end: string, extra: Partial<Event> = {}): Event => ({
+        uuid: id,
+        name,
+        organizer: "o",
+        isPrivate: false,
+        isCancelled: false,
+        location: "",
+        schedule: {
+            start: new Date(start),
+            end: new Date(end),
+            ...((extra as any).schedule || {}),
+        },
+        ...extra,
+    });
+
+    const createSchedule = (day: string, opts: Partial<Schedule> = {}): Schedule => ({
+        start: new Date(`${day}T00:00:00`),
+        end: new Date(`${day}T08:00:00`),
+        isHoliday: false,
+        isPaidLeave: false,
+        ...opts,
+    });
+
+    afterEach(() => {
+        // 呼び出し回数等のみクリアし、モック実装自体は維持
+        vi.clearAllMocks();
+    });
+
+    it("AL02: history 自動紐付け (isHistoryAutoInput=true)", async () => {
+        const settings: TimeTrackerSettings = { ...baseSettings, isHistoryAutoInput: true, timeOffEvent: undefined };
+        const events: Event[] = [
+            createEvent("e1", "History 作業", "2024-02-01T10:00:00", "2024-02-01T11:00:00"),
+            createEvent("e2", "通常作業", "2024-02-01T12:00:00", "2024-02-01T13:00:00"),
+        ];
+        const schedules: Schedule[] = [createSchedule("2024-02-01")];
+        const workItems: WorkItem[] = [
+            { id: "101", name: "履歴WI", folderName: "F", folderPath: "/F" },
+            { id: "300", name: "勤務", folderName: "F", folderPath: "/F" },
+        ];
+        const input: AutoLinkingInput = {
+            events,
+            schedules,
+            project: baseProject,
+            workItemChirdren: workItems,
+            timetracker: settings,
+        } as any;
+        const historyModule = await import("@/core/history");
+        // 既存 mock を一回だけ差し替え
+        (historyModule as any).HistoryManager.mockImplementation(() => ({
+            load: vi.fn(),
+            save: vi.fn(),
+            getWorkItemId: (e: Event) => (e.name.includes("History") ? "101" : null),
+        }));
+        const result = await performAutoLinking(input);
+        const historyLinked = result.linked.filter((p) => p.linkingWorkItem.autoMethod === "history");
+        expect(historyLinked.length).toBe(1);
+        expect(historyLinked[0].event.name).toContain("History");
+    });
+
+    it("AL03: 勤務時間 scheduleEvents 自動紐付け", async () => {
+        // TimeTrackerAlgorithm モックを scheduleEvents 付きで再定義
+        const algoModule = await import("@/core/algorithm");
+        (algoModule.TimeTrackerAlgorithm as any).mockImplementation(() => ({
+            splitOneDayTask: (_events: Event[], _schedules: Schedule[]) => [
+                {
+                    baseDate: new Date("2024-02-02"),
+                    project: baseProject,
+                    events: [],
+                    scheduleEvents: [
+                        createEvent(
+                            "se1",
+                            "勤務ブロック",
+                            "2024-02-02T09:00:00",
+                            "2024-02-02T18:00:00",
+                        ),
+                    ],
+                },
+            ],
+        }));
+
+        const settings: TimeTrackerSettings = { ...baseSettings };
+        const input: AutoLinkingInput = {
+            events: [],
+            schedules: [createSchedule("2024-02-02")],
+            project: baseProject,
+            workItemChirdren: [
+                { id: "300", name: "勤務", folderName: "F", folderPath: "/F" },
+            ],
+            timetracker: settings,
+        } as any;
+
+        const result = await performAutoLinking(input);
+        const workScheduleLinked = result.linked.filter((p) => p.linkingWorkItem.autoMethod === "workShedule");
+        expect(workScheduleLinked.length).toBe(1);
+        expect(workScheduleLinked[0].event.name).toBe("勤務ブロック");
+    });
+
+    it("AL04: timeOff が history より優先される", async () => {
+        // TimeTrackerAlgorithmモックを上書きして、dayTasksを確実に返すようにする
+        const algorithmModule = await import("@/core/algorithm");
+        (algorithmModule as any).TimeTrackerAlgorithm.mockImplementationOnce(() => ({
+            splitOneDayTask: vi.fn((events: Event[], _schedules: Schedule[]) => {
+                if (events.length === 0) return [];
+                // すべてのイベントを1つのDayTaskにまとめる
+                return [{
+                    baseDate: new Date("2024-02-03"),
+                    project: baseProject,
+                    events,
+                    scheduleEvents: [],
+                }];
+            }),
+        }));
+        const historyModule = await import("@/core/history");
+        (historyModule as any).HistoryManager.mockImplementationOnce(() => ({
+            load: vi.fn(),
+            save: vi.fn(),
+            // e1(年次休暇)は timeOff で処理されるので History では処理されない
+            // e2(通常History)のみ History で処理
+            getWorkItemId: (e: Event) => {
+                if (e.name === "通常History") return "101";
+                return null;
+            },
+        }));
+        const settings: TimeTrackerSettings = { ...baseSettings, isHistoryAutoInput: true };
+        const events: Event[] = [
+            // タイムゾーン問題を避けるため、スケジュール日と同じ日時範囲内に設定
+            createEvent("e1", "年次休暇", "2024-02-03T00:00:00", "2024-02-03T01:00:00"), // timeOff & history 両方マッチ
+            createEvent("e2", "通常History", "2024-02-03T02:00:00", "2024-02-03T03:00:00"), // history のみ
+        ];
+        // timeOffEvent のパターンを "休暇" にしてイベントとマッチ
+        settings.timeOffEvent = { namePatterns: [{ pattern: "休暇", matchMode: "partial" }], workItemId: 200 };
+        const input: AutoLinkingInput = {
+            events,
+            // イベントが処理されるようにスケジュールを提供
+            schedules: [
+                createSchedule("2024-02-03"),
+            ],
+            project: baseProject,
+            workItemChirdren: [
+                { id: "101", name: "履歴WI", folderName: "F", folderPath: "/F" },
+                { id: "200", name: "休暇WI", folderName: "F", folderPath: "/F" },
+            ],
+            timetracker: settings,
+        } as any;
+        const result = await performAutoLinking(input);
+        const timeOffLinked = result.linked.filter((p) => p.linkingWorkItem.autoMethod === "timeOff");
+        expect(timeOffLinked.find((p) => p.event.uuid === "e1")).toBeDefined();
+        const historyLinkedSameEvent = result.linked.find(
+            (p) => p.linkingWorkItem.autoMethod === "history" && p.event.uuid === "e1",
+        );
+        expect(historyLinkedSameEvent).toBeUndefined();
+        // e2 は history として紐付く
+        expect(result.linked.find((p) => p.linkingWorkItem.autoMethod === "history" && p.event.uuid === "e2")).toBeDefined();
+    });
+
+    it("AL08: roundingTimeTypeOfSchedule=nonduplicate は例外を投げる", async () => {
+        const settings: TimeTrackerSettings = {
+            ...baseSettings,
+            scheduleAutoInputInfo: {
+                ...baseSettings.scheduleAutoInputInfo,
+                roundingTimeTypeOfSchedule: "nonduplicate" as any,
+            },
+        };
+        const input: AutoLinkingInput = {
+            events: [createEvent("e1", "X", "2024-02-04T10:00:00", "2024-02-04T11:00:00")],
+            schedules: [createSchedule("2024-02-04")],
+            project: baseProject,
+            workItemChirdren: [
+                { id: "300", name: "勤務", folderName: "F", folderPath: "/F" },
+            ],
+            timetracker: settings,
+        } as any;
+        await expect(performAutoLinking(input)).rejects.toThrow(/nonduplicate/);
+    });
+
+    it("ST01: paidLeaveDays を計上する", () => {
+        const paidLeaveEvent = createEvent(
+            "p1",
+            "有給休暇",
+            "2024-03-01T09:00:00",
+            "2024-03-01T18:00:00",
+            { schedule: { start: new Date("2024-03-01T09:00:00"), end: new Date("2024-03-01T18:00:00"), isPaidLeave: true } as any },
+        );
+        const normalEvent = createEvent("n1", "通常", "2024-03-02T10:00:00", "2024-03-02T11:00:00");
+        const stats = calculateLinkingStatistics([normalEvent], [{ event: paidLeaveEvent, linkingWorkItem: { type: "auto", autoMethod: "timeOff", workItem: { id: "200", name: "休暇", folderName: "F", folderPath: "/F" } } }], []);
+        expect(stats.day.paidLeaveDays).toBe(1);
+        // paidLeave 日は normalDays に含まれないため normalDays=1
+        expect(stats.day.normalDays).toBe(1); // 3/2 のみ
+    });
+
+    it("ST02: excluded 集計 (ignored/outOfSchedule/invalid)", () => {
+        const eIgnored = createEvent("i1", "ignored", "2024-03-05T09:00:00", "2024-03-05T10:00:00");
+        const eOut = createEvent("o1", "out", "2024-03-06T09:00:00", "2024-03-06T10:00:00");
+        const eInv = createEvent("v1", "invalid", "2024-03-07T09:00:00", "2024-03-07T10:00:00");
+        const excluded = [
+            { event: eIgnored, reason: "ignored", reasonDetail: "無視" },
+            { event: eOut, reason: "outOfSchedule", reasonDetail: "外" },
+            { event: eInv, reason: "invalid", reasonDetail: "無効" },
+            { event: eIgnored, reason: "ignored", reasonDetail: "無視" }, // 重複カテゴリ
+        ];
+        const stats = calculateLinkingStatistics([], [], excluded as any);
+        expect(stats.excluded.ignored).toBe(2);
+        expect(stats.excluded.outOfSchedule).toBe(1);
+        expect(stats.excluded.invalid).toBe(1);
+    });
+
+    it("VC01: workItems 空で 3 項目クリア", async () => {
+        const { validateAndCleanupSettings } = await import("./logic");
+        const settings: TimeTrackerSettings = {
+            ...baseSettings,
+            baseProjectId: null,
+            timeOffEvent: { namePatterns: [], workItemId: 10 },
+            scheduleAutoInputInfo: { ...baseSettings.scheduleAutoInputInfo, workItemId: 11 },
+            paidLeaveInputInfo: { workItemId: 12, startTime: "09:00", endTime: "18:00" },
+        };
+        const result = validateAndCleanupSettings(settings, []); // workItems 空
+        expect(result.cleanedCount).toBe(3);
+        expect(result.settings.timeOffEvent).toBeUndefined();
+        expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(0);
+        expect(result.settings.paidLeaveInputInfo).toBeUndefined();
     });
 });

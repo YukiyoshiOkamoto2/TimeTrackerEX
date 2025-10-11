@@ -12,6 +12,9 @@ import { getStorage } from "../../lib/storage";
 // ストレージのモック
 vi.mock("../../lib/storage", () => ({
     getStorage: vi.fn(),
+    LocalStorageStorage: class {}, // settingsDefinition が参照するためダミー実装
+    MemoryStorage: class {}, // 他テスト参照用
+    resetStorage: () => {},
 }));
 
 // MessageDialogのモック

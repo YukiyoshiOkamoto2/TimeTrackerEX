@@ -2,9 +2,8 @@
  * TimeTracker基本設定セクション
  */
 
+import { AutoSettingItem, SettingSection } from "@/pages/setting/components";
 import { TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
-import { SettingSection } from "../../../layout";
-import { AutoSettingItem } from "../../../ui";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
 const ttDef = TIMETRACKER_SETTINGS_DEFINITION.getTypedChildren()!;

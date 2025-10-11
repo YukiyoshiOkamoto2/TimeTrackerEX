@@ -26,7 +26,6 @@ import {
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
-import { PasswordInputDialog } from "../components/PasswordInputDialog";
 import { useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { ICS, PDF, UploadInfo } from "../models";
 
@@ -720,7 +719,7 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
                     icon={<Link24Regular />}
                 />
             </div>
-            <PasswordInputDialog
+            {/* <PasswordInputDialog
                 open={sessionHook.isPasswordDialogOpen}
                 onOpenChange={(open) => {
                     if (!open) {
@@ -729,7 +728,7 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
                 }}
                 onSubmit={sessionHook.authenticateWithPassword}
                 userName={timeTrackerSettings?.userName || ""}
-            />
+            /> */}
         </>
     );
 }

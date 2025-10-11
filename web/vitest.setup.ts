@@ -53,3 +53,19 @@
 
 // pdf.jsのテスト環境フラグを設定
 (global as any).__VITEST__ = true;
+
+// 全テスト共通: getLogger モック（ログノイズを抑制）
+import { vi } from "vitest";
+vi.mock("@/lib", async () => {
+    const actual = await vi.importActual<any>("@/lib");
+    return {
+        ...actual,
+        getLogger: () => ({
+            info: () => {},
+            warn: () => {},
+            error: () => {},
+            debug: () => {},
+            trace: () => {},
+        }),
+    };
+});

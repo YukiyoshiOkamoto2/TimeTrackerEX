@@ -4,6 +4,12 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parsePDF } from "./pdfParser";
 
+// 環境変数フラグ
+const PRINT_PARSED = process.env.PRINT_PARSED === "1";
+const ENABLE_HEAVY_TESTS = process.env.ENABLE_HEAVY_TESTS === "1";
+// 重い実ファイル依存テスト制御用
+const heavyIt = ENABLE_HEAVY_TESTS ? it : it.skip;
+
 describe("pdfParser", () => {
     describe("parsePDF", () => {
         it("parsePDF関数が存在する", () => {
@@ -17,7 +23,7 @@ describe("pdfParser", () => {
             expect(result).toBeInstanceOf(Promise);
         });
 
-        it("実際のPDFファイルを解析できる", async () => {
+        heavyIt("実際のPDFファイルを解析できる", async () => {
             // 勤務実績入力（本人用）.pdfを読み込む（ワークスペースルートから）
             const pdfPath = resolve(__dirname, "../../../../勤務実績入力（本人用）.pdf");
             const pdfBuffer = readFileSync(pdfPath);
@@ -37,7 +43,9 @@ describe("pdfParser", () => {
             }
 
             const result = await parsePDF(file);
-            console.log(result.schedule.map((s) => ScheduleUtils.getText(s)).join("\n"));
+            if (PRINT_PARSED) {
+                console.log(result.schedule.map((s) => ScheduleUtils.getText(s)).join("\n"));
+            }
             // 結果の構造を確認
             expect(result).toHaveProperty("schedule");
             expect(result).toHaveProperty("scheduleStamp");
@@ -54,7 +62,7 @@ describe("pdfParser", () => {
             expect(firstSchedule.start).toBeInstanceOf(Date);
 
             // エラーメッセージがないことを確認（あっても警告として出力）
-            if (result.errorMessage) {
+            if (PRINT_PARSED && result.errorMessage) {
                 console.warn("PDFパース警告:", result.errorMessage);
             }
         });

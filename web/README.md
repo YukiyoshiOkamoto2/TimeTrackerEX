@@ -89,3 +89,19 @@ npm run test:ui      # テストUI表示
 npm run lint         # リント実行
 npm run typecheck    # 型チェック
 ```
+
+### テスト実行オプション (環境変数)
+
+重い実ファイル依存テストや詳細ログ出力はデフォルトでは抑制しています。必要に応じて以下の環境変数を設定してください。
+
+| 変数 | 値 | 効果 |
+|------|----|------|
+| `ENABLE_HEAVY_TESTS` | `1` | 実ファイル (大きなICS / PDF) を用いる重いテストを有効化します。未設定時は skip されます。 |
+| `PRINT_PARSED` | `1` | ICS / PDF パーサーテストで生成される詳細イベント/スケジュール出力を表示します。 |
+
+PowerShell 例:
+```powershell
+$env:ENABLE_HEAVY_TESTS=1; $env:PRINT_PARSED=1; npm test -- src/core/ics/icsParser.test.ts
+```
+
+一時的に設定した環境変数をクリアするには、同じセッションで `$env:ENABLE_HEAVY_TESTS=""` のように空文字を代入してください。

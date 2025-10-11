@@ -3,8 +3,8 @@
  */
 
 import { TIMETRACKER_PAID_LEAVE_INPUT_INFO, TIMETRACKER_SETTINGS_DEFINITION } from "@/schema";
-import { SettingSection } from "../../../layout";
-import { AutoSettingItem } from "../../../ui";
+
+import { AutoSettingItem, SettingSection } from "@/pages/setting/components";
 import { useTimeTrackerSettings } from "../hooks/useTimeTrackerSettings";
 
 const ttDef = TIMETRACKER_SETTINGS_DEFINITION.getTypedChildren()!;

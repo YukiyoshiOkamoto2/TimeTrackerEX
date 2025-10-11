@@ -4,6 +4,12 @@ import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { extractRecentEvents, parseICS } from "./icsParser";
 
+// 環境変数フラグ
+const PRINT_PARSED = process.env.PRINT_PARSED === "1";
+const ENABLE_HEAVY_TESTS = process.env.ENABLE_HEAVY_TESTS === "1";
+// 重い実ファイルテストを段階的に制御
+const heavyDescribe = ENABLE_HEAVY_TESTS ? describe : describe.skip;
+
 describe("icsParser", () => {
     // テスト用に現在時刻を固定
     beforeEach(() => {
@@ -256,14 +262,16 @@ END:VCALENDAR`;
         });
     });
 
-    describe("実際のICSファイルのテスト", () => {
+    heavyDescribe("実際のICSファイルのテスト", () => {
         it("岡本 行欽 の予定表.icsをパースできる", () => {
             // 実際のICSファイルを読み込む
             const icsPath = resolve(__dirname, "岡本 行欽 の予定表.ics");
             const icsContent = readFileSync(icsPath, "utf-8");
 
             const result = parseICS(icsContent);
-            console.log(result.events.map((e) => EventUtils.getText(e)).join(""));
+            if (PRINT_PARSED) {
+                console.log(result.events.map((e) => EventUtils.getText(e)).join(""));
+            }
 
             // 結果の基本検証
             expect(result).toHaveProperty("events");
@@ -285,35 +293,39 @@ END:VCALENDAR`;
             expect(firstEvent.schedule.end).toBeInstanceOf(Date);
 
             // イベント情報をログ出力
-            console.log("\n=== ICS解析結果サマリー ===");
-            console.log(`パースされたイベント数: ${result.events.length}`);
-            console.log(`エラーメッセージ数: ${result.errorMessages.length}`);
+            if (PRINT_PARSED) {
+                console.log("\n=== ICS解析結果サマリー ===");
+                console.log(`パースされたイベント数: ${result.events.length}`);
+                console.log(`エラーメッセージ数: ${result.errorMessages.length}`);
+            }
 
             if (result.events.length > 0) {
-                console.log(`\n最初のイベント: ${firstEvent.name}`);
-                console.log(`  UUID: ${firstEvent.uuid}`);
-                console.log(`  開始: ${firstEvent.schedule.start.toISOString()}`);
-                console.log(`  終了: ${firstEvent.schedule.end?.toISOString()}`);
-                console.log(`  場所: ${firstEvent.location || "(なし)"}`);
-                console.log(`  主催者: ${firstEvent.organizer || "(なし)"}`);
-                console.log(`  プライベート: ${firstEvent.isPrivate}`);
-                console.log(`  キャンセル: ${firstEvent.isCancelled}`);
-                if (firstEvent.recurrence) {
-                    console.log(`  繰り返し: ${firstEvent.recurrence.length}回`);
-                }
+                if (PRINT_PARSED) {
+                    console.log(`\n最初のイベント: ${firstEvent.name}`);
+                    console.log(`  UUID: ${firstEvent.uuid}`);
+                    console.log(`  開始: ${firstEvent.schedule.start.toISOString()}`);
+                    console.log(`  終了: ${firstEvent.schedule.end?.toISOString()}`);
+                    console.log(`  場所: ${firstEvent.location || "(なし)"}`);
+                    console.log(`  主催者: ${firstEvent.organizer || "(なし)"}`);
+                    console.log(`  プライベート: ${firstEvent.isPrivate}`);
+                    console.log(`  キャンセル: ${firstEvent.isCancelled}`);
+                    if (firstEvent.recurrence) {
+                        console.log(`  繰り返し: ${firstEvent.recurrence.length}回`);
+                    }
 
-                // Pythonと同じ形式で全イベントを出力（非キャンセル・非プライベートのみ）
-                console.log("\n=== 全イベントリスト（非キャンセル・非プライベート） ===");
-                const visibleEvents = result.events.filter((e) => !e.isCancelled && !e.isPrivate);
-                console.log(`表示対象イベント数: ${visibleEvents.length}`);
-                console.log("---");
-                visibleEvents.forEach((event, index) => {
-                    console.log(`${index + 1}. ${EventUtils.getText(event)}`);
-                });
+                    // Pythonと同じ形式で全イベントを出力（非キャンセル・非プライベートのみ）
+                    console.log("\n=== 全イベントリスト（非キャンセル・非プライベート） ===");
+                    const visibleEvents = result.events.filter((e) => !e.isCancelled && !e.isPrivate);
+                    console.log(`表示対象イベント数: ${visibleEvents.length}`);
+                    console.log("---");
+                    visibleEvents.forEach((event, index) => {
+                        console.log(`${index + 1}. ${EventUtils.getText(event)}`);
+                    });
+                }
             }
 
             // エラーメッセージがある場合は警告として出力
-            if (result.errorMessages.length > 0) {
+            if (PRINT_PARSED && result.errorMessages.length > 0) {
                 console.warn("\n=== ICSパース警告 ===");
                 result.errorMessages.slice(0, 10).forEach((msg, i) => {
                     console.warn(`  ${i + 1}. ${msg}`);
@@ -364,12 +376,14 @@ END:VCALENDAR`;
             expect(firstEvent.recurrence).toBeDefined();
             expect(firstEvent.recurrence!.length).toBeGreaterThan(0);
 
-            console.log("\n=== Python互換性チェック ===");
-            console.log(`✓ 総イベント数: ${result.events.length} (期待値: 72)`);
-            console.log(`✓ 表示イベント数: ${visibleEvents.length}`);
-            console.log(`✓ 最初のイベント名: "${firstEvent.name}" (期待値: "保育園送り")`);
-            console.log(`✓ イベントソート順: 正常`);
-            console.log(`✓ 繰り返しイベント処理: 正常`);
+            if (PRINT_PARSED) {
+                console.log("\n=== Python互換性チェック ===");
+                console.log(`✓ 総イベント数: ${result.events.length} (期待値: 72)`);
+                console.log(`✓ 表示イベント数: ${visibleEvents.length}`);
+                console.log(`✓ 最初のイベント名: "${firstEvent.name}" (期待値: "保育園送り")`);
+                console.log(`✓ イベントソート順: 正常`);
+                console.log(`✓ 繰り返しイベント処理: 正常`);
+            }
         });
     });
 });

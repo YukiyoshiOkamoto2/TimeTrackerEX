@@ -3,15 +3,25 @@
  */
 
 import type { Project, WorkItem } from "@/types";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as helper from "./timeTrackerSessionHelper";
 import { AuthError, type StoredAuth } from "./timeTrackerSessionHelper";
 import { useTimeTrackerSession } from "./useTimeTrackerSession";
 
-// モック
-vi.mock("./timeTrackerSessionHelper");
+// モック: AuthErrorなどクラス実装は本物を使用し、関数のみをmockする
+vi.mock("./timeTrackerSessionHelper", async () => {
+    const actual = await vi.importActual<typeof import("./timeTrackerSessionHelper")>("./timeTrackerSessionHelper");
+    return {
+        ...actual,
+        loadAuth: vi.fn(),
+        clearAllSession: vi.fn(),
+        authenticateWithPasswordAsync: vi.fn(),
+        fetchProjectAndWorkItemsAsync: vi.fn(),
+        registerTaskWithAuthCheckAsync: vi.fn(),
+    };
+});
 
 const mockStoredAuth: StoredAuth = {
     token: "test-token",
@@ -42,6 +52,24 @@ const mockWorkItems: WorkItem[] = [
     },
 ];
 
+// ===================== テストユーティリティ =====================
+type APIResult<T = any> = { isError: boolean; content?: T; errorMessage?: string };
+function expectOk<T>(r: APIResult<T>): asserts r is { isError: false; content: T | undefined } {
+    expect(r.isError).toBe(false);
+}
+function expectErr(r: APIResult): asserts r is { isError: true; errorMessage: string } {
+    expect(r.isError).toBe(true);
+    // @ts-expect-error 型ナロー
+    expect(r.errorMessage).toBeTruthy();
+}
+async function withAct<T>(fn: () => Promise<T>): Promise<T> {
+    let ret!: T;
+    await act(async () => {
+        ret = await fn();
+    });
+    return ret;
+}
+
 describe("useTimeTrackerSession (新API)", () => {
     const baseUrl = "https://timetracker.example.com";
     const userName = "testuser";
@@ -51,7 +79,9 @@ describe("useTimeTrackerSession (新API)", () => {
 
         // デフォルトのモック実装
         vi.mocked(helper.loadAuth).mockReturnValue(null);
-        vi.mocked(helper.clearAllSession).mockImplementation(() => {});
+        vi.mocked(helper.clearAllSession).mockImplementation(() => {
+            vi.mocked(helper.loadAuth).mockReturnValue(null);
+        });
         vi.mocked(helper.authenticateWithPasswordAsync).mockResolvedValue(mockStoredAuth);
         vi.mocked(helper.fetchProjectAndWorkItemsAsync).mockResolvedValue({
             project: mockProject,
@@ -86,10 +116,9 @@ describe("useTimeTrackerSession (新API)", () => {
 
             expect(result.current.isAuthenticated).toBe(true);
 
-            // ログアウト後はloadAuthがnullを返すように変更
-            vi.mocked(helper.loadAuth).mockReturnValue(null);
-
-            result.current.logout();
+            act(() => {
+                result.current.logout();
+            });
 
             await waitFor(() => {
                 expect(result.current.isAuthenticated).toBe(false);
@@ -104,12 +133,9 @@ describe("useTimeTrackerSession (新API)", () => {
 
             const { result } = renderHook(() => useTimeTrackerSession({ baseUrl, userName }));
 
-            const response = await result.current.fetchProjectAndWorkItemsAsync("proj-1");
-
-            expect(response.isError).toBe(false);
-            if (!response.isError) {
-                expect(response.content).toEqual({ project: mockProject, workItems: mockWorkItems });
-            }
+            const response = await withAct(() => result.current.fetchProjectAndWorkItemsAsync("proj-1"));
+            expectOk(response);
+            expect(response.content).toEqual({ project: mockProject, workItems: mockWorkItems });
             expect(helper.fetchProjectAndWorkItemsAsync).toHaveBeenCalledWith(baseUrl, "proj-1", userName);
         });
 
@@ -122,12 +148,11 @@ describe("useTimeTrackerSession (新API)", () => {
 
             const { result } = renderHook(() => useTimeTrackerSession({ baseUrl, userName }));
 
-            const response = await result.current.fetchProjectAndWorkItemsAsync("proj-1");
-
-            expect(response.isError).toBe(true);
-            if (response.isError) {
-                expect(response.errorMessage).toContain("認証の有効期限が切れました");
-            }
+            const response = await withAct(() => result.current.fetchProjectAndWorkItemsAsync("proj-1"));
+            expectErr(response);
+            expect(response.errorMessage).toContain("認証の有効期限が切れました");
+            // logout後はsessionStorageがクリアされた想定でloadAuthもnullに
+            vi.mocked(helper.loadAuth).mockReturnValue(null);
             await waitFor(() => {
                 expect(result.current.isAuthenticated).toBe(false);
             });
@@ -139,12 +164,9 @@ describe("useTimeTrackerSession (新API)", () => {
 
             const { result } = renderHook(() => useTimeTrackerSession({ baseUrl, userName }));
 
-            const response = await result.current.fetchProjectAndWorkItemsAsync("proj-1");
-
-            expect(response.isError).toBe(true);
-            if (response.isError) {
-                expect(response.errorMessage).toBe("Network error");
-            }
+            const response = await withAct(() => result.current.fetchProjectAndWorkItemsAsync("proj-1"));
+            expectErr(response);
+            expect(response.errorMessage).toBe("Network error");
             expect(result.current.isAuthenticated).toBe(true); // ログアウトしない
         });
     });
@@ -162,9 +184,8 @@ describe("useTimeTrackerSession (新API)", () => {
 
             const { result } = renderHook(() => useTimeTrackerSession({ baseUrl, userName }));
 
-            const response = await result.current.registerTaskAsync(mockTask);
-
-            expect(response.isError).toBe(false);
+            const response = await withAct(() => result.current.registerTaskAsync(mockTask));
+            expectOk(response);
             expect(helper.registerTaskWithAuthCheckAsync).toHaveBeenCalledWith(baseUrl, mockTask);
         });
 
@@ -177,16 +198,11 @@ describe("useTimeTrackerSession (新API)", () => {
 
             const { result } = renderHook(() => useTimeTrackerSession({ baseUrl, userName }));
 
-            const response = await result.current.registerTaskAsync(mockTask);
+            const response = await withAct(() => result.current.registerTaskAsync(mockTask));
+            expectErr(response);
+            expect(response.errorMessage).toContain("認証の有効期限が切れました");
 
-            expect(response.isError).toBe(true);
-            if (response.isError) {
-                expect(response.errorMessage).toContain("認証の有効期限が切れました");
-            }
-
-            // ログアウト後はloadAuthがnullを返すように変更
-            vi.mocked(helper.loadAuth).mockReturnValue(null);
-
+            // clearAllSessionモックがloadAuthをnullに設定済み
             await waitFor(() => {
                 expect(result.current.isAuthenticated).toBe(false);
             });

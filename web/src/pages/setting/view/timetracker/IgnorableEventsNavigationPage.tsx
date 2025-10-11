@@ -1,8 +1,7 @@
 import { TIMETRACKER_IGNORABLE_EVENTS } from "@/schema";
+import { IgnorableEventPattern } from "@/types";
 import { makeStyles, tokens } from "@fluentui/react-components";
-import { IgnorableEventPattern } from "../../../../../types/settings";
-import { SettingNavigationPageLayout, SettingSection } from "../../layout";
-import { EventPatternEditor } from "../../ui";
+import { EventPatternEditor, SettingNavigationPageLayout, SettingSection } from "../../components";
 
 const ignorableEventDef = TIMETRACKER_IGNORABLE_EVENTS;
 const patternDefinition = ignorableEventDef.getTypedItemSchema()!.getTypedChildren()!;

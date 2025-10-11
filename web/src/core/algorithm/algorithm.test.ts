@@ -75,156 +75,94 @@ function assertDateTime(
 
 describe("TimeTrackerAlgorithm", () => {
     describe("roundingTime", () => {
-        test("should round up time correctly", () => {
+        type RoundTimeCase = {
+            caseId: string;
+            title: string;
+            set: [number, number];
+            up: boolean;
+            expect: { hour: number; minute: number } | { day: number; hour: number; minute: number };
+        };
+        const cases: RoundTimeCase[] = [
+            { caseId: "RT01", title: "round up 15->30", set: [9, 15], up: true, expect: { hour: 9, minute: 30 } },
+            { caseId: "RT02", title: "no change on boundary", set: [9, 0], up: true, expect: { hour: 9, minute: 0 } },
+            {
+                caseId: "RT03",
+                title: "round up 45->next hour",
+                set: [9, 45],
+                up: true,
+                expect: { hour: 10, minute: 0 },
+            },
+            { caseId: "RT04", title: "round down 15->00", set: [9, 15], up: false, expect: { hour: 9, minute: 0 } },
+            { caseId: "RT05", title: "round down 45->30", set: [9, 45], up: false, expect: { hour: 9, minute: 30 } },
+        ];
+
+        test.each(cases)("[$caseId] $title", ({ set, up, expect }) => {
             const input = new Date(now);
-            input.setHours(9, 15, 0);
-
-            const result = algorithm.roundingTime(input, true);
-
-            assertDateTime(result, now, { hour: 9, minute: 30, second: 0 });
+            input.setHours(set[0], set[1], 0);
+            const result = algorithm.roundingTime(input, up);
+            assertDateTime(result, now, { ...expect, second: 0 } as any);
         });
 
-        test("should not round when already on boundary", () => {
-            const input = new Date(now);
-            input.setHours(9, 0, 0);
-
-            const result = algorithm.roundingTime(input, true);
-
-            assertDateTime(result, now, { hour: 9, minute: 0, second: 0 });
-        });
-
-        test("should round to next hour", () => {
-            const input = new Date(now);
-            input.setHours(9, 45, 0);
-
-            const result = algorithm.roundingTime(input, true);
-
-            assertDateTime(result, now, { hour: 10, minute: 0, second: 0 });
-        });
-
-        test("should round down time correctly", () => {
-            const input = new Date(now);
-            input.setHours(9, 15, 0);
-
-            const result = algorithm.roundingTime(input, false);
-
-            assertDateTime(result, now, { hour: 9, minute: 0, second: 0 });
-        });
-
-        test("should round down to previous half hour", () => {
-            const input = new Date(now);
-            input.setHours(9, 45, 0);
-
-            const result = algorithm.roundingTime(input, false);
-
-            assertDateTime(result, now, { hour: 9, minute: 30, second: 0 });
-        });
-
-        test("should handle midnight crossing", () => {
+        test("midnight crossing when rounding up", () => {
             const input = new Date(now);
             input.setHours(23, 45, 0);
-
             const result = algorithm.roundingTime(input, true);
-
-            assertDateTime(result, now, {
-                day: now.getDate() + 1,
-                hour: 0,
-                minute: 0,
-                second: 0,
-            });
+            assertDateTime(result, now, { day: now.getDate() + 1, hour: 0, minute: 0, second: 0 });
         });
     });
 
     describe("roundingSchedule", () => {
-        test("should round schedule backward", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 7, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 49, 0),
-            );
+        type RoundScheduleCase = {
+            caseId: string;
+            method: Parameters<TimeTrackerAlgorithm["roundingSchedule"]>[1];
+            expected: { startH: number; startM: number; endH: number; endM: number };
+            title: string;
+            events?: any[];
+        };
+        const baseStart = () => new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 7, 0);
+        const baseEnd = () => new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 49, 0);
+        const scheduleCases: RoundScheduleCase[] = [
+            {
+                caseId: "RS01",
+                method: "backward",
+                title: "backward",
+                expected: { startH: 9, startM: 30, endH: 19, endM: 0 },
+            },
+            {
+                caseId: "RS02",
+                method: "forward",
+                title: "forward",
+                expected: { startH: 9, startM: 0, endH: 18, endM: 30 },
+            },
+            { caseId: "RS03", method: "round", title: "round", expected: { startH: 9, startM: 0, endH: 19, endM: 0 } },
+            { caseId: "RS04", method: "half", title: "half", expected: { startH: 9, startM: 0, endH: 19, endM: 0 } },
+            {
+                caseId: "RS05",
+                method: "stretch",
+                title: "stretch",
+                expected: { startH: 9, startM: 0, endH: 19, endM: 0 },
+            },
+            {
+                caseId: "RS06",
+                method: "nonduplicate",
+                title: "nonduplicate (no conflicts)",
+                expected: { startH: 9, startM: 0, endH: 19, endM: 0 },
+                events: [],
+            },
+        ];
 
-            const result = algorithm.roundingSchedule(schedule, "backward");
-
-            expect(result).not.toBeNull();
-            if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 30, second: 0 });
-                assertDateTime(result.end!, now, { hour: 19, minute: 0, second: 0 });
-            }
-        });
-
-        test("should round schedule forward", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 7, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 49, 0),
-            );
-
-            const result = algorithm.roundingSchedule(schedule, "forward");
-
-            expect(result).not.toBeNull();
-            if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 0, second: 0 });
-                assertDateTime(result.end!, now, { hour: 18, minute: 30, second: 0 });
-            }
-        });
-
-        test("should round schedule using round method", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 7, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 49, 0),
-            );
-
-            const result = algorithm.roundingSchedule(schedule, "round");
-
-            expect(result).not.toBeNull();
-            if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 0, second: 0 });
-                assertDateTime(result.end!, now, { hour: 19, minute: 0, second: 0 });
-            }
-        });
-
-        test("should round schedule using half method", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 7, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 49, 0),
-            );
-
-            const result = algorithm.roundingSchedule(schedule, "half");
-
-            expect(result).not.toBeNull();
-            if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 0, second: 0 });
-                assertDateTime(result.end!, now, { hour: 19, minute: 0, second: 0 });
-            }
-        });
-
-        test("should round schedule using stretch method", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 7, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 49, 0),
-            );
-
-            const result = algorithm.roundingSchedule(schedule, "stretch");
-
-            expect(result).not.toBeNull();
-            if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 0, second: 0 });
-                assertDateTime(result.end!, now, { hour: 19, minute: 0, second: 0 });
-            }
-        });
-
-        test("should round schedule using nonduplicate method with no conflicts", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 7, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 49, 0),
-            );
-
-            const result = algorithm.roundingSchedule(schedule, "nonduplicate", []);
-
-            expect(result).not.toBeNull();
-            if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 0, second: 0 });
-                assertDateTime(result.end!, now, { hour: 19, minute: 0, second: 0 });
-            }
-        });
+        test.each(scheduleCases)(
+            "[$caseId] should round schedule using $title method",
+            ({ method, expected, events }) => {
+                const schedule = createSchedule(baseStart(), baseEnd());
+                const result = algorithm.roundingSchedule(schedule, method as any, events as any);
+                expect(result).not.toBeNull();
+                if (result) {
+                    assertDateTime(result.start, now, { hour: expected.startH, minute: expected.startM, second: 0 });
+                    assertDateTime(result.end!, now, { hour: expected.endH, minute: expected.endM, second: 0 });
+                }
+            },
+        );
 
         test("should return null for schedule that becomes too short", () => {
             const schedule = createSchedule(
@@ -281,48 +219,51 @@ describe("TimeTrackerAlgorithm", () => {
             }
         });
 
-        test("should handle half rounding with specific time boundaries (14min)", () => {
+        // half の境界挙動をまとめて検証
+        type HalfBoundaryCase = {
+            caseId: string;
+            title: string;
+            start: [number, number];
+            end: [number, number];
+            expectedStart: [number, number];
+            expectedEnd: [number, number];
+        };
+        const halfBoundaryCases: HalfBoundaryCase[] = [
+            {
+                caseId: "HB01",
+                title: "half rounding <15min both sides (14 -> 00)",
+                start: [9, 14],
+                end: [10, 14],
+                expectedStart: [9, 0],
+                expectedEnd: [10, 0],
+            },
+            {
+                caseId: "HB02",
+                title: "half rounding start 14min end early minute (1)", // end 10:01 -> 10:00 に収束
+                start: [9, 14],
+                end: [10, 1],
+                expectedStart: [9, 0],
+                expectedEnd: [10, 0],
+            },
+            {
+                caseId: "HB03",
+                title: "half rounding exactly 15min boundary (-> 30)",
+                start: [9, 15],
+                end: [10, 15],
+                expectedStart: [9, 30],
+                expectedEnd: [10, 30],
+            },
+        ];
+        test.each(halfBoundaryCases)("[$caseId] should handle $title", ({ start, end, expectedStart, expectedEnd }) => {
             const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 14, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 14, 0),
+                new Date(now.getFullYear(), now.getMonth(), now.getDate(), start[0], start[1], 0),
+                new Date(now.getFullYear(), now.getMonth(), now.getDate(), end[0], end[1], 0),
             );
-
             const result = algorithm.roundingSchedule(schedule, "half");
-
             expect(result).not.toBeNull();
             if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 0, second: 0 });
-                assertDateTime(result.end!, now, { hour: 10, minute: 0, second: 0 });
-            }
-        });
-
-        test("should handle half rounding with 1 minute after boundary", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 14, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 1, 0),
-            );
-
-            const result = algorithm.roundingSchedule(schedule, "half");
-
-            expect(result).not.toBeNull();
-            if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 0, second: 0 });
-                assertDateTime(result.end!, now, { hour: 10, minute: 0, second: 0 });
-            }
-        });
-
-        test("should handle half rounding at exactly 15 minutes", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 15, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 15, 0),
-            );
-
-            const result = algorithm.roundingSchedule(schedule, "half");
-
-            expect(result).not.toBeNull();
-            if (result) {
-                assertDateTime(result.start, now, { hour: 9, minute: 30, second: 0 });
-                assertDateTime(result.end!, now, { hour: 10, minute: 30, second: 0 });
+                assertDateTime(result.start, now, { hour: expectedStart[0], minute: expectedStart[1], second: 0 });
+                assertDateTime(result.end!, now, { hour: expectedEnd[0], minute: expectedEnd[1], second: 0 });
             }
         });
 
@@ -400,207 +341,102 @@ describe("TimeTrackerAlgorithm", () => {
     });
 
     describe("scheduleToEvent", () => {
-        test('should create start event only when startEndType is "start"', () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 12, 0),
-            );
-
-            const info: ScheduleInputInfo = {
+        // start / end / both の組合せと roundingTimeType の基本パターンをマトリクス化
+        type ScheduleToEventCase = {
+            caseId: string;
+            title: string;
+            roundingTimeType: ScheduleInputInfo["roundingTimeType"];
+            startEndType: ScheduleInputInfo["startEndType"];
+            expected: Array<{
+                type: "start" | "end";
+                start: [number, number];
+                end: [number, number];
+            }>;
+        };
+        const scheduleMatrix: ScheduleToEventCase[] = [
+            {
+                caseId: "SE01",
+                title: "start only backward",
                 roundingTimeType: "backward",
                 startEndType: "start",
-                startEndTime: 30,
-            };
-
-            const events = algorithm.scheduleToEvent(schedule, info, []);
-
-            expect(events.length).toBe(1);
-            assertDateTime(events[0].schedule.start, now, {
-                hour: 9,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(events[0].schedule.end!, now, {
-                hour: 9,
-                minute: 30,
-                second: 0,
-            });
-        });
-
-        test('should create end event only when startEndType is "end"', () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 12, 0),
-            );
-
-            const info: ScheduleInputInfo = {
+                expected: [{ type: "start", start: [9, 0], end: [9, 30] }],
+            },
+            {
+                caseId: "SE02",
+                title: "end only backward",
                 roundingTimeType: "backward",
                 startEndType: "end",
-                startEndTime: 30,
-            };
-
-            const events = algorithm.scheduleToEvent(schedule, info, []);
-
-            expect(events.length).toBe(1);
-            assertDateTime(events[0].schedule.start, now, {
-                hour: 18,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(events[0].schedule.end!, now, {
-                hour: 18,
-                minute: 30,
-                second: 0,
-            });
-        });
-
-        test("should create both start and end events with backward rounding", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 12, 0),
-            );
-
-            const info: ScheduleInputInfo = {
+                expected: [{ type: "end", start: [18, 0], end: [18, 30] }],
+            },
+            {
+                caseId: "SE03",
+                title: "both backward",
                 roundingTimeType: "backward",
                 startEndType: "both",
-                startEndTime: 30,
-            };
-
-            const events = algorithm.scheduleToEvent(schedule, info, []);
-
-            expect(events.length).toBe(2);
-            assertDateTime(events[0].schedule.start, now, {
-                hour: 9,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(events[0].schedule.end!, now, {
-                hour: 9,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(events[1].schedule.start, now, {
-                hour: 18,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(events[1].schedule.end!, now, {
-                hour: 18,
-                minute: 30,
-                second: 0,
-            });
-        });
-
-        test("should create both events with forward rounding", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 12, 0),
-            );
-
-            const info: ScheduleInputInfo = {
+                expected: [
+                    { type: "start", start: [9, 0], end: [9, 30] },
+                    { type: "end", start: [18, 0], end: [18, 30] },
+                ],
+            },
+            {
+                caseId: "SE04",
+                title: "both forward",
                 roundingTimeType: "forward",
                 startEndType: "both",
-                startEndTime: 30,
-            };
-
-            const events = algorithm.scheduleToEvent(schedule, info, []);
-
-            expect(events.length).toBe(2);
-            assertDateTime(events[0].schedule.start, now, {
-                hour: 8,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(events[0].schedule.end!, now, {
-                hour: 9,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(events[1].schedule.start, now, {
-                hour: 17,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(events[1].schedule.end!, now, {
-                hour: 18,
-                minute: 0,
-                second: 0,
-            });
-        });
-
-        test("should create both events with round rounding", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 12, 0),
-            );
-
-            const info: ScheduleInputInfo = {
+                expected: [
+                    { type: "start", start: [8, 30], end: [9, 0] },
+                    { type: "end", start: [17, 30], end: [18, 0] },
+                ],
+            },
+            {
+                caseId: "SE05",
+                title: "both round",
                 roundingTimeType: "round",
                 startEndType: "both",
-                startEndTime: 30,
-            };
-
-            const events = algorithm.scheduleToEvent(schedule, info, []);
-
-            expect(events.length).toBe(2);
-            assertDateTime(events[0].schedule.start, now, {
-                hour: 9,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(events[0].schedule.end!, now, {
-                hour: 9,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(events[1].schedule.start, now, {
-                hour: 17,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(events[1].schedule.end!, now, {
-                hour: 18,
-                minute: 0,
-                second: 0,
-            });
-        });
-
-        test("should create both events with stretch rounding", () => {
-            const schedule = createSchedule(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 12, 0),
-            );
-
-            const info: ScheduleInputInfo = {
+                expected: [
+                    { type: "start", start: [9, 0], end: [9, 30] },
+                    { type: "end", start: [17, 30], end: [18, 0] },
+                ],
+            },
+            {
+                caseId: "SE06",
+                title: "both stretch",
                 roundingTimeType: "stretch",
                 startEndType: "both",
-                startEndTime: 30,
-            };
-
-            const events = algorithm.scheduleToEvent(schedule, info, []);
-
-            expect(events.length).toBe(2);
-            assertDateTime(events[0].schedule.start, now, {
-                hour: 8,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(events[0].schedule.end!, now, {
-                hour: 9,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(events[1].schedule.start, now, {
-                hour: 18,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(events[1].schedule.end!, now, {
-                hour: 18,
-                minute: 30,
-                second: 0,
-            });
-        });
+                expected: [
+                    { type: "start", start: [8, 30], end: [9, 0] },
+                    { type: "end", start: [18, 0], end: [18, 30] },
+                ],
+            },
+        ];
+        test.each(scheduleMatrix)(
+            "[$caseId] should create events - $title",
+            ({ roundingTimeType, startEndType, expected }) => {
+                const schedule = createSchedule(
+                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0),
+                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 12, 0),
+                );
+                const info: ScheduleInputInfo = {
+                    roundingTimeType,
+                    startEndType,
+                    startEndTime: 30,
+                };
+                const events = algorithm.scheduleToEvent(schedule, info, []);
+                expect(events.length).toBe(expected.length);
+                expected.forEach((exp, idx) => {
+                    assertDateTime(events[idx].schedule.start, now, {
+                        hour: exp.start[0],
+                        minute: exp.start[1],
+                        second: 0,
+                    });
+                    assertDateTime(events[idx].schedule.end!, now, {
+                        hour: exp.end[0],
+                        minute: exp.end[1],
+                        second: 0,
+                    });
+                });
+            },
+        );
 
         test("should handle schedule spanning multiple days", () => {
             const schedule = createSchedule(
@@ -724,7 +560,8 @@ describe("TimeTrackerAlgorithm", () => {
     });
 
     describe("cleanDuplicateEvent", () => {
-        test('should clean duplicate events using "small" comparison', () => {
+        // 重複除去ロジックを比較タイプ別にパラメトリック化
+        function buildDuplicateEventData() {
             const events1 = [
                 createTestEvent(
                     new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0),
@@ -762,7 +599,6 @@ describe("TimeTrackerAlgorithm", () => {
                     "7",
                 ),
             ];
-
             const events2 = [
                 createTestEvent(
                     new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0),
@@ -780,218 +616,40 @@ describe("TimeTrackerAlgorithm", () => {
                     "3",
                 ),
             ];
-
             const nowDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
             const nextDate = new Date(now);
             nextDate.setDate(now.getDate() + 1);
             const nextDateStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(nextDate.getDate()).padStart(2, "0")}`;
-
             const eventMap = new Map<string, Event[]>();
             eventMap.set(nowDate, events1);
             eventMap.set(nextDateStr, events2);
+            return { eventMap, nowDate, nextDateStr };
+        }
 
-            const result = algorithm.cleanDuplicateEvent(eventMap, "small");
-            const resultEvent = result.get(nowDate)!;
+        interface DuplicateCase {
+            caseId: string;
+            compare: "small" | "large";
+            expectedLength: number;
+            expectedOrder: string[];
+        }
+        const duplicateCases: DuplicateCase[] = [
+            { caseId: "CD01", compare: "small", expectedLength: 6, expectedOrder: ["1", "2", "3", "5", "6", "7"] },
+            { caseId: "CD02", compare: "large", expectedLength: 4, expectedOrder: ["2", "5", "6", "7"] },
+        ];
 
-            expect(resultEvent).toBeDefined();
-
-            expect(resultEvent.length).toBe(6);
-            expect(resultEvent[0].name).toBe("1");
-            assertDateTime(resultEvent[0].schedule.start, now, {
-                hour: 9,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(resultEvent[0].schedule.end!, now, {
-                hour: 9,
-                minute: 30,
-                second: 0,
-            });
-
-            expect(resultEvent[1].name).toBe("2");
-            assertDateTime(resultEvent[1].schedule.start, now, {
-                hour: 9,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(resultEvent[1].schedule.end!, now, {
-                hour: 10,
-                minute: 0,
-                second: 0,
-            });
-
-            expect(resultEvent[2].name).toBe("3");
-            assertDateTime(resultEvent[2].schedule.start, now, {
-                hour: 10,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(resultEvent[2].schedule.end!, now, {
-                hour: 10,
-                minute: 30,
-                second: 0,
-            });
-
-            expect(resultEvent[3].name).toBe("5");
-            assertDateTime(resultEvent[3].schedule.start, now, {
-                hour: 10,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(resultEvent[3].schedule.end!, now, {
-                hour: 11,
-                minute: 0,
-                second: 0,
-            });
-
-            expect(resultEvent[4].name).toBe("6");
-            assertDateTime(resultEvent[4].schedule.start, now, {
-                hour: 11,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(resultEvent[4].schedule.end!, now, {
-                hour: 12,
-                minute: 30,
-                second: 0,
-            });
-
-            expect(resultEvent[5].name).toBe("7");
-            assertDateTime(resultEvent[5].schedule.start, now, {
-                hour: 12,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(resultEvent[5].schedule.end!, now, {
-                hour: 13,
-                minute: 30,
-                second: 0,
-            });
-
-            const resultEvent2 = result.get(nextDateStr)!;
-            expect(resultEvent2).toBeDefined();
-            expect(resultEvent2.length).toBe(3);
-        });
-
-        test('should clean duplicate events using "large" comparison', () => {
-            const events1 = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30, 0),
-                    "1",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                    "2",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                    "3",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                    "4",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0, 0),
-                    "5",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 30, 0),
-                    "6",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 30, 0),
-                    "7",
-                ),
-            ];
-
-            const events2 = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 30, 0),
-                    "1",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0),
-                    "2",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 30, 0),
-                    "3",
-                ),
-            ];
-
-            const nowDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-            const nextDate = new Date(now);
-            nextDate.setDate(now.getDate() + 1);
-            const nextDateStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(nextDate.getDate()).padStart(2, "0")}`;
-
-            const eventMap = new Map<string, Event[]>();
-            eventMap.set(nowDate, events1);
-            eventMap.set(nextDateStr, events2);
-
-            const result = algorithm.cleanDuplicateEvent(eventMap, "large");
-            const resultEvent = result.get(nowDate)!;
-
-            expect(resultEvent).toBeDefined();
-            expect(resultEvent.length).toBe(4);
-            expect(resultEvent[0].name).toBe("2");
-            assertDateTime(resultEvent[0].schedule.start, now, {
-                hour: 9,
-                minute: 0,
-                second: 0,
-            });
-            assertDateTime(resultEvent[0].schedule.end!, now, {
-                hour: 10,
-                minute: 30,
-                second: 0,
-            });
-
-            expect(resultEvent[1].name).toBe("5");
-            assertDateTime(resultEvent[1].schedule.start, now, {
-                hour: 10,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(resultEvent[1].schedule.end!, now, {
-                hour: 11,
-                minute: 0,
-                second: 0,
-            });
-
-            expect(resultEvent[2].name).toBe("6");
-            assertDateTime(resultEvent[2].schedule.start, now, {
-                hour: 11,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(resultEvent[2].schedule.end!, now, {
-                hour: 12,
-                minute: 30,
-                second: 0,
-            });
-
-            expect(resultEvent[3].name).toBe("7");
-            assertDateTime(resultEvent[3].schedule.start, now, {
-                hour: 12,
-                minute: 30,
-                second: 0,
-            });
-            assertDateTime(resultEvent[3].schedule.end!, now, {
-                hour: 13,
-                minute: 30,
-                second: 0,
-            });
-        });
+        test.each(duplicateCases)(
+            "[$caseId] should clean duplicates ($compare)",
+            ({ compare, expectedLength, expectedOrder }) => {
+                const { eventMap, nowDate, nextDateStr } = buildDuplicateEventData();
+                const result = algorithm.cleanDuplicateEvent(eventMap, compare);
+                const resultEvent = result.get(nowDate)!;
+                expect(resultEvent.length).toBe(expectedLength);
+                expectedOrder.forEach((name, idx) => expect(resultEvent[idx].name).toBe(name));
+                // 2日目 (共通検証)
+                const day2 = result.get(nextDateStr)!;
+                expect(day2.length).toBe(3);
+            },
+        );
     });
 
     describe("splitOneDayTask", () => {
@@ -1569,369 +1227,299 @@ describe("TimeTrackerAlgorithm", () => {
     });
 
     describe("scheduleToEvent with fill mode", () => {
-        test("should create fill events for multi-day schedule", () => {
-            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0);
-            const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2, 20, 36, 0);
-            const schedule = createSchedule(start, end);
-
-            const info: ScheduleInputInfo = {
-                roundingTimeType: "stretch",
-                startEndType: "fill",
-                startEndTime: 30,
-            };
-
-            const events = algorithm.scheduleToEvent(schedule, info, []);
-
-            // fillモードでは開始イベント、終了イベント、および中間の埋めイベントが作成される
-            expect(events.length).toBeGreaterThan(2);
-
-            // すべてのイベントにworkingEventTypeが設定されている
-            for (const event of events) {
-                expect(event.workingEventType).toBeDefined();
-            }
-
-            // 開始イベントと終了イベントが含まれる
-            const hasStartEvent = events.some((e) => e.workingEventType === "start");
-            const hasEndEvent = events.some((e) => e.workingEventType === "end");
-            const hasMiddleEvents = events.some((e) => e.workingEventType === "middle");
-
-            expect(hasStartEvent).toBe(true);
-            expect(hasEndEvent).toBe(true);
-            expect(hasMiddleEvents).toBe(true);
-
-            // 詳細な検証: 開始イベント
-            const startEvent = events.find((e) => e.workingEventType === "start");
-            expect(startEvent).toBeDefined();
-            assertDateTime(startEvent!.schedule.start, now, { hour: 8, minute: 30, second: 0 });
-            assertDateTime(startEvent!.schedule.end!, now, { hour: 9, minute: 0, second: 0 });
-
-            // 詳細な検証: 終了イベント
-            const endEvent = events.find((e) => e.workingEventType === "end");
-            expect(endEvent).toBeDefined();
-            const endDay = new Date(now);
-            endDay.setDate(now.getDate() + 2);
-            assertDateTime(endEvent!.schedule.start, endDay, { hour: 20, minute: 30, second: 0 });
-            assertDateTime(endEvent!.schedule.end!, endDay, { hour: 21, minute: 0, second: 0 });
-        });
-
-        test("should avoid overlapping with existing events in fill mode", () => {
-            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 52, 0);
-            const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 36, 0);
-            const schedule = createSchedule(start, end);
-
-            // 既存イベント
-            const existingEvents = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30, 0),
-                    "Existing 1",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0, 0),
-                    "Existing 2",
-                ),
-            ];
-
-            const info: ScheduleInputInfo = {
-                roundingTimeType: "round",
-                startEndType: "fill",
-                startEndTime: 30,
-            };
-
-            const events = algorithm.scheduleToEvent(schedule, info, existingEvents);
-
-            // 既存イベントの時間帯には fillイベントが作成されない
-            for (const event of events) {
-                if (event.workingEventType === "middle") {
-                    for (const existing of existingEvents) {
-                        // fillイベントが既存イベントと重複していないことを確認
-                        const isOverlap =
-                            event.schedule.start < existing.schedule.end! &&
-                            event.schedule.end! > existing.schedule.start;
-                        expect(isOverlap).toBe(false);
+        interface FillCase {
+            caseId: string;
+            title: string;
+            rounding: ScheduleInputInfo["roundingTimeType"];
+            start: [number, number, number?]; // [h,m, plusDays]
+            end: [number, number, number?];
+            existing?: Array<{ start: [number, number]; end: [number, number]; name: string }>;
+            verify: (events: Event[]) => void;
+        }
+        const makeDate = (base: Date, t: [number, number, number?]) =>
+            new Date(base.getFullYear(), base.getMonth(), base.getDate() + (t[2] ?? 0), t[0], t[1], 0);
+        const fillCases: FillCase[] = [
+            {
+                caseId: "FM01",
+                title: "multi-day stretch with middle events",
+                rounding: "stretch",
+                start: [8, 52, 0],
+                end: [20, 36, 2],
+                verify: (events) => {
+                    expect(events.length).toBeGreaterThan(2);
+                    const hasStart = events.some((e) => e.workingEventType === "start");
+                    const hasEnd = events.some((e) => e.workingEventType === "end");
+                    const hasMiddle = events.some((e) => e.workingEventType === "middle");
+                    expect(hasStart && hasEnd && hasMiddle).toBe(true);
+                },
+            },
+            {
+                caseId: "FM02",
+                title: "single-day round without overlap on existing events",
+                rounding: "round",
+                start: [8, 52, 0],
+                end: [20, 36, 0],
+                existing: [
+                    { start: [9, 0], end: [9, 30], name: "Existing 1" },
+                    { start: [10, 0], end: [11, 0], name: "Existing 2" },
+                ],
+                verify: (events) => {
+                    const existingSpans = events.filter((e) => e.name.startsWith("Existing"));
+                    // scheduleToEvent は既存イベントをそのまま返さない仕様のため 0 を期待
+                    expect(existingSpans.length).toBe(0);
+                    // middle が既存イベントと重ならない
+                    const middle = events.filter((e) => e.workingEventType === "middle");
+                    for (const m of middle) {
+                        for (const ex of existingSpans) {
+                            const isOverlap =
+                                m.schedule.start < ex.schedule.end! && m.schedule.end! > ex.schedule.start;
+                            expect(isOverlap).toBe(false);
+                        }
                     }
-                }
-            }
+                },
+            },
+        ];
+
+        test.each(fillCases)("[$caseId] fill mode - $title", ({ rounding, start: s, end: e, existing, verify }) => {
+            const schedule = createSchedule(makeDate(now, s), makeDate(now, e));
+            const info: ScheduleInputInfo = {
+                roundingTimeType: rounding,
+                startEndType: "fill",
+                startEndTime: 30,
+            };
+            const existingEvents = existing?.map((e) =>
+                createTestEvent(makeDate(now, [e.start[0], e.start[1]]), makeDate(now, [e.end[0], e.end[1]]), e.name),
+            );
+            const events = algorithm.scheduleToEvent(schedule, info, existingEvents ?? []);
+            verify(events);
         });
     });
 
     describe("searchNextEvent", () => {
-        test("should find next event with small comparison from start", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                    "1",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30, 0),
-                    "2",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30, 0),
-                    "3",
-                ),
-            ];
+        interface SearchCaseSingle {
+            caseId: string;
+            title: string;
+            events: Array<{ start: [number, number]; end: [number, number]; name: string }>;
+            current?: { start: [number, number]; end: [number, number]; name: string } | null;
+            compare: "small" | "large";
+            expectedName: string | null;
+            expectedStart?: [number, number];
+            expectedEnd?: [number, number];
+        }
+        interface SearchCaseBoth {
+            caseId: string;
+            title: string;
+            events: Array<{ start: [number, number]; end: [number, number]; name: string }>;
+            current: { start: [number, number]; end: [number, number]; name: string } | null;
+            compare: "both";
+            expectedSmall: { name: string | null; start?: [number, number]; end?: [number, number] };
+            expectedLarge: { name: string | null; start?: [number, number]; end?: [number, number] };
+        }
+        type SearchCase = SearchCaseSingle | SearchCaseBoth;
+        const baseDay = () => [now.getFullYear(), now.getMonth(), now.getDate()] as const;
+        const makeDate = (h: number, m: number) => new Date(baseDay()[0], baseDay()[1], baseDay()[2], h, m, 0);
+        const searchCases: SearchCase[] = [
+            {
+                caseId: "SN01",
+                title: "initial selection small (shortest)",
+                events: [
+                    { start: [10, 0], end: [10, 30], name: "1" },
+                    { start: [10, 0], end: [11, 30], name: "2" },
+                    { start: [11, 0], end: [11, 30], name: "3" },
+                ],
+                current: null,
+                compare: "small",
+                expectedName: "1",
+                expectedStart: [10, 0],
+                expectedEnd: [10, 30],
+            },
+            {
+                caseId: "SN02",
+                title: "initial selection large (longest)",
+                events: [
+                    { start: [10, 0], end: [10, 30], name: "1" },
+                    { start: [10, 0], end: [12, 0], name: "4" },
+                ],
+                current: null,
+                compare: "large",
+                expectedName: "4",
+                expectedStart: [10, 0],
+                expectedEnd: [12, 0],
+            },
+            {
+                caseId: "SN03",
+                title: "no next event (returns null)",
+                events: [{ start: [10, 0], end: [11, 0], name: "1" }],
+                current: { start: [12, 0], end: [13, 0], name: "current" },
+                compare: "small",
+                expectedName: null,
+            },
+            {
+                caseId: "SN04",
+                title: "after current event (small)",
+                events: [
+                    { start: [10, 0], end: [10, 30], name: "1" },
+                    { start: [10, 0], end: [11, 30], name: "2" },
+                    { start: [11, 0], end: [11, 30], name: "3" },
+                ],
+                current: { start: [10, 0], end: [10, 30], name: "current" },
+                compare: "small",
+                expectedName: "2",
+                expectedStart: [10, 30],
+                expectedEnd: [11, 0],
+            },
+            {
+                caseId: "SN05",
+                title: "overlapping long current choose longest (large)",
+                events: [
+                    { start: [10, 0], end: [11, 30], name: "2" },
+                    { start: [10, 0], end: [12, 0], name: "4" },
+                ],
+                current: { start: [10, 0], end: [13, 30], name: "current" },
+                compare: "large",
+                // current が全体を包含するため候補なし -> null
+                expectedName: null,
+            },
+            {
+                caseId: "SN06",
+                title: "no next exists (explicit)",
+                events: [{ start: [10, 0], end: [11, 0], name: "1" }],
+                current: { start: [12, 0], end: [13, 0], name: "current" },
+                compare: "small",
+                expectedName: null,
+            },
+            {
+                caseId: "SN07",
+                title: "large comparison after current event",
+                events: [
+                    { start: [10, 0], end: [11, 30], name: "2" },
+                    { start: [10, 0], end: [12, 0], name: "4" },
+                ],
+                current: { start: [10, 0], end: [10, 30], name: "current" },
+                compare: "large",
+                expectedName: "4",
+                expectedStart: [10, 30],
+                expectedEnd: [12, 0],
+            },
+            {
+                caseId: "SN08",
+                title: "small from long overlapping event",
+                events: [
+                    { start: [12, 30], end: [14, 0], name: "7" },
+                    { start: [13, 30], end: [15, 0], name: "5" },
+                ],
+                current: { start: [10, 0], end: [13, 30], name: "current" },
+                compare: "small",
+                expectedName: "7",
+                expectedStart: [13, 30],
+                expectedEnd: [14, 0],
+            },
+            {
+                caseId: "SN09",
+                title: "large from long overlapping event",
+                events: [
+                    { start: [12, 30], end: [14, 0], name: "7" },
+                    { start: [13, 30], end: [15, 0], name: "5" },
+                ],
+                current: { start: [10, 0], end: [13, 30], name: "current" },
+                compare: "large",
+                expectedName: "5",
+                expectedStart: [13, 30],
+                expectedEnd: [15, 0],
+            },
+            {
+                caseId: "SN10",
+                title: "no overlap same result both",
+                events: [{ start: [13, 30], end: [15, 0], name: "5" }],
+                current: { start: [10, 0], end: [14, 0], name: "current" },
+                compare: "both",
+                expectedSmall: { name: "5", start: [14, 0], end: [15, 0] },
+                expectedLarge: { name: "5", start: [14, 0], end: [15, 0] },
+            },
+            {
+                caseId: "SN11",
+                title: "before work hours both comparisons",
+                events: [
+                    { start: [10, 0], end: [10, 30], name: "1" },
+                    { start: [10, 0], end: [12, 0], name: "4" },
+                ],
+                current: { start: [9, 0], end: [9, 30], name: "current" },
+                compare: "both",
+                expectedSmall: { name: "1", start: [10, 0], end: [10, 30] },
+                expectedLarge: { name: "4", start: [10, 0], end: [12, 0] },
+            },
+        ];
 
-            // currentItemがnullの場合、最初のイベントを返す（小さい順）
-            const result = algorithm.searchNextEvent(null, events, "small");
-
-            expect(result).toBeDefined();
-            expect(result!.name).toBe("1"); // 最も短いイベント
-            assertDateTime(result!.schedule.start, now, { hour: 10, minute: 0, second: 0 });
-            assertDateTime(result!.schedule.end!, now, { hour: 10, minute: 30, second: 0 });
-        });
-
-        test("should find next event with large comparison from start", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                    "1",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0),
-                    "4",
-                ),
-            ];
-
-            const result = algorithm.searchNextEvent(null, events, "large");
-
-            expect(result).toBeDefined();
-            expect(result!.name).toBe("4"); // 最も長いイベント
-            assertDateTime(result!.schedule.start, now, { hour: 10, minute: 0, second: 0 });
-            assertDateTime(result!.schedule.end!, now, { hour: 12, minute: 0, second: 0 });
-        });
-
-        test("should find next event after current event", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                    "1",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30, 0),
-                    "2",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30, 0),
-                    "3",
-                ),
-            ];
-
-            const currentEvent = createTestEvent(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                "current",
+        test.each(searchCases)("[$caseId] should find next event - $title", (c) => {
+            const evs = c.events.map((e) =>
+                createTestEvent(makeDate(e.start[0], e.start[1]), makeDate(e.end[0], e.end[1]), e.name),
             );
-
-            const result = algorithm.searchNextEvent(currentEvent, events, "small");
-
-            expect(result).toBeDefined();
-            expect(result!.name).toBe("2");
-            // 重複部分が調整される
-            assertDateTime(result!.schedule.start, now, { hour: 10, minute: 30, second: 0 });
-            assertDateTime(result!.schedule.end!, now, { hour: 11, minute: 0, second: 0 });
+            const curr = c.current
+                ? createTestEvent(
+                      makeDate(c.current.start[0], c.current.start[1]),
+                      makeDate(c.current.end[0], c.current.end[1]),
+                      c.current.name,
+                  )
+                : null;
+            if (c.compare === "both") {
+                const small = algorithm.searchNextEvent(curr, evs, "small");
+                const large = algorithm.searchNextEvent(curr, evs, "large");
+                if (c.expectedSmall.name === null) expect(small).toBeNull();
+                else {
+                    expect(small).not.toBeNull();
+                    expect(small!.name).toBe(c.expectedSmall.name);
+                    if (c.expectedSmall.start && c.expectedSmall.end) {
+                        assertDateTime(small!.schedule.start, now, {
+                            hour: c.expectedSmall.start[0],
+                            minute: c.expectedSmall.start[1],
+                            second: 0,
+                        });
+                        assertDateTime(small!.schedule.end!, now, {
+                            hour: c.expectedSmall.end[0],
+                            minute: c.expectedSmall.end[1],
+                            second: 0,
+                        });
+                    }
+                }
+                if (c.expectedLarge.name === null) expect(large).toBeNull();
+                else {
+                    expect(large).not.toBeNull();
+                    expect(large!.name).toBe(c.expectedLarge.name);
+                    if (c.expectedLarge.start && c.expectedLarge.end) {
+                        assertDateTime(large!.schedule.start, now, {
+                            hour: c.expectedLarge.start[0],
+                            minute: c.expectedLarge.start[1],
+                            second: 0,
+                        });
+                        assertDateTime(large!.schedule.end!, now, {
+                            hour: c.expectedLarge.end[0],
+                            minute: c.expectedLarge.end[1],
+                            second: 0,
+                        });
+                    }
+                }
+            } else {
+                const result = algorithm.searchNextEvent(curr, evs, c.compare);
+                if (c.expectedName === null) {
+                    expect(result).toBeNull();
+                } else {
+                    expect(result).not.toBeNull();
+                    expect(result!.name).toBe(c.expectedName);
+                    if (c.expectedStart && c.expectedEnd) {
+                        assertDateTime(result!.schedule.start, now, {
+                            hour: c.expectedStart[0],
+                            minute: c.expectedStart[1],
+                            second: 0,
+                        });
+                        assertDateTime(result!.schedule.end!, now, {
+                            hour: c.expectedEnd[0],
+                            minute: c.expectedEnd[1],
+                            second: 0,
+                        });
+                    }
+                }
+            }
         });
-
-        test("should handle overlapping events correctly", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30, 0),
-                    "2",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0),
-                    "4",
-                ),
-            ];
-
-            const currentEvent = createTestEvent(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 30, 0),
-                "current",
-            );
-
-            const result = algorithm.searchNextEvent(currentEvent, events, "large");
-
-            // currentEventより後で、最も長いイベントが選ばれる
-            expect(result).toBeDefined();
-            // 重複している部分は調整される
-        });
-
-        test("should return null when no next event exists", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0, 0),
-                    "1",
-                ),
-            ];
-
-            const currentEvent = createTestEvent(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0),
-                "current",
-            );
-
-            const result = algorithm.searchNextEvent(currentEvent, events, "small");
-
-            expect(result).toBeNull();
-        });
-
-        test("should find next event with large comparison after current event", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30, 0),
-                    "2",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0),
-                    "4",
-                ),
-            ];
-
-            const currentEvent = createTestEvent(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                "current",
-            );
-
-            const result = algorithm.searchNextEvent(currentEvent, events, "large");
-
-            expect(result).toBeDefined();
-            expect(result!.name).toBe("4");
-            assertDateTime(result!.schedule.start, now, { hour: 10, minute: 30, second: 0 });
-            assertDateTime(result!.schedule.end!, now, { hour: 12, minute: 0, second: 0 });
-        });
-
-        test("should find next event with small comparison from long overlapping event", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 30, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 14, 0, 0),
-                    "7",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 30, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0),
-                    "5",
-                ),
-            ];
-
-            const currentEvent = createTestEvent(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 30, 0),
-                "current",
-            );
-
-            const result = algorithm.searchNextEvent(currentEvent, events, "small");
-
-            expect(result).toBeDefined();
-            expect(result!.name).toBe("7");
-            assertDateTime(result!.schedule.start, now, { hour: 13, minute: 30, second: 0 });
-            assertDateTime(result!.schedule.end!, now, { hour: 14, minute: 0, second: 0 });
-        });
-
-        test("should find next event with large comparison from long overlapping event", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 30, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 14, 0, 0),
-                    "7",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 30, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0),
-                    "5",
-                ),
-            ];
-
-            const currentEvent = createTestEvent(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 30, 0),
-                "current",
-            );
-
-            const result = algorithm.searchNextEvent(currentEvent, events, "large");
-
-            expect(result).toBeDefined();
-            expect(result!.name).toBe("5");
-            assertDateTime(result!.schedule.start, now, { hour: 13, minute: 30, second: 0 });
-            assertDateTime(result!.schedule.end!, now, { hour: 15, minute: 0, second: 0 });
-        });
-
-        test("should find same event for both small and large when no overlap", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 30, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0),
-                    "5",
-                ),
-            ];
-
-            const currentEvent = createTestEvent(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 14, 0, 0),
-                "current",
-            );
-
-            const resultSmall = algorithm.searchNextEvent(currentEvent, events, "small");
-            const resultLarge = algorithm.searchNextEvent(currentEvent, events, "large");
-
-            expect(resultSmall).toBeDefined();
-            expect(resultLarge).toBeDefined();
-            expect(resultSmall!.name).toBe("5");
-            expect(resultLarge!.name).toBe("5");
-            assertDateTime(resultSmall!.schedule.start, now, { hour: 14, minute: 0, second: 0 });
-            assertDateTime(resultSmall!.schedule.end!, now, { hour: 15, minute: 0, second: 0 });
-            assertDateTime(resultLarge!.schedule.start, now, { hour: 14, minute: 0, second: 0 });
-            assertDateTime(resultLarge!.schedule.end!, now, { hour: 15, minute: 0, second: 0 });
-        });
-
-        test("should find next event from before work hours", () => {
-            const events = [
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0),
-                    "1",
-                ),
-                createTestEvent(
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0),
-                    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0),
-                    "4",
-                ),
-            ];
-
-            const currentEvent = createTestEvent(
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0),
-                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30, 0),
-                "current",
-            );
-
-            const resultSmall = algorithm.searchNextEvent(currentEvent, events, "small");
-            const resultLarge = algorithm.searchNextEvent(currentEvent, events, "large");
-
-            expect(resultSmall).toBeDefined();
-            expect(resultSmall!.name).toBe("1");
-            assertDateTime(resultSmall!.schedule.start, now, { hour: 10, minute: 0, second: 0 });
-            assertDateTime(resultSmall!.schedule.end!, now, { hour: 10, minute: 30, second: 0 });
-
-            expect(resultLarge).toBeDefined();
-            expect(resultLarge!.name).toBe("4");
-            assertDateTime(resultLarge!.schedule.start, now, { hour: 10, minute: 0, second: 0 });
-            assertDateTime(resultLarge!.schedule.end!, now, { hour: 12, minute: 0, second: 0 });
-        });
+        // 旧個別テストは searchCases に統合済み
     });
 });
