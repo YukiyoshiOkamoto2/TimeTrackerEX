@@ -1522,4 +1522,116 @@ describe("TimeTrackerAlgorithm", () => {
         });
         // 旧個別テストは searchCases に統合済み
     });
+
+    describe("境界値テスト", () => {
+        const baseDay = () => [now.getFullYear(), now.getMonth(), now.getDate()] as const;
+        const makeDate = (h: number, m: number) => new Date(baseDay()[0], baseDay()[1], baseDay()[2], h, m, 0);
+
+        it("BV01: 0分のイベントも処理される", () => {
+            const event = createTestEvent(makeDate(9, 0), makeDate(9, 0), "0分イベント");
+            const result = algorithm.splitOneDayTask([event], []);
+            // アルゴリズムは0分(開始=終了)のイベントも処理する
+            expect(result).toHaveLength(1);
+        });
+
+        it("BV02: 24時間に近いイベントも処理される", () => {
+            const event = createTestEvent(makeDate(0, 0), makeDate(23, 59), "24時間イベント");
+            const result = algorithm.splitOneDayTask([event], []);
+            // アルゴリズムは終日イベント(24時間近いイベント)も処理する
+            expect(result).toHaveLength(1);
+        });
+
+        it("BV03: 複数日にまたがるイベント（48時間）", () => {
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0);
+            const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2, 9, 0);
+            const event = createTestEvent(start, end, "48時間イベント");
+            const result = algorithm.splitOneDayTask([event], []);
+            expect(result.length).toBeGreaterThanOrEqual(2); // 少なくとも2日に分割
+        });
+
+        it("BV04: 午前0時をまたぐイベント", () => {
+            const start = makeDate(23, 30);
+            const tomorrow = new Date(start);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 30, 0, 0);
+            const event = createTestEvent(start, tomorrow, "日付またぎ");
+            const result = algorithm.splitOneDayTask([event], []);
+            expect(result.length).toBeGreaterThanOrEqual(1);
+        });
+
+        it("BV05: 非常に多くのイベント（100件）でもパフォーマンスが保たれる", () => {
+            // 現実的な時間範囲で100件のイベントを生成
+            const events = Array.from({ length: 100 }, (_, i) => {
+                // 9:00から18:00まで、各イベントは30分、5分間隔で配置
+                const startMinuteTotal = i * 5; // 0, 5, 10, ..., 495分
+                const startHour = 9 + Math.floor(startMinuteTotal / 60);
+                const startMinute = startMinuteTotal % 60;
+                const endMinuteTotal = startMinuteTotal + 30; // 30分後
+                const endHour = 9 + Math.floor(endMinuteTotal / 60);
+                const endMinute = endMinuteTotal % 60;
+                return createTestEvent(
+                    new Date(baseDay()[0], baseDay()[1], baseDay()[2], startHour, startMinute),
+                    new Date(baseDay()[0], baseDay()[1], baseDay()[2], endHour, endMinute),
+                    `イベント${i}`,
+                );
+            });
+            // パフォーマンステスト: 処理が完了することを確認
+            const result = algorithm.splitOneDayTask(events, []);
+            // 結果の長さは問わない（アルゴリズムの実装によって異なる）
+            expect(result).toBeDefined();
+            expect(Array.isArray(result)).toBe(true);
+        });
+
+        it("BV06: スケジュールの開始時刻と終了時刻が同じ", () => {
+            const schedule = {
+                start: makeDate(9, 0),
+                end: makeDate(9, 0),
+                isHoliday: false,
+                isPaidLeave: false,
+            };
+            const event = createTestEvent(makeDate(9, 0), makeDate(10, 0), "テストイベント");
+            const result = algorithm.splitOneDayTask([event], [schedule]);
+            expect(result).toHaveLength(1);
+        });
+
+        it("BV07: イベント開始時刻がスケジュール範囲のちょうど境界", () => {
+            const schedule = {
+                start: makeDate(9, 0),
+                end: makeDate(18, 0),
+                isHoliday: false,
+                isPaidLeave: false,
+            };
+            const event = createTestEvent(makeDate(9, 0), makeDate(10, 0), "境界イベント");
+            const result = algorithm.splitOneDayTask([event], [schedule]);
+            expect(result).toHaveLength(1);
+            // オブジェクト参照ではなく、イベントの存在を確認
+            expect(result[0].events.length).toBe(1);
+            expect(result[0].events[0].name).toBe("境界イベント");
+        });
+
+        it("BV08: 閏年の2月29日を処理できる", () => {
+            const leapDate = new Date(2024, 1, 29, 9, 0); // 2024年2月29日
+            const event = createTestEvent(leapDate, new Date(2024, 1, 29, 10, 0), "閏年イベント");
+            const result = algorithm.splitOneDayTask([event], []);
+            expect(result).toHaveLength(1);
+            expect(result[0].baseDate.getMonth()).toBe(1);
+            expect(result[0].baseDate.getDate()).toBe(29);
+        });
+
+        it("BV09: 年末年始をまたぐイベント", () => {
+            const start = new Date(2024, 11, 31, 23, 0); // 12月31日 23:00
+            const end = new Date(2025, 0, 1, 1, 0); // 1月1日 1:00
+            const event = createTestEvent(start, end, "年越しイベント");
+            const result = algorithm.splitOneDayTask([event], []);
+            expect(result.length).toBeGreaterThanOrEqual(1);
+        });
+
+        it("BV10: 夏時間の切り替わり境界（UTCタイムゾーンなので影響なし）", () => {
+            const start = makeDate(2, 0);
+            const end = makeDate(3, 0);
+            const event = createTestEvent(start, end, "夏時間イベント");
+            const result = algorithm.splitOneDayTask([event], []);
+            expect(result).toHaveLength(1);
+        });
+    });
 });

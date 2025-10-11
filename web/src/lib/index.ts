@@ -94,3 +94,38 @@ export { LocalStorageStorage, MemoryStorage, getStorage, resetStorage } from "./
  * Storage関連の型定義
  */
 export type { IStorage } from "./storage";
+
+// ========================================
+// DateUtil - 日付ユーティリティ
+// ========================================
+
+/**
+ * 日付ユーティリティ
+ *
+ * @remarks
+ * - タイムゾーンに依存しない安全な日付操作
+ * - YYYY-MM-DD形式の日付キー変換
+ * - 日付比較・範囲計算
+ *
+ * @example
+ * ```typescript
+ * import { formatDateKey, isSameDay, resetTime } from '@/lib'
+ *
+ * const dateKey = formatDateKey(new Date()) // "2024-02-03"
+ * const isToday = isSameDay(new Date(), someDate)
+ * const midnight = resetTime(new Date())
+ * ```
+ */
+export {
+    addDays,
+    compareDates,
+    formatDateKey,
+    getCurrentDate,
+    getDayCount,
+    getToday,
+    getUniqueDateKeys,
+    isOverlapping,
+    isSameDay,
+    parseDateKey,
+    resetTime,
+} from "./dateUtil";

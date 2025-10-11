@@ -11,6 +11,7 @@
 import { TimeTrackerAlgorithm } from "@/core/algorithm";
 import { HistoryManager } from "@/core/history";
 import { IgnoreManager } from "@/core/ignore";
+import { getCurrentDate } from "@/lib/dateUtil";
 import { getLogger } from "@/lib/logger";
 import {
     PaidLeaveInputInfo,
@@ -360,14 +361,16 @@ function filterSheduleRangeEvent(
         logger.info("スケジュール情報なし（ICSのみ）: すべてのイベントを処理対象とします");
         filteredDayTasks = dayTasksResult;
     } else {
-        const scheduleDates = new Set(enableSchedules.map((s) => s.start.toLocaleDateString().split("T")[0]));
+        // ScheduleUtils.getBaseDateKeyを使用してYYYY-MM-DD形式の日付キーを取得
+        const scheduleDates = new Set(enableSchedules.map((s) => ScheduleUtils.getBaseDateKey({ start: s.start, end: s.end })));
 
         // フィルタリング前のイベントを記録
         const allEventsInTasks = dayTasksResult.flatMap((task) => task.events);
         const filteredEventsInTasks = new Set<string>();
 
         filteredDayTasks = dayTasksResult.filter((task) => {
-            const taskDate = task.baseDate.toLocaleDateString().split("T")[0];
+            // ScheduleUtils.getDateKeyを使用してタイムゾーンに依存しない日付比較を実行
+            const taskDate = ScheduleUtils.getDateKey(task.baseDate);
             const isInRange = scheduleDates.has(taskDate);
             if (isInRange) {
                 task.events.forEach((e) => filteredEventsInTasks.add(e.uuid));
@@ -553,8 +556,8 @@ export function calculateLinkingStatistics(
         }
     }
 
-    const from = allEvents.length > 0 ? ScheduleUtils.getBaseDate(allEvents[0].schedule) : new Date();
-    const end = allEvents.length > 0 ? ScheduleUtils.getBaseDate(allEvents[allEvents.length - 1].schedule) : new Date();
+    const from = allEvents.length > 0 ? ScheduleUtils.getBaseDate(allEvents[0].schedule) : getCurrentDate();
+    const end = allEvents.length > 0 ? ScheduleUtils.getBaseDate(allEvents[allEvents.length - 1].schedule) : getCurrentDate();
     const day = {
         normalDays: normalDaySet.size,
         paidLeaveDays: paidLeaveDaysSet.size,

@@ -1,3 +1,4 @@
+import { formatDateKey, isOverlapping, resetTime } from "@/lib/dateUtil";
 import type { Event, Schedule, WorkItem, WorkItemChldren } from "@/types";
 
 /**
@@ -23,13 +24,14 @@ export const ScheduleUtils = {
 
     /**
      * 基準日を取得
+     * @deprecated Use resetTime from @/lib/dateUtil instead
      */
     getBaseDate(schedule: Schedule): Date {
         const date = schedule.start || schedule.end;
         if (!date) {
             throw new Error("Schedule has no start or end date");
         }
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        return resetTime(date);
     },
 
     /**
@@ -37,14 +39,15 @@ export const ScheduleUtils = {
      */
     getBaseDateKey(schedule: Schedule): string {
         const baseDate = this.getBaseDate(schedule);
-        return baseDate.toLocaleDateString("en-CA"); // en-CA は YYYY-MM-DD 形式を返す
+        return formatDateKey(baseDate);
     },
 
     /**
      * 日付オブジェクトから日付キー（YYYY-MM-DD形式）を取得
+     * @deprecated Use formatDateKey from @/lib/dateUtil instead
      */
     getDateKey(date: Date): string {
-        return date.toLocaleDateString("en-CA"); // en-CA は YYYY-MM-DD 形式を返す
+        return formatDateKey(date);
     },
 
     /**
@@ -62,10 +65,7 @@ export const ScheduleUtils = {
             return false;
         }
 
-        const latestStart = Math.max(schedule.start.getTime(), other.start.getTime());
-        const earliestEnd = Math.min(schedule.end.getTime(), other.end.getTime());
-
-        return latestStart < earliestEnd;
+        return isOverlapping(schedule.start, schedule.end, other.start, other.end);
     },
 
     /**

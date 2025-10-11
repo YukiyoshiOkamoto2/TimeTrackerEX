@@ -10,6 +10,7 @@
  * - 履歴のサイズ制限があり、古いエントリから自動削除されます
  */
 
+import { getCurrentDate } from "@/lib/dateUtil";
 import { getMostNestChildren } from "@/types/utils";
 import { getLogger } from "../../lib/logger";
 import { getStorage } from "../../lib/storage";
@@ -241,7 +242,7 @@ export class HistoryManager {
         if (entry) {
             logger.debug(`履歴から作業項目IDを取得: ${key} -> ${entry.itemId}`);
             entry.useCount = entry.useCount + 1;
-            entry.lastUsedDate = new Date();
+            entry.lastUsedDate = getCurrentDate();
             return entry.itemId;
         }
 
@@ -267,7 +268,7 @@ export class HistoryManager {
 
         const key = this.getEventKey(event);
         const existingEntry = this.history.get(key);
-        const now = new Date();
+        const now = getCurrentDate();
 
         if (existingEntry) {
             // 既存エントリの使用回数をインクリメント、最終使用日時を更新
@@ -421,7 +422,7 @@ export class HistoryManager {
         if (entry) {
             entry.itemId = newItemId;
             entry.itemName = newItemName;
-            entry.lastUsedDate = new Date();
+            entry.lastUsedDate = getCurrentDate();
             logger.debug(`履歴を更新: ${key} -> ${newItemId} (${newItemName})`);
             this.dump();
             return true;

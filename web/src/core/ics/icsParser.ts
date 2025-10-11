@@ -1,4 +1,4 @@
-import { getLogger } from "@/lib";
+import { getCurrentDate, getLogger } from "@/lib";
 import ICAL from "ical.js";
 
 import { Event } from "@/types";
@@ -35,7 +35,7 @@ export function parseICS(fileContent: string): InputICSResult {
         logger.debug(`検出されたイベント数: ${vevents.length}`);
 
         // 30日前の基準日
-        const now = new Date();
+        const now = getCurrentDate();
         const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
         // 各イベントを処理
@@ -186,7 +186,7 @@ export function extractRecentEvents(fileContent: string, daysAgo: number = 30): 
     let inEvent = false;
     let firstEventNone = true;
 
-    const now = new Date();
+    const now = getCurrentDate();
     const startDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
 
     for (const line of lines) {

@@ -9,6 +9,7 @@
 | **asyncQueue** | 非同期タスクのキュー管理 (HTTP通信、タイムアウト対応) | 10 |
 | **logger** | ログ出力とレベル管理 | 20 |
 | **storage** | localStorage抽象化 | 33 |
+| **dateUtil** | タイムゾーンに依存しない日付操作 | 27 |
 
 ## 使用方法
 
@@ -41,4 +42,25 @@ const response = await queue.enqueueAsync({
   headers: { 'Authorization': 'Bearer token' },
   json: { data: 'value' }  // POSTの場合
 })
+```
+
+### dateUtil
+```typescript
+import { formatDateKey, isSameDay, resetTime, parseDateKey, addDays } from '@/lib'
+
+// 日付をYYYY-MM-DD形式に変換（タイムゾーン安全）
+const dateKey = formatDateKey(new Date(2024, 1, 3)) // "2024-02-03"
+
+// 日付文字列からDateオブジェクトを作成
+const date = parseDateKey("2024-02-03")
+
+// 時刻をリセット（00:00:00.000）
+const midnight = resetTime(new Date())
+
+// 同じ日かチェック（時刻無視）
+const isToday = isSameDay(new Date(), someDate)
+
+// 日数を加算/減算
+const tomorrow = addDays(new Date(), 1)
+const yesterday = addDays(new Date(), -1)
 ```

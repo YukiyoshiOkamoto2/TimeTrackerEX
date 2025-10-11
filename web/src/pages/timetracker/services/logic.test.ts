@@ -1478,3 +1478,237 @@ describe("TimeTrackerLogic Additional Branch Cases", () => {
         expect(result.settings.paidLeaveInputInfo).toBeUndefined();
     });
 });
+
+describe("TimeTrackerLogic 境界値テスト", () => {
+    const baseProject: Project = {
+        id: "project-1",
+        name: "テストプロジェクト",
+        projectId: "1",
+        projectName: "テストプロジェクト",
+        projectCode: "TEST",
+    };
+
+    const baseSettings: TimeTrackerSettings = {
+        userName: "u",
+        baseUrl: "https://example.com",
+        baseProjectId: 1,
+        ignorableEvents: [],
+        isHistoryAutoInput: false,
+        timeOffEvent: {
+            namePatterns: [{ pattern: "休暇", matchMode: "partial" }],
+            workItemId: 200,
+        },
+        eventDuplicatePriority: { timeCompare: "small" },
+        roundingTimeTypeOfEvent: "backward",
+        scheduleAutoInputInfo: {
+            roundingTimeTypeOfSchedule: "backward",
+            startEndType: "both",
+            startEndTime: 30,
+            workItemId: 300,
+        },
+        paidLeaveInputInfo: {
+            workItemId: 400,
+            startTime: "09:00",
+            endTime: "18:00",
+        },
+    };
+
+    const createEvent = (id: string, name: string, start: string, end: string, extra: Partial<Event> = {}): Event => ({
+        uuid: id,
+        name,
+        organizer: "o",
+        isPrivate: false,
+        isCancelled: false,
+        location: "",
+        schedule: {
+            start: new Date(start),
+            end: new Date(end),
+            ...((extra as any).schedule || {}),
+        },
+        ...extra,
+    });
+
+    const createSchedule = (day: string, opts: Partial<Schedule> = {}): Schedule => ({
+        start: new Date(`${day}T00:00:00`),
+        end: new Date(`${day}T08:00:00`),
+        isHoliday: false,
+        isPaidLeave: false,
+        ...opts,
+    });
+
+    it("BV-L01: 空のイベントとスケジュールを処理", async () => {
+        const { performAutoLinking } = await import("./logic");
+        const input: AutoLinkingInput = {
+            events: [],
+            schedules: [],
+            project: baseProject,
+            workItemChirdren: [],
+            timetracker: baseSettings,
+        } as any;
+        const result = await performAutoLinking(input);
+        expect(result.linked).toHaveLength(0);
+        expect(result.unlinked).toHaveLength(0);
+        expect(result.excluded).toHaveLength(0);
+    });
+
+    it("BV-L02: 1件のイベントと1件のスケジュール", async () => {
+        const { performAutoLinking } = await import("./logic");
+        // TimeTrackerAlgorithmをモックしてdayTasksを確実に返すようにする
+        const algorithmModule = await import("@/core/algorithm");
+        const testEvent = createEvent("e1", "イベント", "2024-02-03T09:00:00", "2024-02-03T10:00:00");
+        (algorithmModule as any).TimeTrackerAlgorithm.mockImplementationOnce(() => ({
+            splitOneDayTask: vi.fn((events: Event[], _schedules: Schedule[]) => {
+                return events.length > 0
+                    ? [
+                          {
+                              baseDate: new Date("2024-02-03"),
+                              project: baseProject,
+                              events,
+                              scheduleEvents: [],
+                          },
+                      ]
+                    : [];
+            }),
+        }));
+        const events = [testEvent];
+        const schedules = [createSchedule("2024-02-03")];
+        const input: AutoLinkingInput = {
+            events,
+            schedules,
+            project: baseProject,
+            workItemChirdren: [],
+            timetracker: baseSettings,
+        } as any;
+        const result = await performAutoLinking(input);
+        // イベントは処理されるが、workItemが空なので unlinked になる
+        expect(result.unlinked.length + result.linked.length).toBe(1);
+    });
+
+    it("BV-L03: 100件のイベントを処理", async () => {
+        const { performAutoLinking } = await import("./logic");
+        // TimeTrackerAlgorithmをモックしてdayTasksを確実に返すようにする
+        const algorithmModule = await import("@/core/algorithm");
+        const events = Array.from({ length: 100 }, (_, i) =>
+            createEvent(`e${i}`, `イベント${i}`, "2024-02-03T09:00:00", "2024-02-03T10:00:00"),
+        );
+        (algorithmModule as any).TimeTrackerAlgorithm.mockImplementationOnce(() => ({
+            splitOneDayTask: vi.fn((events: Event[], _schedules: Schedule[]) => {
+                return events.length > 0
+                    ? [
+                          {
+                              baseDate: new Date("2024-02-03"),
+                              project: baseProject,
+                              events,
+                              scheduleEvents: [],
+                          },
+                      ]
+                    : [];
+            }),
+        }));
+        const schedules = [createSchedule("2024-02-03")];
+        const input: AutoLinkingInput = {
+            events,
+            schedules,
+            project: baseProject,
+            workItemChirdren: [],
+            timetracker: baseSettings,
+        } as any;
+        const result = await performAutoLinking(input);
+        const totalProcessed = result.linked.length + result.unlinked.length + result.excluded.length;
+        expect(totalProcessed).toBe(100);
+    });
+
+    it("BV-L04: プライベートイベントのみ", async () => {
+        const { performAutoLinking } = await import("./logic");
+        const events = [createEvent("e1", "プライベート", "2024-02-03T09:00:00", "2024-02-03T10:00:00", { isPrivate: true })];
+        const schedules = [createSchedule("2024-02-03")];
+        const input: AutoLinkingInput = {
+            events,
+            schedules,
+            project: baseProject,
+            workItemChirdren: [],
+            timetracker: baseSettings,
+        } as any;
+        const result = await performAutoLinking(input);
+        expect(result.excluded).toHaveLength(1);
+        expect(result.excluded[0].reason).toBe("invalid");
+    });
+
+    it("BV-L05: 全イベントが無視リストに一致", async () => {
+        const { performAutoLinking } = await import("./logic");
+        const events = [
+            createEvent("e1", "無視A", "2024-02-03T09:00:00", "2024-02-03T10:00:00"),
+            createEvent("e2", "無視B", "2024-02-03T11:00:00", "2024-02-03T12:00:00"),
+        ];
+        const schedules = [createSchedule("2024-02-03")];
+        const settings = {
+            ...baseSettings,
+            ignorableEvents: [
+                { pattern: "無視", matchMode: "partial" as const },
+            ],
+        };
+        const input: AutoLinkingInput = {
+            events,
+            schedules,
+            project: baseProject,
+            workItemChirdren: [],
+            timetracker: settings,
+        } as any;
+        const result = await performAutoLinking(input);
+        expect(result.excluded.filter((e) => e.reason === "ignored")).toHaveLength(2);
+    });
+
+    it("BV-L06: 統計計算で日数が正しく計上される", async () => {
+        const { calculateLinkingStatistics } = await import("./logic");
+        const events = [
+            createEvent("e1", "イベント1", "2024-02-01T09:00:00", "2024-02-01T10:00:00"),
+            createEvent("e2", "イベント2", "2024-02-01T11:00:00", "2024-02-01T12:00:00"), // 同日
+            createEvent("e3", "イベント3", "2024-02-02T09:00:00", "2024-02-02T10:00:00"), // 翌日
+        ];
+        const linked = events.map((e) => ({
+            event: e,
+            linkingWorkItem: { type: "auto" as const, autoMethod: "timeOff" as const, workItem: {} as any },
+        }));
+        const stats = calculateLinkingStatistics([], linked, []);
+        expect(stats.day.normalDays).toBe(2); // 2日分
+    });
+
+    it("BV-L07: 有給休暇と通常日が混在する統計", async () => {
+        const { calculateLinkingStatistics } = await import("./logic");
+        const normalEvent = createEvent("e1", "通常", "2024-02-01T09:00:00", "2024-02-01T10:00:00");
+        const paidEvent = createEvent("e2", "有給", "2024-02-02T09:00:00", "2024-02-02T10:00:00", {
+            schedule: {
+                start: new Date("2024-02-02T09:00:00"),
+                end: new Date("2024-02-02T10:00:00"),
+                isPaidLeave: true,
+            },
+        });
+        const linked = [normalEvent, paidEvent].map((e) => ({
+            event: e,
+            linkingWorkItem: { type: "auto" as const, autoMethod: "timeOff" as const, workItem: {} as any },
+        }));
+        const stats = calculateLinkingStatistics([], linked, []);
+        expect(stats.day.normalDays).toBe(1);
+        expect(stats.day.paidLeaveDays).toBe(1);
+    });
+
+    it("BV-L08: 設定検証で存在するWorkItemはクリアされない", async () => {
+        const { validateAndCleanupSettings } = await import("./logic");
+        const workItems = [
+            { id: "10", name: "WI10", folderName: "F", folderPath: "/F" },
+            { id: "11", name: "WI11", folderName: "F", folderPath: "/F" },
+            { id: "400", name: "WI400", folderName: "F", folderPath: "/F" }, // paidLeaveInputInfo用
+        ];
+        const settings: TimeTrackerSettings = {
+            ...baseSettings,
+            timeOffEvent: { namePatterns: [], workItemId: 10 },
+            scheduleAutoInputInfo: { ...baseSettings.scheduleAutoInputInfo, workItemId: 11 },
+            paidLeaveInputInfo: { workItemId: 400, startTime: "09:00", endTime: "18:00" },
+        };
+        const result = validateAndCleanupSettings(settings, workItems);
+        expect(result.cleanedCount).toBe(0);
+        expect(result.settings.timeOffEvent?.workItemId).toBe(10);
+        expect(result.settings.scheduleAutoInputInfo.workItemId).toBe(11);
+        expect(result.settings.paidLeaveInputInfo?.workItemId).toBe(400);
+    });
+});

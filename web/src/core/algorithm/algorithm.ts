@@ -1,4 +1,4 @@
-import { getLogger } from "@/lib";
+import { getCurrentDate, getLogger } from "@/lib";
 import type {
     DayTask,
     Event,
@@ -400,7 +400,7 @@ export class TimeTrackerAlgorithm {
     private checkEvent(events: Event[]): Event[] {
         const maxTime = 6 * 60 * 60 * 1000; // 6時間
         const maxOld = 30; // 30日
-        const now = new Date();
+        const now = getCurrentDate();
         const old = new Date(now.getTime() - maxOld * 24 * 60 * 60 * 1000);
 
         const result: Event[] = [];
