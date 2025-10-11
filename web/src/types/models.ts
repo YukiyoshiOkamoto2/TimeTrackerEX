@@ -5,7 +5,7 @@
  * スケジュール、イベント、プロジェクト、作業項目などのデータ構造を定義します。
  */
 
-import type { RoundingMethod, StartEndType, TimeCompare } from "./settings";
+import type { RoundingMethod, TimeCompare } from "./settings";
 
 /**
  * 勤務イベントタイプ
@@ -157,22 +157,6 @@ export interface EventInputInfo {
     eventDuplicateTimeCompare: TimeCompare;
     /** 時間の丸め処理タイプ */
     roundingTimeType: RoundingMethod;
-}
-
-/**
- * スケジュール入力情報を表すインターフェース
- *
- * @property roundingTimeType - 時間の丸め処理タイプ（nonduplicateを除く）
- * @property startEndType - 開始・終了の処理タイプ
- * @property startEndTime - 開始・終了時間（分単位）
- */
-export interface ScheduleInputInfo {
-    /** 時間の丸め処理タイプ */
-    roundingTimeType: Exclude<RoundingMethod, "nonduplicate">;
-    /** 開始・終了の処理タイプ */
-    startEndType: StartEndType;
-    /** 開始・終了時間（分単位） */
-    startEndTime: number;
 }
 
 /**

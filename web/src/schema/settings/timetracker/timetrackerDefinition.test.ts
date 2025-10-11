@@ -49,7 +49,7 @@ describe("timetrackerDefinition", () => {
                 },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
-                    roundingTimeTypeOfSchedule: "half",
+                    roundingTimeType: "half",
                     startEndTime: 30,
                     workItemId: 456,
                 },
@@ -102,7 +102,7 @@ describe("timetrackerDefinition", () => {
                 },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
-                    roundingTimeTypeOfSchedule: "half",
+                    roundingTimeType: "half",
                     startEndTime: 30,
                     workItemId: 456,
                 },
@@ -124,7 +124,7 @@ describe("timetrackerDefinition", () => {
                 },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
-                    roundingTimeTypeOfSchedule: "half",
+                    roundingTimeType: "half",
                     startEndTime: 30,
                     workItemId: 456,
                 },
@@ -146,7 +146,7 @@ describe("timetrackerDefinition", () => {
                 },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
-                    roundingTimeTypeOfSchedule: "half",
+                    roundingTimeType: "half",
                     startEndTime: 30,
                     workItemId: 456,
                 },
@@ -168,7 +168,7 @@ describe("timetrackerDefinition", () => {
                 },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
-                    roundingTimeTypeOfSchedule: "half",
+                    roundingTimeType: "half",
                     startEndTime: 30,
                     workItemId: 456,
                 },
@@ -194,7 +194,7 @@ describe("timetrackerDefinition", () => {
                 },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
-                    roundingTimeTypeOfSchedule: "half",
+                    roundingTimeType: "half",
                     startEndTime: 30,
                     workItemId: 456,
                 },
@@ -221,7 +221,7 @@ describe("timetrackerDefinition", () => {
                 },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
-                    roundingTimeTypeOfSchedule: "half",
+                    roundingTimeType: "half",
                     startEndTime: 30,
                     workItemId: 456,
                 },
@@ -243,7 +243,7 @@ describe("timetrackerDefinition", () => {
                 },
                 scheduleAutoInputInfo: {
                     startEndType: "both",
-                    roundingTimeTypeOfSchedule: "half",
+                    roundingTimeType: "half",
                     startEndTime: 30,
                     workItemId: 456,
                 },
@@ -546,7 +546,7 @@ describe("timetrackerDefinition", () => {
                     },
                     scheduleAutoInputInfo: {
                         startEndType: "both",
-                        roundingTimeTypeOfSchedule: "half",
+                        roundingTimeType: "half",
                         startEndTime: 30,
                         workItemId: 456,
                     },

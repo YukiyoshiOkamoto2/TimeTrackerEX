@@ -1,196 +1,22 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import type { Event, EventInputInfo, Schedule, ScheduleAutoInputInfo, WorkingEventType } from "@/types";
+import { beforeEach, describe, expect, it } from "vitest";
 import { TimeTrackerAlgorithm } from "./algorithm";
-import type { Event, Project, EventInputInfo, ScheduleInputInfo, Schedule } from "@/types";
 
 describe("TimeTrackerAlgorithm Methods", () => {
     let algorithm: TimeTrackerAlgorithm;
-    const mockProject: Project = {
-        id: "test-project",
-        name: "Test Project",
-        projectId: "1",
-        projectName: "Test Project",
-        projectCode: "TEST",
-    };
     const mockEventInputInfo: EventInputInfo = {
         roundingTimeType: "backward",
         eventDuplicateTimeCompare: "small",
     };
-    const mockScheduleInputInfo: ScheduleInputInfo = {
+    const mockScheduleAutoInputInfo: ScheduleAutoInputInfo = {
         roundingTimeType: "backward",
         startEndType: "both",
         startEndTime: 30,
+        workItemId: 1,
     };
 
     beforeEach(() => {
-        algorithm = new TimeTrackerAlgorithm(mockProject, mockEventInputInfo, mockScheduleInputInfo);
-    });
-
-    describe("isDuplicateEventOrSchedule", () => {
-        const createTestEvent = (uuid: string, start: Date, end: Date): Event => ({
-            uuid,
-            name: `Event ${uuid}`,
-            organizer: "test@example.com",
-            isPrivate: false,
-            isCancelled: false,
-            location: "",
-            schedule: { start, end },
-        });
-
-        const createTestSchedule = (start: Date, end: Date): Schedule => ({
-            start,
-            end,
-        });
-
-        it("DUP01: イベント同士が重複していない場合はfalseを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(false);
-        });
-
-        it("DUP02: イベント同士が重複している場合はtrueを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 11, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 12, 0));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(true);
-        });
-
-        it("DUP03: 自分自身との比較の場合はfalseを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 11, 0));
-            const events = [event1];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(false);
-        });
-
-        it("DUP04: 複数のイベントのうち1つでも重複していればtrueを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 11, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 8, 0), new Date(2024, 1, 3, 8, 30));
-            const event3 = createTestEvent("e3", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 12, 0));
-            const events = [event2, event3];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(true);
-        });
-
-        it("DUP05: スケジュールがイベントと重複していない場合はfalseを返す", () => {
-            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
-            const event = createTestEvent("e1", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
-            const events = [event];
-
-            const result = algorithm.isDuplicateEventOrSchedule(schedule, events);
-
-            expect(result).toBe(false);
-        });
-
-        it("DUP06: スケジュールがイベントと重複している場合はtrueを返す", () => {
-            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 11, 0));
-            const event = createTestEvent("e1", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 12, 0));
-            const events = [event];
-
-            const result = algorithm.isDuplicateEventOrSchedule(schedule, events);
-
-            expect(result).toBe(true);
-        });
-
-        it("DUP07: イベント配列が空の場合はfalseを返す", () => {
-            const event = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 11, 0));
-            const events: Event[] = [];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event, events);
-
-            expect(result).toBe(false);
-        });
-
-        it("DUP08: イベントが完全に包含される場合はtrueを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 12, 0));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(true);
-        });
-
-        it("DUP09: イベントが他のイベントを完全に包含する場合はtrueを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 12, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(true);
-        });
-
-        it("DUP10: 開始時刻と終了時刻がぴったり一致する場合は重複とみなさない", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(false);
-        });
-
-        it("DUP11: 1分だけ重複している場合はtrueを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 1));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(true);
-        });
-
-        it("DUP12: 自分自身を含む複数イベントがあり、他と重複していなければfalseを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
-            const event3 = createTestEvent("e3", new Date(2024, 1, 3, 11, 0), new Date(2024, 1, 3, 12, 0));
-            const events = [event1, event2, event3];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(false);
-        });
-
-        it("DUP13: 同じ時刻のイベントが複数ある場合、自分以外と重複していればtrueを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(true);
-        });
-
-        it("DUP14: 日をまたぐイベントは基準日が異なるため重複と判定されない", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 23, 0), new Date(2024, 1, 4, 1, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 4, 0, 0), new Date(2024, 1, 4, 2, 0));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            // 基準日が異なるため重複と判定されない（event1の基準日: 2024-01-03, event2の基準日: 2024-01-04）
-            expect(result).toBe(false);
-        });
-
-        it("DUP15: 同じ日の午前0時前後で重複している場合はtrueを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 3, 22, 0), new Date(2024, 1, 3, 23, 30));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 3, 23, 0), new Date(2024, 1, 3, 23, 59));
-            const events = [event2];
-
-            const result = algorithm.isDuplicateEventOrSchedule(event1, events);
-
-            expect(result).toBe(true);
-        });
+        algorithm = new TimeTrackerAlgorithm(mockEventInputInfo, mockScheduleAutoInputInfo);
     });
 
     describe("roundingTime", () => {
@@ -283,10 +109,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS02: 開始終了とも丸め単位で割り切れる場合はそのまま返す", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
 
             const result = algorithm.roundingSchedule(schedule, "backward");
 
@@ -294,10 +117,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS03: backwardモードで両方切り上げられる", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 10, 25)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 10, 25));
 
             const result = algorithm.roundingSchedule(schedule, "backward");
 
@@ -308,10 +128,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS04: forwardモードで両方切り捨てられる", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 10, 25)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 10, 25));
 
             const result = algorithm.roundingSchedule(schedule, "forward");
 
@@ -322,10 +139,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS05: stretchモードで開始は切り捨て、終了は切り上げ", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 10, 25)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 10, 25));
 
             const result = algorithm.roundingSchedule(schedule, "stretch");
 
@@ -336,10 +150,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS06: roundモードで15分未満は切り捨て、15分以上は切り上げ", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 10),
-                new Date(2024, 1, 3, 10, 20)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 10), new Date(2024, 1, 3, 10, 20));
 
             const result = algorithm.roundingSchedule(schedule, "round");
 
@@ -348,10 +159,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS07: halfモードで15分ちょうどは切り上げ", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 10, 15)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 10, 15));
 
             const result = algorithm.roundingSchedule(schedule, "half");
 
@@ -360,10 +168,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS08: 丸めた結果、開始と終了が同じ時刻になる場合はnullを返す", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 9, 20)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 9, 20));
 
             const result = algorithm.roundingSchedule(schedule, "forward");
 
@@ -371,10 +176,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS09: 丸めた結果、開始と終了が30分ちょうどの場合はそのまま返す", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 25),
-                new Date(2024, 1, 3, 9, 35)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 25), new Date(2024, 1, 3, 9, 35));
 
             const result = algorithm.roundingSchedule(schedule, "backward");
 
@@ -386,10 +188,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS10: 丸めた結果が丸め単位(30分)未満になる場合はnullを返す", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 5),
-                new Date(2024, 1, 3, 9, 20)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 5), new Date(2024, 1, 3, 9, 20));
 
             const result = algorithm.roundingSchedule(schedule, "forward");
 
@@ -398,10 +197,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS11: nonduplicateモード - イベント配列がデフォルトで空配列の場合は動作する", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 10, 15)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 10, 15));
 
             // デフォルトで events = [] が設定されているため、エラーにはならない
             const result = algorithm.roundingSchedule(schedule, "nonduplicate");
@@ -413,10 +209,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS12: nonduplicateモード - 重複しない場合は切り捨てと切り上げ", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 10, 15)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 10, 15));
             const events: Event[] = [];
 
             const result = algorithm.roundingSchedule(schedule, "nonduplicate", events);
@@ -427,15 +220,8 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS13: nonduplicateモード - 開始が重複する場合は切り上げ", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 11, 0)
-            );
-            const existingEvent = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 8, 30),
-                new Date(2024, 1, 3, 9, 30)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 11, 0));
+            const existingEvent = createTestEvent("e1", new Date(2024, 1, 3, 8, 30), new Date(2024, 1, 3, 9, 30));
             const events: Event[] = [existingEvent];
 
             const result = algorithm.roundingSchedule(schedule, "nonduplicate", events);
@@ -446,15 +232,8 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS14: nonduplicateモード - 終了が重複する場合は切り捨て", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 45)
-            );
-            const existingEvent = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 10, 30),
-                new Date(2024, 1, 3, 11, 30)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 45));
+            const existingEvent = createTestEvent("e1", new Date(2024, 1, 3, 10, 30), new Date(2024, 1, 3, 11, 30));
             const events: Event[] = [existingEvent];
 
             const result = algorithm.roundingSchedule(schedule, "nonduplicate", events);
@@ -465,10 +244,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS15: 開始のみ丸めが必要で終了は丸め不要の場合", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 10, 0)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 10, 0));
 
             const result = algorithm.roundingSchedule(schedule, "backward");
 
@@ -477,10 +253,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("RS16: 終了のみ丸めが必要で開始は丸め不要の場合", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 15)
-            );
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 15));
 
             const result = algorithm.roundingSchedule(schedule, "backward");
 
@@ -511,15 +284,16 @@ describe("TimeTrackerAlgorithm Methods", () => {
                 end: new Date(2024, 1, 3, 17, 0),
                 isHoliday: true,
             };
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
             expect(() => {
-                algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+                algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
             }).toThrow("スケジュールが休日またはエラーのためイベントに変換できません。");
         });
 
@@ -527,15 +301,16 @@ describe("TimeTrackerAlgorithm Methods", () => {
             const schedule: Schedule = {
                 start: new Date(2024, 1, 3, 9, 0),
             };
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
             expect(() => {
-                algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+                algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
             }).toThrow("スケジュールが休日またはエラーのためイベントに変換できません。");
         });
 
@@ -545,31 +320,30 @@ describe("TimeTrackerAlgorithm Methods", () => {
                 end: new Date(2024, 1, 3, 17, 0),
                 errorMessage: "テストエラー",
             };
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
             expect(() => {
-                algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+                algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
             }).toThrow("スケジュールが休日またはエラーのためイベントに変換できません。");
         });
 
         it("STE04: bothモード - 勤務開始と勤務終了イベントが生成される", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 17, 0)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 17, 0));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
             expect(result).toHaveLength(2);
             expect(result[0].name).toBe("勤務開始");
@@ -579,25 +353,23 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("STE05: bothモード - 勤務開始は30分間のイベント", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 17, 0)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 17, 0));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
-            const startEvent = result.find(e => e.workingEventType === "start");
+            const startEvent = result.find((e) => e.workingEventType === "start");
             expect(startEvent?.schedule.start.getHours()).toBe(9);
             expect(startEvent?.schedule.start.getMinutes()).toBe(0);
             expect(startEvent?.schedule.end?.getHours()).toBe(9);
             expect(startEvent?.schedule.end?.getMinutes()).toBe(30);
-            const endEvent = result.find(e => e.workingEventType === "end");
+            const endEvent = result.find((e) => e.workingEventType === "end");
             expect(endEvent?.schedule.start.getHours()).toBe(16);
             expect(endEvent?.schedule.start.getMinutes()).toBe(30);
             expect(endEvent?.schedule.end?.getHours()).toBe(17);
@@ -605,68 +377,53 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("STE06: bothモード - 既存イベントと重複する場合", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 17, 0)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 17, 0));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
-            const existingEvent = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 16, 0),
-                new Date(2024, 1, 3, 17, 0)
-            );
+            const existingEvent = createTestEvent("e1", new Date(2024, 1, 3, 16, 0), new Date(2024, 1, 3, 17, 0));
             const events: Event[] = [existingEvent];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
             expect(result).toHaveLength(2);
         });
 
         it("STE07: bothモード - 既存イベントと重複しない場合", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 17, 0)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 17, 0));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
-            const existingEvent = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 10, 0),
-                new Date(2024, 1, 3, 11, 0)
-            );
+            const existingEvent = createTestEvent("e1", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
             const events: Event[] = [existingEvent];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
             expect(result).toHaveLength(2);
         });
 
-
         it("STE08: fillモード - 勤務開始、勤務中、勤務終了が生成される", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 11, 0)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 11, 0));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "fill",
                 startEndTime: 30,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
             expect(result.length).toBeGreaterThan(2);
-            const startEvents = result.filter(e => e.workingEventType === "start");
-            const middleEvents = result.filter(e => e.workingEventType === "middle");
-            const endEvents = result.filter(e => e.workingEventType === "end");
+            const startEvents = result.filter((e) => e.workingEventType === "start");
+            const middleEvents = result.filter((e) => e.workingEventType === "middle");
+            const endEvents = result.filter((e) => e.workingEventType === "end");
 
             expect(startEvents).toHaveLength(1);
             expect(middleEvents).toHaveLength(1);
@@ -674,36 +431,30 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("STE10: fillモード - 既存イベントがある場合、その時間は埋めない", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 12, 0)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 12, 0));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "fill",
                 startEndTime: 30,
+                workItemId: 1,
             };
-            const existingEvent = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 10, 0),
-                new Date(2024, 1, 3, 11, 0)
-            );
+            const existingEvent = createTestEvent("e1", new Date(2024, 1, 3, 10, 0), new Date(2024, 1, 3, 11, 0));
             const events: Event[] = [existingEvent];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
             // 既存イベントの時間帯は埋められないため、中間イベントは分割される
-            const middleEvents = result.filter(e => e.workingEventType === "middle");
+            const middleEvents = result.filter((e) => e.workingEventType === "middle");
 
             // 既存イベントがある場合、その前後で分割される
             expect(middleEvents).toHaveLength(2);
 
-            const first = middleEvents[0]
+            const first = middleEvents[0];
             expect(first?.schedule.start.getHours()).toBe(9);
             expect(first?.schedule.start.getMinutes()).toBe(30);
             expect(first?.schedule.end?.getHours()).toBe(10);
             expect(first?.schedule.end?.getMinutes()).toBe(0);
-            const second = middleEvents[1]
+            const second = middleEvents[1];
             expect(second?.schedule.start.getHours()).toBe(11);
             expect(second?.schedule.start.getMinutes()).toBe(0);
             expect(second?.schedule.end?.getHours()).toBe(11);
@@ -711,23 +462,21 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("STE12: bothモード - roundingTimeTypeがstretchの場合", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 15),
-                new Date(2024, 1, 3, 17, 15)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 15), new Date(2024, 1, 3, 17, 15));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "stretch",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
             expect(result).toHaveLength(2);
             // stretchは開始を切り捨て、終了を切り上げ
-            const startEvent = result.find(e => e.workingEventType === "start");
-            const endEvent = result.find(e => e.workingEventType === "end");
+            const startEvent = result.find((e) => e.workingEventType === "start");
+            const endEvent = result.find((e) => e.workingEventType === "end");
 
             // 開始は9:00-9:30の1時間
             expect(startEvent?.schedule.start.getHours()).toBe(9);
@@ -743,21 +492,19 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("STE13: bothモード - startEndTimeが60分の場合", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 18, 0)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 18, 0));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "backward",
                 startEndType: "both",
                 startEndTime: 60,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
-            const startEvent = result.find(e => e.workingEventType === "start");
-            const endEvent = result.find(e => e.workingEventType === "end");
+            const startEvent = result.find((e) => e.workingEventType === "start");
+            const endEvent = result.find((e) => e.workingEventType === "end");
 
             // 開始は9:00-10:00の1時間
             expect(startEvent?.schedule.start.getHours()).toBe(9);
@@ -769,288 +516,24 @@ describe("TimeTrackerAlgorithm Methods", () => {
         });
 
         it("STE14: bothモード - 勤務時間が短い場合でも開始・終了は別々に処理される", () => {
-            const schedule = createTestSchedule(
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0)
-            );
-            const scheduleInputInfo: ScheduleInputInfo = {
+            const schedule = createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
+            const ScheduleAutoInputInfo: ScheduleAutoInputInfo = {
                 roundingTimeType: "forward",
                 startEndType: "both",
                 startEndTime: 30,
+                workItemId: 1,
             };
             const events: Event[] = [];
 
-            const result = algorithm.scheduleToEvent(schedule, scheduleInputInfo, events);
+            const result = algorithm.scheduleToEvent(schedule, ScheduleAutoInputInfo, events);
 
             // 勤務開始(9:00-9:30)と勤務終了(9:30-10:00)が生成される
             expect(result).toHaveLength(2);
-            const startEvent = result.find(e => e.workingEventType === "start");
-            const endEvent = result.find(e => e.workingEventType === "end");
+            const startEvent = result.find((e) => e.workingEventType === "start");
+            const endEvent = result.find((e) => e.workingEventType === "end");
 
             expect(startEvent).toBeDefined();
             expect(endEvent).toBeDefined();
-        });
-    });
-
-    describe("getRecurrenceEvent", () => {
-        const createTestEvent = (uuid: string, start: Date, end: Date, recurrence?: Date[]): Event => ({
-            uuid,
-            name: `Event ${uuid}`,
-            organizer: "test@example.com",
-            isPrivate: false,
-            isCancelled: false,
-            location: "",
-            schedule: { start, end },
-            recurrence,
-        });
-
-        it("GRE01: recurrenceがundefinedの場合は空配列を返す", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0)
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toEqual([]);
-        });
-
-        it("GRE02: recurrenceがnullの場合は空配列を返す", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                null as any
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toEqual([]);
-        });
-
-        it("GRE03: recurrenceが空配列の場合は空配列を返す", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                []
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toEqual([]);
-        });
-
-        it("GRE04: 繰り返し日が1つある場合、1つのイベントが生成される", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                [new Date(2024, 1, 4)] // 翌日
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(1);
-        });
-
-        it("GRE05: 繰り返し日が複数ある場合、複数のイベントが生成される", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                [
-                    new Date(2024, 1, 4),
-                    new Date(2024, 1, 5),
-                    new Date(2024, 1, 6),
-                ]
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(3);
-        });
-
-        it("GRE06: 元のイベントと同じ日付は除外される", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                [
-                    new Date(2024, 1, 3), // 同じ日
-                    new Date(2024, 1, 4),
-                ]
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            // 同じ日は除外されるので1つだけ
-            expect(result).toHaveLength(1);
-            expect(result[0].schedule.start.getDate()).toBe(4);
-        });
-
-        it("GRE07: 繰り返しイベントは元の時刻を保持する", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 14, 30, 45), // 14:30:45
-                new Date(2024, 1, 3, 16, 15, 30), // 16:15:30
-                [new Date(2024, 1, 5)]
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(1);
-            expect(result[0].schedule.start.getHours()).toBe(14);
-            expect(result[0].schedule.start.getMinutes()).toBe(30);
-            expect(result[0].schedule.start.getSeconds()).toBe(45);
-            expect(result[0].schedule.end?.getHours()).toBe(16);
-            expect(result[0].schedule.end?.getMinutes()).toBe(15);
-            expect(result[0].schedule.end?.getSeconds()).toBe(30);
-        });
-
-        it("GRE08: 繰り返しイベントの日付は繰り返し日の日付になる", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                [new Date(2024, 1, 10)]
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(1);
-            expect(result[0].schedule.start.getFullYear()).toBe(2024);
-            expect(result[0].schedule.start.getMonth()).toBe(1);
-            expect(result[0].schedule.start.getDate()).toBe(10);
-        });
-
-        it("GRE09: 生成されたイベントのrecurrenceはundefinedになる", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                [
-                    new Date(2024, 1, 4),
-                    new Date(2024, 1, 5),
-                ]
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(2);
-            result.forEach(recEvent => {
-                expect(recEvent.recurrence).toBeUndefined();
-            });
-        });
-
-        it("GRE10: 生成されたイベントは元のイベントのプロパティを継承する", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                [new Date(2024, 1, 4)]
-            );
-            event.name = "定例会議";
-            event.location = "会議室A";
-            event.isPrivate = true;
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(1);
-            expect(result[0].name).toBe("定例会議");
-            expect(result[0].location).toBe("会議室A");
-            expect(result[0].isPrivate).toBe(true);
-        });
-
-        it("GRE11: UUIDは新しく生成される", () => {
-            const event = createTestEvent(
-                "original-uuid",
-                new Date(2024, 1, 3, 9, 0),
-                new Date(2024, 1, 3, 10, 0),
-                [new Date(2024, 1, 4)]
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(1);
-            // 新しいUUIDが生成されるため、元のUUIDとは異なる
-            expect(result[0].uuid).not.toBe("original-uuid");
-        });
-
-        it("GRE12: 異なる月の繰り返し日も正しく処理される", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 0, 15, 9, 0), // 1月15日
-                new Date(2024, 0, 15, 10, 0),
-                [
-                    new Date(2024, 1, 15), // 2月15日
-                    new Date(2024, 2, 15), // 3月15日
-                ]
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(2);
-            expect(result[0].schedule.start.getMonth()).toBe(1); // 2月
-            expect(result[0].schedule.start.getDate()).toBe(15);
-            expect(result[1].schedule.start.getMonth()).toBe(2); // 3月
-            expect(result[1].schedule.start.getDate()).toBe(15);
-        });
-
-        it("GRE13: 異なる年の繰り返し日も正しく処理される", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 11, 1, 9, 0), // 2024年12月1日
-                new Date(2024, 11, 1, 10, 0),
-                [new Date(2025, 0, 1)] // 2025年1月1日
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(1);
-            expect(result[0].schedule.start.getFullYear()).toBe(2025);
-            expect(result[0].schedule.start.getMonth()).toBe(0); // 1月
-            expect(result[0].schedule.start.getDate()).toBe(1);
-        });
-
-        it("GRE14: 終了時刻がundefinedの場合も正しく処理される", () => {
-            const event: Event = {
-                uuid: "e1",
-                name: "Event 1",
-                organizer: "test@example.com",
-                isPrivate: false,
-                isCancelled: false,
-                location: "",
-                schedule: {
-                    start: new Date(2024, 1, 3, 9, 0),
-                    end: undefined,
-                },
-                recurrence: [new Date(2024, 1, 4)],
-            };
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            expect(result).toHaveLength(1);
-            expect(result[0].schedule.end).toBeUndefined();
-        });
-
-        it("GRE15: 過去と未来の繰り返し日が混在している場合", () => {
-            const event = createTestEvent(
-                "e1",
-                new Date(2024, 1, 15, 9, 0), // 2月15日
-                new Date(2024, 1, 15, 10, 0),
-                [
-                    new Date(2024, 1, 10), // 2月10日（過去）
-                    new Date(2024, 1, 20), // 2月20日（未来）
-                    new Date(2024, 1, 25), // 2月25日（未来）
-                ]
-            );
-
-            const result = algorithm.getRecurrenceEvent(event);
-
-            // すべての繰り返し日でイベントが生成される（基準日と異なれば）
-            expect(result).toHaveLength(3);
         });
     });
 
@@ -1205,8 +688,16 @@ describe("TimeTrackerAlgorithm Methods", () => {
             const now = new Date();
             const event1 = createTestEvent("e1", new Date(now.getTime() - 60 * 60 * 1000), now); // 通過
             const event2 = createTestEvent("e2", new Date(now.getTime() - 7 * 60 * 60 * 1000), now); // 6時間超
-            const event3 = createTestEvent("e3", new Date(now.getTime() + 60 * 60 * 1000), new Date(now.getTime() + 2 * 60 * 60 * 1000)); // 未来
-            const event4 = createTestEvent("e4", new Date(now.getTime() - 2 * 60 * 60 * 1000), new Date(now.getTime() - 60 * 60 * 1000)); // 通過
+            const event3 = createTestEvent(
+                "e3",
+                new Date(now.getTime() + 60 * 60 * 1000),
+                new Date(now.getTime() + 2 * 60 * 60 * 1000),
+            ); // 未来
+            const event4 = createTestEvent(
+                "e4",
+                new Date(now.getTime() - 2 * 60 * 60 * 1000),
+                new Date(now.getTime() - 60 * 60 * 1000),
+            ); // 通過
 
             const result = checkEvent([event1, event2, event3, event4]);
 
@@ -1230,327 +721,6 @@ describe("TimeTrackerAlgorithm Methods", () => {
 
             expect(result).toHaveLength(1);
             expect(result[0].uuid).toBe("e1");
-        });
-    });
-
-    describe("searchNextEvent", () => {
-        const createTestEvent = (uuid: string, start: Date, end: Date): Event => ({
-            uuid,
-            name: `Event ${uuid}`,
-            organizer: "test@example.com",
-            isPrivate: false,
-            isCancelled: false,
-            location: "",
-            schedule: { start, end },
-        });
-
-        it("SNE01: イベント配列が空の場合はnullを返す", () => {
-            const result = algorithm.searchNextEvent(null, [], "small");
-
-            expect(result).toBeNull();
-        });
-
-        it("SNE02: currentItemがnullで1つのイベントがある場合、そのイベントを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const events = [event1];
-
-            const result = algorithm.searchNextEvent(null, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e1");
-        });
-
-        it("SNE03: currentItemがnullで複数イベント - smallモードで最も小さいイベントを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0)); // 60分
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 9, 30)); // 30分
-            const events = [event1, event2];
-
-            const result = algorithm.searchNextEvent(null, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e2"); // 30分の方が小さい
-        });
-
-        it("SNE04: currentItemがnullで複数イベント - largeモードで最も大きいイベントを返す", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0)); // 60分
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 9, 30)); // 30分
-            const events = [event1, event2];
-
-            const result = algorithm.searchNextEvent(null, events, "large");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e1"); // 60分の方が大きい
-        });
-
-        it("SNE05: currentItemありで次のイベントがない場合はnullを返す", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const events = [current];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).toBeNull();
-        });
-
-        it("SNE06: currentItemより後のイベントを返す", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            const events = [current, event2];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e2");
-        });
-
-        it("SNE07: currentItemと重複するイベントは調整される", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 30), new Date(2024, 1, 1, 11, 0));
-            const events = [current, event2];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e2");
-            // 重複部分が調整されて10:00から開始になる
-            expect(result!.schedule.start.getTime()).toBe(new Date(2024, 1, 1, 10, 0).getTime());
-            expect(result!.schedule.end!.getTime()).toBe(new Date(2024, 1, 1, 11, 0).getTime());
-        });
-
-        it("SNE08: currentItemと完全に重複するイベントはスキップされる", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e3"); // e2はスキップされてe3が返る
-        });
-
-        it("SNE09: 複数の候補から開始時刻が最も早いものを選ぶ", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 11, 0), new Date(2024, 1, 1, 12, 0));
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e3"); // 10:00開始のe3
-        });
-
-        it("SNE10: 開始時刻が同じで重複する場合 - smallモードで小さい方を選ぶ", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0)); // 60分
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 10, 30)); // 30分
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e3"); // 小さい方
-        });
-
-        it("SNE11: 開始時刻が同じで重複する場合 - largeモードで大きい方を選ぶ", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0)); // 60分
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 10, 30)); // 30分
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "large");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e2"); // 大きい方
-        });
-
-        it("SNE12: 次のイベントが複数重複している場合 - smallモードで小さい方を選ぶ", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 12, 0)); // 120分
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0)); // 60分
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            // smallモードなので小さいe3が選ばれる
-            expect(result!.uuid).toBe("e3");
-            expect(result!.schedule.start.getTime()).toBe(new Date(2024, 1, 1, 10, 0).getTime());
-            expect(result!.schedule.end!.getTime()).toBe(new Date(2024, 1, 1, 11, 0).getTime());
-        });
-
-        it("SNE13: 次のイベントが複数重複している場合 - largeモードでそのまま返される", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 12, 0)); // 120分
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0)); // 60分
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "large");
-
-            expect(result).not.toBeNull();
-            // largeモードなので大きいe2がそのまま返される
-            expect(result!.uuid).toBe("e2");
-            expect(result!.schedule.start.getTime()).toBe(new Date(2024, 1, 1, 10, 0).getTime());
-            expect(result!.schedule.end!.getTime()).toBe(new Date(2024, 1, 1, 12, 0).getTime());
-        });
-
-        it("SNE14: currentItemがnullでイベントが時系列順でない場合も正しくソートされる", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 1, 11, 0), new Date(2024, 1, 1, 12, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            const events = [event1, event2, event3]; // 順不同
-
-            const result = algorithm.searchNextEvent(null, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e2"); // 最も早い9:00のイベント
-        });
-
-        it("SNE15: 終了時刻がundefinedのイベントはフィルタリングされる", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            event2.schedule.end = undefined;
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 11, 0), new Date(2024, 1, 1, 12, 0));
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e3"); // e2はスキップされる
-        });
-
-        it("SNE16: currentItemがnullで終了時刻がundefinedのイベントも含まれる場合", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            event2.schedule.end = undefined;
-            const events = [event1, event2];
-
-            const result = algorithm.searchNextEvent(null, events, "small");
-
-            // currentItemがnullの場合は終了時刻undefinedでも返される
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e1");
-        });
-
-        it("SNE17: 開始時刻が同じで長さが異なる複数イベント - smallモード", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 12, 0)); // 180分
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0)); // 60分
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 9, 30)); // 30分
-            const events = [event1, event2, event3];
-
-            const result = algorithm.searchNextEvent(null, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e3"); // 最も小さい30分
-        });
-
-        it("SNE18: 開始時刻が同じで長さが異なる複数イベント - largeモード", () => {
-            const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 12, 0)); // 180分
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0)); // 60分
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 9, 30)); // 30分
-            const events = [event1, event2, event3];
-
-            const result = algorithm.searchNextEvent(null, events, "large");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e1"); // 最も大きい180分
-        });
-
-        it("SNE19: currentItemの直後から開始するイベント", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            const events = [current, event2];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e2");
-            expect(result!.schedule.start.getTime()).toBe(new Date(2024, 1, 1, 10, 0).getTime());
-        });
-
-        it("SNE20: currentItemより前のイベントは無視される", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 9, 30));
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 11, 0), new Date(2024, 1, 1, 12, 0));
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e3"); // e2は無視される
-        });
-
-        it("SNE21: 部分的に重複するイベントの調整", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 30));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            const events = [current, event2];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e2");
-            // 10:30から開始に調整される
-            expect(result!.schedule.start.getTime()).toBe(new Date(2024, 1, 1, 10, 30).getTime());
-            expect(result!.schedule.end!.getTime()).toBe(new Date(2024, 1, 1, 11, 0).getTime());
-        });
-
-        it("SNE22: 3つのイベントが重複 - smallモードで最小を選ぶ", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 13, 0)); // 180分
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 12, 0)); // 120分
-            const event4 = createTestEvent("e4", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0)); // 60分
-            const events = [current, event2, event3, event4];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            // smallモードなので最小のe4が選ばれる
-            expect(result!.uuid).toBe("e4");
-            expect(result!.schedule.start.getTime()).toBe(new Date(2024, 1, 1, 10, 0).getTime());
-            expect(result!.schedule.end!.getTime()).toBe(new Date(2024, 1, 1, 11, 0).getTime());
-        });
-
-        it("SNE23: 3つのイベントが重複 - largeモードで最大をそのまま返す", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 13, 0)); // 180分
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 12, 0)); // 120分
-            const event4 = createTestEvent("e4", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0)); // 60分
-            const events = [current, event2, event3, event4];
-
-            const result = algorithm.searchNextEvent(current, events, "large");
-
-            expect(result).not.toBeNull();
-            // largeモードなので最大のe2がそのまま返される
-            expect(result!.uuid).toBe("e2");
-            expect(result!.schedule.end!.getTime()).toBe(new Date(2024, 1, 1, 13, 0).getTime());
-        });
-
-        it("SNE24: 重複調整後に開始と終了が同じになる場合はスキップされる", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 11, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 10, 0), new Date(2024, 1, 1, 11, 0));
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 11, 0), new Date(2024, 1, 1, 12, 0));
-            const events = [current, event2, event3];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            expect(result!.uuid).toBe("e3"); // e2は完全に重複してスキップされる
-        });
-
-        it("SNE25: 複雑なシナリオ - 複数の候補と重複", () => {
-            const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            const event2 = createTestEvent("e2", new Date(2024, 1, 1, 9, 30), new Date(2024, 1, 1, 10, 30));
-            const event3 = createTestEvent("e3", new Date(2024, 1, 1, 10, 30), new Date(2024, 1, 1, 11, 30));
-            const event4 = createTestEvent("e4", new Date(2024, 1, 1, 11, 0), new Date(2024, 1, 1, 12, 0));
-            const events = [current, event2, event3, event4];
-
-            const result = algorithm.searchNextEvent(current, events, "small");
-
-            expect(result).not.toBeNull();
-            // e2は調整されて10:00-10:30になる
-            expect(result!.uuid).toBe("e2");
-            expect(result!.schedule.start.getTime()).toBe(new Date(2024, 1, 1, 10, 0).getTime());
-            expect(result!.schedule.end!.getTime()).toBe(new Date(2024, 1, 1, 10, 30).getTime());
         });
     });
 
@@ -1756,11 +926,11 @@ describe("TimeTrackerAlgorithm Methods", () => {
             // 1日目: 重複あり
             const day1_event1 = createTestEvent("d1e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 11, 0));
             const day1_event2 = createTestEvent("d1e2", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            
+
             // 2日目: 重複なし
             const day2_event1 = createTestEvent("d2e1", new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 10, 0));
             const day2_event2 = createTestEvent("d2e2", new Date(2024, 1, 2, 10, 0), new Date(2024, 1, 2, 11, 0));
-            
+
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [day1_event1, day1_event2]);
             eventMap.set("2024-02-02", [day2_event1, day2_event2]);
@@ -1861,7 +1031,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
             // smallモードなので短時間のイベントが優先される
             expect(events!.length).toBeGreaterThan(0);
             // 最初に選ばれるのは最小のイベント
-            const firstEvent = events!.find(e => e.uuid === "e2" || e.uuid === "e3");
+            const firstEvent = events!.find((e) => e.uuid === "e2" || e.uuid === "e3");
             expect(firstEvent).toBeDefined();
         });
     });
@@ -1918,7 +1088,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
             const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
             const event2 = createTestEvent("e2", new Date(2024, 1, 5, 11, 0), new Date(2024, 1, 5, 12, 0));
             const event3 = createTestEvent("e3", new Date(2024, 1, 10, 13, 0), new Date(2024, 1, 10, 14, 0));
-            
+
             const schedules = [
                 createTestSchedule(new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 18, 0)),
                 createTestSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 18, 0)),
@@ -1936,7 +1106,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
             const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
             const event2 = createTestEvent("e2", new Date(2024, 1, 2, 11, 0), new Date(2024, 1, 2, 12, 0));
             const event3 = createTestEvent("e3", new Date(2024, 1, 5, 13, 0), new Date(2024, 1, 5, 14, 0));
-            
+
             const schedules = [
                 createTestSchedule(new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 18, 0)),
                 createTestSchedule(new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 18, 0)),
@@ -1953,10 +1123,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
 
         it("GEDM06: 繰り返しイベントが展開される", () => {
             const event = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
-            event.recurrence = [
-                new Date(2024, 1, 2, 0, 0, 0),
-                new Date(2024, 1, 3, 0, 0, 0),
-            ];
+            event.recurrence = [new Date(2024, 1, 2, 0, 0, 0), new Date(2024, 1, 3, 0, 0, 0)];
 
             const result = algorithm.getEventDayMap([event], []);
 
@@ -2034,9 +1201,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
             const event1 = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
             const event2 = createTestEvent("e2", new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 10, 0));
 
-            const schedules = [
-                createTestSchedule(new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 18, 0)),
-            ];
+            const schedules = [createTestSchedule(new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 18, 0))];
 
             const result = algorithm.getEventDayMap([event1, event2], schedules);
 
@@ -2050,9 +1215,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
             const event1 = createTestEvent("e1", new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 10, 0));
             const event2 = createTestEvent("e2", new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
 
-            const schedules = [
-                createTestSchedule(new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 18, 0)),
-            ];
+            const schedules = [createTestSchedule(new Date(2024, 1, 2, 9, 0), new Date(2024, 1, 2, 18, 0))];
 
             const result = algorithm.getEventDayMap([event1, event2], schedules);
 
@@ -2077,10 +1240,7 @@ describe("TimeTrackerAlgorithm Methods", () => {
             const events: Event[] = [];
             for (let i = 0; i < 10; i++) {
                 const event = createTestEvent(`e${i}`, new Date(2024, 1, 1, 9 + i, 0), new Date(2024, 1, 1, 10 + i, 0));
-                event.recurrence = [
-                    new Date(2024, 1, 2, 0, 0, 0),
-                    new Date(2024, 1, 3, 0, 0, 0),
-                ];
+                event.recurrence = [new Date(2024, 1, 2, 0, 0, 0), new Date(2024, 1, 3, 0, 0, 0)];
                 events.push(event);
             }
 
@@ -2358,7 +1518,12 @@ describe("TimeTrackerAlgorithm Methods", () => {
         };
 
         it("MSE01: 勤務時間イベントが2つ未満の場合はスキップ", () => {
-            const scheduleEvent = createTestEvent("s1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 9, 30), "start");
+            const scheduleEvent = createTestEvent(
+                "s1",
+                new Date(2024, 1, 1, 9, 0),
+                new Date(2024, 1, 1, 9, 30),
+                "start",
+            );
             const scheduleEventMap = new Map<string, Event[]>();
             scheduleEventMap.set("2024-02-01", [scheduleEvent]);
             const eventMap = new Map<string, Event[]>();
@@ -2465,7 +1630,12 @@ describe("TimeTrackerAlgorithm Methods", () => {
 
         it("MSE07: 中間イベント(middle)が存在する場合", () => {
             const startEvent = createTestEvent("s1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 9, 30), "start");
-            const middleEvent = createTestEvent("s2", new Date(2024, 1, 1, 12, 0), new Date(2024, 1, 1, 13, 0), "middle");
+            const middleEvent = createTestEvent(
+                "s2",
+                new Date(2024, 1, 1, 12, 0),
+                new Date(2024, 1, 1, 13, 0),
+                "middle",
+            );
             const endEvent = createTestEvent("s3", new Date(2024, 1, 1, 17, 30), new Date(2024, 1, 1, 18, 0), "end");
             const scheduleEventMap = new Map<string, Event[]>();
             scheduleEventMap.set("2024-02-01", [startEvent, middleEvent, endEvent]);

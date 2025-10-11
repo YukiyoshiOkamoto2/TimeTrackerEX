@@ -11,10 +11,7 @@ import {
     Link24Regular,
     Warning24Filled,
 } from "@fluentui/react-icons";
-import { TaskStatistics } from "../models/statistics";
-// import type { DetailDialogType } from "./DetailDialog";
 
-// DetailDialogTypeの代替定義（DetailDialogが削除されたため）
 type DetailDialogType = "targetEvents" | "linked" | "unlinked" | "excluded";
 
 const useStyles = makeStyles({
@@ -138,50 +135,28 @@ const useStyles = makeStyles({
     },
 });
 
-export interface StatisticsData {
-    totalDays: number;
-    paidLeaveDays: number;
-    normalEventCount: number;
-    convertedEventCount: number;
-    excludedCount: number;
-    totalLinked: number;
-    timeOffCount: number;
-    historyCount: number;
-    unlinkedCount: number;
-}
-
-export interface ExcludedStatistics {
-    ignored: number;
-    outOfSchedule: number;
-    invalid: number;
-}
-
 export interface StatisticsCardsProps {
-    taskStatistics: TaskStatistics;
-    onCardClick?: (dialogType: DetailDialogType) => void;
+    // schedules: Schedule[];
+    // events: Event[];
+    // paidLeaveDayEvents: Event[];
+    // excludedSchedules: ExcludedScheduleInfo[];
+    // excludedEvents: ExcludedEventInfo[];
+    // linkingEventWorkItemPair: LinkingEventWorkItemPair[];
 }
 
-export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCardsProps) {
+export function StatisticsCards({}: StatisticsCardsProps) {
     const styles = useStyles();
 
-    const targetDays = taskStatistics.day.normalDays + taskStatistics.day.paidLeaveDays;
-    const fromStr = taskStatistics.day.from.toLocaleDateString("ja-JP");
-    const endStr = taskStatistics.day.end.toLocaleDateString("ja-JP");
+    const targetDays = 0;
+    const fromStr = "";
+    const endStr = "";
 
-    const totalLinked =
-        taskStatistics.linked.historyCount +
-        taskStatistics.linked.timeOffCount +
-        taskStatistics.linked.manualCount +
-        taskStatistics.linked.aiLinked;
-    const totalEvents =
-        totalLinked +
-        taskStatistics.linked.unlinkedCount +
-        taskStatistics.excluded.ignored +
-        taskStatistics.excluded.outOfSchedule +
-        taskStatistics.excluded.invalid;
-    const excludedCount =
-        taskStatistics.excluded.ignored + taskStatistics.excluded.outOfSchedule + taskStatistics.excluded.invalid;
-    const unlinkedCount = taskStatistics.linked.unlinkedCount;
+    const totalLinked = 0;
+    const totalEvents = 0;
+    const excludedCount = 0;
+    const unlinkedCount = 0;
+
+    const handleCardClick = (type: DetailDialogType) => {};
 
     return (
         <div className={styles.statsSection}>
@@ -200,15 +175,15 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                         <div className={styles.statDate}>
                             {fromStr}～{endStr}
                         </div>
-                        <div className={styles.statSubText}>有給休暇：{taskStatistics.day.paidLeaveDays}日</div>
+                        <div className={styles.statSubText}>有給休暇：{0}日</div>
                     </div>
                 </Card>
 
                 {/* 対象イベント（削除対象を含む） */}
                 <Card
                     className={styles.statCardInfo}
-                    onClick={onCardClick ? () => onCardClick("targetEvents") : undefined}
-                    style={{ cursor: onCardClick ? "pointer" : "default" }}
+                    onClick={() => handleCardClick("targetEvents")}
+                    style={{ cursor: "pointer" }}
                 >
                     <div className={styles.statCardContent}>
                         <div className={styles.statCardHeader}>
@@ -225,8 +200,8 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                 {/* 紐づけ済み */}
                 <Card
                     className={styles.statCardSuccess}
-                    onClick={onCardClick ? () => onCardClick("linked") : undefined}
-                    style={{ cursor: onCardClick ? "pointer" : "default" }}
+                    onClick={() => handleCardClick("linked")}
+                    style={{ cursor: "pointer" }}
                 >
                     <div className={styles.statCardContent}>
                         <div className={styles.statCardHeader}>
@@ -237,12 +212,11 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                         </div>
                         <div className={styles.statValue}>{totalLinked}件</div>
                         <div className={styles.statSubText}>
-                            休暇：{taskStatistics.linked.timeOffCount}件 / 履歴：{taskStatistics.linked.historyCount}件
-                            / AI：{taskStatistics.linked.aiLinked}件
+                            休暇：{0}件 / 履歴：{0}件 / AI：{0}件
                         </div>
                         <div className={styles.statSubText}>
-                            勤務時間：{taskStatistics.linked.workSheduleCount}件 / 手動：
-                            {taskStatistics.linked.manualCount}件
+                            勤務時間：{0}件 / 手動：
+                            {0}件
                         </div>
                     </div>
                 </Card>
@@ -250,8 +224,8 @@ export function StatisticsCards({ taskStatistics, onCardClick }: StatisticsCards
                 {/* 未紐づけ */}
                 <Card
                     className={unlinkedCount > 0 ? styles.statCardWarning : styles.statCardSuccess}
-                    onClick={onCardClick ? () => onCardClick("unlinked") : undefined}
-                    style={{ cursor: onCardClick ? "pointer" : "default" }}
+                    onClick={() => handleCardClick("unlinked")}
+                    style={{ cursor: "pointer" }}
                 >
                     <div className={styles.statCardContent}>
                         <div className={styles.statCardHeader}>

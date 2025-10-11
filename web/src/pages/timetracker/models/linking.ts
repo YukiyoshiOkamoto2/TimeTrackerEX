@@ -1,4 +1,4 @@
-import { Event, Project, Schedule, TimeTrackerSettings, WorkItem, WorkItemChldren } from "@/types";
+import { Event, Schedule, TimeTrackerSettings, WorkItem, WorkItemChldren } from "@/types";
 
 /**
  * 紐付け状態
@@ -41,6 +41,20 @@ export interface ExcludedEventInfo {
     reasonDetail?: string;
 }
 
+export type ExcludedScheduleReason = "ignored" | "holiday" | "invalid";
+
+/**
+ * 除外されたスケジュールの情報
+ */
+export interface ExcludedScheduleInfo {
+    /** 除外されたイベント */
+    schedule: Schedule;
+    /** 除外理由 */
+    reason: ExcludedScheduleReason;
+    /** 除外理由の詳細説明 */
+    reasonDetail?: string;
+}
+
 /**
  * 自動紐付け処理の入力データ
  */
@@ -49,8 +63,6 @@ export interface AutoLinkingInput {
     events: Event[];
     /** PDFスケジュール */
     schedules: Schedule[];
-    /** プロジェクト情報 */
-    project: Project;
     /** 作業項目リスト */
     workItemChirdren: WorkItemChldren[];
     /** TimeTracker設定 */

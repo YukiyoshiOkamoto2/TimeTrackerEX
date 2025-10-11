@@ -1,13 +1,13 @@
-import type { Event, EventInputInfo, Project, ScheduleInputInfo } from "@/types";
+import type { Event, EventInputInfo, Project, ScheduleAutoInputInfo } from "@/types";
 import { createSchedule, generateUUID, ScheduleUtils } from "@/types/utils";
-import { beforeEach, describe, expect, it, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import { TimeTrackerAlgorithm } from "./algorithm";
 
 let now: Date;
 let algorithm: TimeTrackerAlgorithm;
 let project: Project;
 let eventInputInfo: EventInputInfo;
-let scheduleInputInfo: ScheduleInputInfo;
+let scheduleInputInfo: ScheduleAutoInputInfo;
 
 beforeEach(() => {
     // 現在日時を使用（checkEventで削除されないように）
@@ -19,6 +19,7 @@ beforeEach(() => {
         roundingTimeType: "backward",
         startEndType: "both",
         startEndTime: 30,
+        workItemId: 1,
     };
 
     eventInputInfo = {
@@ -26,15 +27,7 @@ beforeEach(() => {
         roundingTimeType: "nonduplicate",
     };
 
-    project = {
-        id: "1",
-        name: "test-project",
-        projectId: "",
-        projectName: "",
-        projectCode: "",
-    };
-
-    algorithm = new TimeTrackerAlgorithm(project, eventInputInfo, scheduleInputInfo);
+    algorithm = new TimeTrackerAlgorithm(eventInputInfo, scheduleInputInfo);
 });
 
 function createTestEvent(start: Date, end: Date, name = "test-event"): Event {
@@ -652,233 +645,6 @@ describe("TimeTrackerAlgorithm", () => {
             expect(result2[1].name).toBe("勤務終了");
             assertDateTime(result2[1].schedule.start, day2, { hour: 18, minute: 30, second: 0 });
             assertDateTime(result2[1].schedule.end!, day2, { hour: 19, minute: 0, second: 0 });
-        });
-    });
-
-    describe("searchNextEvent", () => {
-        interface SearchCaseSingle {
-            caseId: string;
-            title: string;
-            events: Array<{ start: [number, number]; end: [number, number]; name: string }>;
-            current?: { start: [number, number]; end: [number, number]; name: string } | null;
-            compare: "small" | "large";
-            expectedName: string | null;
-            expectedStart?: [number, number];
-            expectedEnd?: [number, number];
-        }
-        interface SearchCaseBoth {
-            caseId: string;
-            title: string;
-            events: Array<{ start: [number, number]; end: [number, number]; name: string }>;
-            current: { start: [number, number]; end: [number, number]; name: string } | null;
-            compare: "both";
-            expectedSmall: { name: string | null; start?: [number, number]; end?: [number, number] };
-            expectedLarge: { name: string | null; start?: [number, number]; end?: [number, number] };
-        }
-        type SearchCase = SearchCaseSingle | SearchCaseBoth;
-        const baseDay = () => [now.getFullYear(), now.getMonth(), now.getDate()] as const;
-        const makeDate = (h: number, m: number) => new Date(baseDay()[0], baseDay()[1], baseDay()[2], h, m, 0);
-        const searchCases: SearchCase[] = [
-            {
-                caseId: "SN01",
-                title: "initial selection small (shortest)",
-                events: [
-                    { start: [10, 0], end: [10, 30], name: "1" },
-                    { start: [10, 0], end: [11, 30], name: "2" },
-                    { start: [11, 0], end: [11, 30], name: "3" },
-                ],
-                current: null,
-                compare: "small",
-                expectedName: "1",
-                expectedStart: [10, 0],
-                expectedEnd: [10, 30],
-            },
-            {
-                caseId: "SN02",
-                title: "initial selection large (longest)",
-                events: [
-                    { start: [10, 0], end: [10, 30], name: "1" },
-                    { start: [10, 0], end: [12, 0], name: "4" },
-                ],
-                current: null,
-                compare: "large",
-                expectedName: "4",
-                expectedStart: [10, 0],
-                expectedEnd: [12, 0],
-            },
-            {
-                caseId: "SN03",
-                title: "no next event (returns null)",
-                events: [{ start: [10, 0], end: [11, 0], name: "1" }],
-                current: { start: [12, 0], end: [13, 0], name: "current" },
-                compare: "small",
-                expectedName: null,
-            },
-            {
-                caseId: "SN04",
-                title: "after current event (small)",
-                events: [
-                    { start: [10, 0], end: [10, 30], name: "1" },
-                    { start: [10, 0], end: [11, 30], name: "2" },
-                    { start: [11, 0], end: [11, 30], name: "3" },
-                ],
-                current: { start: [10, 0], end: [10, 30], name: "current" },
-                compare: "small",
-                expectedName: "2",
-                expectedStart: [10, 30],
-                expectedEnd: [11, 0],
-            },
-            {
-                caseId: "SN05",
-                title: "overlapping long current choose longest (large)",
-                events: [
-                    { start: [10, 0], end: [11, 30], name: "2" },
-                    { start: [10, 0], end: [12, 0], name: "4" },
-                ],
-                current: { start: [10, 0], end: [13, 30], name: "current" },
-                compare: "large",
-                // current が全体を包含するため候補なし -> null
-                expectedName: null,
-            },
-            {
-                caseId: "SN06",
-                title: "no next exists (explicit)",
-                events: [{ start: [10, 0], end: [11, 0], name: "1" }],
-                current: { start: [12, 0], end: [13, 0], name: "current" },
-                compare: "small",
-                expectedName: null,
-            },
-            {
-                caseId: "SN07",
-                title: "large comparison after current event",
-                events: [
-                    { start: [10, 0], end: [11, 30], name: "2" },
-                    { start: [10, 0], end: [12, 0], name: "4" },
-                ],
-                current: { start: [10, 0], end: [10, 30], name: "current" },
-                compare: "large",
-                expectedName: "4",
-                expectedStart: [10, 30],
-                expectedEnd: [12, 0],
-            },
-            {
-                caseId: "SN08",
-                title: "small from long overlapping event",
-                events: [
-                    { start: [12, 30], end: [14, 0], name: "7" },
-                    { start: [13, 30], end: [15, 0], name: "5" },
-                ],
-                current: { start: [10, 0], end: [13, 30], name: "current" },
-                compare: "small",
-                expectedName: "7",
-                expectedStart: [13, 30],
-                expectedEnd: [14, 0],
-            },
-            {
-                caseId: "SN09",
-                title: "large from long overlapping event",
-                events: [
-                    { start: [12, 30], end: [14, 0], name: "7" },
-                    { start: [13, 30], end: [15, 0], name: "5" },
-                ],
-                current: { start: [10, 0], end: [13, 30], name: "current" },
-                compare: "large",
-                expectedName: "5",
-                expectedStart: [13, 30],
-                expectedEnd: [15, 0],
-            },
-            {
-                caseId: "SN10",
-                title: "no overlap same result both",
-                events: [{ start: [13, 30], end: [15, 0], name: "5" }],
-                current: { start: [10, 0], end: [14, 0], name: "current" },
-                compare: "both",
-                expectedSmall: { name: "5", start: [14, 0], end: [15, 0] },
-                expectedLarge: { name: "5", start: [14, 0], end: [15, 0] },
-            },
-            {
-                caseId: "SN11",
-                title: "before work hours both comparisons",
-                events: [
-                    { start: [10, 0], end: [10, 30], name: "1" },
-                    { start: [10, 0], end: [12, 0], name: "4" },
-                ],
-                current: { start: [9, 0], end: [9, 30], name: "current" },
-                compare: "both",
-                expectedSmall: { name: "1", start: [10, 0], end: [10, 30] },
-                expectedLarge: { name: "4", start: [10, 0], end: [12, 0] },
-            },
-        ];
-
-        test.each(searchCases)("[$caseId] should find next event - $title", (c) => {
-            const evs = c.events.map((e) =>
-                createTestEvent(makeDate(e.start[0], e.start[1]), makeDate(e.end[0], e.end[1]), e.name),
-            );
-            const curr = c.current
-                ? createTestEvent(
-                      makeDate(c.current.start[0], c.current.start[1]),
-                      makeDate(c.current.end[0], c.current.end[1]),
-                      c.current.name,
-                  )
-                : null;
-            if (c.compare === "both") {
-                const small = algorithm.searchNextEvent(curr, evs, "small");
-                const large = algorithm.searchNextEvent(curr, evs, "large");
-                if (c.expectedSmall.name === null) expect(small).toBeNull();
-                else {
-                    expect(small).not.toBeNull();
-                    expect(small!.name).toBe(c.expectedSmall.name);
-                    if (c.expectedSmall.start && c.expectedSmall.end) {
-                        assertDateTime(small!.schedule.start, now, {
-                            hour: c.expectedSmall.start[0],
-                            minute: c.expectedSmall.start[1],
-                            second: 0,
-                        });
-                        assertDateTime(small!.schedule.end!, now, {
-                            hour: c.expectedSmall.end[0],
-                            minute: c.expectedSmall.end[1],
-                            second: 0,
-                        });
-                    }
-                }
-                if (c.expectedLarge.name === null) expect(large).toBeNull();
-                else {
-                    expect(large).not.toBeNull();
-                    expect(large!.name).toBe(c.expectedLarge.name);
-                    if (c.expectedLarge.start && c.expectedLarge.end) {
-                        assertDateTime(large!.schedule.start, now, {
-                            hour: c.expectedLarge.start[0],
-                            minute: c.expectedLarge.start[1],
-                            second: 0,
-                        });
-                        assertDateTime(large!.schedule.end!, now, {
-                            hour: c.expectedLarge.end[0],
-                            minute: c.expectedLarge.end[1],
-                            second: 0,
-                        });
-                    }
-                }
-            } else {
-                const result = algorithm.searchNextEvent(curr, evs, c.compare);
-                if (c.expectedName === null) {
-                    expect(result).toBeNull();
-                } else {
-                    expect(result).not.toBeNull();
-                    expect(result!.name).toBe(c.expectedName);
-                    if (c.expectedStart && c.expectedEnd) {
-                        assertDateTime(result!.schedule.start, now, {
-                            hour: c.expectedStart[0],
-                            minute: c.expectedStart[1],
-                            second: 0,
-                        });
-                        assertDateTime(result!.schedule.end!, now, {
-                            hour: c.expectedEnd[0],
-                            minute: c.expectedEnd[1],
-                            second: 0,
-                        });
-                    }
-                }
-            }
         });
     });
 });

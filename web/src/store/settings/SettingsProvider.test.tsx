@@ -80,7 +80,7 @@ describe("SettingsProvider - Core Logic", () => {
                     },
                     scheduleAutoInputInfo: {
                         startEndType: "both",
-                        roundingTimeTypeOfSchedule: "round",
+                        roundingTimeType: "round",
                         startEndTime: 0,
                         workItemId: 0,
                     },
@@ -214,7 +214,7 @@ describe("SettingsProvider - Core Logic", () => {
                     },
                     scheduleAutoInputInfo: {
                         startEndType: "both",
-                        roundingTimeTypeOfSchedule: "round",
+                        roundingTimeType: "round",
                         startEndTime: 0,
                         workItemId: 0,
                     },
@@ -267,7 +267,7 @@ describe("SettingsProvider - Core Logic", () => {
                     },
                     scheduleAutoInputInfo: {
                         startEndType: "both",
-                        roundingTimeTypeOfSchedule: "round",
+                        roundingTimeType: "round",
                         startEndTime: 0,
                         workItemId: 0,
                     },

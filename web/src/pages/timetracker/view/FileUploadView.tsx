@@ -5,6 +5,7 @@ import { HistoryManager } from "@/core/history";
 import { parseICS } from "@/core/ics";
 import { parsePDF } from "@/core/pdf";
 import { getLogger } from "@/lib";
+import { formatDateTime } from "@/lib/dateUtil";
 import { useSettings } from "@/store/settings/SettingsProvider";
 import { Event, Schedule, ScheduleUtils, WorkItem } from "@/types";
 import {
@@ -28,7 +29,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { ProjectAndWorkItem, useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { ICS, PDF, UploadInfo } from "../models";
-import { formatDateTime } from "@/lib/dateUtil";
 import { validateAndCleanupSettings } from "../services";
 
 // CheckedTableItemの型定義
@@ -380,7 +380,6 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
 
     // プロジェクト情報取得
     const fetchProjectData = async (projectId: string): Promise<ProjectAndWorkItem | undefined> => {
-
         const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId, async () => {
             // プロジェクトID取得失敗時は設定をクリア
             if (timeTrackerSettings) {
@@ -399,11 +398,7 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
         });
 
         if (result.isError) {
-            await appMessageDialogRef.showMessageAsync(
-                "TimeTrackerデータ取得エラー",
-                result.errorMessage,
-                "ERROR",
-            );
+            await appMessageDialogRef.showMessageAsync("TimeTrackerデータ取得エラー", result.errorMessage, "ERROR");
             return;
         }
 
@@ -439,7 +434,6 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
     const handleLinkedClick = async () => {
         setIsLoading(true);
         try {
-
             if (!isAuthenticated) {
                 // 認証チェック
                 const authResult = await sessionHook.authenticateAsync();
@@ -454,7 +448,7 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
             }
 
             // プロジェクト情報取得
-            const itemResult = await fetchProjectData(String(timeTrackerSettings.baseProjectId))
+            const itemResult = await fetchProjectData(String(timeTrackerSettings.baseProjectId));
             if (!itemResult) {
                 return;
             }
@@ -463,14 +457,19 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
             updateHistory(itemResult.workItems);
 
             // 設定の更新
-            const cleanResult = validateAndCleanupSettings(timeTrackerSettings, itemResult.workItems)
+            const cleanResult = validateAndCleanupSettings(timeTrackerSettings, itemResult.workItems);
             if (cleanResult.items.length > 0) {
                 await appMessageDialogRef.showMessageAsync(
                     "設定エラー",
-                    `設定項目に不正なIDが存在します。削除しました。（ ${cleanResult.items.length}件 ）\n\n` +
-                    cleanResult.items.map(i => "・ " + i).join("\n"),
+                    `設定項目に不正なIDが存在します。削除します。（ ${cleanResult.items.length}件 ）\n\n` +
+                        cleanResult.items.map((i) => "・ " + i).join("\n"),
                     "ERROR",
                 );
+                updateSettings({
+                    timetracker: {
+                        ...cleanResult.settings,
+                    },
+                });
                 return;
             }
 

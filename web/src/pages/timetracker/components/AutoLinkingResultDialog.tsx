@@ -10,7 +10,6 @@ import {
     tokens,
 } from "@fluentui/react-components";
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import type { AutoLinkingResult } from "../models/linking";
 
 const useStyles = makeStyles({
     surface: {
@@ -74,13 +73,13 @@ const useStyles = makeStyles({
 
 export type AutoLinkingResultDialogProps = {
     open: boolean;
-    result: AutoLinkingResult | null;
     onClose: () => void;
 };
 
-export function AutoLinkingResultDialog({ open, result, onClose }: AutoLinkingResultDialogProps) {
+export function AutoLinkingResultDialog({ open, onClose }: AutoLinkingResultDialogProps) {
     const styles = useStyles();
 
+    const result = undefined as any;
     if (!result) return null;
 
     const totalEvents = result.linked.length + result.unlinked.length + result.excluded.length;

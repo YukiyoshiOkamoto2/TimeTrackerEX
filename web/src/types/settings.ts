@@ -55,7 +55,7 @@ export interface ScheduleAutoInputInfo {
     /** 開始終了時間の自動入力タイプ */
     startEndType: StartEndType;
     /** 勤務時間の丸め方法 */
-    roundingTimeTypeOfSchedule: RoundingMethod;
+    roundingTimeType: Exclude<RoundingMethod, "nonduplicate">;
     /** 自動入力時間（分） */
     startEndTime: number;
     /** WorkItemID */
@@ -117,9 +117,3 @@ export interface AppSettings {
     /** TimeTracker設定 */
     timetracker: TimeTrackerSettings;
 }
-
-// Type aliases for backward compatibility
-/** @deprecated RoundingMethodを使用してください */
-export type RoundingTimeType = RoundingMethod;
-/** @deprecated TimeCompareを使用してください */
-export type TimeCompareType = TimeCompare;

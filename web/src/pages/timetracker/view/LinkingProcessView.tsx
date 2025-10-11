@@ -1,4 +1,3 @@
-import { appMessageDialogRef } from "@/components/message-dialog";
 import { PageHeader } from "@/components/page";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
@@ -15,8 +14,9 @@ import { HistoryDrawer } from "../components/HistoryDrawer";
 import { StatisticsCards } from "../components/StatisticsCards";
 import { ViewHeader, ViewSection } from "../components/ViewLayout";
 import { UploadInfo } from "../models";
-import { AutoLinkingResult, ExcludedEventInfo, LinkingEventWorkItemPair } from "../models/linking";
-import { calculateLinkingStatistics, performAutoLinking } from "../services/logic";
+import { ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair } from "../models/linking";
+import { getAllEvents } from "../services/converter";
+import { performAutoLinking } from "../services/logic";
 
 const logger = getLogger("LinkingProcessView");
 
@@ -29,7 +29,7 @@ const useStyles = makeStyles({
     },
 });
 
-async function runAutoLinkingAsync(
+async function arunAutoLinkingAsync(
     events: Event[],
     schedules: Schedule[],
     project: Project | undefined,
@@ -53,11 +53,25 @@ async function runAutoLinkingAsync(
     return await performAutoLinking({
         events,
         schedules,
-        project,
         workItemChirdren,
         timetracker,
     });
 }
+
+type LinkingProcessViewState = {
+    schedules: Schedule[];
+    events: Event[];
+    paidLeaveDayEvents: Event[];
+    excludedSchedules: ExcludedScheduleInfo[];
+    excludedEvents: ExcludedEventInfo[];
+};
+
+const historyManager = new HistoryManager();
+const setHistrory = (event: Event, workItem: WorkItem) => {
+    historyManager.load();
+    historyManager.setHistory(event, workItem);
+    historyManager.dump();
+};
 
 export type LinkingProcessViewProps = {
     uploadInfo?: UploadInfo;
@@ -69,20 +83,40 @@ export type LinkingProcessViewProps = {
 export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: LinkingProcessViewProps) {
     const styles = useStyles();
     const { settings } = useSettings();
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    // AI
     const [token, setToken] = useState<string>("");
     const [useHistory, setUseHistory] = useState<boolean>(false);
 
-    const [excludedEvents, setExcludedEvents] = useState<ExcludedEventInfo[]>([]);
-    const [unlinkedEvents, setUnlinkedEvents] = useState<Event[]>([]);
+    // 履歴
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    const [state, setState] = useState<LinkingProcessViewState>();
+    const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
 
-    // 自動紐付け結果ダイアログの状態
-    const [autoLinkingResult, setAutoLinkingResult] = useState<AutoLinkingResult | null>(null);
-    const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
+    const allEvents = [...(state?.events ?? []), ...(state?.paidLeaveDayEvents ?? [])];
+    const linkingEventUUID = linkingEventWorkItemPair.map((l) => l.event.uuid);
 
-    // 履歴マネージャーの初期化
-    const historyManager = useMemo(() => new HistoryManager(), []);
+    // イベントリストを取得（紐づけ済み + 未紐づけ）
+    const allEventTableRow = useMemo((): EventTableRow[] => {
+        const linked = linkingEventWorkItemPair.map((pair) => ({
+            id: pair.event.uuid,
+            item: pair,
+        }));
+
+        const unlinked = allEvents
+            .filter((event) => !linkingEventUUID.includes(event.uuid))
+            .map((event) => ({
+                id: event.uuid,
+                item: event,
+            }));
+        return [...linked, ...unlinked].sort((a, b) => {
+            const aEvent = "event" in a.item ? a.item.event : a.item;
+            const bEvent = "event" in b.item ? b.item.event : b.item;
+            return aEvent.schedule.start.getTime() - bEvent.schedule.start.getTime();
+        });
+    }, [linkingEventWorkItemPair, state]);
 
     // WorkItemの変更ハンドラー
     const handleWorkItemChange = (eventId: string, workItemId: string) => {
@@ -90,11 +124,13 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
         const allWorkItems = getMostNestChildren(workItems);
         const selectedWorkItem = allWorkItems.find((w) => w.id === workItemId);
 
-        if (!selectedWorkItem) return;
+        if (!selectedWorkItem) {
+            logger.error("Selected Unkown WorkItem Id -> " + workItemId);
+            return;
+        }
 
         // eventIdから実際のイベントを取得
-        const eventIndex = linkingEventWorkItemPair.findIndex((_, idx) => `linked-${idx}` === eventId);
-
+        const eventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
         if (eventIndex >= 0) {
             // 既存の紐づけを更新
             const updatedPairs = [...linkingEventWorkItemPair];
@@ -109,84 +145,30 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
                 },
             };
             setLinkingEventWorkItemPair(updatedPairs);
-
-            // 履歴に追加
-            historyManager.setHistory(event, selectedWorkItem);
-            historyManager.dump();
-            logger.info(`履歴に追加: ${event.name} -> ${selectedWorkItem.name}`);
-        } else {
-            // 未紐づけから紐づけ済みに移動
-            const unlinkedIndex = Number.parseInt(eventId.replace("unlinked-", ""));
-            const event = unlinkedEvents[unlinkedIndex];
-
-            if (event) {
-                setLinkingEventWorkItemPair([
-                    ...linkingEventWorkItemPair,
-                    {
-                        event,
-                        linkingWorkItem: {
-                            workItem: selectedWorkItem,
-                            type: "manual",
-                            autoMethod: "none",
-                        },
-                    },
-                ]);
-                setUnlinkedEvents(unlinkedEvents.filter((_, idx) => idx !== unlinkedIndex));
-
-                // 履歴に追加
-                historyManager.setHistory(event, selectedWorkItem);
-                historyManager.dump();
-                logger.info(`履歴に追加: ${event.name} -> ${selectedWorkItem.name}`);
-            }
+            setHistrory(event, selectedWorkItem);
+            return;
         }
+
+        // 未紐づけから紐づけ済みに移動
+        const event = allEvents.find((event) => event.uuid === eventId);
+        if (event) {
+            setLinkingEventWorkItemPair([
+                ...linkingEventWorkItemPair,
+                {
+                    event,
+                    linkingWorkItem: {
+                        workItem: selectedWorkItem,
+                        type: "manual",
+                        autoMethod: "none",
+                    },
+                },
+            ]);
+            setHistrory(event, selectedWorkItem);
+            return;
+        }
+
+        logger.error("Not found event -> id: " + eventId);
     };
-
-    // 統計データの計算
-    const taskStatistics = useMemo(() => {
-        return calculateLinkingStatistics(unlinkedEvents, linkingEventWorkItemPair, excludedEvents);
-    }, [unlinkedEvents, linkingEventWorkItemPair, excludedEvents]);
-
-    // 履歴マネージャーの初期化
-    useEffect(() => {
-        historyManager.load();
-        logger.info("履歴マネージャーを初期化しました");
-    }, [historyManager]);
-
-    // 自動紐付け処理
-    useEffect(() => {
-        const runAutoLinking = async () => {
-            const timetracker = settings.timetracker;
-            const project = uploadInfo?.project;
-            const workItems = uploadInfo?.workItems || [];
-            const events = uploadInfo?.ics?.event ?? [];
-            const schedules = uploadInfo?.pdf?.schedule ?? [];
-
-            setIsLoading(true);
-            try {
-                const result = await runAutoLinkingAsync(events, schedules, project, workItems, timetracker);
-
-                // 結果を状態に保存
-                setExcludedEvents(result.excluded);
-                setUnlinkedEvents(result.unlinked);
-                setLinkingEventWorkItemPair(result.linked);
-
-                // 結果ダイアログを表示
-                setAutoLinkingResult(result);
-                setIsResultDialogOpen(true);
-            } catch (error) {
-                logger.error("自動紐付けエラー:", error);
-                await appMessageDialogRef.showMessageAsync(
-                    "自動紐付けエラー",
-                    `自動紐付け処理中にエラーが発生しました。\n\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-                    "ERROR",
-                );
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        runAutoLinking();
-    }, [uploadInfo, settings.timetracker, setIsLoading]);
 
     const handleSubmit = async () => {
         // // すべてのイベントが未処理の場合は進めない
@@ -218,22 +200,13 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
         // }
     };
 
-    // イベントリストを取得（紐づけ済み + 未紐づけ）
-    const allEvents = useMemo((): EventTableRow[] => {
-        const linked = linkingEventWorkItemPair.map((pair, index) => ({
-            id: `linked-${index}`,
-            item: pair,
-        }));
-        const unlinked = unlinkedEvents.map((event, index) => ({
-            id: `unlinked-${index}`,
-            item: event,
-        }));
-        return [...linked, ...unlinked].sort((a, b) => {
-            const aEvent = "event" in a.item ? a.item.event : a.item;
-            const bEvent = "event" in b.item ? b.item.event : b.item;
-            return aEvent.schedule.start.getTime() - bEvent.schedule.start.getTime();
-        });
-    }, [linkingEventWorkItemPair, unlinkedEvents]);
+    // 有効イベント取得
+    useEffect(() => {
+        const timetracker = settings.timetracker!;
+        const events = uploadInfo?.ics?.event ?? [];
+        const schedules = uploadInfo?.pdf?.schedule ?? [];
+        setState(getAllEvents(timetracker, schedules, events));
+    }, [uploadInfo, settings.timetracker, setState]);
 
     return (
         <>
@@ -248,7 +221,7 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
 
             <ViewSection>
                 {/* サマリーカード */}
-                <StatisticsCards taskStatistics={taskStatistics} />
+                <StatisticsCards />
 
                 {/* AIによる自動紐づけセクション */}
                 <AiLinkingSection
@@ -264,7 +237,7 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
 
                 {/* イベントテーブル */}
                 <EventTable
-                    events={allEvents}
+                    events={allEventTableRow}
                     workItems={uploadInfo?.workItems || []}
                     onWorkItemChange={handleWorkItemChange}
                 />
@@ -290,11 +263,7 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
             <HistoryDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} workItems={uploadInfo?.workItems ?? []} />
 
             {/* 自動紐付け結果ダイアログ */}
-            <AutoLinkingResultDialog
-                open={isResultDialogOpen}
-                result={autoLinkingResult}
-                onClose={() => setIsResultDialogOpen(false)}
-            />
+            <AutoLinkingResultDialog open={isResultDialogOpen} onClose={() => setIsResultDialogOpen(false)} />
         </>
     );
 }

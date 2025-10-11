@@ -7,6 +7,6 @@ export type { HistoryDrawerProps } from "./HistoryDrawer";
 export { ScheduleTable } from "./ScheduleTable";
 export type { ItemCodeDisplayMode, ItemCodeOption, ScheduleItem, ScheduleTableProps } from "./ScheduleTable";
 export { StatisticsCards } from "./StatisticsCards";
-export type { ExcludedStatistics, StatisticsCardsProps, StatisticsData } from "./StatisticsCards";
+export type { StatisticsCardsProps } from "./StatisticsCards";
 export { WorkItemCombobox } from "./WorkItemCombobox";
 export type { WorkItemComboboxProps } from "./WorkItemCombobox";
