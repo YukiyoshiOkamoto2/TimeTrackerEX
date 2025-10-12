@@ -14,15 +14,16 @@ const debugLog = (str: string) => {
     }
 };
 
-/**
- * スケジュールをイベントに変換する処理
- */
-export function scheduleToEvent(
-    schedule: Schedule,
-    scheduleInputInfo: ScheduleAutoInputInfo,
-    events: Event[],
-    roundingTimeUnit: number = ROUNDING_TIME_UNIT,
-): Event[] {
+export const TimeTrackerAlgorithmSchedule = {
+    /**
+     * スケジュールをイベントに変換する処理
+     */
+    scheduleToEvent: (
+        schedule: Schedule,
+        scheduleInputInfo: ScheduleAutoInputInfo,
+        events: Event[],
+        roundingTimeUnit: number = ROUNDING_TIME_UNIT,
+    ): Event[] => {
     if (schedule.isHoliday || !schedule.end || schedule.errorMessage) {
         const errorMsg = "スケジュールが休日またはエラーのためイベントに変換できません。";
         logger.error(errorMsg);
@@ -170,15 +171,15 @@ export function scheduleToEvent(
     debugLog(`===================================================================================`);
 
     return result;
-}
+    },
 
-/**
- * イベントの終了日が基準日と異なる場合、終了日までの日付毎に分割したイベントマップを作成します
- */
-export function addStartToEndDate(
-    eventMap: Map<string, Event[]>,
-    roundingTimeUnit: number = ROUNDING_TIME_UNIT,
-): Map<string, Event[]> {
+    /**
+     * イベントの終了日が基準日と異なる場合、終了日までの日付毎に分割したイベントマップを作成します
+     */
+    addStartToEndDate: (
+        eventMap: Map<string, Event[]>,
+        roundingTimeUnit: number = ROUNDING_TIME_UNIT,
+    ): Map<string, Event[]> => {
     const resultMap = new Map<string, Event[]>();
 
     for (const [dateKey, events] of eventMap.entries()) {
@@ -262,18 +263,18 @@ export function addStartToEndDate(
     debugLog(`=================================================`);
 
     return resultMap;
-}
+    },
 
-/**
- * イベントをクリーンアップして勤務時間イベントと統合する処理
- */
-export function cleanEvent(
-    events: Event[],
-    schedules: Schedule[],
-    eventInputInfo: EventInputInfo,
-    scheduleInputInfo: ScheduleAutoInputInfo,
-    roundingTimeUnit: number = ROUNDING_TIME_UNIT,
-): { margedEvents: Event[]; excluedMargedEvents: Event[] } {
+    /**
+     * イベントをクリーンアップして勤務時間イベントと統合する処理
+     */
+    cleanEvent: (
+        events: Event[],
+        schedules: Schedule[],
+        eventInputInfo: EventInputInfo,
+        scheduleInputInfo: ScheduleAutoInputInfo,
+        roundingTimeUnit: number = ROUNDING_TIME_UNIT,
+    ): { margedEvents: Event[]; excluedMargedEvents: Event[] } => {
     // イベント丸め処理
     const roundedEvents: Event[] = [];
     for (const event of events) {
@@ -293,7 +294,12 @@ export function cleanEvent(
         try {
             const text = ScheduleUtils.getText(schedule);
             debugLog(`Schedule ${text}の変換開始`);
-            const createEvents = scheduleToEvent(schedule, scheduleInputInfo, roundedEvents, roundingTimeUnit);
+            const createEvents = TimeTrackerAlgorithmSchedule.scheduleToEvent(
+                schedule,
+                scheduleInputInfo,
+                roundedEvents,
+                roundingTimeUnit,
+            );
             debugLog(`Schedule ${text}: 生成されたイベント数=${createEvents.length}`);
             return createEvents;
         } catch (error) {
@@ -309,7 +315,8 @@ export function cleanEvent(
         roundedEvents,
     );
     return { margedEvents, excluedMargedEvents };
-}
+    },
+};
 
 // /**
 //  * 1日のタスクを分割する処理

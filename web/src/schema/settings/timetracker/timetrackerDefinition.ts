@@ -216,12 +216,12 @@ export const TIMETRACKER_APPEARANCE_SETTINGS = new ObjectSettingValueInfoTyped<T
     children: {
         historyDisplayCount: new NumberSettingValueInfo({
             name: "履歴表示件数",
-            description: "イベントとWorkItemの紐づけ時に表示する履歴の件数 (1〜10件)",
+            description: "イベントとWorkItemの紐づけ時に表示する履歴の件数 (0~5件)",
             required: true,
             defaultValue: 3,
             integer: true,
-            min: 1,
-            max: 10,
+            min: 0,
+            max: 5,
         }),
     },
 });

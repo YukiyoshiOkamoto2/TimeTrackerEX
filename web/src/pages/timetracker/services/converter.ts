@@ -8,7 +8,7 @@
  * - データ検証
  */
 
-import { scheduleToEvent, TimeTrackerAlgorithmEvent as TimeTrackerAlgorithmHelper } from "@/core/algorithm";
+import { TimeTrackerAlgorithmEvent, TimeTrackerAlgorithmSchedule } from "@/core/algorithm";
 import { IgnoreManager } from "@/core/ignore";
 import { getLogger } from "@/lib/logger";
 import {
@@ -144,13 +144,13 @@ export function getAllEvents(timetracker: TimeTrackerSettings, schedules: Schedu
     const paidLeaveDayEvents = createPaidLeaveDayEvent(schedules, timetracker.paidLeaveInputInfo);
 
     // 繰り返しイベントを作成
-    const recurrenceEvents = enableEvents.flatMap((event) => TimeTrackerAlgorithmHelper.getRecurrenceEvent(event));
+    const recurrenceEvents = enableEvents.flatMap((event) => TimeTrackerAlgorithmEvent.getRecurrenceEvent(event));
 
     // 勤務日外のイベントは削除
     const allEvents = [...enableEvents, ...recurrenceEvents];
-    const filterdEvents = TimeTrackerAlgorithmHelper.getAllEventInScheduleRange(allEvents, enableSchedules);
+    const filterdEvents = TimeTrackerAlgorithmEvent.getAllEventInScheduleRange(allEvents, enableSchedules);
 
-    // 勤務日外のイベントを作成
+    // 勤務日外のイベントを取得
     const enbleUUID = filterdEvents.map((e) => e.uuid);
     excludedEvents.push(
         ...allEvents
@@ -166,7 +166,7 @@ export function getAllEvents(timetracker: TimeTrackerSettings, schedules: Schedu
 
     // 勤務日イベントを作成
     const scheduleEvents = enableSchedules.flatMap((s) =>
-        scheduleToEvent(s, timetracker.scheduleAutoInputInfo, filterdEvents),
+        TimeTrackerAlgorithmSchedule.scheduleToEvent(s, timetracker.scheduleAutoInputInfo, filterdEvents),
     );
 
     return {

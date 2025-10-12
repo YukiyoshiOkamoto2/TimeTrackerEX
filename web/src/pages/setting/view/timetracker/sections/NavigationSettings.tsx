@@ -62,11 +62,6 @@ export function NavigationSettings({
                 <SettingNavigationItem
                     title="外観設定"
                     description="TimeTrackerの表示に関する設定を管理します"
-                    badge={
-                        <Badge appearance="outline" color="subtle">
-                            {settings?.appearance?.historyDisplayCount ?? 3}件表示
-                        </Badge>
-                    }
                     onClick={onNavigateToAppearance}
                 />
             </SettingNavigationSection>

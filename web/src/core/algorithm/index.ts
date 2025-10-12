@@ -20,7 +20,7 @@ export {
 export { TimeTrackerAlgorithmEvent } from "./TimeTrackerAlgorithmEvent";
 
 // Schedule operations - スケジュール処理
-export { addStartToEndDate, cleanEvent, scheduleToEvent } from "./TimeTrackerAlgorithmSchedule";
+export { TimeTrackerAlgorithmSchedule } from "./TimeTrackerAlgorithmSchedule";
 
 // Legacy compatibility - 後方互換性のためTimeTrackerAlgorithmEventをTimeTrackerAlgorithmHelperとしても公開
 export { TimeTrackerAlgorithmEvent as TimeTrackerAlgorithmHelper } from "./TimeTrackerAlgorithmEvent";
