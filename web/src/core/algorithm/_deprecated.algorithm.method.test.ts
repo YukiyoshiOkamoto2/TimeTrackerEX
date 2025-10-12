@@ -1,3 +1,16 @@
+/**
+ * @deprecated このテストファイルは将来削除予定です。
+ *
+ * algorithm.tsのTimeTrackerAlgorithmクラスは将来削除され、
+ * メソッド機能は以下のモジュールに移行されました:
+ * - TimeTrackerAlgorithmCore.ts (roundingTime, roundingSchedule, checkEvent)
+ * - TimeTrackerAlgorithmEvent.ts (Event操作関連)
+ * - TimeTrackerAlgorithmSchedule.ts (Schedule操作関連)
+ *
+ * 各モジュールの新しいテストは以下を参照:
+ * - TimeTrackerAlgorithmHelper.test.ts (各メソッドの統合テスト)
+ */
+
 import type { Event, EventInputInfo, Schedule, ScheduleAutoInputInfo, WorkingEventType } from "@/types";
 import { beforeEach, describe, expect, it } from "vitest";
 import { TimeTrackerAlgorithm } from "./algorithm";

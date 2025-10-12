@@ -12,11 +12,13 @@ const ttDef = TIMETRACKER_SETTINGS_DEFINITION.getTypedChildren()!;
 interface NavigationSettingsProps {
     onNavigateToTimeOffEvents: () => void;
     onNavigateToIgnorableEvents: () => void;
+    onNavigateToAppearance: () => void;
 }
 
 export function NavigationSettings({
     onNavigateToTimeOffEvents,
     onNavigateToIgnorableEvents,
+    onNavigateToAppearance,
 }: NavigationSettingsProps) {
     const { settings } = useTimeTrackerSettings();
 
@@ -53,6 +55,19 @@ export function NavigationSettings({
                         )
                     }
                     onClick={onNavigateToIgnorableEvents}
+                />
+            </SettingNavigationSection>
+
+            <SettingNavigationSection title="外観設定" required={false}>
+                <SettingNavigationItem
+                    title="外観設定"
+                    description="TimeTrackerの表示に関する設定を管理します"
+                    badge={
+                        <Badge appearance="outline" color="subtle">
+                            {settings?.appearance?.historyDisplayCount ?? 3}件表示
+                        </Badge>
+                    }
+                    onClick={onNavigateToAppearance}
                 />
             </SettingNavigationSection>
         </>

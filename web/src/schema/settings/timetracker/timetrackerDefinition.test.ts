@@ -341,7 +341,7 @@ describe("timetrackerDefinition", () => {
                 const partialSettings = {
                     scheduleAutoInputInfo: {
                         startEndType: "both" as StartEndType,
-                        roundingTimeTypeOfSchedule: "half" as RoundingMethod,
+                        roundingTimeType: "half" as RoundingMethod,
                         startEndTime: 60,
                     },
                 } as Partial<TimeTrackerSettings>;
@@ -582,7 +582,7 @@ describe("timetrackerDefinition", () => {
                 const partialSettings = {
                     scheduleAutoInputInfo: {
                         startEndType: "both" as StartEndType,
-                        roundingTimeTypeOfSchedule: "half" as RoundingMethod,
+                        roundingTimeType: "half" as RoundingMethod,
                         startEndTime: 30,
                     },
                 } as Partial<TimeTrackerSettings>;

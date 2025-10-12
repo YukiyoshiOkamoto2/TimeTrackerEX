@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/page";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
-import type { Event, Project, Schedule, TimeTrackerSettings, WorkItem } from "@/types";
+import type { Event, Schedule, WorkItem } from "@/types";
 import { getMostNestChildren } from "@/types/utils";
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { Sparkle24Regular } from "@fluentui/react-icons";
@@ -16,7 +16,6 @@ import { ViewHeader, ViewSection } from "../components/ViewLayout";
 import { UploadInfo } from "../models";
 import { ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair } from "../models/linking";
 import { getAllEvents } from "../services/converter";
-import { performAutoLinking } from "../services/logic";
 
 const logger = getLogger("LinkingProcessView");
 
@@ -29,38 +28,10 @@ const useStyles = makeStyles({
     },
 });
 
-async function arunAutoLinkingAsync(
-    events: Event[],
-    schedules: Schedule[],
-    project: Project | undefined,
-    workItems: WorkItem[],
-    timetracker: TimeTrackerSettings | undefined,
-) {
-    if (!timetracker) {
-        throw new Error("");
-    }
-
-    if (!project || workItems.length === 0) {
-        throw new Error("");
-    }
-
-    if (events.length === 0 && schedules.length === 0) {
-        throw new Error("");
-    }
-
-    // 自動紐付けサービスを実行
-    const workItemChirdren = getMostNestChildren(workItems);
-    return await performAutoLinking({
-        events,
-        schedules,
-        workItemChirdren,
-        timetracker,
-    });
-}
-
 type LinkingProcessViewState = {
     schedules: Schedule[];
     events: Event[];
+    scheduleEvents: Event[];
     paidLeaveDayEvents: Event[];
     excludedSchedules: ExcludedScheduleInfo[];
     excludedEvents: ExcludedEventInfo[];
@@ -95,8 +66,20 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
 
-    const allEvents = [...(state?.events ?? []), ...(state?.paidLeaveDayEvents ?? [])];
+    const allEvents = [
+        ...(state?.events ?? []),
+        ...(state?.paidLeaveDayEvents ?? []),
+        ...(state?.scheduleEvents ?? []),
+    ];
     const linkingEventUUID = linkingEventWorkItemPair.map((l) => l.event.uuid);
+
+    // 履歴から最近使用したWorkItemのIDを取得（設定から件数を取得）
+    const recentWorkItemIds = useMemo(() => {
+        historyManager.load();
+        const allEntries = historyManager.getAllEntries();
+        const maxCount = settings.timetracker?.appearance?.historyDisplayCount ?? 3;
+        return allEntries.slice(0, maxCount).map((entry) => entry.itemId);
+    }, [settings.timetracker?.appearance?.historyDisplayCount]);
 
     // イベントリストを取得（紐づけ済み + 未紐づけ）
     const allEventTableRow = useMemo((): EventTableRow[] => {
@@ -240,6 +223,7 @@ export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: Linking
                     events={allEventTableRow}
                     workItems={uploadInfo?.workItems || []}
                     onWorkItemChange={handleWorkItemChange}
+                    recentWorkItemIds={recentWorkItemIds}
                 />
 
                 {/* 登録実行ボタン */}

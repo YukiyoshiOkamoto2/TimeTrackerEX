@@ -29,7 +29,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { ProjectAndWorkItem, useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { ICS, PDF, UploadInfo } from "../models";
-import { validateAndCleanupSettings } from "../services";
+import { validateAndCleanupSettings } from "../services/validate";
 
 // CheckedTableItemの型定義
 type CheckedTableItem = {

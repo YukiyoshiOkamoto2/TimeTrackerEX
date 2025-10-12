@@ -72,6 +72,12 @@ export interface PaidLeaveInputInfo {
     endTime: string;
 }
 
+/** TimeTracker外観設定 */
+export interface TimeTrackerAppearanceSettings {
+    /** 履歴表示件数 (1-10) */
+    historyDisplayCount: number;
+}
+
 /** TimeTracker設定 */
 export interface TimeTrackerSettings {
     /** ユーザー名(ログイン名) */
@@ -94,6 +100,8 @@ export interface TimeTrackerSettings {
     scheduleAutoInputInfo: ScheduleAutoInputInfo;
     /** 有給休暇の自動入力設定 */
     paidLeaveInputInfo?: PaidLeaveInputInfo;
+    /** 外観設定 */
+    appearance?: TimeTrackerAppearanceSettings;
 }
 
 /** 一般設定 */

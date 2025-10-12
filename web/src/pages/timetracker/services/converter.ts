@@ -8,7 +8,7 @@
  * - データ検証
  */
 
-import { TimeTrackerAlgorithmEvent as TimeTrackerAlgorithmHelper } from "@/core/algorithm";
+import { scheduleToEvent, TimeTrackerAlgorithmEvent as TimeTrackerAlgorithmHelper } from "@/core/algorithm";
 import { IgnoreManager } from "@/core/ignore";
 import { getLogger } from "@/lib/logger";
 import {
@@ -164,9 +164,15 @@ export function getAllEvents(timetracker: TimeTrackerSettings, schedules: Schedu
             }),
     );
 
+    // 勤務日イベントを作成
+    const scheduleEvents = enableSchedules.flatMap((s) =>
+        scheduleToEvent(s, timetracker.scheduleAutoInputInfo, filterdEvents),
+    );
+
     return {
         schedules: enableSchedules,
         events: filterdEvents,
+        scheduleEvents,
         paidLeaveDayEvents,
         excludedSchedules,
         excludedEvents,

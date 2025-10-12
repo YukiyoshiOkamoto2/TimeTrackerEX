@@ -1,3 +1,14 @@
+/**
+ * TimeTrackerAlgorithmEvent および TimeTrackerAlgorithmSchedule のテスト
+ *
+ * このテストファイルは、リファクタリング後の新しいモジュール構成をテストします:
+ * - TimeTrackerAlgorithmEvent: Event操作関連 (isDuplicateEventOrSchedule, getRecurrenceEvent, getAllEventInScheduleRange, searchNextEvent, cleanDuplicateEvent, margedScheduleEvents)
+ * - TimeTrackerAlgorithmSchedule: Schedule操作関連 (scheduleToEvent, addStartToEndDate, cleanEvent, splitOneDayTask)
+ * - TimeTrackerAlgorithmCore: Core機能 (roundingTime, roundingSchedule, checkEvent)
+ *
+ * 注: 旧TimeTrackerAlgorithmクラスのテストは _deprecated.algorithm.test.ts および _deprecated.algorithm.method.test.ts を参照
+ */
+
 import { Event, Schedule } from "@/types";
 import { describe, expect, it } from "vitest";
 import { TimeTrackerAlgorithmEvent as TimeTrackerAlgorithmHelper } from "./TimeTrackerAlgorithmEvent";
@@ -800,13 +811,13 @@ describe("TimeTrackerAlgorithm Methods", () => {
             expect(result!.uuid).toBe("e1"); // 60分の方が大きい
         });
 
-        it("SNE05: currentItemありで次のイベントがない場合はnullを返す", () => {
+        it("SNE05: currentItemありで次のイベントがない場合はundefinedを返す", () => {
             const current = createTestEvent("e1", new Date(2024, 1, 1, 9, 0), new Date(2024, 1, 1, 10, 0));
             const events = [current];
 
             const result = TimeTrackerAlgorithmHelper.searchNextEvent(current, events, "small");
 
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
         });
 
         it("SNE06: currentItemより後のイベントを返す", () => {

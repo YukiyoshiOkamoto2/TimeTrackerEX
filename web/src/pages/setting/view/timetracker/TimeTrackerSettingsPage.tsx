@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useSettings } from "@/store";
 import { IgnorableEventPattern, TimeOffEventPattern, TimeTrackerSettings } from "@/types";
 import { SettingPageLayout } from "../../components";
+import { AppearanceNavigationPage } from "./AppearanceNavigationPage";
 import { IgnorableEventsNavigationPage } from "./IgnorableEventsNavigationPage";
 import { TimeOffEventsNavigationPage } from "./TimeOffEventsNavigationPage";
 import {
@@ -13,7 +14,7 @@ import {
     ScheduleAutoInputSettings,
 } from "./sections";
 
-type SettingView = "main" | "ignorableEvents" | "timeOffEvents";
+type SettingView = "main" | "ignorableEvents" | "timeOffEvents" | "appearance";
 
 export function TimeTrackerSettingsPage() {
     const [currentView, setCurrentView] = useState<SettingView>("main");
@@ -73,6 +74,11 @@ export function TimeTrackerSettingsPage() {
         );
     }
 
+    // 外観設定ビュー
+    if (currentView === "appearance") {
+        return <AppearanceNavigationPage onBack={() => setCurrentView("main")} />;
+    }
+
     // メイン設定ビュー
     return (
         <SettingPageLayout errors={errors}>
@@ -83,6 +89,7 @@ export function TimeTrackerSettingsPage() {
             <NavigationSettings
                 onNavigateToTimeOffEvents={() => setCurrentView("timeOffEvents")}
                 onNavigateToIgnorableEvents={() => setCurrentView("ignorableEvents")}
+                onNavigateToAppearance={() => setCurrentView("appearance")}
             />
         </SettingPageLayout>
     );

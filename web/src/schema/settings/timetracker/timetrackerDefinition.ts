@@ -11,6 +11,7 @@ import {
     ScheduleAutoInputInfo,
     TimeOffEventConfig,
     TimeOffEventPattern,
+    TimeTrackerAppearanceSettings,
     TimeTrackerSettings,
 } from "@/types";
 import {
@@ -140,7 +141,7 @@ export const TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO = new ObjectSettingValueInfoTy
             defaultValue: "both",
             literals: ["both", "start", "end", "fill"],
         }),
-        roundingTimeTypeOfSchedule: new StringSettingValueInfo({
+        roundingTimeType: new StringSettingValueInfo({
             name: "勤務時間の丸め方法",
             description: `30分単位での勤務時間の丸め方法
 - backward: 切り上げ
@@ -174,29 +175,53 @@ export const TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO = new ObjectSettingValueInfoTy
  */
 export const TIMETRACKER_PAID_LEAVE_INPUT_INFO = new ObjectSettingValueInfoTyped<PaidLeaveInputInfo>({
     name: "有給休暇の自動入力設定",
-    description: "有給休暇を自動入力する設定(オブジェクトが存在する場合に有効)",
+    description: "有給休暇の自動入力に関する設定",
     required: false,
     children: {
         workItemId: new NumberSettingValueInfo({
-            name: "有給休暇のWorkItemID",
+            name: "有給休暇WorkItemID",
             description: "有給休暇として登録するWorkItemのID",
             required: true,
             integer: true,
             positive: true,
         }),
         startTime: new StringSettingValueInfo({
-            name: "有給休暇の開始時間",
-            description: "有給休暇の開始時間(HH:MM形式)",
+            name: "開始時間",
+            description: "有給休暇の開始時間（HH:MM形式）",
             required: true,
+            minLength: 5,
+            maxLength: 5,
+            pattern: /^([01][0-9]|2[0-3]):[0-5][0-9]$/,
             defaultValue: "09:00",
-            pattern: /^\d{2}:\d{2}$/,
         }),
         endTime: new StringSettingValueInfo({
-            name: "有給休暇の終了時間",
-            description: "有給休暇の終了時間(HH:MM形式)",
+            name: "終了時間",
+            description: "有給休暇の終了時間（HH:MM形式）",
             required: true,
-            defaultValue: "17:30",
-            pattern: /^\d{2}:\d{2}$/,
+            minLength: 5,
+            maxLength: 5,
+            pattern: /^([01][0-9]|2[0-3]):[0-5][0-9]$/,
+            defaultValue: "18:00",
+        }),
+    },
+});
+
+/**
+ * TimeTracker外観設定
+ */
+export const TIMETRACKER_APPEARANCE_SETTINGS = new ObjectSettingValueInfoTyped<TimeTrackerAppearanceSettings>({
+    name: "外観設定",
+    description: "TimeTrackerの表示に関する設定",
+    required: false,
+    children: {
+        historyDisplayCount: new NumberSettingValueInfo({
+            name: "履歴表示件数",
+            description: "イベントとWorkItemの紐づけ時に表示する履歴の件数 (1〜10件)",
+            required: true,
+            defaultValue: 3,
+            integer: true,
+            min: 1,
+            max: 10,
         }),
     },
 });
@@ -261,5 +286,6 @@ export const TIMETRACKER_SETTINGS_DEFINITION = new ObjectSettingValueInfoTyped<T
         eventDuplicatePriority: TIMETRACKER_EVENT_DUPLICATE_PRIORITY,
         scheduleAutoInputInfo: TIMETRACKER_SCHEDULE_AUTO_INPUT_INFO,
         paidLeaveInputInfo: TIMETRACKER_PAID_LEAVE_INPUT_INFO,
+        appearance: TIMETRACKER_APPEARANCE_SETTINGS,
     },
 });
