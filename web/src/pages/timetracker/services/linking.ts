@@ -174,5 +174,6 @@ export function autoLinkEvents(
     return {
         linked: allLinked,
         unlinked: remainingEvents,
+        excluded: [],
     };
 }

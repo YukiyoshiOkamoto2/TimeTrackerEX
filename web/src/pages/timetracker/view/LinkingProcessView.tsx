@@ -51,7 +51,7 @@ export type LinkingProcessViewProps = {
     onSubmit?: (linkingEventWorkItemPair: LinkingEventWorkItemPair[]) => void;
 };
 
-export function LinkingProcessView({ uploadInfo, onBack, setIsLoading }: LinkingProcessViewProps) {
+export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewProps) {
     const styles = useStyles();
     const { settings } = useSettings();
 

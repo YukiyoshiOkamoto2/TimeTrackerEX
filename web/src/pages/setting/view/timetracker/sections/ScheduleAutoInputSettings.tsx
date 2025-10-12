@@ -26,7 +26,7 @@ export function ScheduleAutoInputSettings() {
                 minWidth="250px"
             />
             <AutoSettingItem
-                definition={scheduleAutoInputInfoDef.roundingTimeTypeOfSchedule}
+                definition={scheduleAutoInputInfoDef.roundingTimeType}
                 value={settings?.scheduleAutoInputInfo?.roundingTimeType}
                 onChange={(value: unknown) =>
                     handleNestedUpdate("scheduleAutoInputInfo", "roundingTimeTypeOfSchedule", value as string)

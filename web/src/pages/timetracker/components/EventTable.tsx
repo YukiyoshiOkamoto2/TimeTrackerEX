@@ -8,12 +8,10 @@ import {
     Button,
     createTableColumn,
     Dialog,
-    DialogActions,
     DialogBody,
     DialogContent,
     DialogSurface,
     DialogTitle,
-    DialogTrigger,
     Input,
     makeStyles,
     TableCellLayout,
@@ -130,7 +128,7 @@ const useStyles = makeStyles({
     // Dialog
     dialogSurface: {
         width: "700px",
-        maxHeight: "80vh",
+        maxHeight: "95vh",
     },
     dialogHeader: {
         display: "flex",
@@ -140,7 +138,7 @@ const useStyles = makeStyles({
     },
     dialogTree: {
         overflowY: "auto",
-        maxHeight: "520px",
+        maxHeight: "560px",
         minHeight: "400px",
     },
     // 履歴表示
@@ -613,11 +611,11 @@ export function EventTable({ events, workItems, onWorkItemChange, recentWorkItem
                                 className={styles.dialogTree}
                             />
                         </DialogContent>
-                        <DialogActions>
+                        {/* <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
                                 <Button appearance="secondary">閉じる</Button>
                             </DialogTrigger>
-                        </DialogActions>
+                        </DialogActions> */}
                     </DialogBody>
                 </DialogSurface>
             </Dialog>

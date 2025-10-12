@@ -10,7 +10,6 @@
 
 import { TimeTrackerAlgorithmEvent, TimeTrackerAlgorithmSchedule } from "@/core/algorithm";
 import { IgnoreManager } from "@/core/ignore";
-import { getLogger } from "@/lib/logger";
 import {
     PaidLeaveInputInfo,
     type Event,
@@ -19,8 +18,6 @@ import {
     type TimeTrackerSettings,
 } from "@/types";
 import { ExcludedEventInfo, ExcludedScheduleInfo } from "../models/linking";
-
-const logger = getLogger("filter");
 
 /**
  * 有効なイベント（無視リストに含まれないイベント）を取得

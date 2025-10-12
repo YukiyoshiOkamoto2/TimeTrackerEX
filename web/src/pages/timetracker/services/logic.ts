@@ -8,16 +8,8 @@
  * - データ検証
  */
 
-import { TimeTrackerAlgorithm } from "@/core/algorithm";
 import { getLogger } from "@/lib/logger";
-import {
-    ScheduleUtils,
-    type DayTask,
-    type Event,
-    type EventInputInfo,
-    type Schedule,
-    type TimeTrackerSettings,
-} from "@/types";
+import { ScheduleUtils, type DayTask, type Schedule } from "@/types";
 import { ExcludedEventInfo } from "../models/linking";
 
 const logger = getLogger("TimeTrackerLogic");
@@ -31,21 +23,21 @@ const logger = getLogger("TimeTrackerLogic");
  * @param settings - TimeTracker設定
  * @returns 1日ごとのタスク一覧
  */
-function splitEventsByDay(events: Event[], schedules: Schedule[], settings: TimeTrackerSettings): DayTask[] {
-    // EventInputInfoを作成
-    const eventInputInfo: EventInputInfo = {
-        eventDuplicateTimeCompare: settings.eventDuplicatePriority.timeCompare,
-        roundingTimeType: settings.roundingTimeTypeOfEvent,
-    };
+// function splitEventsByDay(events: Event[], schedules: Schedule[], settings: TimeTrackerSettings): DayTask[] {
+//     // EventInputInfoを作成
+//     const eventInputInfo: EventInputInfo = {
+//         eventDuplicateTimeCompare: settings.eventDuplicatePriority.timeCompare,
+//         roundingTimeType: settings.roundingTimeTypeOfEvent,
+//     };
 
-    // TimeTrackerAlgorithmを初期化
-    const algorithm = new TimeTrackerAlgorithm(eventInputInfo, settings.scheduleAutoInputInfo);
+//     // TimeTrackerAlgorithmを初期化
+//     const algorithm = new TimeTrackerAlgorithm(eventInputInfo, settings.scheduleAutoInputInfo);
 
-    // 1日ごとのタスクに分割
-    const dayTasks = algorithm.splitOneDayTask(events, schedules);
+//     // 1日ごとのタスクに分割
+//     const dayTasks = algorithm.splitOneDayTask(events, schedules);
 
-    return dayTasks;
-}
+//     return dayTasks;
+// }
 
 function filterSheduleRangeEvent(
     dayTasksResult: DayTask[],

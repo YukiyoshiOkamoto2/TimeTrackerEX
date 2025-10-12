@@ -156,7 +156,7 @@ export function StatisticsCards({}: StatisticsCardsProps) {
     const excludedCount = 0;
     const unlinkedCount = 0;
 
-    const handleCardClick = (type: DetailDialogType) => {};
+    const handleCardClick = (_type: DetailDialogType) => {};
 
     return (
         <div className={styles.statsSection}>
