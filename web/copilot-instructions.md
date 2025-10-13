@@ -34,5 +34,7 @@ TimeTrackerEX/
 
 ### 🛠️ 主要な技術スタック
 
-- **言語**: python
-- **ライブラリバージョン管理・仮想環境**: uv
+・/npm　run test --run
+・ディレクトリ構成、README
+・長くなりそう
+

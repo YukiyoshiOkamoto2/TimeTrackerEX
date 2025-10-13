@@ -2,7 +2,7 @@ import { DataTable } from "@/components/data-table";
 import { TreeView } from "@/components/tree/Tree";
 import type { TreeItem } from "@/components/tree/TreeItem";
 import { treeViewHelper } from "@/components/tree/TreeViewHelper";
-import type { Event, WorkItem } from "@/types";
+import type { Event, Schedule, WorkItem } from "@/types";
 import { EventUtils, getMostNestChildren } from "@/types/utils";
 import {
     Button,
@@ -33,20 +33,24 @@ import {
     PersonEdit20Regular,
 } from "@fluentui/react-icons";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
-import { LinkingEventWorkItemPair } from "../models/linking";
+import { AdjustedEventInfo, LinkingEventWorkItemPair } from "../models";
 
 // イベントテーブル用の型定義
 type TableRow = {
     id: string;
-    event: Event;
+    event: EventWithOption;
     workItemId: string;
     workItemName: string;
     inputType: string;
 };
 
+export type EventWithOption = {
+    oldSchedule?: Schedule
+} & Event
+
 export type EventTableRow = {
     id: string;
-    item: Event | LinkingEventWorkItemPair;
+    item: EventWithOption | LinkingEventWorkItemPair;
 };
 
 export type EventTableProps = {
@@ -245,21 +249,42 @@ function createEventColumns(
                 <TableCellLayout>
                     <div className={styles.dateTimeCell}>
                         <Calendar20Regular />
-                        <div>
-                            {item.event.schedule.start.toLocaleDateString("ja-JP", {
-                                month: "numeric",
-                                day: "numeric",
-                                weekday: "short",
-                            })}{" "}
-                            {item.event.schedule.start.toLocaleTimeString("ja-JP", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                            ~
-                            {item.event.schedule.end?.toLocaleTimeString("ja-JP", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <div>
+                                {item.event.schedule.start.toLocaleDateString("ja-JP", {
+                                    month: "numeric",
+                                    day: "numeric",
+                                    weekday: "short",
+                                })}{" "}
+                                {item.event.schedule.start.toLocaleTimeString("ja-JP", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })}
+                                ~
+                                {item.event.schedule.end?.toLocaleTimeString("ja-JP", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })}
+                            </div>
+                            {item.event.oldSchedule && (
+                                <div
+                                    style={{
+                                        fontSize: tokens.fontSizeBase200,
+                                        color: tokens.colorPaletteRedForeground1,
+                                    }}
+                                >
+                                    変更前：
+                                    {item.event.oldSchedule.start.toLocaleTimeString("ja-JP", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
+                                    ~
+                                    {item.event.oldSchedule.end?.toLocaleTimeString("ja-JP", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </TableCellLayout>
@@ -383,7 +408,7 @@ function convertToTableRow(row: EventTableRow): TableRow {
     }
 
     // Eventの場合（未紐づけ）
-    const event = item as Event;
+    const event = item as EventWithOption;
     return {
         id,
         event,

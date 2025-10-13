@@ -8,7 +8,8 @@ import {
     TimeTrackerSettings,
     WorkItemChldren,
 } from "@/types";
-import { AutoLinkingResult, LinkingEventWorkItemPair, LinkingWorkItem } from "../models/linking";
+import { LinkingEventWorkItemPair, LinkingWorkItem } from "../models";
+
 
 const logger = getLogger("linking");
 
@@ -152,7 +153,7 @@ export function autoLinkEvents(
     workItems: WorkItemChldren[],
     settings: TimeTrackerSettings,
     historyManager: HistoryManager,
-): AutoLinkingResult {
+) {
     let remainingEvents = events;
     const allLinked: LinkingEventWorkItemPair[] = [];
 
@@ -173,7 +174,6 @@ export function autoLinkEvents(
 
     return {
         linked: allLinked,
-        unlinked: remainingEvents,
-        excluded: [],
+        unlinked: remainingEvents
     };
 }

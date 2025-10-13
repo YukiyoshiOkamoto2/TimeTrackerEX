@@ -197,8 +197,3 @@ export const DAY_FORMAT = "yyyy/MM/dd (EEE)";
  * 時刻フォーマット定数
  */
 export const TIME_FORMAT = "HH:mm";
-
-/**
- * ユーティリティ関数のエクスポート
- */
-export { createEvent, createSchedule, EventUtils, generateUUID, ScheduleUtils } from "./utils";

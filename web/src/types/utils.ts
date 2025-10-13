@@ -1,10 +1,21 @@
 import { formatDateKey, isOverlapping, resetTime } from "@/lib/dateUtil";
+import { EventSchema, isType, ScheduleSchema } from "@/schema/models";
 import type { Event, Schedule, WorkItem, WorkItemChldren } from "@/types";
 
 /**
  * スケジュールのユーティリティ関数
  */
 export const ScheduleUtils = {
+    /**
+     * オブジェクトがSchedule型であるかをチェック
+     *
+     * @param obj - チェックする値
+     * @returns Schedule型の場合はtrue
+     */
+    isSchedule(obj: unknown): obj is Schedule {
+        return isType(ScheduleSchema, obj);
+    },
+
     /**
      * スケジュールの範囲（時間差）を取得
      */
@@ -13,13 +24,6 @@ export const ScheduleUtils = {
             return null;
         }
         return schedule.end.getTime() - schedule.start.getTime();
-    },
-
-    /**
-     * エラーがあるか判定
-     */
-    isError(schedule: Schedule): boolean {
-        return schedule.errorMessage != null;
     },
 
     /**
@@ -53,8 +57,8 @@ export const ScheduleUtils = {
      * 他のスケジュールと重複しているか判定
      */
     isOverlap(schedule: Schedule, other: Schedule): boolean {
-        if (!schedule.start || !schedule.end || !other.start || !other.end) {
-            return false;
+        if (!schedule.end || !other.end) {
+            throw new Error(`スケジュールの重複判定で終了時間の存在しないスケジュールが渡されました。(a: ${ScheduleUtils.getText(schedule)}, b: ${ScheduleUtils.getText(other)})`)
         }
 
         const scheduleBaseDate = this.getBaseDate(schedule);
@@ -140,6 +144,16 @@ export const ScheduleUtils = {
  * イベントのユーティリティ関数
  */
 export const EventUtils = {
+    /**
+     * オブジェクトがEvent型であるかをチェック
+     *
+     * @param obj - チェックする値
+     * @returns Event型の場合はtrue
+     */
+    isEvent(obj: unknown): obj is Event {
+        return isType(EventSchema, obj);
+    },
+
     /**
      * イベントのキーを生成
      */
@@ -232,7 +246,7 @@ export const EventUtils = {
 /**
  * UUID生成（ブラウザ互換）
  */
-export function generateUUID(): string {
+function generateUUID(): string {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
         return crypto.randomUUID();
     }

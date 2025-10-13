@@ -1,5 +1,6 @@
 import { getLogger } from "@/lib";
 import { Schedule } from "@/types";
+import { createSchedule } from "@/types/utils";
 import * as pdfjsLib from "pdfjs-dist";
 
 // vitest 実行環境判定用の型ガード
@@ -112,19 +113,24 @@ function analyzePDFText(text: string): { schedule: Schedule[]; scheduleStamp: Sc
             const endHour = parseInt(stampMatch[3]);
             const endMinute = parseInt(stampMatch[4]);
 
-            scheduleStamp.push({
-                start: new Date(currentYear, month - 1, day, startHour, startMinute),
-                end: new Date(currentYear, month - 1, day, endHour, endMinute),
-                isHoliday,
-                isPaidLeave,
-            });
+            scheduleStamp.push(
+                createSchedule(
+                    new Date(currentYear, month - 1, day, startHour, startMinute),
+                    new Date(currentYear, month - 1, day, endHour, endMinute),
+                    isHoliday,
+                    isPaidLeave,
+                ),
+            );
         } else {
-            scheduleStamp.push({
-                start: new Date(currentYear, month - 1, day),
-                isHoliday,
-                isPaidLeave,
-                errorMessage: hasNoStampInfo ? "打刻情報なし" : "打刻時間が見つかりません。",
-            });
+            scheduleStamp.push(
+                createSchedule(
+                    new Date(currentYear, month - 1, day),
+                    null,
+                    isHoliday,
+                    isPaidLeave,
+                    hasNoStampInfo ? "打刻情報なし" : "打刻時間が見つかりません。",
+                ),
+            );
         }
 
         // 勤務時間スケジュールの追加
@@ -134,19 +140,24 @@ function analyzePDFText(text: string): { schedule: Schedule[]; scheduleStamp: Sc
             const endHour = parseInt(workMatch[3]);
             const endMinute = parseInt(workMatch[4]);
 
-            schedule.push({
-                start: new Date(currentYear, month - 1, day, startHour, startMinute),
-                end: new Date(currentYear, month - 1, day, endHour, endMinute),
-                isHoliday,
-                isPaidLeave,
-            });
+            schedule.push(
+                createSchedule(
+                    new Date(currentYear, month - 1, day, startHour, startMinute),
+                    new Date(currentYear, month - 1, day, endHour, endMinute),
+                    isHoliday,
+                    isPaidLeave,
+                ),
+            );
         } else {
-            schedule.push({
-                start: new Date(currentYear, month - 1, day),
-                isHoliday,
-                isPaidLeave,
-                errorMessage: "勤務時間が見つかりません。",
-            });
+            schedule.push(
+                createSchedule(
+                    new Date(currentYear, month - 1, day),
+                    null,
+                    isHoliday,
+                    isPaidLeave,
+                    "勤務時間が見つかりません。",
+                ),
+            );
         }
     }
 

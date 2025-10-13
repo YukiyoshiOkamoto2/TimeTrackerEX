@@ -6,15 +6,14 @@ import type { Event, Schedule, WorkItem } from "@/types";
 import { getMostNestChildren } from "@/types/utils";
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { Sparkle24Regular } from "@fluentui/react-icons";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AiLinkingSection } from "../components/AiLinkingSection";
 import { AutoLinkingResultDialog } from "../components/AutoLinkingResultDialog";
-import { EventTable, type EventTableRow } from "../components/EventTable";
+import { EventTable, EventWithOption, type EventTableRow } from "../components/EventTable";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { StatisticsCards } from "../components/StatisticsCards";
 import { ViewHeader, ViewSection } from "../components/ViewLayout";
-import { UploadInfo } from "../models";
-import { ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair } from "../models/linking";
+import { AdjustedEventInfo, ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair, UploadInfo } from "../models";
 import { getAllEvents } from "../services/converter";
 
 const logger = getLogger("LinkingProcessView");
@@ -29,12 +28,20 @@ const useStyles = makeStyles({
 });
 
 type LinkingProcessViewState = {
-    schedules: Schedule[];
-    events: Event[];
-    scheduleEvents: Event[];
-    paidLeaveDayEvents: Event[];
-    excludedSchedules: ExcludedScheduleInfo[];
-    excludedEvents: ExcludedEventInfo[];
+    // 有効なスケジュール（休日・エラーを除く） 
+    enableSchedules: Schedule[]
+    // 有効なイベント
+    enableEvents: Event[],
+    // 勤務日イベント
+    scheduleEvents: Event[],
+    // 時間調整されたイベント
+    adjustedEvents: AdjustedEventInfo[],
+    // 有給休暇の日別イベント
+    paidLeaveDayEvents: Event[],
+    // 除外されたスケジュール
+    excludedSchedules: ExcludedScheduleInfo[],
+    // 除外されたイベント
+    excludedEvents: ExcludedEventInfo[],
 };
 
 const historyManager = new HistoryManager();
@@ -43,6 +50,29 @@ const setHistrory = (event: Event, workItem: WorkItem) => {
     historyManager.setHistory(event, workItem);
     historyManager.dump();
 };
+
+const toEventWithOption = (state: LinkingProcessViewState): EventWithOption[] => {
+    const allEvents = []
+    if (state?.enableEvents) {
+        allEvents.push(...state.enableEvents)
+    }
+    if (state?.adjustedEvents) {
+        const adjustedEvents = state.adjustedEvents.map(a => {
+            return {
+                ...a.event,
+                oldSchedule: a.oldSchdule,
+            }
+        })
+        allEvents.push(...adjustedEvents)
+    }
+    if (state?.paidLeaveDayEvents) {
+        allEvents.push(...state.paidLeaveDayEvents)
+    }
+    if (state?.scheduleEvents) {
+        allEvents.push(...state.scheduleEvents)
+    }
+    return allEvents;
+}
 
 export type LinkingProcessViewProps = {
     uploadInfo?: UploadInfo;
@@ -62,24 +92,18 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
     // 履歴
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    const [state, setState] = useState<LinkingProcessViewState>();
+    // スケジュール・イベント
+    const [state, setState] = useState<LinkingProcessViewState>({
+        adjustedEvents: [],
+        enableEvents: [],
+        enableSchedules: [],
+        excludedEvents: [],
+        excludedSchedules: [],
+        paidLeaveDayEvents: [],
+        scheduleEvents: [],
+    });
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
-
-    const allEvents = [
-        ...(state?.events ?? []),
-        ...(state?.paidLeaveDayEvents ?? []),
-        ...(state?.scheduleEvents ?? []),
-    ];
-    const linkingEventUUID = linkingEventWorkItemPair.map((l) => l.event.uuid);
-
-    // 履歴から最近使用したWorkItemのIDを取得（設定から件数を取得）
-    const recentWorkItemIds = useMemo(() => {
-        historyManager.load();
-        const allEntries = historyManager.getAllEntries();
-        const maxCount = settings.timetracker?.appearance?.historyDisplayCount ?? 3;
-        return allEntries.slice(0, maxCount).map((entry) => entry.itemId);
-    }, [settings.timetracker?.appearance?.historyDisplayCount]);
 
     // イベントリストを取得（紐づけ済み + 未紐づけ）
     const allEventTableRow = useMemo((): EventTableRow[] => {
@@ -87,9 +111,9 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
             id: pair.event.uuid,
             item: pair,
         }));
-
-        const unlinked = allEvents
-            .filter((event) => !linkingEventUUID.includes(event.uuid))
+        const linkedUUID = linked.map((l) => l.id);
+        const unlinked = toEventWithOption(state)
+            .filter((event) => !linkedUUID.includes(event.uuid))
             .map((event) => ({
                 id: event.uuid,
                 item: event,
@@ -102,11 +126,8 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
     }, [linkingEventWorkItemPair, state]);
 
     // WorkItemの変更ハンドラー
-    const handleWorkItemChange = (eventId: string, workItemId: string) => {
-        const workItems = uploadInfo?.workItems || [];
-        const allWorkItems = getMostNestChildren(workItems);
-        const selectedWorkItem = allWorkItems.find((w) => w.id === workItemId);
-
+    const handleWorkItemChange = useCallback((eventId: string, workItemId: string) => {
+        const selectedWorkItem = getMostNestChildren(uploadInfo?.workItems || []).find((w) => w.id === workItemId);
         if (!selectedWorkItem) {
             logger.error("Selected Unkown WorkItem Id -> " + workItemId);
             return;
@@ -133,7 +154,7 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
         }
 
         // 未紐づけから紐づけ済みに移動
-        const event = allEvents.find((event) => event.uuid === eventId);
+        const event = toEventWithOption(state).find((event) => event.uuid === eventId);
         if (event) {
             setLinkingEventWorkItemPair([
                 ...linkingEventWorkItemPair,
@@ -151,7 +172,7 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
         }
 
         logger.error("Not found event -> id: " + eventId);
-    };
+    }, [uploadInfo, linkingEventWorkItemPair, state])
 
     const handleSubmit = async () => {
         // // すべてのイベントが未処理の場合は進めない
@@ -185,11 +206,10 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
 
     // 有効イベント取得
     useEffect(() => {
-        const timetracker = settings.timetracker!;
         const events = uploadInfo?.ics?.event ?? [];
         const schedules = uploadInfo?.pdf?.schedule ?? [];
-        setState(getAllEvents(timetracker, schedules, events));
-    }, [uploadInfo, settings.timetracker, setState]);
+        setState(getAllEvents(settings.timetracker!, schedules, events));
+    }, [uploadInfo, settings.timetracker]);
 
     return (
         <>
@@ -223,7 +243,6 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
                     events={allEventTableRow}
                     workItems={uploadInfo?.workItems || []}
                     onWorkItemChange={handleWorkItemChange}
-                    recentWorkItemIds={recentWorkItemIds}
                 />
 
                 {/* 登録実行ボタン */}

@@ -2,7 +2,7 @@ import { getLogger } from "@/lib";
 import type { Event, EventInputInfo, Schedule, ScheduleAutoInputInfo, WorkingEventType } from "@/types";
 import { createEvent, EventUtils, ScheduleUtils } from "@/types/utils";
 import { resetTime } from "../../lib/dateUtil";
-import { ROUNDING_TIME_UNIT, roundingSchedule } from "./TimeTrackerAlgorithmCore";
+import { ROUNDING_TIME_UNIT, TimeTrackerAlgorithmCore } from './TimeTrackerAlgorithmCore';
 import { TimeTrackerAlgorithmEvent } from "./TimeTrackerAlgorithmEvent";
 
 const logger = getLogger("TimeTrackerAlgorithmSchedule");
@@ -24,10 +24,14 @@ export const TimeTrackerAlgorithmSchedule = {
         events: Event[],
         roundingTimeUnit: number = ROUNDING_TIME_UNIT,
     ): Event[] => {
-        if (schedule.isHoliday || !schedule.end || schedule.errorMessage) {
-            const errorMsg = "スケジュールが休日またはエラーのためイベントに変換できません。";
-            logger.error(errorMsg);
-            throw new Error(errorMsg);
+        const checked = TimeTrackerAlgorithmCore.check(schedule)
+        if (checked) {
+            const look = checked.details.filter(d => d.reason === "invalid")
+            if (look.length > 0) {
+                const errorMsg = "スケジュールが不正です。\n" + look.map(d => d.message).join("\n");
+                logger.error(errorMsg);
+                throw new Error(errorMsg);
+            }
         }
 
         const getEvent = (name: string, eventSchedule: Schedule, workingType: WorkingEventType): Event => {
@@ -42,7 +46,7 @@ export const TimeTrackerAlgorithmSchedule = {
                 start: schedule.start,
                 end: new Date(schedule.start.getTime() + startEndTime * 60 * 1000),
             };
-            let roundedStartSchedule = roundingSchedule(startSchedule, roundingTimeType, events, roundingTimeUnit);
+            let roundedStartSchedule = TimeTrackerAlgorithmCore.roundingSchedule(startSchedule, roundingTimeType, events, roundingTimeUnit);
 
             if (roundedStartSchedule) {
                 // stretchの場合はstart_end_timeよりも大きい場合はstart_end_timeにする
@@ -62,10 +66,11 @@ export const TimeTrackerAlgorithmSchedule = {
 
         if (startEndType !== "start") {
             const endSchedule: Schedule = {
-                start: new Date(schedule.end.getTime() - startEndTime * 60 * 1000),
+                // schedule.endはcheck関数でチェックが実施されているため
+                start: new Date(schedule.end!.getTime() - startEndTime * 60 * 1000),
                 end: schedule.end,
             };
-            let roundedEndSchedule = roundingSchedule(endSchedule, roundingTimeType, events, roundingTimeUnit);
+            let roundedEndSchedule = TimeTrackerAlgorithmCore.roundingSchedule(endSchedule, roundingTimeType, events, roundingTimeUnit);
 
             if (roundedEndSchedule) {
                 // stretchの場合はstart_end_timeよりも大きい場合はstart_end_timeにする
@@ -171,157 +176,6 @@ export const TimeTrackerAlgorithmSchedule = {
         debugLog(`===================================================================================`);
 
         return result;
-    },
-
-    /**
-     * イベントの終了日が基準日と異なる場合、終了日までの日付毎に分割したイベントマップを作成します
-     */
-    addStartToEndDate: (
-        eventMap: Map<string, Event[]>,
-        roundingTimeUnit: number = ROUNDING_TIME_UNIT,
-    ): Map<string, Event[]> => {
-        const resultMap = new Map<string, Event[]>();
-
-        for (const [dateKey, events] of eventMap.entries()) {
-            for (const event of events) {
-                if (!resultMap.has(dateKey)) {
-                    resultMap.set(dateKey, []);
-                }
-
-                // イベントの終了日を取得(時刻は保持)
-                if (!event.schedule.end) {
-                    resultMap.get(dateKey)!.push(event);
-                    continue;
-                }
-
-                // 終了日の日付部分を取得
-                const eventEndDateKey = ScheduleUtils.getDateKey(event.schedule.end);
-
-                if (dateKey === eventEndDateKey) {
-                    // 終了日が基準日と同じ場合はそのまま追加
-                    resultMap.get(dateKey)!.push(event);
-                    continue;
-                }
-
-                // 初日のイベントを追加
-                const firstDay = new Date(dateKey);
-                const firstSchedule: Schedule = {
-                    start: event.schedule.start,
-                    // 23:XX:00に設定(XX は rounding_time_unit)
-                    end: new Date(
-                        firstDay.getFullYear(),
-                        firstDay.getMonth(),
-                        firstDay.getDate(),
-                        23,
-                        roundingTimeUnit,
-                        0,
-                    ),
-                };
-                resultMap.get(dateKey)!.push(EventUtils.scheduled(event, firstSchedule));
-
-                // 開始日と終了日の日数差を計算
-                const startDate = resetTime(event.schedule.start);
-                const endDate = resetTime(event.schedule.end);
-                const daysDiff = Math.floor((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
-
-                for (let i = 1; i <= daysDiff; i++) {
-                    const baseDate = new Date(startDate);
-                    baseDate.setDate(startDate.getDate() + i);
-                    const baseDateKey = ScheduleUtils.getDateKey(baseDate);
-
-                    let endSchedule: Schedule;
-                    if (baseDateKey === eventEndDateKey) {
-                        // 最終日
-                        endSchedule = {
-                            start: new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0),
-                            end: event.schedule.end,
-                        };
-                    } else {
-                        // 中間日
-                        endSchedule = {
-                            start: new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0),
-                            end: new Date(
-                                baseDate.getFullYear(),
-                                baseDate.getMonth(),
-                                baseDate.getDate(),
-                                23,
-                                roundingTimeUnit,
-                                0,
-                            ),
-                        };
-                    }
-
-                    const endEvent = EventUtils.scheduled(event, endSchedule, true);
-                    endEvent.recurrence = undefined;
-
-                    if (!resultMap.has(baseDateKey)) {
-                        resultMap.set(baseDateKey, []);
-                    }
-                    resultMap.get(baseDateKey)!.push(endEvent);
-                }
-            }
-        }
-
-        debugLog(`===終了日までの日付毎に分割したイベントマップ (入力: ${eventMap.size}日分)===`);
-        debugLog(`RESULT: ${resultMap.size}日分`);
-        for (const [dateKey, events] of resultMap.entries()) {
-            debugLog(`---> ${dateKey}: ${events.length}件`);
-        }
-        debugLog(`=================================================`);
-
-        return resultMap;
-    },
-
-    /**
-     * イベントをクリーンアップして勤務時間イベントと統合する処理
-     */
-    cleanEvent: (
-        events: Event[],
-        schedules: Schedule[],
-        eventInputInfo: EventInputInfo,
-        scheduleInputInfo: ScheduleAutoInputInfo,
-        roundingTimeUnit: number = ROUNDING_TIME_UNIT,
-    ): { margedEvents: Event[]; excluedMargedEvents: Event[] } => {
-        // イベント丸め処理
-        const roundedEvents: Event[] = [];
-        for (const event of events) {
-            const roundedSchedule = roundingSchedule(
-                event.schedule,
-                eventInputInfo.roundingTimeType,
-                events,
-                roundingTimeUnit,
-            );
-            if (roundedSchedule) {
-                roundedEvents.push(EventUtils.scheduled(event, roundedSchedule));
-            }
-        }
-
-        // 勤務時間をイベントに変換
-        const schduleEvents = schedules.flatMap((schedule) => {
-            try {
-                const text = ScheduleUtils.getText(schedule);
-                debugLog(`Schedule ${text}の変換開始`);
-                const createEvents = TimeTrackerAlgorithmSchedule.scheduleToEvent(
-                    schedule,
-                    scheduleInputInfo,
-                    roundedEvents,
-                    roundingTimeUnit,
-                );
-                debugLog(`Schedule ${text}: 生成されたイベント数=${createEvents.length}`);
-                return createEvents;
-            } catch (error) {
-                // スケジュールが休日やエラーの場合はスキップ
-                logger.warn("スケジュールをスキップ:", error);
-                return [];
-            }
-        });
-
-        // イベントを勤務開始終了時間に合わせるor勤務時間外を消す、重複した場合は勤務時間イベントを消す
-        const [margedEvents, excluedMargedEvents] = TimeTrackerAlgorithmEvent.margedScheduleEvents(
-            schduleEvents,
-            roundedEvents,
-        );
-        return { margedEvents, excluedMargedEvents };
     },
 };
 

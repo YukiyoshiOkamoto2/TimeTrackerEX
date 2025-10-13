@@ -10,3 +10,8 @@ export * from "./settings";
 
 // モデル関連の型
 export * from "./models";
+
+/**
+ * ユーティリティ関数のエクスポート
+ */
+export { createEvent, createSchedule, EventUtils, ScheduleUtils } from "./utils";

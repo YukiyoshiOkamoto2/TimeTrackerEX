@@ -2,8 +2,12 @@ import { getCurrentDate, getLogger } from "@/lib";
 import ICAL from "ical.js";
 
 import { Event } from "@/types";
+import { createEvent, createSchedule } from "@/types/utils";
 
 const logger = getLogger("ICSParser");
+
+// 過去日の期限
+const MAX_OLD = 30
 
 /**
  * ICSファイルのパース結果
@@ -34,9 +38,9 @@ export function parseICS(fileContent: string): InputICSResult {
         const vevents = comp.getAllSubcomponents("vevent");
         logger.debug(`検出されたイベント数: ${vevents.length}`);
 
-        // 30日前の基準日
+        // 指定日前の基準日
         const now = getCurrentDate();
-        const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const startDate = new Date(now.getTime() - MAX_OLD * 24 * 60 * 60 * 1000);
 
         // 各イベントを処理
         for (const vevent of vevents) {
@@ -117,7 +121,7 @@ function parseEvent(vevent: ICAL.Component, startDate: Date, now: Date): Event |
     // 繰り返しイベントの処理
     const recurrence = parseRecurrence(vevent, dtstart, now);
 
-    // 過去のイベント(30日前より古い)で繰り返しもない場合はスキップ
+    // 過去のイベント(XX日前より古い)で繰り返しもない場合はスキップ
     const eventDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
     const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
 
@@ -125,14 +129,12 @@ function parseEvent(vevent: ICAL.Component, startDate: Date, now: Date): Event |
         throw new Error(`過去のイベントです: ${summary}`);
     }
 
+    const schedule = createSchedule(start, end);
+    const event = createEvent(summary, schedule, organizer, location, isPrivate, isCancelled);
+    
     return {
-        name: summary,
+        ...event,
         uuid: uid,
-        organizer,
-        location,
-        isPrivate,
-        isCancelled,
-        schedule: { start, end },
         recurrence: recurrence && recurrence.length > 0 ? recurrence : undefined,
     };
 }

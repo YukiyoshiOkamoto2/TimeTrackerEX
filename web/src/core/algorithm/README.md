@@ -37,9 +37,26 @@
 
 ### テストファイル
 
-- **TimeTrackerAlgorithmHelper.test.ts**: ✅ 現行テスト (75 tests)
-  - Event, Schedule操作の統合テスト
-  - 各メソッドの詳細なテストケース
+- **TimeTrackerAlgorithmCore.test.ts**: ✅ 現行テスト (28 tests)
+  - roundingTime, roundingSchedule 関数のテスト
+  - 各丸めモード (backward, forward, stretch, round, half, nonduplicate) のテスト
+  - カスタム丸め単位のテスト
+  - 本ファイルを使用
+
+- **TimeTrackerAlgorithmSchedule.test.ts**: ✅ 現行テスト (27 tests)
+  - scheduleToEvent, addStartToEndDate 関数のテスト
+  - 各モード (both, fill) のテスト
+  - 複数日にまたがるイベント分割のテスト
+  - 本ファイルを使用
+
+- **TimeTrackerAlgorithmEvent.test.ts**: ✅ 現行テスト (110 tests)
+  - Event操作関連の統合テスト
+  - isDuplicateEventOrSchedule (15 tests): イベント/スケジュール重複判定
+  - getRecurrenceEvent (15 tests): 繰り返しイベント展開
+  - getAllEventInScheduleRange (20 tests): 勤務日フィルタリング
+  - searchNextEvent (25 tests): 次イベント検索 (サイズ比較対応)
+  - cleanDuplicateEvent (20 tests): 重複イベント除去
+  - margedScheduleEvents (15 tests): スケジュールイベントとの統合
   - 本ファイルを使用
 
 - **_deprecated.algorithm.test.ts**: ⚠️ 将来削除予定 (12 tests)
@@ -49,7 +66,7 @@
 
 - **_deprecated.algorithm.method.test.ts**: ⚠️ 将来削除予定 (1792 lines)
   - TimeTrackerAlgorithmクラスのメソッドテスト
-  - roundingTime, roundingSchedule など
+  - roundingTime, roundingSchedule, scheduleToEvent, addStartToEndDate など
   - 参照のみ、新規テスト追加不可
 
 ## 主要な型
@@ -88,7 +105,9 @@ const dayTasks = splitOneDayTask(events, schedules);
 
 ```bash
 # 現行テスト
-npm test -- TimeTrackerAlgorithmHelper.test.ts --run
+npm test -- TimeTrackerAlgorithmCore.test.ts --run
+npm test -- TimeTrackerAlgorithmSchedule.test.ts --run
+npm test -- TimeTrackerAlgorithmEvent.test.ts --run
 
 # 削除予定テスト (参照用)
 npm test -- _deprecated.algorithm.test.ts --run
