@@ -11,7 +11,7 @@
  */
 
 import { getCurrentDate } from "@/lib/dateUtil";
-import { getMostNestChildren } from "@/types/utils";
+import { EventUtils, getMostNestChildren } from "@/types/utils";
 import { getLogger } from "../../lib/logger";
 import { getStorage } from "../../lib/storage";
 import type { Event, WorkItem } from "../../types";
@@ -95,11 +95,7 @@ export class HistoryManager {
      * @returns 生成されたキー
      */
     private getEventKey(event: Event): string {
-        const uuid = event.uuid || "";
-        const name = event.name || "";
-        const organizer = event.organizer || "";
-        // =をエンコードして保存（LocalStorageのキーとしての問題を回避）
-        return `${uuid}|${name}|${organizer}`;
+        return EventUtils.getKey(event);
     }
 
     /**
@@ -115,9 +111,7 @@ export class HistoryManager {
             const data = this.storage.getValue<string>(this.config.storageKey);
 
             if (!data) {
-                logger.info("履歴データが見つかりません。新規に作成します。");
-                this.history.clear();
-                this.dump();
+                logger.info("履歴データが見つかりません。");
                 return;
             }
 
@@ -270,7 +264,7 @@ export class HistoryManager {
         const existingEntry = this.history.get(key);
         const now = getCurrentDate();
 
-        if (existingEntry) {
+        if (existingEntry && existingEntry.itemId === workItem.id) {
             // 既存エントリの使用回数をインクリメント、最終使用日時を更新
             existingEntry.useCount++;
             existingEntry.eventName = event.name; // イベント名を更新
@@ -283,7 +277,7 @@ export class HistoryManager {
                 const firstKey = this.history.keys().next().value;
                 if (firstKey) {
                     const firstEntry = this.history.get(firstKey);
-                    logger.debug(`最大サイズに到達。最も古いエントリを削除: ${firstKey}=${firstEntry?.itemId}`);
+                    logger.info(`最大サイズに到達。最も古いエントリを削除: ${firstKey}=${firstEntry?.itemId}`);
                     this.history.delete(firstKey);
                 }
             }

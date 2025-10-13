@@ -411,7 +411,6 @@ describe("TimeTrackerAlgorithmCore", () => {
             });
 
             it("CHK11: 複数のエラーを同時に返す", () => {
-       
                 const schedule = createSchedule(
                     new Date(2045, 1, 5, 9, 0), // 未来
                 );
@@ -513,7 +512,6 @@ describe("TimeTrackerAlgorithmCore", () => {
                 expect(result).not.toBeNull();
                 expect(result?.details[0].message).toContain("6時間以上");
             });
-
 
             it("CHK19: 未来のイベントはoutOfScheduleエラーを返す", () => {
                 const schedule = createSchedule(

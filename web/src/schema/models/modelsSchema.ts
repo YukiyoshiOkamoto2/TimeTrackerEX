@@ -32,9 +32,9 @@ export const ScheduleSchema = z
             })
             .optional(),
         /** 休日であるかどうか */
-        isHoliday: z.boolean().optional().default(false),
+        isHoliday: z.boolean().default(false).optional(),
         /** 有給休暇であるかどうか */
-        isPaidLeave: z.boolean().optional().default(false),
+        isPaidLeave: z.boolean().default(false).optional(),
         /** エラーメッセージ */
         errorMessage: z.string().nullable().optional(),
     })
@@ -174,103 +174,11 @@ export const WorkItemChildrenSchema = z.object({
 /**
  * 作業項目のスキーマ（再帰的）
  */
-export const WorkItemSchema: z.ZodType<{
-    id: string;
-    name: string;
-    folderName: string;
-    folderPath: string;
-    subItems?: Array<{
-        id: string;
-        name: string;
-        folderName: string;
-        folderPath: string;
-        subItems?: unknown;
-    }> | null;
-}> = WorkItemChildrenSchema.extend({
+type WorkItem = z.infer<typeof WorkItemChildrenSchema> & {
+    subItems?: WorkItem[];
+};
+
+export const WorkItemSchema: z.ZodType<WorkItem> = WorkItemChildrenSchema.extend({
     /** サブ作業項目のリスト */
-    subItems: z.lazy(() => z.array(WorkItemSchema).nullable().optional()),
+    subItems: z.lazy(() => z.array(WorkItemSchema)).optional(),
 });
-
-/**
- * 日次タスクのスキーマ
- */
-export const DayTaskSchema = z.object({
-    /** 基準日 */
-    baseDate: z.date({
-        message: "基準日はDate型である必要があります",
-    }),
-    /** 通常イベントのリスト */
-    events: z.array(EventSchema),
-    /** 勤務時間イベントのリスト */
-    scheduleEvents: z.array(EventSchema),
-});
-
-/**
- * RoundingMethodのスキーマ
- */
-export const RoundingMethodSchema = z.enum(["backward", "forward", "round", "half", "stretch", "nonduplicate"]);
-
-/**
- * TimeCompareのスキーマ
- */
-export const TimeCompareSchema = z.enum(["small", "large"]);
-
-/**
- * イベント入力情報のスキーマ
- */
-export const EventInputInfoSchema = z.object({
-    /** 重複時の時間比較方法（短い順/長い順） */
-    eventDuplicateTimeCompare: TimeCompareSchema,
-    /** 時間の丸め処理タイプ */
-    roundingTimeType: RoundingMethodSchema,
-});
-
-/**
- * イベントと作業項目のペアのスキーマ
- */
-export const EventWorkItemPairSchema = z.object({
-    /** イベント情報 */
-    event: EventSchema,
-    /** 作業項目情報 */
-    workItem: WorkItemSchema,
-});
-
-/**
- * TimeTracker日次タスクのスキーマ
- */
-export const TimeTrackerDayTaskSchema = z.object({
-    /** 基準日 */
-    baseDate: z.date({
-        message: "基準日はDate型である必要があります",
-    }),
-    /** プロジェクト情報 */
-    project: ProjectSchema,
-    /** イベントと作業項目のペアのリスト */
-    eventWorkItemPair: z.array(EventWorkItemPairSchema),
-});
-
-/**
- * 型推論用の型定義
- */
-export type WorkingEventType = z.infer<typeof WorkingEventTypeSchema>;
-export type Schedule = z.infer<typeof ScheduleSchema>;
-export type Event = z.infer<typeof EventSchema>;
-export type Project = z.infer<typeof ProjectSchema>;
-export type WorkItemChildren = z.infer<typeof WorkItemChildrenSchema>;
-export type WorkItem = z.infer<typeof WorkItemSchema>;
-export type DayTask = z.infer<typeof DayTaskSchema>;
-export type RoundingMethod = z.infer<typeof RoundingMethodSchema>;
-export type TimeCompare = z.infer<typeof TimeCompareSchema>;
-export type EventInputInfo = z.infer<typeof EventInputInfoSchema>;
-export type EventWorkItemPair = z.infer<typeof EventWorkItemPairSchema>;
-export type TimeTrackerDayTask = z.infer<typeof TimeTrackerDayTaskSchema>;
-
-/**
- * 日付フォーマット定数
- */
-export const DAY_FORMAT = "yyyy/MM/dd (EEE)";
-
-/**
- * 時刻フォーマット定数
- */
-export const TIME_FORMAT = "HH:mm";

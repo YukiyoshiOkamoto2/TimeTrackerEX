@@ -1,7 +1,6 @@
 import { getCurrentDate, getLogger } from "@/lib";
 import type { Event, RoundingMethod, Schedule } from "@/types";
 import { EventUtils, ScheduleUtils } from "@/types/utils";
-import { TimeTrackerAlgorithmEvent } from "./TimeTrackerAlgorithmEvent";
 import { ExcludedInfo, ExcludedReasonDetail } from "./models";
 
 const logger = getLogger("TimeTrackerAlgorithmCore");
@@ -152,7 +151,7 @@ export const TimeTrackerAlgorithmCore = {
         };
     },
 
-        /**
+    /**
      * イベントまたはスケジュールが重複しているかを判定
      */
     isDuplicateEventOrSchedule: (eventOrSchedule: Event | Schedule, events: Event[]): boolean => {

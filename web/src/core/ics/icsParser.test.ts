@@ -79,7 +79,7 @@ END:VCALENDAR`;
 
             const result = parseICS(icsContent);
 
-            expect(result.events).toHaveLength(1);
+            expect(result.events).toHaveLength(4);
             expect(result.errorMessages).toHaveLength(0);
 
             const event = result.events[0];

@@ -46,14 +46,6 @@ export const ScheduleUtils = {
     },
 
     /**
-     * 日付オブジェクトから日付キー（YYYY-MM-DD形式）を取得
-     * @deprecated Use formatDateKey from @/lib/dateUtil instead
-     */
-    getDateKey(date: Date): string {
-        return formatDateKey(date);
-    },
-
-    /**
      * 他のスケジュールと重複しているか判定
      */
     isOverlap(schedule: Schedule, other: Schedule): boolean {
@@ -272,7 +264,7 @@ export function createEvent(
     isCancelled = false,
     workingEventType: Event["workingEventType"] = null,
 ): Event {
-    return {
+    return EventSchema.parse({
         uuid: generateUUID(),
         name,
         organizer,
@@ -281,7 +273,7 @@ export function createEvent(
         location,
         schedule,
         workingEventType,
-    };
+    });
 }
 
 /**
@@ -294,21 +286,13 @@ export function createSchedule(
     isPaidLeave = false,
     errorMessage: string | null = null,
 ): Schedule {
-    if (isPaidLeave && !isHoliday) {
-        throw new Error("有給休暇の場合は休日フラグを設定してください。");
-    }
-
-    if (end && start > end) {
-        throw new Error("終了時間が開始時間より前です。");
-    }
-
-    return {
+    return ScheduleSchema.parse({
         start,
         end: end ?? undefined,
         isHoliday,
         isPaidLeave,
         errorMessage,
-    };
+    });
 }
 
 export function getMostNestChildren(workItem: WorkItem | WorkItem[]): WorkItemChldren[] {

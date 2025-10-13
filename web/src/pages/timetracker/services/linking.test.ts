@@ -76,9 +76,8 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 15, 11, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked).toHaveLength(1);
                 expect(result.linked[0].event.name).toBe("有給休暇");
@@ -103,9 +102,8 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 17, 11, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "timeOff")).toHaveLength(2);
                 expect(result.unlinked).toHaveLength(1);
@@ -127,9 +125,8 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 16, 18, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "timeOff")).toHaveLength(1);
                 expect(result.linked[0].event.name).toBe("休暇:有給");
@@ -152,9 +149,8 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 16, 18, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "timeOff")).toHaveLength(1);
                 expect(result.linked[0].event.name).toBe("有給(休暇)");
@@ -170,9 +166,8 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 15, 18, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "timeOff")).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);
@@ -190,9 +185,7 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 15, 18, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
-
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "timeOff")).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);
@@ -210,9 +203,8 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 15, 18, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "timeOff")).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);
@@ -237,9 +229,8 @@ describe("linking.ts", () => {
                 historyManager.setHistory(event2, workItem2);
 
                 const events: Event[] = [event1, event2];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 const historyLinked = result.linked.filter((l) => l.linkingWorkItem.autoMethod === "history");
                 expect(historyLinked).toHaveLength(2);
@@ -264,9 +255,8 @@ describe("linking.ts", () => {
                 historyManager.setHistory(event1, nonExistentWorkItem);
 
                 const events: Event[] = [event1];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "history")).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);
@@ -284,9 +274,7 @@ describe("linking.ts", () => {
                 historyManager.setHistory(event1, workItem1);
 
                 const events: Event[] = [event1];
-                const scheduleEvents: Event[] = [];
-
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "history")).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);
@@ -299,9 +287,8 @@ describe("linking.ts", () => {
                 });
 
                 const events: Event[] = [event1];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "history")).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);
@@ -310,8 +297,7 @@ describe("linking.ts", () => {
 
         describe("勤務時間イベントの自動紐付け", () => {
             it("LINK12: 勤務時間イベントを紐付ける", () => {
-                const events: Event[] = [];
-                const scheduleEvents: Event[] = [
+                const events: Event[] = [
                     createEvent(
                         "勤務開始",
                         {
@@ -338,7 +324,7 @@ describe("linking.ts", () => {
                     ),
                 ];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 const workScheduleLinked = result.linked.filter((l) => l.linkingWorkItem.autoMethod === "workShedule");
                 expect(workScheduleLinked).toHaveLength(2);
@@ -349,8 +335,7 @@ describe("linking.ts", () => {
             it("LINK13: WorkItemが見つからない場合は空配列を返す", () => {
                 settings.scheduleAutoInputInfo.workItemId = 9999;
 
-                const events: Event[] = [];
-                const scheduleEvents: Event[] = [
+                const events: Event[] = [
                     createEvent(
                         "勤務開始",
                         {
@@ -365,16 +350,15 @@ describe("linking.ts", () => {
                     ),
                 ];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "workShedule")).toHaveLength(0);
             });
 
             it("LINK14: 勤務時間イベントがない場合は空配列", () => {
                 const events: Event[] = [];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "workShedule")).toHaveLength(0);
             });
@@ -399,9 +383,6 @@ describe("linking.ts", () => {
                         start: new Date(2025, 0, 15, 14, 0),
                         end: new Date(2025, 0, 15, 15, 0),
                     }),
-                ];
-
-                const scheduleEvents: Event[] = [
                     createEvent(
                         "勤務開始",
                         {
@@ -416,7 +397,7 @@ describe("linking.ts", () => {
                     ),
                 ];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 // 休暇イベント: 1件
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "timeOff")).toHaveLength(1);
@@ -439,9 +420,8 @@ describe("linking.ts", () => {
                 historyManager.setHistory(event, workItem1);
 
                 const events: Event[] = [event];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 // 休暇イベントとして紐付けられる(優先度が高い)
                 expect(result.linked).toHaveLength(1);
@@ -461,9 +441,8 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 15, 15, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(2);
@@ -478,26 +457,24 @@ describe("linking.ts", () => {
                     start: new Date(2025, 0, 15, 10, 0),
                     end: new Date(2025, 0, 15, 11, 0),
                 });
+                const event3 = createEvent(
+                    "勤務開始",
+                    {
+                        start: new Date(2025, 0, 15, 9, 0),
+                        end: new Date(2025, 0, 15, 9, 30),
+                    },
+                    "Automatic",
+                    "",
+                    false,
+                    false,
+                    "start",
+                );
                 const workItem1 = workItems.find((w) => w.id === "2001")!;
                 historyManager.setHistory(event2, workItem1);
 
-                const events: Event[] = [event1, event2];
-                const scheduleEvents: Event[] = [
-                    createEvent(
-                        "勤務開始",
-                        {
-                            start: new Date(2025, 0, 15, 9, 0),
-                            end: new Date(2025, 0, 15, 9, 30),
-                        },
-                        "Automatic",
-                        "",
-                        false,
-                        false,
-                        "start",
-                    ),
-                ];
+                const events: Event[] = [event1, event2, event3];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked).toHaveLength(3);
                 expect(result.unlinked).toHaveLength(0);
@@ -505,9 +482,8 @@ describe("linking.ts", () => {
 
             it("LINK19: 空の入力でも正常動作", () => {
                 const events: Event[] = [];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, workItems, settings, historyManager);
+                const result = autoLinkEvents(events, workItems, settings, historyManager);
 
                 expect(result.linked).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(0);
@@ -520,9 +496,8 @@ describe("linking.ts", () => {
                         end: new Date(2025, 0, 15, 11, 0),
                     }),
                 ];
-                const scheduleEvents: Event[] = [];
 
-                const result = autoLinkEvents(events, scheduleEvents, [], settings, historyManager);
+                const result = autoLinkEvents(events, [], settings, historyManager);
 
                 expect(result.linked).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);

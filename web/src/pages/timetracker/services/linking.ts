@@ -2,12 +2,13 @@ import { HistoryManager } from "@/core";
 import { getLogger } from "@/lib";
 import {
     Event,
-    EventUtils,
     ScheduleAutoInputInfo,
     TimeOffEventConfig,
     TimeTrackerSettings,
+    WorkItem,
     WorkItemChldren,
 } from "@/types";
+import { getMostNestChildren } from "@/types/utils";
 import { LinkingEventWorkItemPair, LinkingWorkItem } from "../models";
 
 const logger = getLogger("linking");
@@ -36,14 +37,14 @@ function matchEventName(eventName: string, patterns: Array<{ pattern: string; ma
 function linkTimeOffEvents(
     events: Event[],
     timeOffConfig: TimeOffEventConfig | undefined,
-    workItems: WorkItemChldren[],
+    workItemsChildren: WorkItemChldren[],
 ): { linked: LinkingEventWorkItemPair[]; remaining: Event[] } {
     if (!timeOffConfig || !timeOffConfig.namePatterns || timeOffConfig.namePatterns.length === 0) {
         logger.info("休暇イベント設定が未設定です");
         return { linked: [], remaining: events };
     }
 
-    const workItem = workItems.find((w) => w.id === String(timeOffConfig.workItemId));
+    const workItem = workItemsChildren.find((w) => w.id === String(timeOffConfig.workItemId));
     if (!workItem) {
         logger.error(`休暇WorkItem(ID: ${timeOffConfig.workItemId})が見つかりません`);
         return { linked: [], remaining: events };
@@ -75,9 +76,9 @@ function linkTimeOffEvents(
 function linkFromHistory(
     events: Event[],
     historyManager: HistoryManager,
-    workItems: WorkItemChldren[],
+    workItemsChildren: WorkItemChldren[],
 ): { linked: LinkingEventWorkItemPair[]; remaining: Event[] } {
-    const workItemMap = new Map(workItems.map((w) => [w.id, w]));
+    const workItemMap = new Map(workItemsChildren.map((w) => [w.id, w]));
     const linked: LinkingEventWorkItemPair[] = [];
     const remaining: Event[] = [];
 
@@ -106,12 +107,12 @@ function linkFromHistory(
 function linkFromWorkSchedule(
     events: Event[],
     scheduleAutoInputInfo: ScheduleAutoInputInfo,
-    workItems: WorkItemChldren[],
-): LinkingEventWorkItemPair[] {
-    const workItem = workItems.find((w) => w.id === String(scheduleAutoInputInfo.workItemId));
+    workItemsChildren: WorkItemChldren[],
+): { linked: LinkingEventWorkItemPair[]; remaining: Event[] } {
+    const workItem = workItemsChildren.find((w) => w.id === String(scheduleAutoInputInfo.workItemId));
     if (!workItem) {
         logger.error(`勤務時間の自動入力設定WorkItem(ID: ${scheduleAutoInputInfo.workItemId})が見つかりません`);
-        return [];
+        return { linked: [], remaining: events };
     }
 
     const workScheduleWorkItem: LinkingWorkItem = {
@@ -120,21 +121,19 @@ function linkFromWorkSchedule(
         workItem,
     };
 
-    return events
-        .filter((event) => {
-            if (event.workingEventType) {
-                return true;
-            } else {
-                logger.error(`勤務時間イベントではありません: ${EventUtils.getText(event)}`);
-                return false;
-            }
-        })
-        .map((event) => {
-            return {
+    const remaining: Event[] = [];
+    const linked: LinkingEventWorkItemPair[] = [];
+    events.forEach((event) => {
+        if (event.workingEventType) {
+            linked.push({
                 event,
                 linkingWorkItem: workScheduleWorkItem,
-            };
-        });
+            });
+        } else {
+            remaining.push(event);
+        }
+    });
+    return { linked, remaining };
 }
 
 /**
@@ -148,28 +147,32 @@ function linkFromWorkSchedule(
  */
 export function autoLinkEvents(
     events: Event[],
-    scheduleEvents: Event[],
-    workItems: WorkItemChldren[],
+    workItems: WorkItem[],
     settings: TimeTrackerSettings,
     historyManager: HistoryManager,
 ) {
+    const workItemsChildren = getMostNestChildren(workItems);
+
     let remainingEvents = events;
     const allLinked: LinkingEventWorkItemPair[] = [];
 
     // 1. 休暇イベントの自動紐付け
-    const timeOffResult = linkTimeOffEvents(remainingEvents, settings.timeOffEvent, workItems);
+    const timeOffResult = linkTimeOffEvents(remainingEvents, settings.timeOffEvent, workItemsChildren);
     allLinked.push(...timeOffResult.linked);
     remainingEvents = timeOffResult.remaining;
 
     // 2. 履歴からの自動紐付け（設定で有効な場合）
     if (settings.isHistoryAutoInput) {
-        const historyResult = linkFromHistory(remainingEvents, historyManager, workItems);
+        historyManager.load();
+        const historyResult = linkFromHistory(remainingEvents, historyManager, workItemsChildren);
         allLinked.push(...historyResult.linked);
         remainingEvents = historyResult.remaining;
     }
 
     // 3. 勤務時間イベントの紐づけ
-    allLinked.push(...linkFromWorkSchedule(scheduleEvents, settings.scheduleAutoInputInfo, workItems));
+    const workScheduleResult = linkFromWorkSchedule(remainingEvents, settings.scheduleAutoInputInfo, workItemsChildren);
+    allLinked.push(...workScheduleResult.linked);
+    remainingEvents = workScheduleResult.remaining;
 
     return {
         linked: allLinked,

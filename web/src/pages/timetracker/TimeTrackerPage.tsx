@@ -1,6 +1,5 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { useSettings } from "@/store";
-import type { DayTask } from "@/types";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 import { Page } from "../../components/page";
@@ -101,9 +100,6 @@ export function TimeTrackerPage() {
     const [uploadInfo, setUploadInfo] = useState<UploadInfo | undefined>(undefined);
     const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-    // Phase 6: データフロー用のstate
-    // @ts-expect-error Phase 7: TimeTracker API登録で使用予定
-    const [dayTasks, setDayTasks] = useState<DayTask[]>([]);
     // @ts-expect-error Phase 7: TimeTracker API登録で使用予定
     const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
 

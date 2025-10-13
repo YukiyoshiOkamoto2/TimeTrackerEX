@@ -1,4 +1,4 @@
-import { getLogger, resetTime } from "@/lib";
+import { getLogger } from "@/lib";
 import type { Event, Schedule, TimeCompare } from "@/types";
 import { EventUtils, ScheduleUtils } from "@/types/utils";
 import { ConvertEventInfo, ExcludedInfo } from "./models";
@@ -14,7 +14,6 @@ const debugLog = (str: string) => {
 };
 
 export const TimeTrackerAlgorithmEvent = {
-
     /**
      * 繰り返しイベントを取得する処理
      */
@@ -44,13 +43,13 @@ export const TimeTrackerAlgorithmEvent = {
                 ),
                 end: event.schedule.end
                     ? new Date(
-                        recurrence.getFullYear(),
-                        recurrence.getMonth(),
-                        recurrence.getDate(),
-                        event.schedule.end.getHours(),
-                        event.schedule.end.getMinutes(),
-                        event.schedule.end.getSeconds(),
-                    )
+                          recurrence.getFullYear(),
+                          recurrence.getMonth(),
+                          recurrence.getDate(),
+                          event.schedule.end.getHours(),
+                          event.schedule.end.getMinutes(),
+                          event.schedule.end.getSeconds(),
+                      )
                     : undefined,
             };
 

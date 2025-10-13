@@ -287,5 +287,225 @@ describe("TimeTrackerAlgorithmSchedule", () => {
             expect(startEvent).toBeDefined();
             expect(endEvent).toBeDefined();
         });
+
+        it("STE15: 日跨ぎ - 2日間のスケジュールを分割処理（10/1 10:00～10/2 12:00）", () => {
+            const schedule = createTestSchedule(
+                new Date(2024, 9, 1, 10, 0), // 10/1 10:00
+                new Date(2024, 9, 2, 12, 0), // 10/2 12:00
+            );
+            const scheduleAutoInputInfo: ScheduleAutoInputInfo = {
+                roundingTimeType: "backward",
+                startEndType: "both",
+                startEndTime: 30,
+                workItemId: 1,
+            };
+            const events: Event[] = [];
+
+            const result = TimeTrackerAlgorithmSchedule.scheduleToEvent(schedule, scheduleAutoInputInfo, events);
+
+            // 各日ごとに開始・終了イベントが生成される
+            // 10/1: 勤務開始(10:00-10:30), 勤務終了(23:00-23:30)
+            // 10/2: 勤務開始(0:00-0:30), 勤務終了(11:30-12:00)
+            expect(result).toHaveLength(4);
+
+            const day1Events = result.filter(
+                (e) => e.schedule.start.getDate() === 1 && e.schedule.start.getMonth() === 9,
+            );
+            const day2Events = result.filter(
+                (e) => e.schedule.start.getDate() === 2 && e.schedule.start.getMonth() === 9,
+            );
+
+            expect(day1Events).toHaveLength(2);
+            expect(day2Events).toHaveLength(2);
+
+            // 10/1の開始イベント
+            const day1Start = day1Events.find((e) => e.workingEventType === "start");
+            expect(day1Start?.schedule.start.getHours()).toBe(10);
+            expect(day1Start?.schedule.start.getMinutes()).toBe(0);
+            expect(day1Start?.schedule.end?.getHours()).toBe(10);
+            expect(day1Start?.schedule.end?.getMinutes()).toBe(30);
+
+            // 10/1の終了イベント
+            const day1End = day1Events.find((e) => e.workingEventType === "end");
+            expect(day1End?.schedule.start.getHours()).toBe(23);
+            expect(day1End?.schedule.start.getMinutes()).toBe(0);
+            expect(day1End?.schedule.end?.getHours()).toBe(23);
+            expect(day1End?.schedule.end?.getMinutes()).toBe(30);
+
+            // 10/2の開始イベント
+            const day2Start = day2Events.find((e) => e.workingEventType === "start");
+            expect(day2Start?.schedule.start.getHours()).toBe(0);
+            expect(day2Start?.schedule.start.getMinutes()).toBe(0);
+            expect(day2Start?.schedule.end?.getHours()).toBe(0);
+            expect(day2Start?.schedule.end?.getMinutes()).toBe(30);
+
+            // 10/2の終了イベント
+            const day2End = day2Events.find((e) => e.workingEventType === "end");
+            expect(day2End?.schedule.start.getHours()).toBe(11);
+            expect(day2End?.schedule.start.getMinutes()).toBe(30);
+            expect(day2End?.schedule.end?.getHours()).toBe(12);
+            expect(day2End?.schedule.end?.getMinutes()).toBe(0);
+        });
+
+        it("STE16: 日跨ぎ - 3日間のスケジュールを分割処理（10/1 10:00～10/3 12:00）", () => {
+            const schedule = createTestSchedule(
+                new Date(2024, 9, 1, 10, 0), // 10/1 10:00
+                new Date(2024, 9, 3, 12, 0), // 10/3 12:00
+            );
+            const scheduleAutoInputInfo: ScheduleAutoInputInfo = {
+                roundingTimeType: "backward",
+                startEndType: "both",
+                startEndTime: 30,
+                workItemId: 1,
+            };
+            const events: Event[] = [];
+
+            const result = TimeTrackerAlgorithmSchedule.scheduleToEvent(schedule, scheduleAutoInputInfo, events);
+
+            // 各日ごとに開始・終了イベントが生成される
+            // 10/1: 勤務開始(10:00-10:30), 勤務終了(23:00-23:30)
+            // 10/2: 勤務開始(0:00-0:30), 勤務終了(23:00-23:30)
+            // 10/3: 勤務開始(0:00-0:30), 勤務終了(11:30-12:00)
+            expect(result).toHaveLength(6);
+
+            const day1Events = result.filter(
+                (e) => e.schedule.start.getDate() === 1 && e.schedule.start.getMonth() === 9,
+            );
+            const day2Events = result.filter(
+                (e) => e.schedule.start.getDate() === 2 && e.schedule.start.getMonth() === 9,
+            );
+            const day3Events = result.filter(
+                (e) => e.schedule.start.getDate() === 3 && e.schedule.start.getMonth() === 9,
+            );
+
+            expect(day1Events).toHaveLength(2);
+            expect(day2Events).toHaveLength(2);
+            expect(day3Events).toHaveLength(2);
+
+            // 10/2（中間日）の確認
+            const day2Start = day2Events.find((e) => e.workingEventType === "start");
+            const day2End = day2Events.find((e) => e.workingEventType === "end");
+
+            expect(day2Start?.schedule.start.getHours()).toBe(0);
+            expect(day2Start?.schedule.start.getMinutes()).toBe(0);
+            expect(day2Start?.schedule.end?.getHours()).toBe(0);
+            expect(day2Start?.schedule.end?.getMinutes()).toBe(30);
+
+            expect(day2End?.schedule.start.getHours()).toBe(23);
+            expect(day2End?.schedule.start.getMinutes()).toBe(0);
+            expect(day2End?.schedule.end?.getHours()).toBe(23);
+            expect(day2End?.schedule.end?.getMinutes()).toBe(30);
+        });
+
+        it("STE17: 日跨ぎ - fillモードで2日間のスケジュール", () => {
+            const schedule = createTestSchedule(
+                new Date(2024, 9, 1, 22, 0), // 10/1 22:00
+                new Date(2024, 9, 2, 2, 0), // 10/2 02:00
+            );
+            const scheduleAutoInputInfo: ScheduleAutoInputInfo = {
+                roundingTimeType: "backward",
+                startEndType: "fill",
+                startEndTime: 30,
+                workItemId: 1,
+            };
+            const events: Event[] = [];
+
+            const result = TimeTrackerAlgorithmSchedule.scheduleToEvent(schedule, scheduleAutoInputInfo, events);
+
+            // 各日に開始・中間・終了イベントが生成される
+            expect(result.length).toBeGreaterThan(4);
+
+            const day1Events = result.filter(
+                (e) => e.schedule.start.getDate() === 1 && e.schedule.start.getMonth() === 9,
+            );
+            const day2Events = result.filter(
+                (e) => e.schedule.start.getDate() === 2 && e.schedule.start.getMonth() === 9,
+            );
+
+            expect(day1Events.length).toBeGreaterThan(0);
+            expect(day2Events.length).toBeGreaterThan(0);
+
+            // 10/1の開始イベント
+            const day1Start = day1Events.find((e) => e.workingEventType === "start");
+            expect(day1Start?.schedule.start.getHours()).toBe(22);
+            expect(day1Start?.schedule.start.getMinutes()).toBe(0);
+
+            // 10/2の終了イベント
+            const day2End = day2Events.find((e) => e.workingEventType === "end");
+            expect(day2End?.schedule.end?.getHours()).toBe(2);
+            expect(day2End?.schedule.end?.getMinutes()).toBe(0);
+        });
+
+        it("STE18: 日跨ぎ - 既存イベントがある場合も正しく処理される", () => {
+            const schedule = createTestSchedule(
+                new Date(2024, 9, 1, 10, 0), // 10/1 10:00
+                new Date(2024, 9, 2, 12, 0), // 10/2 12:00
+            );
+            const scheduleAutoInputInfo: ScheduleAutoInputInfo = {
+                roundingTimeType: "backward",
+                startEndType: "both",
+                startEndTime: 30,
+                workItemId: 1,
+            };
+            // 10/1に既存イベントを追加
+            const existingEvent = createTestEvent("e1", new Date(2024, 9, 1, 15, 0), new Date(2024, 9, 1, 16, 0));
+            const events: Event[] = [existingEvent];
+
+            const result = TimeTrackerAlgorithmSchedule.scheduleToEvent(schedule, scheduleAutoInputInfo, events);
+
+            // 既存イベントがあっても、各日のイベントは生成される
+            expect(result).toHaveLength(4);
+
+            const day1Events = result.filter(
+                (e) => e.schedule.start.getDate() === 1 && e.schedule.start.getMonth() === 9,
+            );
+            const day2Events = result.filter(
+                (e) => e.schedule.start.getDate() === 2 && e.schedule.start.getMonth() === 9,
+            );
+
+            expect(day1Events).toHaveLength(2);
+            expect(day2Events).toHaveLength(2);
+        });
+
+        it("STE19: 日跨ぎ - 1日の境界時刻（23:00～翌1:00）", () => {
+            const schedule = createTestSchedule(
+                new Date(2024, 9, 1, 23, 0), // 10/1 23:00
+                new Date(2024, 9, 2, 1, 0), // 10/2 01:00
+            );
+            const scheduleAutoInputInfo: ScheduleAutoInputInfo = {
+                roundingTimeType: "backward",
+                startEndType: "both",
+                startEndTime: 30,
+                workItemId: 1,
+            };
+            const events: Event[] = [];
+
+            const result = TimeTrackerAlgorithmSchedule.scheduleToEvent(schedule, scheduleAutoInputInfo, events);
+
+            // 2日分のイベントが生成される
+            expect(result).toHaveLength(4);
+
+            const day1Events = result.filter(
+                (e) => e.schedule.start.getDate() === 1 && e.schedule.start.getMonth() === 9,
+            );
+            const day2Events = result.filter(
+                (e) => e.schedule.start.getDate() === 2 && e.schedule.start.getMonth() === 9,
+            );
+
+            expect(day1Events).toHaveLength(2);
+            expect(day2Events).toHaveLength(2);
+
+            // 10/1の終了イベントは23:00-23:30
+            const day1End = day1Events.find((e) => e.workingEventType === "end");
+            expect(day1End?.schedule.start.getHours()).toBe(23);
+            expect(day1End?.schedule.end?.getHours()).toBe(23);
+            expect(day1End?.schedule.end?.getMinutes()).toBe(30);
+
+            // 10/2の開始イベントは0:00-0:30
+            const day2Start = day2Events.find((e) => e.workingEventType === "start");
+            expect(day2Start?.schedule.start.getHours()).toBe(0);
+            expect(day2Start?.schedule.end?.getHours()).toBe(0);
+            expect(day2Start?.schedule.end?.getMinutes()).toBe(30);
+        });
     });
 });
