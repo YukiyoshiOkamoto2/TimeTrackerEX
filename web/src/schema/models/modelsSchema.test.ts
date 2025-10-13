@@ -6,18 +6,18 @@
 
 import { describe, expect, it } from "vitest";
 import {
-    WorkingEventTypeSchema,
-    ScheduleSchema,
+    DayTaskSchema,
+    EventInputInfoSchema,
     EventSchema,
+    EventWorkItemPairSchema,
     ProjectSchema,
+    RoundingMethodSchema,
+    ScheduleSchema,
+    TimeCompareSchema,
+    TimeTrackerDayTaskSchema,
+    WorkingEventTypeSchema,
     WorkItemChildrenSchema,
     WorkItemSchema,
-    DayTaskSchema,
-    RoundingMethodSchema,
-    TimeCompareSchema,
-    EventInputInfoSchema,
-    EventWorkItemPairSchema,
-    TimeTrackerDayTaskSchema,
 } from "./modelsSchema";
 
 describe("WorkingEventTypeSchema", () => {
@@ -81,9 +81,7 @@ describe("ScheduleSchema", () => {
             isHoliday: false,
             isPaidLeave: true,
         };
-        expect(() => ScheduleSchema.parse(schedule)).toThrow(
-            "有給休暇の場合は休日フラグも設定する必要があります",
-        );
+        expect(() => ScheduleSchema.parse(schedule)).toThrow("有給休暇の場合は休日フラグも設定する必要があります");
     });
 
     it("SCH06: 終了時間が開始時間より前のスケジュールを拒否する", () => {
@@ -93,9 +91,7 @@ describe("ScheduleSchema", () => {
             isHoliday: false,
             isPaidLeave: false,
         };
-        expect(() => ScheduleSchema.parse(schedule)).toThrow(
-            "終了時間は開始時間より後である必要があります",
-        );
+        expect(() => ScheduleSchema.parse(schedule)).toThrow("終了時間は開始時間より後である必要があります");
     });
 
     it("SCH07: 開始時間が未設定のスケジュールを拒否する", () => {
@@ -150,10 +146,7 @@ describe("EventSchema", () => {
     it("EVT03: 繰り返し日程を持つイベントを受け入れる", () => {
         const event = {
             ...baseEvent,
-            recurrence: [
-                new Date("2024-01-08T09:00:00"),
-                new Date("2024-01-15T09:00:00"),
-            ],
+            recurrence: [new Date("2024-01-08T09:00:00"), new Date("2024-01-15T09:00:00")],
         };
         expect(() => EventSchema.parse(event)).not.toThrow();
     });

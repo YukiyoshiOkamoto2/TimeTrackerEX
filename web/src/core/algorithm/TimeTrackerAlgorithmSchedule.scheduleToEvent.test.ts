@@ -39,7 +39,7 @@ describe("TimeTrackerAlgorithmSchedule", () => {
             const events: Event[] = [];
 
             const result = TimeTrackerAlgorithmSchedule.scheduleToEvent(schedule, scheduleAutoInputInfo, events);
-            
+
             // 休日フラグは無視されて通常通りイベントが生成される
             expect(result).toHaveLength(2);
             expect(result[0].workingEventType).toBe("start");
@@ -78,7 +78,7 @@ describe("TimeTrackerAlgorithmSchedule", () => {
             const events: Event[] = [];
 
             const result = TimeTrackerAlgorithmSchedule.scheduleToEvent(schedule, scheduleAutoInputInfo, events);
-            
+
             // エラーメッセージがあっても通常通りイベントが生成される
             expect(result).toHaveLength(2);
             expect(result[0].workingEventType).toBe("start");

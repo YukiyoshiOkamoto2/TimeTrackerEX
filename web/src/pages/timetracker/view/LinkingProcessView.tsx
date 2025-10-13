@@ -13,7 +13,13 @@ import { EventTable, EventWithOption, type EventTableRow } from "../components/E
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { StatisticsCards } from "../components/StatisticsCards";
 import { ViewHeader, ViewSection } from "../components/ViewLayout";
-import { AdjustedEventInfo, ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair, UploadInfo } from "../models";
+import {
+    AdjustedEventInfo,
+    ExcludedEventInfo,
+    ExcludedScheduleInfo,
+    LinkingEventWorkItemPair,
+    UploadInfo,
+} from "../models";
 import { getAllEvents } from "../services/converter";
 
 const logger = getLogger("LinkingProcessView");
@@ -28,20 +34,20 @@ const useStyles = makeStyles({
 });
 
 type LinkingProcessViewState = {
-    // 有効なスケジュール（休日・エラーを除く） 
-    enableSchedules: Schedule[]
+    // 有効なスケジュール（休日・エラーを除く）
+    enableSchedules: Schedule[];
     // 有効なイベント
-    enableEvents: Event[],
+    enableEvents: Event[];
     // 勤務日イベント
-    scheduleEvents: Event[],
+    scheduleEvents: Event[];
     // 時間調整されたイベント
-    adjustedEvents: AdjustedEventInfo[],
+    adjustedEvents: AdjustedEventInfo[];
     // 有給休暇の日別イベント
-    paidLeaveDayEvents: Event[],
+    paidLeaveDayEvents: Event[];
     // 除外されたスケジュール
-    excludedSchedules: ExcludedScheduleInfo[],
+    excludedSchedules: ExcludedScheduleInfo[];
     // 除外されたイベント
-    excludedEvents: ExcludedEventInfo[],
+    excludedEvents: ExcludedEventInfo[];
 };
 
 const historyManager = new HistoryManager();
@@ -52,27 +58,27 @@ const setHistrory = (event: Event, workItem: WorkItem) => {
 };
 
 const toEventWithOption = (state: LinkingProcessViewState): EventWithOption[] => {
-    const allEvents = []
+    const allEvents = [];
     if (state?.enableEvents) {
-        allEvents.push(...state.enableEvents)
+        allEvents.push(...state.enableEvents);
     }
     if (state?.adjustedEvents) {
-        const adjustedEvents = state.adjustedEvents.map(a => {
+        const adjustedEvents = state.adjustedEvents.map((a) => {
             return {
                 ...a.event,
                 oldSchedule: a.oldSchdule,
-            }
-        })
-        allEvents.push(...adjustedEvents)
+            };
+        });
+        allEvents.push(...adjustedEvents);
     }
     if (state?.paidLeaveDayEvents) {
-        allEvents.push(...state.paidLeaveDayEvents)
+        allEvents.push(...state.paidLeaveDayEvents);
     }
     if (state?.scheduleEvents) {
-        allEvents.push(...state.scheduleEvents)
+        allEvents.push(...state.scheduleEvents);
     }
     return allEvents;
-}
+};
 
 export type LinkingProcessViewProps = {
     uploadInfo?: UploadInfo;
@@ -126,53 +132,56 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
     }, [linkingEventWorkItemPair, state]);
 
     // WorkItemの変更ハンドラー
-    const handleWorkItemChange = useCallback((eventId: string, workItemId: string) => {
-        const selectedWorkItem = getMostNestChildren(uploadInfo?.workItems || []).find((w) => w.id === workItemId);
-        if (!selectedWorkItem) {
-            logger.error("Selected Unkown WorkItem Id -> " + workItemId);
-            return;
-        }
+    const handleWorkItemChange = useCallback(
+        (eventId: string, workItemId: string) => {
+            const selectedWorkItem = getMostNestChildren(uploadInfo?.workItems || []).find((w) => w.id === workItemId);
+            if (!selectedWorkItem) {
+                logger.error("Selected Unkown WorkItem Id -> " + workItemId);
+                return;
+            }
 
-        // eventIdから実際のイベントを取得
-        const eventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
-        if (eventIndex >= 0) {
-            // 既存の紐づけを更新
-            const updatedPairs = [...linkingEventWorkItemPair];
-            const event = updatedPairs[eventIndex].event;
+            // eventIdから実際のイベントを取得
+            const eventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
+            if (eventIndex >= 0) {
+                // 既存の紐づけを更新
+                const updatedPairs = [...linkingEventWorkItemPair];
+                const event = updatedPairs[eventIndex].event;
 
-            updatedPairs[eventIndex] = {
-                ...updatedPairs[eventIndex],
-                linkingWorkItem: {
-                    workItem: selectedWorkItem,
-                    type: "manual",
-                    autoMethod: "none",
-                },
-            };
-            setLinkingEventWorkItemPair(updatedPairs);
-            setHistrory(event, selectedWorkItem);
-            return;
-        }
-
-        // 未紐づけから紐づけ済みに移動
-        const event = toEventWithOption(state).find((event) => event.uuid === eventId);
-        if (event) {
-            setLinkingEventWorkItemPair([
-                ...linkingEventWorkItemPair,
-                {
-                    event,
+                updatedPairs[eventIndex] = {
+                    ...updatedPairs[eventIndex],
                     linkingWorkItem: {
                         workItem: selectedWorkItem,
                         type: "manual",
                         autoMethod: "none",
                     },
-                },
-            ]);
-            setHistrory(event, selectedWorkItem);
-            return;
-        }
+                };
+                setLinkingEventWorkItemPair(updatedPairs);
+                setHistrory(event, selectedWorkItem);
+                return;
+            }
 
-        logger.error("Not found event -> id: " + eventId);
-    }, [uploadInfo, linkingEventWorkItemPair, state])
+            // 未紐づけから紐づけ済みに移動
+            const event = toEventWithOption(state).find((event) => event.uuid === eventId);
+            if (event) {
+                setLinkingEventWorkItemPair([
+                    ...linkingEventWorkItemPair,
+                    {
+                        event,
+                        linkingWorkItem: {
+                            workItem: selectedWorkItem,
+                            type: "manual",
+                            autoMethod: "none",
+                        },
+                    },
+                ]);
+                setHistrory(event, selectedWorkItem);
+                return;
+            }
+
+            logger.error("Not found event -> id: " + eventId);
+        },
+        [uploadInfo, linkingEventWorkItemPair, state],
+    );
 
     const handleSubmit = async () => {
         // // すべてのイベントが未処理の場合は進めない

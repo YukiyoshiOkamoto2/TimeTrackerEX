@@ -33,7 +33,7 @@ import {
     PersonEdit20Regular,
 } from "@fluentui/react-icons";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
-import { AdjustedEventInfo, LinkingEventWorkItemPair } from "../models";
+import { LinkingEventWorkItemPair } from "../models";
 
 // イベントテーブル用の型定義
 type TableRow = {
@@ -45,8 +45,8 @@ type TableRow = {
 };
 
 export type EventWithOption = {
-    oldSchedule?: Schedule
-} & Event
+    oldSchedule?: Schedule;
+} & Event;
 
 export type EventTableRow = {
     id: string;

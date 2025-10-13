@@ -54,7 +54,7 @@ export const TimeTrackerAlgorithmCore = {
         }
 
         if (!schedule.end) {
-            throw new Error(`終了予定時間がありません。${ScheduleUtils.getText(schedule)}`)
+            throw new Error(`終了予定時間がありません。${ScheduleUtils.getText(schedule)}`);
         }
 
         const startMinuteMod = schedule.start.getMinutes() % roundingTimeUnit;
@@ -166,7 +166,7 @@ export const TimeTrackerAlgorithmCore = {
 
         const checkSchedule = (schedule: Schedule) => {
             const range = ScheduleUtils.getRange(schedule);
-            const details: ExcludedReasonDetail[] = []
+            const details: ExcludedReasonDetail[] = [];
 
             if (!schedule.end) {
                 const text = `終了時間がありません: ${ScheduleUtils.getText(schedule)}`;
@@ -174,7 +174,10 @@ export const TimeTrackerAlgorithmCore = {
             }
 
             // 開始時間と終了時間が同じ、または丸め単位よりも小さい場合は削除
-            if (schedule.end && (schedule.start.getTime() === schedule.end.getTime() || (range && range < roundingTimeUnit * 60 * 1000))) {
+            if (
+                schedule.end &&
+                (schedule.start.getTime() === schedule.end.getTime() || (range && range < roundingTimeUnit * 60 * 1000))
+            ) {
                 const text = `開始時間と終了時間が同じ、または丸め単位よりも小さい: ${ScheduleUtils.getText(schedule)}`;
                 details.push({ reason: "invalid", message: text });
             }
@@ -192,12 +195,12 @@ export const TimeTrackerAlgorithmCore = {
             }
 
             return details;
-        }
+        };
 
         const checEvent = (event: Event) => {
             const schedule = event.schedule;
             const range = ScheduleUtils.getRange(schedule);
-            const details: ExcludedReasonDetail[] = checkSchedule(schedule)
+            const details: ExcludedReasonDetail[] = checkSchedule(schedule);
 
             // 6時間以上のイベントは削除
             if (range && range > maxTime) {
@@ -206,14 +209,14 @@ export const TimeTrackerAlgorithmCore = {
             }
 
             return details;
-        }
+        };
 
         if (ScheduleUtils.isSchedule(eventOrSchedule)) {
             const details = checkSchedule(eventOrSchedule);
             if (details.length > 0) {
                 return {
                     target: eventOrSchedule,
-                    details: details
+                    details: details,
                 };
             }
             return null;
@@ -224,13 +227,12 @@ export const TimeTrackerAlgorithmCore = {
             if (details.length > 0) {
                 return {
                     target: eventOrSchedule,
-                    details: details
+                    details: details,
                 };
             }
             return null;
         }
 
-        throw new Error(`不正なEvent、Scheduleが渡されました。: ${JSON.stringify(eventOrSchedule)}`)
-    }
-}
-
+        throw new Error(`不正なEvent、Scheduleが渡されました。: ${JSON.stringify(eventOrSchedule)}`);
+    },
+};

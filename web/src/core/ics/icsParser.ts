@@ -3,11 +3,12 @@ import ICAL from "ical.js";
 
 import { Event } from "@/types";
 import { createEvent, createSchedule } from "@/types/utils";
+import { TimeTrackerAlgorithmEvent } from "../algorithm";
 
 const logger = getLogger("ICSParser");
 
 // 過去日の期限
-const MAX_OLD = 30
+const MAX_OLD = 30;
 
 /**
  * ICSファイルのパース結果
@@ -48,6 +49,10 @@ export function parseICS(fileContent: string): InputICSResult {
                 const event = parseEvent(vevent, startDate, now);
                 if (event) {
                     result.events.push(event);
+                    if (event.recurrence) {
+                        //繰り返しイベントも取得する
+                        result.events.push(...TimeTrackerAlgorithmEvent.getRecurrenceEvent(event));
+                    }
                 }
             } catch (e) {
                 const summary = vevent.getFirstPropertyValue("summary") || "(不明)";
@@ -131,7 +136,7 @@ function parseEvent(vevent: ICAL.Component, startDate: Date, now: Date): Event |
 
     const schedule = createSchedule(start, end);
     const event = createEvent(summary, schedule, organizer, location, isPrivate, isCancelled);
-    
+
     return {
         ...event,
         uuid: uid,

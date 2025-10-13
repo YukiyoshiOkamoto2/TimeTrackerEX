@@ -14,4 +14,4 @@ export * from "./models";
 /**
  * ユーティリティ関数のエクスポート
  */
-export { createEvent, createSchedule, EventUtils, ScheduleUtils } from "./utils";
+export { EventUtils, ScheduleUtils, createEvent, createSchedule } from "./utils";

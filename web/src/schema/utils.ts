@@ -6,7 +6,6 @@
 
 import { z } from "zod";
 
-
 export const SchemaUtils = {
     /**
      * Zodスキーマを使用して型チェックを行う
@@ -30,5 +29,4 @@ export const SchemaUtils = {
     isType<T>(schema: z.ZodType<T>, value: unknown): value is T {
         return schema.safeParse(value).success;
     },
-
-}
+};

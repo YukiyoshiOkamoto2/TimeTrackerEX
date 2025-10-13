@@ -225,14 +225,7 @@ export const DayTaskSchema = z.object({
 /**
  * RoundingMethodのスキーマ
  */
-export const RoundingMethodSchema = z.enum([
-    "backward",
-    "forward",
-    "round",
-    "half",
-    "stretch",
-    "nonduplicate",
-]);
+export const RoundingMethodSchema = z.enum(["backward", "forward", "round", "half", "stretch", "nonduplicate"]);
 
 /**
  * TimeCompareのスキーマ

@@ -3,11 +3,11 @@
  * TimeTrackerAlgorithmCore.roundingTime, TimeTrackerAlgorithmCore.roundingSchedule 関数のテスト
  */
 
-import type { Event, Schedule } from "@/types";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { TimeTrackerAlgorithmCore, MAX_TIME, MAX_OLD } from "./TimeTrackerAlgorithmCore";
-import { createEvent, createSchedule } from "@/types/utils";
 import * as lib from "@/lib";
+import type { Event, Schedule } from "@/types";
+import { createEvent, createSchedule } from "@/types/utils";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MAX_OLD, MAX_TIME, TimeTrackerAlgorithmCore } from "./TimeTrackerAlgorithmCore";
 
 describe("TimeTrackerAlgorithmCore", () => {
     describe("TimeTrackerAlgorithmCore.roundingTime", () => {
@@ -108,7 +108,9 @@ describe("TimeTrackerAlgorithmCore", () => {
                 start: new Date(2024, 1, 3, 9, 0),
             };
 
-            expect(() => TimeTrackerAlgorithmCore.roundingSchedule(schedule, "backward")).toThrow("終了予定時間がありません");
+            expect(() => TimeTrackerAlgorithmCore.roundingSchedule(schedule, "backward")).toThrow(
+                "終了予定時間がありません",
+            );
         });
 
         it("RS02: 開始終了とも丸め単位で割り切れる場合はそのまま返す", () => {
@@ -304,10 +306,7 @@ describe("TimeTrackerAlgorithmCore", () => {
 
         describe("Scheduleのチェック", () => {
             it("CHK01: 正常なスケジュールはnullを返す", () => {
-                const schedule = createSchedule(
-                    new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 10, 0)
-                );
+                const schedule = createSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
 
@@ -315,10 +314,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             });
 
             it("CHK02: 終了時間がない場合はinvalidエラーを返す", () => {
-                const schedule = createSchedule(
-                    new Date(2024, 1, 3, 9, 0),
-                    null
-                );
+                const schedule = createSchedule(new Date(2024, 1, 3, 9, 0), null);
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
 
@@ -331,7 +327,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK03: 6時間以上のスケジュールはinvalidエラーを返す", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 15, 30) // 6.5時間
+                    new Date(2024, 1, 3, 15, 30), // 6.5時間
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
@@ -345,7 +341,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK04: 6時間ちょうどのスケジュールは正常", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 15, 0) // 6時間
+                    new Date(2024, 1, 3, 15, 0), // 6時間
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
@@ -356,7 +352,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK05: 未来のスケジュールはoutOfScheduleエラーを返す", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 4, 9, 0), // 明日
-                    new Date(2024, 1, 4, 10, 0)
+                    new Date(2024, 1, 4, 10, 0),
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
@@ -370,7 +366,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK06: 30日以上前のスケジュールはoutOfScheduleエラーを返す", () => {
                 const schedule = createSchedule(
                     new Date(2024, 0, 1, 9, 0), // 33日前
-                    new Date(2024, 0, 1, 10, 0)
+                    new Date(2024, 0, 1, 10, 0),
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
@@ -384,7 +380,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK07: 30日前ちょうどのスケジュールは正常", () => {
                 const schedule = createSchedule(
                     new Date(2024, 0, 4, 12, 0), // 30日前の同時刻
-                    new Date(2024, 0, 4, 13, 0)
+                    new Date(2024, 0, 4, 13, 0),
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
@@ -393,10 +389,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             });
 
             it("CHK08: 開始時刻と終了時刻が同じ場合はinvalidエラーを返す", () => {
-                const schedule = createSchedule(
-                    new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 9, 0)
-                );
+                const schedule = createSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 9, 0));
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
 
@@ -409,7 +402,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK09: 丸め単位(30分)未満のスケジュールはinvalidエラーを返す", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 9, 29) // 29分
+                    new Date(2024, 1, 3, 9, 29), // 29分
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
@@ -423,7 +416,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK10: 丸め単位(30分)ちょうどのスケジュールは正常", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 9, 30) // 30分
+                    new Date(2024, 1, 3, 9, 30), // 30分
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
@@ -435,21 +428,21 @@ describe("TimeTrackerAlgorithmCore", () => {
                 // 未来 + 過去
                 const schedule = createSchedule(
                     new Date(2024, 1, 5, 9, 0), // 未来
-                    new Date(2000, 1, 5, 16, 0) // 過去
+                    new Date(2000, 1, 5, 16, 0), // 過去
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
 
                 expect(result).not.toBeNull();
                 expect(result?.details.length).toBeGreaterThanOrEqual(2);
-                expect(result?.details.some(d => d.reason === "invalid")).toBe(true);
-                expect(result?.details.some(d => d.reason === "outOfSchedule")).toBe(true);
+                expect(result?.details.some((d) => d.reason === "invalid")).toBe(true);
+                expect(result?.details.some((d) => d.reason === "outOfSchedule")).toBe(true);
             });
 
             it("CHK12: カスタムmaxTimeでチェック", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 11, 30) // 2.5時間
+                    new Date(2024, 1, 3, 11, 30), // 2.5時間
                 );
 
                 // maxTime = 2時間でチェック
@@ -462,7 +455,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK13: カスタムmaxOldでチェック", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 1, 9, 0), // 2日前
-                    new Date(2024, 1, 1, 10, 0)
+                    new Date(2024, 1, 1, 10, 0),
                 );
 
                 // maxOld = 1日でチェック
@@ -475,7 +468,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK14: カスタムTimeTrackerAlgorithmCore.roundingTimeUnitでチェック", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 9, 10) // 10分
+                    new Date(2024, 1, 3, 9, 10), // 10分
                 );
 
                 // TimeTrackerAlgorithmCore.roundingTimeUnit = 15分でチェック
@@ -490,7 +483,7 @@ describe("TimeTrackerAlgorithmCore", () => {
                     new Date(2024, 1, 3, 9, 0),
                     new Date(2024, 1, 3, 10, 0),
                     true, // isHoliday
-                    true  // isPaidLeave
+                    true, // isPaidLeave
                 );
 
                 const result = TimeTrackerAlgorithmCore.check(schedule);
@@ -501,10 +494,7 @@ describe("TimeTrackerAlgorithmCore", () => {
 
         describe("Eventのチェック", () => {
             it("CHK16: 正常なイベントはnullを返す", () => {
-                const schedule = createSchedule(
-                    new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 10, 0)
-                );
+                const schedule = createSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
                 const event = createEvent("Meeting", schedule);
 
                 const result = TimeTrackerAlgorithmCore.check(event);
@@ -513,10 +503,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             });
 
             it("CHK17: イベントのスケジュールに終了時間がない場合はinvalidエラーを返す", () => {
-                const schedule = createSchedule(
-                    new Date(2024, 1, 3, 9, 0),
-                    null
-                );
+                const schedule = createSchedule(new Date(2024, 1, 3, 9, 0), null);
                 const event = createEvent("Meeting", schedule);
 
                 const result = TimeTrackerAlgorithmCore.check(event);
@@ -531,7 +518,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK18: イベントのスケジュールが6時間以上の場合はinvalidエラーを返す", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 16, 0) // 7時間
+                    new Date(2024, 1, 3, 16, 0), // 7時間
                 );
                 const event = createEvent("Long Meeting", schedule);
 
@@ -545,7 +532,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK19: 未来のイベントはoutOfScheduleエラーを返す", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 4, 9, 0), // 明日
-                    new Date(2024, 1, 4, 10, 0)
+                    new Date(2024, 1, 4, 10, 0),
                 );
                 const event = createEvent("Future Meeting", schedule);
 
@@ -559,7 +546,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK20: 30日以上前のイベントはoutOfScheduleエラーを返す", () => {
                 const schedule = createSchedule(
                     new Date(2024, 0, 1, 9, 0), // 33日前
-                    new Date(2024, 0, 1, 10, 0)
+                    new Date(2024, 0, 1, 10, 0),
                 );
                 const event = createEvent("Old Meeting", schedule);
 
@@ -573,7 +560,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK21: イベントの複数エラーも正しく検出される", () => {
                 const schedule = createSchedule(
                     new Date(2024, 1, 5, 9, 0), // 未来
-                    new Date(2024, 1, 5, 16, 0) // 7時間
+                    new Date(2024, 1, 5, 16, 0), // 7時間
                 );
                 const event = createEvent("Invalid Event", schedule);
 
@@ -584,10 +571,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             });
 
             it("CHK22: キャンセルされたイベントもチェックされる", () => {
-                const schedule = createSchedule(
-                    new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 10, 0)
-                );
+                const schedule = createSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
                 const event = createEvent("Meeting", schedule, "", "", false, true);
 
                 const result = TimeTrackerAlgorithmCore.check(event);
@@ -596,10 +580,7 @@ describe("TimeTrackerAlgorithmCore", () => {
             });
 
             it("CHK23: プライベートイベントもチェックされる", () => {
-                const schedule = createSchedule(
-                    new Date(2024, 1, 3, 9, 0),
-                    new Date(2024, 1, 3, 10, 0)
-                );
+                const schedule = createSchedule(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 10, 0));
                 const event = createEvent("Private Meeting", schedule, "", "", true);
 
                 const result = TimeTrackerAlgorithmCore.check(event);
@@ -612,15 +593,21 @@ describe("TimeTrackerAlgorithmCore", () => {
             it("CHK24: Schedule/Event以外のオブジェクトはエラーをthrowする", () => {
                 const invalidObject = { foo: "bar" };
 
-                expect(() => TimeTrackerAlgorithmCore.check(invalidObject as any)).toThrow("不正なEvent、Scheduleが渡されました");
+                expect(() => TimeTrackerAlgorithmCore.check(invalidObject as any)).toThrow(
+                    "不正なEvent、Scheduleが渡されました",
+                );
             });
 
             it("CHK25: nullを渡すとエラーをthrowする", () => {
-                expect(() => TimeTrackerAlgorithmCore.check(null as any)).toThrow("不正なEvent、Scheduleが渡されました");
+                expect(() => TimeTrackerAlgorithmCore.check(null as any)).toThrow(
+                    "不正なEvent、Scheduleが渡されました",
+                );
             });
 
             it("CHK26: undefinedを渡すとエラーをthrowする", () => {
-                expect(() => TimeTrackerAlgorithmCore.check(undefined as any)).toThrow("不正なEvent、Scheduleが渡されました");
+                expect(() => TimeTrackerAlgorithmCore.check(undefined as any)).toThrow(
+                    "不正なEvent、Scheduleが渡されました",
+                );
             });
         });
     });

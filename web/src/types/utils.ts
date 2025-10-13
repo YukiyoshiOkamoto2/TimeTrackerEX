@@ -58,7 +58,9 @@ export const ScheduleUtils = {
      */
     isOverlap(schedule: Schedule, other: Schedule): boolean {
         if (!schedule.end || !other.end) {
-            throw new Error(`スケジュールの重複判定で終了時間の存在しないスケジュールが渡されました。(a: ${ScheduleUtils.getText(schedule)}, b: ${ScheduleUtils.getText(other)})`)
+            throw new Error(
+                `スケジュールの重複判定で終了時間の存在しないスケジュールが渡されました。(a: ${ScheduleUtils.getText(schedule)}, b: ${ScheduleUtils.getText(other)})`,
+            );
         }
 
         const scheduleBaseDate = this.getBaseDate(schedule);

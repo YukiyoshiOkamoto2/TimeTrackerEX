@@ -1,8 +1,7 @@
 import { getLogger } from "@/lib";
-import type { Event, EventInputInfo, Schedule, ScheduleAutoInputInfo, WorkingEventType } from "@/types";
+import type { Event, Schedule, ScheduleAutoInputInfo, WorkingEventType } from "@/types";
 import { createEvent, EventUtils, ScheduleUtils } from "@/types/utils";
-import { resetTime } from "../../lib/dateUtil";
-import { ROUNDING_TIME_UNIT, TimeTrackerAlgorithmCore } from './TimeTrackerAlgorithmCore';
+import { ROUNDING_TIME_UNIT, TimeTrackerAlgorithmCore } from "./TimeTrackerAlgorithmCore";
 import { TimeTrackerAlgorithmEvent } from "./TimeTrackerAlgorithmEvent";
 
 const logger = getLogger("TimeTrackerAlgorithmSchedule");
@@ -24,11 +23,11 @@ export const TimeTrackerAlgorithmSchedule = {
         events: Event[],
         roundingTimeUnit: number = ROUNDING_TIME_UNIT,
     ): Event[] => {
-        const checked = TimeTrackerAlgorithmCore.check(schedule)
+        const checked = TimeTrackerAlgorithmCore.check(schedule);
         if (checked) {
-            const look = checked.details.filter(d => d.reason === "invalid")
+            const look = checked.details.filter((d) => d.reason === "invalid");
             if (look.length > 0) {
-                const errorMsg = "スケジュールが不正です。\n" + look.map(d => d.message).join("\n");
+                const errorMsg = "スケジュールが不正です。\n" + look.map((d) => d.message).join("\n");
                 logger.error(errorMsg);
                 throw new Error(errorMsg);
             }
@@ -46,7 +45,12 @@ export const TimeTrackerAlgorithmSchedule = {
                 start: schedule.start,
                 end: new Date(schedule.start.getTime() + startEndTime * 60 * 1000),
             };
-            let roundedStartSchedule = TimeTrackerAlgorithmCore.roundingSchedule(startSchedule, roundingTimeType, events, roundingTimeUnit);
+            let roundedStartSchedule = TimeTrackerAlgorithmCore.roundingSchedule(
+                startSchedule,
+                roundingTimeType,
+                events,
+                roundingTimeUnit,
+            );
 
             if (roundedStartSchedule) {
                 // stretchの場合はstart_end_timeよりも大きい場合はstart_end_timeにする
@@ -70,7 +74,12 @@ export const TimeTrackerAlgorithmSchedule = {
                 start: new Date(schedule.end!.getTime() - startEndTime * 60 * 1000),
                 end: schedule.end,
             };
-            let roundedEndSchedule = TimeTrackerAlgorithmCore.roundingSchedule(endSchedule, roundingTimeType, events, roundingTimeUnit);
+            let roundedEndSchedule = TimeTrackerAlgorithmCore.roundingSchedule(
+                endSchedule,
+                roundingTimeType,
+                events,
+                roundingTimeUnit,
+            );
 
             if (roundedEndSchedule) {
                 // stretchの場合はstart_end_timeよりも大きい場合はstart_end_timeにする

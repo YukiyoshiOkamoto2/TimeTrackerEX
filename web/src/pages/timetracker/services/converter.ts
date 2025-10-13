@@ -20,8 +20,14 @@ import {
     type Schedule,
     type TimeTrackerSettings,
 } from "@/types";
-import { AdjustedEventInfo, ExcludedEventInfo, ExcludedEventReasonDetail, ExcludedScheduleInfo, ExcludedScheduleReasonDetail } from "../models/";
-import { TimeTrackerAlgorithmCore } from '../../../core/algorithm/TimeTrackerAlgorithmCore';
+import { TimeTrackerAlgorithmCore } from "../../../core/algorithm/TimeTrackerAlgorithmCore";
+import {
+    AdjustedEventInfo,
+    ExcludedEventInfo,
+    ExcludedEventReasonDetail,
+    ExcludedScheduleInfo,
+    ExcludedScheduleReasonDetail,
+} from "../models/";
 
 /**
  * 有効なイベント（無視リストに含まれないイベント）を取得
@@ -54,16 +60,16 @@ function getEnableEvents(
             isError = true;
         }
 
-        const checed = TimeTrackerAlgorithmCore.check(event)
+        const checed = TimeTrackerAlgorithmCore.check(event);
         if (checed) {
-            checed.details.forEach(d => {
-                details.push(d)
-            })
+            checed.details.forEach((d) => {
+                details.push(d);
+            });
             isError = true;
         }
 
         if (!isError) {
-            enableEvents.push(event)
+            enableEvents.push(event);
         }
     });
 
@@ -74,7 +80,7 @@ function getEnableEvents(
  * 有効なスケジュール（休日・エラーを除く）を取得
  */
 function getEnableSchedules(schedules: Schedule[]): [Schedule[], ExcludedScheduleInfo[]] {
-    const enableSchedules: Schedule[] = []
+    const enableSchedules: Schedule[] = [];
     const excludedSchedules: ExcludedScheduleInfo[] = [];
 
     schedules.forEach((schedule) => {
@@ -97,11 +103,11 @@ function getEnableSchedules(schedules: Schedule[]): [Schedule[], ExcludedSchedul
             isError = true;
         }
 
-        const checed = TimeTrackerAlgorithmCore.check(schedule)
+        const checed = TimeTrackerAlgorithmCore.check(schedule);
         if (checed) {
-            checed.details.forEach(d => {
-                details.push(d)
-            })
+            checed.details.forEach((d) => {
+                details.push(d);
+            });
         }
 
         if (details.length > 0) {
@@ -112,7 +118,9 @@ function getEnableSchedules(schedules: Schedule[]): [Schedule[], ExcludedSchedul
             isError = true;
         }
 
-        const duplicateDaysIndex = enableSchedules.findIndex(s => ScheduleUtils.getBaseDateKey(s) === ScheduleUtils.getBaseDateKey(schedule))
+        const duplicateDaysIndex = enableSchedules.findIndex(
+            (s) => ScheduleUtils.getBaseDateKey(s) === ScheduleUtils.getBaseDateKey(schedule),
+        );
         if (duplicateDaysIndex > -1) {
             details.push({
                 reason: "invalid",
@@ -122,7 +130,7 @@ function getEnableSchedules(schedules: Schedule[]): [Schedule[], ExcludedSchedul
         }
 
         if (!isError) {
-            enableSchedules.push(schedule)
+            enableSchedules.push(schedule);
         }
     });
 
@@ -160,31 +168,34 @@ function createPaidLeaveDayEvent(schedules: Schedule[], paidLeaveConfig?: PaidLe
         end.setHours(endHour, endMinute, 0, 0);
 
         // 有給休暇イベントを作成
-        return createEvent("有給休暇", {
-            ...schedule,
-            start,
-            end,
-        }, "Automatic")
-
+        return createEvent(
+            "有給休暇",
+            {
+                ...schedule,
+                start,
+                end,
+            },
+            "Automatic",
+        );
     });
 }
 
 type AllEvents = {
-    // 有効なスケジュール（休日・エラーを除く） 
-    enableSchedules: Schedule[]
+    // 有効なスケジュール（休日・エラーを除く）
+    enableSchedules: Schedule[];
     // 有効なイベント
-    enableEvents: Event[],
+    enableEvents: Event[];
     // 勤務日イベント
-    scheduleEvents: Event[],
+    scheduleEvents: Event[];
     // 時間調整されたイベント
-    adjustedEvents: AdjustedEventInfo[],
+    adjustedEvents: AdjustedEventInfo[];
     // 有給休暇の日別イベント
-    paidLeaveDayEvents: Event[],
+    paidLeaveDayEvents: Event[];
     // 除外されたスケジュール
-    excludedSchedules: ExcludedScheduleInfo[],
+    excludedSchedules: ExcludedScheduleInfo[];
     // 除外されたイベント
-    excludedEvents: ExcludedEventInfo[],
-}
+    excludedEvents: ExcludedEventInfo[];
+};
 
 export function getAllEvents(timetracker: TimeTrackerSettings, schedules: Schedule[], events: Event[]): AllEvents {
     // 有効なスケジュール（休日・エラーを除く）を取得
@@ -201,7 +212,7 @@ export function getAllEvents(timetracker: TimeTrackerSettings, schedules: Schedu
     // イベント丸め処理
     const allEvents = [...enableEvents, ...recurrenceEvents];
     const roundedEvents: Event[] = [];
-    allEvents.forEach(event => {
+    allEvents.forEach((event) => {
         const roundedSchedule = TimeTrackerAlgorithmCore.roundingSchedule(
             event.schedule,
             timetracker.roundingTimeTypeOfEvent,
@@ -215,35 +226,37 @@ export function getAllEvents(timetracker: TimeTrackerSettings, schedules: Schedu
                 details: [
                     {
                         reason: "invalid",
-                        message: "丸め処理により削除されました。"
-                    }
-                ]
-            })
-        }
-    })
-
-    // 勤務日外のイベントは削除    
-    const filterdEventResult = TimeTrackerAlgorithmEvent.getAllEventInScheduleRange(roundedEvents, enableSchedules);
-    const filterdEvents = filterdEventResult.enableEvents;
-    const adjustedEvents = filterdEventResult.adjustedEvents.map(e => {
-        return {
-            ...e,
-            event: e.newValue
+                        message: "丸め処理により削除されました。",
+                    },
+                ],
+            });
         }
     });
-    filterdEventResult.excluedEvents.forEach(e => {
+
+    // 勤務日外のイベントは削除
+    const filterdEventResult = TimeTrackerAlgorithmEvent.getAllEventInScheduleRange(roundedEvents, enableSchedules);
+    const filterdEvents = filterdEventResult.enableEvents;
+    const adjustedEvents = filterdEventResult.adjustedEvents.map((e) => {
+        return {
+            ...e,
+            event: e.newValue,
+        };
+    });
+    filterdEventResult.excluedEvents.forEach((e) => {
         excludedEvents.push({
             event: e.target,
             details: e.details,
-        })
-    })
+        });
+    });
 
     // 勤務日イベントを作成
     const scheduleEvents = enableSchedules.flatMap((s) =>
-        TimeTrackerAlgorithmSchedule.scheduleToEvent(s, timetracker.scheduleAutoInputInfo, [...adjustedEvents.map(a => a.event), ...filterdEvents]),
+        TimeTrackerAlgorithmSchedule.scheduleToEvent(s, timetracker.scheduleAutoInputInfo, [
+            ...adjustedEvents.map((a) => a.event),
+            ...filterdEvents,
+        ]),
     );
 
-    alert(excludedEvents.map(e => EventUtils.getText(e.event) + e.details.map(d => d.message).join()).join(""))
     return {
         enableSchedules,
         enableEvents: filterdEvents,

@@ -10,7 +10,6 @@ import {
 } from "@/types";
 import { LinkingEventWorkItemPair, LinkingWorkItem } from "../models";
 
-
 const logger = getLogger("linking");
 
 /**
@@ -174,6 +173,6 @@ export function autoLinkEvents(
 
     return {
         linked: allLinked,
-        unlinked: remainingEvents
+        unlinked: remainingEvents,
     };
 }

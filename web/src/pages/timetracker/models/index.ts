@@ -21,12 +21,11 @@ export type UploadInfo = {
     workItems?: WorkItem[];
 };
 
-
 export type ExcludedEventReasonDetail = {
     reason: "ignored" | "outOfSchedule" | "invalid";
     /** 除外理由の詳細説明 */
     message: string;
-}
+};
 
 /**
  * 除外されたイベントの情報
@@ -42,7 +41,7 @@ export type ExcludedScheduleReasonDetail = {
     reason: "ignored" | "holiday" | "outOfSchedule" | "invalid";
     /** 除外理由の詳細説明 */
     message: string;
-}
+};
 /**
  * 除外されたスケジュールの情報
  */
@@ -58,7 +57,7 @@ export interface ExcludedScheduleInfo {
  */
 export interface AdjustedEventInfo {
     /* 調整イベント */
-    event: Event
+    event: Event;
     /* 調整前のスケジュール */
     oldSchdule: Schedule;
     mesage: string;
