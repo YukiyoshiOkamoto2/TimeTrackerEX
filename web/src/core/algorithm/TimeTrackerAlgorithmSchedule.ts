@@ -1,4 +1,4 @@
-import { getLogger } from "@/lib";
+import { getLogger, resetTime } from "@/lib";
 import type { Event, Schedule, ScheduleAutoInputInfo, WorkingEventType } from "@/types";
 import { createEvent, EventUtils, ScheduleUtils } from "@/types/utils";
 import { ROUNDING_TIME_UNIT, TimeTrackerAlgorithmCore } from "./TimeTrackerAlgorithmCore";
@@ -151,7 +151,7 @@ export const TimeTrackerAlgorithmSchedule = {
                         };
 
                         // 既存イベントと重複していない場合のみ追加
-                        if (!TimeTrackerAlgorithmEvent.isDuplicateEventOrSchedule(fillSchedule, events)) {
+                        if (!TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule(fillSchedule, events)) {
                             fillSchedules.push(fillSchedule);
                         }
                     }
@@ -185,6 +185,160 @@ export const TimeTrackerAlgorithmSchedule = {
         debugLog(`===================================================================================`);
 
         return result;
+    },
+    /**
+     * イベントの終了日が基準日と異なる場合、終了日までの日付毎に分割したイベントマップを作成します
+     */
+    addStartToEndDate: (
+        eventMap: Map<string, Event[]>,
+        roundingTimeUnit: number = ROUNDING_TIME_UNIT,
+    ): Map<string, Event[]> => {
+        const resultMap = new Map<string, Event[]>();
+
+        for (const [dateKey, events] of eventMap.entries()) {
+            for (const event of events) {
+                if (!resultMap.has(dateKey)) {
+                    resultMap.set(dateKey, []);
+                }
+
+                // イベントの終了日を取得(時刻は保持)
+                if (!event.schedule.end) {
+                    resultMap.get(dateKey)!.push(event);
+                    continue;
+                }
+
+                // 終了日の日付部分を取得
+                const eventEndDateKey = ScheduleUtils.getDateKey(event.schedule.end);
+
+                if (dateKey === eventEndDateKey) {
+                    // 終了日が基準日と同じ場合はそのまま追加
+                    resultMap.get(dateKey)!.push(event);
+                    continue;
+                }
+
+                // 初日のイベントを追加
+                const firstDay = new Date(dateKey);
+                const firstSchedule: Schedule = {
+                    start: event.schedule.start,
+                    // 23:XX:00に設定(XX は rounding_time_unit)
+                    end: new Date(
+                        firstDay.getFullYear(),
+                        firstDay.getMonth(),
+                        firstDay.getDate(),
+                        23,
+                        roundingTimeUnit,
+                        0,
+                    ),
+                };
+                resultMap.get(dateKey)!.push(EventUtils.scheduled(event, firstSchedule));
+
+                // 開始日と終了日の日数差を計算
+                const startDate = resetTime(event.schedule.start);
+                const endDate = resetTime(event.schedule.end);
+                const daysDiff = Math.floor((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+
+                for (let i = 1; i <= daysDiff; i++) {
+                    const baseDate = new Date(startDate);
+                    baseDate.setDate(startDate.getDate() + i);
+                    const baseDateKey = ScheduleUtils.getDateKey(baseDate);
+
+                    let endSchedule: Schedule;
+                    if (baseDateKey === eventEndDateKey) {
+                        // 最終日
+                        endSchedule = {
+                            start: new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0),
+                            end: event.schedule.end,
+                        };
+                    } else {
+                        // 中間日
+                        endSchedule = {
+                            start: new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0),
+                            end: new Date(
+                                baseDate.getFullYear(),
+                                baseDate.getMonth(),
+                                baseDate.getDate(),
+                                23,
+                                roundingTimeUnit,
+                                0,
+                            ),
+                        };
+                    }
+
+                    const endEvent = EventUtils.scheduled(event, endSchedule, true);
+                    endEvent.recurrence = undefined;
+
+                    if (!resultMap.has(baseDateKey)) {
+                        resultMap.set(baseDateKey, []);
+                    }
+                    resultMap.get(baseDateKey)!.push(endEvent);
+                }
+            }
+        }
+
+        debugLog(`===終了日までの日付毎に分割したイベントマップ (入力: ${eventMap.size}日分)===`);
+        debugLog(`RESULT: ${resultMap.size}日分`);
+        for (const [dateKey, events] of resultMap.entries()) {
+            debugLog(`---> ${dateKey}: ${events.length}件`);
+        }
+        debugLog(`=================================================`);
+
+        return resultMap;
+    },
+
+    /**
+ * 勤務時間イベントと通常イベントを統合する処理
+ */
+    margedScheduleEvents: (scheduleEvents: Event[], normalEvents: Event[]): Event[] => {
+        const scheduleMap = new Map<string, Event[]>();
+        scheduleEvents.forEach((e) => {
+            const key = ScheduleUtils.getBaseDateKey(e.schedule);
+            if (!scheduleMap.has(key)) {
+                scheduleMap.set(key, []);
+            }
+            scheduleMap.get(key)?.push(e);
+        });
+
+        const eventMap = new Map<string, Event[]>();
+        normalEvents.forEach((e) => {
+            const key = ScheduleUtils.getBaseDateKey(e.schedule);
+            if (!eventMap.has(key)) {
+                eventMap.set(key, []);
+            }
+            eventMap.get(key)?.push(e);
+        });
+
+        const log = []
+        const resultScheduleEvents: Event[] = [];
+        for (const [eventDate, schduleEvents] of scheduleMap.entries()) {
+            if (schduleEvents.length < 2) {
+                logger.warn(
+                    `勤務時間イベントが2つ未満です。${eventDate} (生成されたイベント数: ${schduleEvents.length})`,
+                );
+            }
+
+            const dayEvents = eventMap.get(eventDate);
+            if (!dayEvents || dayEvents.length === 0) {
+                // イベントがない場合は勤務日イベントを設定する
+                resultScheduleEvents.push(...schduleEvents);
+                continue;
+            }
+
+            for (const schduleEvent of schduleEvents) {
+                if (TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule(schduleEvent, dayEvents)) {
+                    log.push(`削除: ${EventUtils.getText(schduleEvent)}`)
+                } else {
+                    resultScheduleEvents.push(schduleEvent)
+                }
+            }
+        }
+
+        debugLog(`===勤務時間イベントと通常イベントを統合===`);
+        debugLog(`--->統合前:  ${scheduleEvents.length}件`);
+        debugLog(`--->統合後:  ${resultScheduleEvents.length}件`);
+        log.forEach(l => debugLog(l))
+        debugLog(`=================================================`);
+
+        return resultScheduleEvents;
     },
 };
 

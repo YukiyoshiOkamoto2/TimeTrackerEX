@@ -5,7 +5,7 @@
 
 import type { Event, Schedule } from "@/types";
 import { describe, expect, it } from "vitest";
-import { TimeTrackerAlgorithmEvent } from "./TimeTrackerAlgorithmEvent";
+import { TimeTrackerAlgorithmSchedule } from "./TimeTrackerAlgorithmSchedule";
 
 describe("TimeTrackerAlgorithmEvent", () => {
     const createTestSchedule = (start: Date, end: Date): Schedule => ({
@@ -29,7 +29,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(1);
             expect(result.get("2024-02-01")!.length).toBe(1);
@@ -42,7 +42,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(1);
             expect(result.get("2024-02-01")!.length).toBe(1);
@@ -53,7 +53,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(2);
             expect(result.get("2024-02-01")!.length).toBe(1);
@@ -79,7 +79,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(3);
             expect(result.get("2024-02-01")!.length).toBe(1);
@@ -110,7 +110,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event1, event2]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(2);
             expect(result.get("2024-02-01")!.length).toBe(2); // e1とe2の初日部分
@@ -123,7 +123,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             // 1日目は元のrecurrenceを保持
             expect(result.get("2024-02-01")![0].recurrence).toBeDefined();
@@ -138,7 +138,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             eventMap.set("2024-02-01", [event1]);
             eventMap.set("2024-02-03", [event2]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(4); // 2/1, 2/2, 2/3, 2/4
             expect(result.get("2024-02-01")!.length).toBe(1);
@@ -150,7 +150,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
         it("ASED08: 空のイベントマップ", () => {
             const eventMap = new Map<string, Event[]>();
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(0);
         });
@@ -159,7 +159,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", []);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             // 空配列の日付キーは結果に含まれない
             expect(result.size).toBe(0);
@@ -170,7 +170,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             // 1日目の終了時刻は23:30 (roundingTimeUnit=30)
             const day1Event = result.get("2024-02-01")![0];
@@ -182,7 +182,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-01-31", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(2);
             expect(result.get("2024-01-31")!.length).toBe(1);
@@ -194,7 +194,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2023-12-31", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(2);
             expect(result.get("2023-12-31")!.length).toBe(1);
@@ -206,7 +206,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(5);
             // 各日にイベントが存在
@@ -229,7 +229,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             const eventMap = new Map<string, Event[]>();
             eventMap.set("2024-02-01", [event]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             // 初日は元のuuidを保持
             expect(result.get("2024-02-01")![0].uuid).toBe("e1");
@@ -245,7 +245,7 @@ describe("TimeTrackerAlgorithmEvent", () => {
             eventMap.set("2024-02-01", [event1]);
             eventMap.set("2024-02-02", [event2]);
 
-            const result = TimeTrackerAlgorithmEvent.addStartToEndDate(eventMap);
+            const result = TimeTrackerAlgorithmSchedule.addStartToEndDate(eventMap);
 
             expect(result.size).toBe(4);
             // 2/1: e1のみ

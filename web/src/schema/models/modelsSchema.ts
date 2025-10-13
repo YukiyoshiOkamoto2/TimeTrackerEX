@@ -23,13 +23,12 @@ export const ScheduleSchema = z
     .object({
         /** スケジュールの開始時間 */
         start: z.date({
-            required_error: "開始時間は必須です",
-            invalid_type_error: "開始時間はDate型である必要があります",
+            message: "開始時間は必須です",
         }),
         /** スケジュールの終了時間 */
         end: z
             .date({
-                invalid_type_error: "終了時間はDate型である必要があります",
+                message: "終了時間はDate型である必要があります",
             })
             .optional(),
         /** 休日であるかどうか */
@@ -77,36 +76,30 @@ export const EventSchema = z.object({
     /** イベントの一意識別子 */
     uuid: z
         .string({
-            error: "UUIDは必須です",
-            invalid_type_error: "UUIDは文字列である必要があります",
+            message: "UUIDは文字列である必要があります",
         })
         .min(1, "UUIDは空文字列にできません"),
     /** イベント名 */
     name: z
         .string({
-            required_error: "イベント名は必須です",
-            invalid_type_error: "イベント名は文字列である必要があります",
+            message: "イベント名は文字列である必要があります",
         })
         .min(1, "イベント名は空文字列にできません"),
     /** イベントの主催者 */
     organizer: z.string({
-        required_error: "主催者は必須です",
-        invalid_type_error: "主催者は文字列である必要があります",
+        message: "主催者は文字列である必要があります",
     }),
     /** イベントが非公開かどうか */
     isPrivate: z.boolean({
-        required_error: "非公開フラグは必須です",
-        invalid_type_error: "非公開フラグはboolean型である必要があります",
+        message: "非公開フラグはboolean型である必要があります",
     }),
     /** イベントがキャンセルされているかどうか */
     isCancelled: z.boolean({
-        required_error: "キャンセルフラグは必須です",
-        invalid_type_error: "キャンセルフラグはboolean型である必要があります",
+        message: "キャンセルフラグはboolean型である必要があります",
     }),
     /** イベントの場所 */
     location: z.string({
-        required_error: "場所は必須です",
-        invalid_type_error: "場所は文字列である必要があります",
+        message: "場所は文字列である必要があります",
     }),
     /** イベントのスケジュール */
     schedule: ScheduleSchema,
@@ -123,36 +116,31 @@ export const ProjectSchema = z.object({
     /** プロジェクトのID */
     id: z
         .string({
-            required_error: "IDは必須です",
-            invalid_type_error: "IDは文字列である必要があります",
+            message: "IDは文字列である必要があります",
         })
         .min(1, "IDは空文字列にできません"),
     /** プロジェクト名 */
     name: z
         .string({
-            required_error: "プロジェクト名は必須です",
-            invalid_type_error: "プロジェクト名は文字列である必要があります",
+            message: "プロジェクト名は文字列である必要があります",
         })
         .min(1, "プロジェクト名は空文字列にできません"),
     /** プロジェクトID */
     projectId: z
         .string({
-            required_error: "プロジェクトIDは必須です",
-            invalid_type_error: "プロジェクトIDは文字列である必要があります",
+            message: "プロジェクトIDは文字列である必要があります",
         })
         .min(1, "プロジェクトIDは空文字列にできません"),
     /** プロジェクト名 */
     projectName: z
         .string({
-            required_error: "プロジェクト名は必須です",
-            invalid_type_error: "プロジェクト名は文字列である必要があります",
+            message: "プロジェクト名は文字列である必要があります",
         })
         .min(1, "プロジェクト名は空文字列にできません"),
     /** プロジェクトコード */
     projectCode: z
         .string({
-            required_error: "プロジェクトコードは必須です",
-            invalid_type_error: "プロジェクトコードは文字列である必要があります",
+            message: "プロジェクトコードは文字列である必要があります",
         })
         .min(1, "プロジェクトコードは空文字列にできません"),
 });
@@ -164,26 +152,22 @@ export const WorkItemChildrenSchema = z.object({
     /** 作業項目の一意の識別子 */
     id: z
         .string({
-            required_error: "IDは必須です",
-            invalid_type_error: "IDは文字列である必要があります",
+            message: "IDは文字列である必要があります",
         })
         .min(1, "IDは空文字列にできません"),
     /** 作業項目の名前 */
     name: z
         .string({
-            required_error: "作業項目名は必須です",
-            invalid_type_error: "作業項目名は文字列である必要があります",
+            message: "作業項目名は文字列である必要があります",
         })
         .min(1, "作業項目名は空文字列にできません"),
     /** 作業項目が属するフォルダの名前 */
     folderName: z.string({
-        required_error: "フォルダ名は必須です",
-        invalid_type_error: "フォルダ名は文字列である必要があります",
+        message: "フォルダ名は文字列である必要があります",
     }),
     /** 作業項目が属するフォルダのパス */
     folderPath: z.string({
-        required_error: "フォルダパスは必須です",
-        invalid_type_error: "フォルダパスは文字列である必要があります",
+        message: "フォルダパスは文字列である必要があります",
     }),
 });
 
@@ -213,8 +197,7 @@ export const WorkItemSchema: z.ZodType<{
 export const DayTaskSchema = z.object({
     /** 基準日 */
     baseDate: z.date({
-        required_error: "基準日は必須です",
-        invalid_type_error: "基準日はDate型である必要があります",
+        message: "基準日はDate型である必要があります",
     }),
     /** 通常イベントのリスト */
     events: z.array(EventSchema),
@@ -258,8 +241,7 @@ export const EventWorkItemPairSchema = z.object({
 export const TimeTrackerDayTaskSchema = z.object({
     /** 基準日 */
     baseDate: z.date({
-        required_error: "基準日は必須です",
-        invalid_type_error: "基準日はDate型である必要があります",
+        message: "基準日はDate型である必要があります",
     }),
     /** プロジェクト情報 */
     project: ProjectSchema,

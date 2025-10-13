@@ -114,7 +114,7 @@ export const TimeTrackerAlgorithmCore = {
                 start = TimeTrackerAlgorithmCore.roundingTime(start, false, roundingTimeUnit);
                 const testSchedule = { ...schedule, start, end: schedule.end };
 
-                if (TimeTrackerAlgorithmEvent.isDuplicateEventOrSchedule(testSchedule, events)) {
+                if (TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule(testSchedule, events)) {
                     start = TimeTrackerAlgorithmCore.roundingTime(oldStart, true, roundingTimeUnit);
                 }
             }
@@ -125,7 +125,7 @@ export const TimeTrackerAlgorithmCore = {
                 const testSchedule = { ...schedule, start: schedule.start, end };
 
                 // 重複する場合はforward(切り捨て)を試す
-                if (TimeTrackerAlgorithmEvent.isDuplicateEventOrSchedule(testSchedule, events)) {
+                if (TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule(testSchedule, events)) {
                     end = TimeTrackerAlgorithmCore.roundingTime(oldEnd, false, roundingTimeUnit);
                 }
             }
@@ -150,6 +150,21 @@ export const TimeTrackerAlgorithmCore = {
             start,
             end,
         };
+    },
+
+        /**
+     * イベントまたはスケジュールが重複しているかを判定
+     */
+    isDuplicateEventOrSchedule: (eventOrSchedule: Event | Schedule, events: Event[]): boolean => {
+        const isTypeEvent = EventUtils.isEvent(eventOrSchedule);
+        const targetSchedule = isTypeEvent ? eventOrSchedule.schedule : eventOrSchedule;
+
+        return events.some((event) => {
+            if (isTypeEvent && event.uuid === eventOrSchedule.uuid) {
+                return false;
+            }
+            return ScheduleUtils.isOverlap(event.schedule, targetSchedule);
+        });
     },
 
     /**
