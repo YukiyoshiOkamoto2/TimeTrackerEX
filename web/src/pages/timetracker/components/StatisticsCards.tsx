@@ -2,25 +2,88 @@
  * LinkingProcessView用の統計表示カードコンポーネント
  *
  * 自動紐づけの結果を視覚的に表示するカード群を提供します。
- * - 対象日数
- * - 対象イベント数
- * - 紐づけ済み件数
- * - 未紐づけ件数
+ * - 対象日数（有給休暇日の一覧ダイアログ付き）
+ * - 対象イベント数（除外イベントの一覧ダイアログ付き）
+ * - 紐づけ済み件数（未実装）
+ * - 未紐づけ件数（未実装）
  */
 
 import { Card } from "@/components/card";
-import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
+import { DataTable } from "@/components/data-table";
+import type { Event, Schedule } from "@/types";
+import {
+    Button,
+    createTableColumn,
+    Dialog,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    Input,
+    makeStyles,
+    mergeClasses,
+    TableCellLayout,
+    TableColumnDefinition,
+    tokens,
+} from "@fluentui/react-components";
 import {
     Calendar24Regular,
+    CalendarCancel24Filled,
+    CalendarLtr24Regular,
     Checkmark24Filled,
     CheckmarkCircle24Filled,
+    Delete24Regular,
+    Dismiss24Regular,
+    DismissCircle24Filled,
+    ErrorCircle24Filled,
     Link24Regular,
+    PersonCircle24Regular,
+    Search24Regular,
     Warning24Filled,
 } from "@fluentui/react-icons";
+import { useCallback, useMemo, useState } from "react";
+import type { AdjustedEventInfo, ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair } from "../models";
 
-type DetailDialogType = "targetEvents" | "linked" | "unlinked" | "excluded";
+// ============================================================================
+// 型定義
+// ============================================================================
 
-// 統計情報の型定義
+/** ダイアログの種類 */
+type DetailDialogType = "targetDays" | "targetEvents";
+
+/** 除外イベントのテーブル行 */
+type ExcludedEventRow = {
+    event: Event;
+    excludeReasons: ExcludedEventInfo["details"];
+};
+
+/** 有給休暇日のテーブル行 */
+type PaidLeaveDayRow = {
+    id: string;
+    date: string;
+    displayDate: string;
+};
+
+/** ダイアログ情報 */
+type DialogInfo = {
+    title: string;
+    icon: JSX.Element;
+    color: string;
+};
+
+/** 統計カードの設定 */
+type StatCardConfig = {
+    cardStyle: string;
+    iconStyle: string;
+    icon: JSX.Element;
+    label: string;
+    getValue: (stats: StatisticsData) => string | number;
+    getSubTexts: (stats: StatisticsData) => (string | React.ReactNode)[];
+    clickable: boolean;
+    dialogType?: DetailDialogType;
+};
+
+/** 統計情報 */
 interface StatisticsData {
     targetDays: number;
     fromStr: string;
@@ -35,6 +98,23 @@ interface StatisticsData {
     linkedByAI: number;
     linkedByWorkSchedule: number;
     linkedByManual: number;
+}
+
+/** 統計カードのデータソース */
+export interface StatisticsCardsData {
+    enableSchedules: Schedule[];
+    enableEvents: Event[];
+    scheduleEvents: Event[];
+    adjustedEvents: AdjustedEventInfo[];
+    paidLeaveDayEvents: Event[];
+    excludedSchedules: ExcludedScheduleInfo[];
+    excludedEvents: ExcludedEventInfo[];
+}
+
+/** コンポーネントのProps */
+export interface StatisticsCardsProps {
+    data: StatisticsCardsData;
+    linkingEventWorkItemPair: LinkingEventWorkItemPair[];
 }
 
 const useStyles = makeStyles({
@@ -159,129 +239,534 @@ const useStyles = makeStyles({
     clickableCard: {
         cursor: "pointer",
     },
+    // ダイアログスタイル
+    dialogSurface: {
+        width: "90vw",
+        maxWidth: "1200px",
+        height: "80vh",
+        maxHeight: "800px",
+        display: "flex",
+        flexDirection: "column",
+    },
+    dialogTitle: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        paddingBottom: tokens.spacingVerticalM,
+        borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+    },
+    dialogTitleIcon: {
+        fontSize: "28px",
+        display: "flex",
+        alignItems: "center",
+    },
+    dialogBody: {
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        padding: "0",
+    },
+    searchContainer: {
+        padding: tokens.spacingVerticalM,
+    },
+    searchInput: {
+        width: "100%",
+    },
+    tableContainer: {
+        flex: 1,
+        overflow: "auto",
+        padding: tokens.spacingVerticalM,
+    },
+    eventCell: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+    },
+    eventName: {
+        fontWeight: "600",
+        color: tokens.colorNeutralForeground1,
+    },
+    eventDetail: {
+        fontSize: "12px",
+        color: tokens.colorNeutralForeground3,
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+    },
+    emptyState: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: tokens.spacingVerticalXXXL,
+        gap: tokens.spacingVerticalL,
+        color: tokens.colorNeutralForeground3,
+    },
+    emptyStateIcon: {
+        fontSize: "64px",
+        opacity: 0.5,
+    },
+    emptyStateText: {
+        fontSize: "16px",
+        fontWeight: "600",
+    },
+    excludeReasonIcons: {
+        display: "flex",
+        gap: "8px",
+        alignItems: "center",
+    },
 });
 
+/**
+ * 日付範囲を文字列形式で取得
+ */
+const getDateRangeString = (schedules: Schedule[]): { fromStr: string; endStr: string } => {
+    if (schedules.length === 0) {
+        return { fromStr: "", endStr: "" };
+    }
+
+    const dates = schedules.map((s) => new Date(s.start)).sort((a, b) => a.getTime() - b.getTime());
+    return {
+        fromStr: dates[0].toLocaleDateString(),
+        endStr: dates[dates.length - 1].toLocaleDateString(),
+    };
+};
+
+/**
+ * 紐づけ方法別の件数をカウント
+ */
+const countLinkingsByMethod = (
+    pairs: LinkingEventWorkItemPair[],
+    type?: "auto" | "manual",
+    autoMethod?: "ai" | "history" | "workShedule" | "timeOff",
+): number => {
+    return pairs.filter((pair) => {
+        if (type && pair.linkingWorkItem.type !== type) return false;
+        if (autoMethod && pair.linkingWorkItem.autoMethod !== autoMethod) return false;
+        return true;
+    }).length;
+};
+
+/**
+ * 統計情報を算出
+ */
+const calcStatisticsData = (
+    data: StatisticsCardsData,
+    linkingEventWorkItemPair: LinkingEventWorkItemPair[],
+): StatisticsData => {
+    const targetDays = data.enableSchedules.length + data.paidLeaveDayEvents.length;
+    const paidLeaveDays = data.paidLeaveDayEvents.length;
+    const { fromStr, endStr } = getDateRangeString(data.enableSchedules);
+
+    // 対象イベント数 = 有効なイベント + 除外されたイベント
+    const totalEvents = data.enableEvents.length + data.excludedEvents.length;
+    const excludedCount = data.excludedEvents.length;
+    const totalLinked = linkingEventWorkItemPair.length;
+    const unlinkedCount = Math.max(0, data.enableEvents.length - totalLinked);
+
+    // 紐づけ方法別の件数
+    const linkedByTimeOff = countLinkingsByMethod(linkingEventWorkItemPair, undefined, "timeOff");
+    const linkedByHistory = countLinkingsByMethod(linkingEventWorkItemPair, "auto", "history");
+    const linkedByAI = countLinkingsByMethod(linkingEventWorkItemPair, "auto", "ai");
+    const linkedByWorkSchedule = countLinkingsByMethod(linkingEventWorkItemPair, "auto", "workShedule");
+    const linkedByManual = countLinkingsByMethod(linkingEventWorkItemPair, "manual");
+
+    return {
+        targetDays,
+        fromStr,
+        endStr,
+        totalLinked,
+        totalEvents,
+        excludedCount,
+        unlinkedCount,
+        paidLeaveDays,
+        linkedByTimeOff,
+        linkedByHistory,
+        linkedByAI,
+        linkedByWorkSchedule,
+        linkedByManual,
+    };
+};
+
 export interface StatisticsCardsProps {
-    /** 統計データ（将来的に親コンポーネントから受け取る） */
-    data?: Partial<StatisticsData>;
-    /** カードクリック時のハンドラー */
-    onCardClick?: (type: DetailDialogType) => void;
+    data: StatisticsCardsData;
+    /** 紐づけ済みのイベントと作業項目のペア */
+    linkingEventWorkItemPair: LinkingEventWorkItemPair[];
 }
 
-export function StatisticsCards({ data, onCardClick }: StatisticsCardsProps) {
+export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCardsProps) {
     const styles = useStyles();
-
-    // デフォルト値を設定
-    const statistics: StatisticsData = {
-        targetDays: data?.targetDays ?? 0,
-        fromStr: data?.fromStr ?? "",
-        endStr: data?.endStr ?? "",
-        totalLinked: data?.totalLinked ?? 0,
-        totalEvents: data?.totalEvents ?? 0,
-        excludedCount: data?.excludedCount ?? 0,
-        unlinkedCount: data?.unlinkedCount ?? 0,
-        paidLeaveDays: data?.paidLeaveDays ?? 0,
-        linkedByTimeOff: data?.linkedByTimeOff ?? 0,
-        linkedByHistory: data?.linkedByHistory ?? 0,
-        linkedByAI: data?.linkedByAI ?? 0,
-        linkedByWorkSchedule: data?.linkedByWorkSchedule ?? 0,
-        linkedByManual: data?.linkedByManual ?? 0,
-    };
-
-    const handleCardClick = (type: DetailDialogType) => {
-        onCardClick?.(type);
-    };
-
-    // 統計カードのレンダリング関数
-    const renderStatCard = (
-        cardStyle: string,
-        iconStyle: string,
-        icon: React.ReactNode,
-        label: string,
-        value: string | number,
-        subTexts: (string | React.ReactNode)[],
-        clickable: boolean = false,
-        onClick?: () => void,
-    ) => (
-        <Card className={clickable ? mergeClasses(cardStyle, styles.clickableCard) : cardStyle} onClick={onClick}>
-            <div className={styles.statCardContent}>
-                <div className={styles.statCardHeader}>
-                    <div className={mergeClasses(styles.statIcon, iconStyle)}>{icon}</div>
-                    <div className={styles.statLabel}>{label}</div>
-                </div>
-                <div className={styles.statValue}>{value}</div>
-                {subTexts.map((text, index) =>
-                    typeof text === "string" ? (
-                        <div key={index} className={index === 0 ? styles.statDate : styles.statSubText}>
-                            {text}
-                        </div>
-                    ) : (
-                        <div key={index} className={styles.statSubText}>
-                            {text}
-                        </div>
-                    ),
-                )}
-            </div>
-        </Card>
+    const statistics = useMemo(
+        () => calcStatisticsData(data, linkingEventWorkItemPair),
+        [data, linkingEventWorkItemPair],
     );
 
+    // ダイアログ状態
+    const [dialogType, setDialogType] = useState<DetailDialogType | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    // ダイアログを開く
+    const handleCardClick = useCallback((type: DetailDialogType) => {
+        setDialogType(type);
+        setSearchQuery("");
+    }, []);
+
+    // ダイアログを閉じる
+    const handleCloseDialog = useCallback(() => {
+        setDialogType(null);
+    }, []);
+
+    // 除外イベント一覧データを取得
+    const excludedEventsData = useMemo((): ExcludedEventRow[] => {
+        if (dialogType !== "targetEvents") return [];
+
+        // 検索フィルター
+        const filtered = data.excludedEvents.filter((e) => {
+            if (!searchQuery) return true;
+            const query = searchQuery.toLowerCase();
+            const event = e.event;
+            const reasonTexts = e.details.map((d) => d.message).join(" ");
+            return (
+                event.name.toLowerCase().includes(query) ||
+                event.organizer.toLowerCase().includes(query) ||
+                reasonTexts.toLowerCase().includes(query)
+            );
+        });
+
+        // EventDetailRow形式に変換
+        return filtered.map((e) => ({
+            event: e.event,
+            excludeReasons: e.details,
+        }));
+    }, [dialogType, data.excludedEvents, searchQuery]);
+
+    // 有給休暇日の一覧データを取得
+    const paidLeaveDaysData = useMemo((): PaidLeaveDayRow[] => {
+        if (dialogType !== "targetDays") return [];
+
+        return data.paidLeaveDayEvents.map((event) => {
+            const date = new Date(event.schedule.start);
+            return {
+                id: event.uuid,
+                date: date.toISOString(),
+                displayDate: date.toLocaleDateString("ja-JP", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    weekday: "short",
+                }),
+            };
+        });
+    }, [dialogType, data.paidLeaveDayEvents]);
+
+    // 統計カードの設定
+    const statCardConfigs: StatCardConfig[] = [
+        {
+            cardStyle: styles.statCardInfo,
+            iconStyle: styles.statIconInfo,
+            icon: <Calendar24Regular />,
+            label: "対象日数",
+            getValue: (stats) => `${stats.targetDays}日分`,
+            getSubTexts: (stats) => [`${stats.fromStr}～${stats.endStr}`, `有給休暇：${stats.paidLeaveDays}日`],
+            clickable: true, // 常にクリック可能（有給休暇日一覧を表示）
+            dialogType: "targetDays",
+        },
+        {
+            cardStyle: styles.statCardInfo,
+            iconStyle: styles.statIconInfo,
+            icon: <Link24Regular />,
+            label: "対象イベント",
+            getValue: (stats) => `${stats.totalEvents}件`,
+            getSubTexts: (stats) => [`除外：${stats.excludedCount}件`],
+            clickable: true,
+            dialogType: "targetEvents",
+        },
+        {
+            cardStyle: styles.statCardSuccess,
+            iconStyle: styles.statIconSuccess,
+            icon: <CheckmarkCircle24Filled />,
+            label: "紐づけ済み",
+            getValue: (stats) => `${stats.totalLinked}件`,
+            getSubTexts: (stats) => [
+                `休暇：${stats.linkedByTimeOff}件 / 履歴：${stats.linkedByHistory}件 / AI：${stats.linkedByAI}件`,
+                `勤務時間：${stats.linkedByWorkSchedule}件 / 手動：${stats.linkedByManual}件`,
+            ],
+            clickable: false, // TODO: 今後実装予定
+            // dialogType: "linked",
+        },
+        {
+            cardStyle: statistics.unlinkedCount > 0 ? styles.statCardWarning : styles.statCardSuccess,
+            iconStyle: statistics.unlinkedCount > 0 ? styles.statIconWarning : styles.statIconSuccess,
+            icon: statistics.unlinkedCount > 0 ? <Warning24Filled /> : <Checkmark24Filled />,
+            label: "未紐づけ",
+            getValue: (stats) => `${stats.unlinkedCount}件`,
+            getSubTexts: (stats) => [
+                stats.unlinkedCount > 0 ? "手動紐づけ/AIによる自動紐づけを実施してください。" : "すべて紐づけ完了",
+            ],
+            clickable: false, // TODO: 今後実装予定
+            // dialogType: "unlinked",
+        },
+    ];
+
+    // 統計カードのレンダリング関数
+    const renderStatCard = useCallback(
+        (config: StatCardConfig) => {
+            const onClick =
+                config.clickable && config.dialogType ? () => handleCardClick(config.dialogType!) : undefined;
+
+            const cardClassName = config.clickable
+                ? mergeClasses(config.cardStyle, styles.clickableCard)
+                : config.cardStyle;
+
+            return (
+                <Card key={config.label} className={cardClassName} onClick={onClick}>
+                    <div className={styles.statCardContent}>
+                        <div className={styles.statCardHeader}>
+                            <div className={mergeClasses(styles.statIcon, config.iconStyle)}>{config.icon}</div>
+                            <div className={styles.statLabel}>{config.label}</div>
+                        </div>
+                        <div className={styles.statValue}>{config.getValue(statistics)}</div>
+                        {config.getSubTexts(statistics).map((text, index) => (
+                            <div key={index} className={index === 0 ? styles.statDate : styles.statSubText}>
+                                {text}
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+            );
+        },
+        [handleCardClick, statistics, styles],
+    );
+
+    // 除外理由アイコンを取得
+    const getExcludeReasonIcon = useCallback((reason: ExcludedEventInfo["details"][0]["reason"]) => {
+        const iconStyle = { fontSize: "20px" };
+        switch (reason) {
+            case "ignored":
+                return <DismissCircle24Filled style={{ ...iconStyle, color: tokens.colorPaletteRedForeground2 }} />;
+            case "outOfSchedule":
+                return <CalendarCancel24Filled style={{ ...iconStyle, color: tokens.colorPaletteYellowForeground2 }} />;
+            case "invalid":
+                return <ErrorCircle24Filled style={{ ...iconStyle, color: tokens.colorPaletteRedForeground2 }} />;
+        }
+    }, []);
+
+    // 除外イベント用のテーブル列定義
+    const excludedEventsColumns = useMemo(
+        (): TableColumnDefinition<ExcludedEventRow>[] => [
+            createTableColumn<ExcludedEventRow>({
+                columnId: "eventName",
+                compare: (a, b) => a.event.name.localeCompare(b.event.name),
+                renderHeaderCell: () => "イベント名",
+                renderCell: (item) => (
+                    <TableCellLayout>
+                        <div className={styles.eventCell}>
+                            <div className={styles.eventName}>{item.event.name}</div>
+                            <div className={styles.eventDetail}>
+                                <PersonCircle24Regular />
+                                {item.event.organizer || "不明"}
+                            </div>
+                        </div>
+                    </TableCellLayout>
+                ),
+            }),
+            createTableColumn<ExcludedEventRow>({
+                columnId: "date",
+                compare: (a, b) =>
+                    new Date(a.event.schedule.start).getTime() - new Date(b.event.schedule.start).getTime(),
+                renderHeaderCell: () => "日時",
+                renderCell: (item) => (
+                    <TableCellLayout>
+                        <div className={styles.eventDetail}>
+                            <CalendarLtr24Regular />
+                            {new Date(item.event.schedule.start).toLocaleString("ja-JP", {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
+                        </div>
+                    </TableCellLayout>
+                ),
+            }),
+            createTableColumn<ExcludedEventRow>({
+                columnId: "excludeReasonIcons",
+                compare: (a, b) => a.excludeReasons.length - b.excludeReasons.length,
+                renderHeaderCell: () => "除外理由",
+                renderCell: (item) => (
+                    <TableCellLayout>
+                        <div className={styles.excludeReasonIcons}>
+                            {item.excludeReasons.map((detail, index) => (
+                                <div key={index} title={detail.message}>
+                                    {getExcludeReasonIcon(detail.reason)}
+                                </div>
+                            ))}
+                        </div>
+                    </TableCellLayout>
+                ),
+            }),
+            createTableColumn<ExcludedEventRow>({
+                columnId: "excludeReasonDetails",
+                compare: (a, b) => {
+                    const aText = a.excludeReasons.map((d) => d.message).join(", ");
+                    const bText = b.excludeReasons.map((d) => d.message).join(", ");
+                    return aText.localeCompare(bText);
+                },
+                renderHeaderCell: () => "詳細",
+                renderCell: (item) => (
+                    <TableCellLayout>
+                        <div className={styles.eventDetail}>{item.excludeReasons.map((d) => d.message).join(", ")}</div>
+                    </TableCellLayout>
+                ),
+            }),
+        ],
+        [getExcludeReasonIcon, styles],
+    );
+
+    // 有給休暇日のテーブル列定義
+    const paidLeaveDaysColumns = useMemo(
+        (): TableColumnDefinition<PaidLeaveDayRow>[] => [
+            createTableColumn<PaidLeaveDayRow>({
+                columnId: "displayDate",
+                compare: (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+                renderHeaderCell: () => "有給休暇日",
+                renderCell: (item) => (
+                    <TableCellLayout>
+                        <div className={styles.eventDetail}>
+                            <CalendarLtr24Regular />
+                            {item.displayDate}
+                        </div>
+                    </TableCellLayout>
+                ),
+            }),
+        ],
+        [],
+    );
+
+    // 除外イベントテーブルの列幅設定
+    const excludedEventsColumnSizingOptions = useMemo(
+        () => ({
+            eventName: { minWidth: 250, idealWidth: 350 },
+            date: { minWidth: 180, idealWidth: 200 },
+            excludeReasonIcons: { minWidth: 120, idealWidth: 150 },
+            excludeReasonDetails: { minWidth: 300, idealWidth: 400 },
+        }),
+        [],
+    );
+
+    // 有給休暇日テーブルの列幅設定
+    const paidLeaveDaysColumnSizingOptions = useMemo(
+        () => ({
+            displayDate: { minWidth: 200, idealWidth: 300 },
+        }),
+        [],
+    );
+
+    // ダイアログ情報を取得
+    const getDialogInfo = (): DialogInfo | null => {
+        if (!dialogType) return null;
+
+        switch (dialogType) {
+            case "targetDays":
+                return {
+                    title: "有給休暇日一覧",
+                    icon: <Calendar24Regular />,
+                    color: tokens.colorBrandForeground1,
+                };
+            case "targetEvents":
+                return {
+                    title: "除外イベント一覧",
+                    icon: <Delete24Regular />,
+                    color: tokens.colorPaletteRedForeground2,
+                };
+        }
+    };
+
+    const currentDialogInfo = getDialogInfo();
+
     return (
-        <div className={styles.statsSection}>
-            <h3 className={styles.sectionTitle}>自動紐づけ結果</h3>
-            <div className={styles.statsGrid}>
-                {/* 対象日数（有給日数を含む） */}
-                {renderStatCard(
-                    styles.statCardInfo,
-                    styles.statIconInfo,
-                    <Calendar24Regular />,
-                    "対象日数",
-                    `${statistics.targetDays}日分`,
-                    [`${statistics.fromStr}～${statistics.endStr}`, `有給休暇：${statistics.paidLeaveDays}日`],
-                )}
-
-                {/* 対象イベント（削除対象を含む） */}
-                {renderStatCard(
-                    styles.statCardInfo,
-                    styles.statIconInfo,
-                    <Link24Regular />,
-                    "対象イベント",
-                    `${statistics.totalEvents}件`,
-                    [`除外：${statistics.excludedCount}件`],
-                    true,
-                    () => handleCardClick("targetEvents"),
-                )}
-
-                {/* 紐づけ済み */}
-                {renderStatCard(
-                    styles.statCardSuccess,
-                    styles.statIconSuccess,
-                    <CheckmarkCircle24Filled />,
-                    "紐づけ済み",
-                    `${statistics.totalLinked}件`,
-                    [
-                        `休暇：${statistics.linkedByTimeOff}件 / 履歴：${statistics.linkedByHistory}件 / AI：${statistics.linkedByAI}件`,
-                        `勤務時間：${statistics.linkedByWorkSchedule}件 / 手動：${statistics.linkedByManual}件`,
-                    ],
-                    true,
-                    () => handleCardClick("linked"),
-                )}
-
-                {/* 未紐づけ */}
-                {renderStatCard(
-                    statistics.unlinkedCount > 0 ? styles.statCardWarning : styles.statCardSuccess,
-                    statistics.unlinkedCount > 0 ? styles.statIconWarning : styles.statIconSuccess,
-                    statistics.unlinkedCount > 0 ? <Warning24Filled /> : <Checkmark24Filled />,
-                    "未紐づけ",
-                    `${statistics.unlinkedCount}件`,
-                    [
-                        statistics.unlinkedCount > 0
-                            ? "手動紐づけ/AIによる自動紐づけを実施してください。"
-                            : "すべて紐づけ完了",
-                    ],
-                    true,
-                    () => handleCardClick("unlinked"),
-                )}
+        <>
+            <div className={styles.statsSection}>
+                <h3 className={styles.sectionTitle}>自動紐づけ結果</h3>
+                <div className={styles.statsGrid}>{statCardConfigs.map(renderStatCard)}</div>
             </div>
-        </div>
+
+            {/* 詳細ダイアログ */}
+            <Dialog open={dialogType !== null} onOpenChange={() => handleCloseDialog()}>
+                <DialogSurface className={styles.dialogSurface}>
+                    <DialogBody className={styles.dialogBody}>
+                        {/* ダイアログヘッダー */}
+                        <DialogTitle className={styles.dialogTitle}>
+                            <div className={styles.dialogTitleIcon} style={{ color: currentDialogInfo?.color }}>
+                                {currentDialogInfo?.icon}
+                            </div>
+                            <span>{currentDialogInfo?.title}</span>
+                            <span style={{ marginLeft: "auto" }}>
+                                ({dialogType === "targetDays" ? paidLeaveDaysData.length : excludedEventsData.length}件)
+                            </span>
+                            <Button appearance="subtle" icon={<Dismiss24Regular />} onClick={handleCloseDialog} />
+                        </DialogTitle>
+
+                        {/* 検索ボックス（有給休暇日ダイアログでは非表示） */}
+                        {dialogType !== "targetDays" && (
+                            <div className={styles.searchContainer}>
+                                <Input
+                                    className={styles.searchInput}
+                                    placeholder="イベント名、主催者、場所で検索..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    contentBefore={<Search24Regular />}
+                                />
+                            </div>
+                        )}
+
+                        {/* データテーブル */}
+                        <DialogContent className={styles.tableContainer}>
+                            {dialogType === "targetDays" ? (
+                                // 有給休暇日一覧
+                                paidLeaveDaysData.length === 0 ? (
+                                    <div className={styles.emptyState}>
+                                        <div className={styles.emptyStateIcon}>{currentDialogInfo?.icon}</div>
+                                        <div className={styles.emptyStateText}>有給休暇日がありません</div>
+                                    </div>
+                                ) : (
+                                    <DataTable
+                                        items={paidLeaveDaysData}
+                                        columns={paidLeaveDaysColumns}
+                                        getRowId={(item) => item.id}
+                                        sortable
+                                        resizableColumns
+                                        columnSizingOptions={paidLeaveDaysColumnSizingOptions}
+                                    />
+                                )
+                            ) : dialogType === "targetEvents" ? (
+                                // 除外イベント一覧
+                                excludedEventsData.length === 0 ? (
+                                    <div className={styles.emptyState}>
+                                        <div className={styles.emptyStateIcon}>{currentDialogInfo?.icon}</div>
+                                        <div className={styles.emptyStateText}>
+                                            {searchQuery
+                                                ? "検索条件に一致するイベントが見つかりませんでした"
+                                                : "除外イベントがありません"}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <DataTable
+                                        items={excludedEventsData}
+                                        columns={excludedEventsColumns}
+                                        getRowId={(item) => item.event.uuid}
+                                        sortable
+                                        resizableColumns
+                                        columnSizingOptions={excludedEventsColumnSizingOptions}
+                                    />
+                                )
+                            ) : null}
+                        </DialogContent>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
+        </>
     );
 }

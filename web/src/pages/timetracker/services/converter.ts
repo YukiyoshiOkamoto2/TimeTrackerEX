@@ -68,7 +68,12 @@ function getEnableEvents(
             isError = true;
         }
 
-        if (!isError) {
+        if (isError) {
+            excludedEvents.push({
+                event,
+                details,
+            });
+        } else {
             enableEvents.push(event);
         }
     });

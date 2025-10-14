@@ -283,7 +283,7 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
 
             <ViewSection>
                 {/* サマリーカード */}
-                <StatisticsCards />
+                <StatisticsCards data={state} linkingEventWorkItemPair={linkingEventWorkItemPair} />
 
                 {/* AIによる自動紐づけセクション */}
                 <AiLinkingSection

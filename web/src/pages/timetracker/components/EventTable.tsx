@@ -432,8 +432,8 @@ function convertToTableRow(row: EventTableRow): TableRow {
     // LinkingEventWorkItemPairの場合（紐づけ済み）
     if (isLinkingEventWorkItemPair(item)) {
         const { workItem } = item.linkingWorkItem;
-        const folderName = workItem.folderPath.split("/").pop() || "";
-
+        const pathReplace = workItem.folderPath.split("/").pop() || "";
+        const folderName = workItem.folderPath.replace("/" + pathReplace, "");
         return {
             event: item.event,
             workItemId: workItem.id,
