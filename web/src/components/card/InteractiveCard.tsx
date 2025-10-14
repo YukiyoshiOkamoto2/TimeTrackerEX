@@ -1,7 +1,13 @@
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { ArrowRight20Regular, ChevronDown20Regular, ChevronUp20Regular } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+
+// アニメーション関連の定数
+const ACTION_HOVER_SCALE = 0.98;
+const ACTION_CLICK_SCALE = 1.02;
+const ACTION_ANIMATION_DURATION_MS = 500; // tokens.durationSlowerに相当
+const EXPANDABLE_SLIDE_DISTANCE = "-6px";
 
 const useStyles = makeStyles({
     card: {
@@ -34,6 +40,33 @@ const useStyles = makeStyles({
             borderRightColor: tokens.colorNeutralStroke2,
             boxShadow: tokens.shadow4,
         },
+    },
+    // actionバリアント用：ホバー時に左側を固定して右側だけ縮む
+    actionHover: {
+        transform: `scaleX(${ACTION_HOVER_SCALE})`,
+        transformOrigin: "left center",
+        transitionDuration: tokens.durationFaster,
+        transitionTimingFunction: tokens.curveEasyEase,
+        transitionProperty: "transform",
+    },
+    // actionバリアント用：クリック時に右方向に伸びるアニメーション
+    actionActive: {
+        animationName: {
+            "0%": {
+                transform: `scaleX(${ACTION_HOVER_SCALE})`,
+                transformOrigin: "left center",
+            },
+            "50%": {
+                transform: `scaleX(${ACTION_CLICK_SCALE})`,
+                transformOrigin: "left center",
+            },
+            "100%": {
+                transform: "scaleX(1)",
+                transformOrigin: "left center",
+            },
+        },
+        animationDuration: tokens.durationFaster,
+        animationTimingFunction: tokens.curveEasyEase,
     },
     disabled: {
         opacity: 0.6,
@@ -121,6 +154,20 @@ const useStyles = makeStyles({
         borderTopStyle: "solid",
         borderTopColor: tokens.colorNeutralStroke2,
         backgroundColor: tokens.colorNeutralBackground1,
+        // ドロップダウンが伸びるようなアニメーション
+        animationName: {
+            from: {
+                opacity: 0,
+                transform: `translateY(${EXPANDABLE_SLIDE_DISTANCE})`,
+            },
+            to: {
+                opacity: 1,
+                transform: "translateY(0)",
+            },
+        },
+        animationDuration: tokens.durationSlower,
+        animationTimingFunction: tokens.curveEasyEase,
+        animationFillMode: "both",
     },
     collapsed: {
         maxHeight: "0",
@@ -168,69 +215,147 @@ export function InteractiveCard({
 }: InteractiveCardProps) {
     const styles = useStyles();
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+    const [isActionAnimating, setIsActionAnimating] = useState(false);
+    const [isActionHovering, setIsActionHovering] = useState(false);
 
-    const handleClick = () => {
+    // バリアント関連の判定（メモ化）
+    const isActionVariant = useMemo(() => variant === "action", [variant]);
+    const isExpandableVariant = useMemo(() => variant === "expandable", [variant]);
+    const isInteractive = useMemo(
+        () => (isActionVariant && !!onClick) || isExpandableVariant,
+        [isActionVariant, isExpandableVariant, onClick],
+    );
+    const showChevron = isExpandableVariant;
+    const showArrow = isActionVariant && !!onClick;
+
+    // クリックハンドラー（メモ化）
+    const handleClick = useCallback(() => {
         if (disabled) return;
 
-        if (variant === "expandable") {
+        if (isExpandableVariant) {
             const newExpanded = !isExpanded;
             setIsExpanded(newExpanded);
             onExpandChange?.(newExpanded);
-        } else if (variant === "action") {
+        } else if (isActionVariant) {
+            // クリックアニメーションをトリガー
+            setIsActionHovering(false); // ホバー状態を解除
+            setIsActionAnimating(true);
+            // アニメーション終了後にリセット
+            setTimeout(() => {
+                setIsActionAnimating(false);
+            }, ACTION_ANIMATION_DURATION_MS);
             onClick?.();
         }
-    };
+    }, [disabled, isExpandableVariant, isActionVariant, isExpanded, onExpandChange, onClick]);
 
-    const isInteractive = (variant === "action" && onClick) || variant === "expandable";
-    const showChevron = variant === "expandable";
-    const showArrow = variant === "action" && onClick;
+    // マウスイベントハンドラー（メモ化）
+    const handleMouseEnter = useCallback(() => {
+        if (isActionVariant && !disabled) {
+            setIsActionHovering(true);
+        }
+    }, [isActionVariant, disabled]);
 
-    const cardClassName = mergeClasses(
-        styles.card,
-        isInteractive && styles.interactive,
-        disabled && styles.disabled,
-        className,
+    const handleMouseLeave = useCallback(() => {
+        if (isActionVariant) {
+            setIsActionHovering(false);
+        }
+    }, [isActionVariant]);
+
+    // クラス名の計算（メモ化）
+    const cardClassName = useMemo(
+        () =>
+            mergeClasses(
+                styles.card,
+                isInteractive && styles.interactive,
+                disabled && styles.disabled,
+                isActionVariant && isActionHovering && !isActionAnimating && styles.actionHover,
+                isActionVariant && isActionAnimating && styles.actionActive,
+                className,
+            ),
+        [
+            styles.card,
+            styles.interactive,
+            styles.disabled,
+            styles.actionHover,
+            styles.actionActive,
+            isInteractive,
+            disabled,
+            isActionVariant,
+            isActionHovering,
+            isActionAnimating,
+            className,
+        ],
     );
 
-    const headerClassName = mergeClasses(styles.header, isInteractive && styles.headerClickable);
+    const headerClassName = useMemo(
+        () => mergeClasses(styles.header, isInteractive && styles.headerClickable),
+        [styles.header, styles.headerClickable, isInteractive],
+    );
 
-    const contentClassName = mergeClasses(styles.expandableContent, isExpanded ? styles.expanded : styles.collapsed);
+    const contentClassName = useMemo(
+        () => mergeClasses(styles.expandableContent, isExpanded ? styles.expanded : styles.collapsed),
+        [styles.expandableContent, styles.expanded, styles.collapsed, isExpanded],
+    );
+
+    // キーボードイベントハンドラー（メモ化）
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+            if (isInteractive && !disabled && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                handleClick();
+            }
+        },
+        [isInteractive, disabled, handleClick],
+    );
+
+    // ヘッダーコンテンツの描画
+    const renderHeaderContent = useMemo(
+        () => (
+            <div className={styles.headerContent}>
+                <div className={styles.title}>
+                    {icon && <span className={styles.titleIcon}>{icon}</span>}
+                    {title}
+                </div>
+                {description && <div className={styles.description}>{description}</div>}
+            </div>
+        ),
+        [styles.headerContent, styles.title, styles.titleIcon, styles.description, icon, title, description],
+    );
+
+    // 右側アイコンの描画
+    const renderRightIcon = useMemo(() => {
+        if (showChevron) {
+            return (
+                <div className={styles.rightIcon}>
+                    {isExpanded ? <ChevronUp20Regular /> : <ChevronDown20Regular />}
+                </div>
+            );
+        }
+        if (showArrow) {
+            return (
+                <div className={styles.rightIcon}>
+                    <ArrowRight20Regular />
+                </div>
+            );
+        }
+        return null;
+    }, [styles.rightIcon, showChevron, showArrow, isExpanded]);
 
     return (
-        <div className={cardClassName}>
+        <div className={cardClassName} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
             <div
                 className={headerClassName}
                 onClick={handleClick}
                 role={isInteractive ? "button" : undefined}
                 tabIndex={isInteractive && !disabled ? 0 : -1}
-                aria-expanded={variant === "expandable" ? isExpanded : undefined}
+                aria-expanded={isExpandableVariant ? isExpanded : undefined}
                 aria-disabled={disabled}
-                onKeyDown={(e) => {
-                    if (isInteractive && !disabled && (e.key === "Enter" || e.key === " ")) {
-                        e.preventDefault();
-                        handleClick();
-                    }
-                }}
+                onKeyDown={handleKeyDown}
             >
-                <div className={styles.headerContent}>
-                    <div className={styles.title}>
-                        {icon && <span className={styles.titleIcon}>{icon}</span>}
-                        {title}
-                    </div>
-                    {description && <div className={styles.description}>{description}</div>}
-                </div>
-                {showChevron && (
-                    <div className={styles.rightIcon}>
-                        {isExpanded ? <ChevronUp20Regular /> : <ChevronDown20Regular />}
-                    </div>
-                )}
-                {showArrow && (
-                    <div className={styles.rightIcon}>
-                        <ArrowRight20Regular />
-                    </div>
-                )}
+                {renderHeaderContent}
+                {renderRightIcon}
             </div>
-            {variant === "expandable" && children && (
+            {isExpandableVariant && children && (
                 <div className={contentClassName}>
                     {isExpanded && <div className={styles.expandableContentInner}>{children}</div>}
                 </div>
