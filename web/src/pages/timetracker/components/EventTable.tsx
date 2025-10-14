@@ -2,6 +2,7 @@ import { DataTable } from "@/components/data-table";
 import { TreeView } from "@/components/tree/Tree";
 import type { TreeItem } from "@/components/tree/TreeItem";
 import { treeViewHelper } from "@/components/tree/TreeViewHelper";
+import { useSettings } from "@/store";
 import type { Event, Schedule, WorkItem } from "@/types";
 import { EventUtils } from "@/types/utils";
 import {
@@ -136,7 +137,7 @@ const useStyles = makeStyles({
         fontSize: tokens.fontSizeBase300,
     },
     dialogSurface: {
-        width: "700px",
+        minWidth: "800px",
         maxHeight: "95vh",
     },
     dialogHeader: {
@@ -450,12 +451,47 @@ function convertToTableRow(row: EventTableRow): TableRow {
     };
 }
 
-export function EventTable({ events, workItems, onWorkItemChange }: EventTableProps) {
+// WorkItemツリーを処理して、リーフノードでsubItemsが1つだけの場合は切り上げる
+function getTargetWorkItems(workItems: WorkItem[]): WorkItem[] {
+    return workItems.flatMap((workItem) => {
+        // subItemsがない場合はリーフノードなのでそのまま返す
+        if (!workItem.subItems || workItem.subItems.length === 0) {
+            return [workItem];
+        }
+
+        // subItemsを再帰的に処理
+        const processedSubItems = getTargetWorkItems(workItem.subItems);
+
+        // 処理後のsubItemsが1つだけで、元のsubItemsが1つだけの場合は切り上げ
+        // （つまり、リーフノードが1つだけの親を削除）
+        if (workItem.subItems.length === 1 && processedSubItems.length === 1) {
+            return processedSubItems;
+        }
+
+        // それ以外の場合は、処理済みのsubItemsを持つ新しいWorkItemを返す
+        return [
+            {
+                ...workItem,
+                subItems: processedSubItems,
+            },
+        ];
+    });
+}
+
+export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChange }: EventTableProps) {
     const styles = useStyles();
+    const { settings } = useSettings();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<string>("");
     const [query, setQuery] = useState("");
     const [openItemValues, setOpenItemValues] = useState<TreeItemValue[]>([]);
+    const [recentWorkItems, setRecentWorkItems] = useState<WorkItem[]>([]);
+
+    // WorkItemツリーから実際の作業アイテムを取得（subItemsが1つだけの階層を自動展開）
+    const targetWorkItems = useMemo(() => {
+        const rootItems = workItemsNotUse[0]?.subItems ?? [];
+        return getTargetWorkItems(rootItems);
+    }, [workItemsNotUse]);
 
     // 選択中のイベントを取得
     const selectedEvent = useMemo((): Event | undefined => {
@@ -487,23 +523,28 @@ export function EventTable({ events, workItems, onWorkItemChange }: EventTablePr
         closeDialog();
     }, [onWorkItemChange, selectedEventId, closeDialog]);
 
-    // TODO: 最近使用したWorkItemの履歴機能（将来実装）
-    const recentWorkItems = useMemo(() => [] as WorkItem[], []);
-
     const handleItemClick = useCallback(
         (value: TreeItemValue) => {
-            const workItem = findWorkItem(value, workItems);
+            const workItem = findWorkItem(value, targetWorkItems);
             if (workItem) {
                 onWorkItemChange(selectedEventId, workItem.id);
+
+                // 履歴に追加（重複を除く）
+                if (settings.timetracker?.appearance?.historyDisplayCount) {
+                    const maxCount = settings.timetracker.appearance.historyDisplayCount;
+                    const filteredHistory = recentWorkItems.filter((item) => item.id !== workItem.id);
+                    setRecentWorkItems([workItem, ...filteredHistory.slice(0, maxCount - 1)]);
+                }
+
                 closeDialog();
             }
         },
-        [onWorkItemChange, workItems, selectedEventId, closeDialog],
+        [onWorkItemChange, targetWorkItems, selectedEventId, closeDialog, settings, recentWorkItems],
     );
 
     const treeItems = useMemo(
-        () => convertWorkItemsToTree(query, workItems[0]?.subItems ?? [], handleItemClick),
-        [workItems, handleItemClick, query],
+        () => convertWorkItemsToTree(query, targetWorkItems, handleItemClick),
+        [targetWorkItems, handleItemClick, query],
     );
 
     // 検索時は全ツリーを展開
@@ -562,7 +603,15 @@ export function EventTable({ events, workItems, onWorkItemChange }: EventTablePr
                                             <div
                                                 key={workItem.id}
                                                 className={styles.historyItem}
-                                                onClick={() => onWorkItemChange(selectedEventId, workItem.id)}
+                                                onClick={() => {
+                                                    onWorkItemChange(selectedEventId, workItem.id);
+                                                    // 履歴の順序を更新（選択したアイテムを先頭に）
+                                                    const filteredHistory = recentWorkItems.filter(
+                                                        (item) => item.id !== workItem.id,
+                                                    );
+                                                    setRecentWorkItems([workItem, ...filteredHistory]);
+                                                    closeDialog();
+                                                }}
                                             >
                                                 <Document20Regular className={styles.historyItemIcon} />
                                                 <span className={styles.historyItemText}>

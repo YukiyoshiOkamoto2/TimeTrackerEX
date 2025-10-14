@@ -139,7 +139,7 @@ export function TimeTrackerPage() {
                 title="TimeTracker"
                 subtitle="勤怠情報とスケジュールの紐づけ管理"
                 loading={isLoading}
-                loadingText="登録処理中..."
+                loadingText="処理中..."
             >
                 <div className={`${styles.viewContainer} ${getAnimationClass()}`} key={currentView}>
                     {currentView === "completion" ? (

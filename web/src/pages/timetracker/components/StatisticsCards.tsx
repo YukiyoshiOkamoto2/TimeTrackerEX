@@ -1,9 +1,15 @@
 /**
  * LinkingProcessView用の統計表示カードコンポーネント
+ *
+ * 自動紐づけの結果を視覚的に表示するカード群を提供します。
+ * - 対象日数
+ * - 対象イベント数
+ * - 紐づけ済み件数
+ * - 未紐づけ件数
  */
 
 import { Card } from "@/components/card";
-import { makeStyles, tokens } from "@fluentui/react-components";
+import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import {
     Calendar24Regular,
     Checkmark24Filled,
@@ -13,6 +19,23 @@ import {
 } from "@fluentui/react-icons";
 
 type DetailDialogType = "targetEvents" | "linked" | "unlinked" | "excluded";
+
+// 統計情報の型定義
+interface StatisticsData {
+    targetDays: number;
+    fromStr: string;
+    endStr: string;
+    totalLinked: number;
+    totalEvents: number;
+    excludedCount: number;
+    unlinkedCount: number;
+    paidLeaveDays: number;
+    linkedByTimeOff: number;
+    linkedByHistory: number;
+    linkedByAI: number;
+    linkedByWorkSchedule: number;
+    linkedByManual: number;
+}
 
 const useStyles = makeStyles({
     statsSection: {
@@ -133,117 +156,131 @@ const useStyles = makeStyles({
         marginTop: "2px",
         lineHeight: "1.3",
     },
+    clickableCard: {
+        cursor: "pointer",
+    },
 });
 
 export interface StatisticsCardsProps {
-    // schedules: Schedule[];
-    // events: Event[];
-    // paidLeaveDayEvents: Event[];
-    // excludedSchedules: ExcludedScheduleInfo[];
-    // excludedEvents: ExcludedEventInfo[];
-    // linkingEventWorkItemPair: LinkingEventWorkItemPair[];
+    /** 統計データ（将来的に親コンポーネントから受け取る） */
+    data?: Partial<StatisticsData>;
+    /** カードクリック時のハンドラー */
+    onCardClick?: (type: DetailDialogType) => void;
 }
 
-export function StatisticsCards({}: StatisticsCardsProps) {
+export function StatisticsCards({ data, onCardClick }: StatisticsCardsProps) {
     const styles = useStyles();
 
-    const targetDays = 0;
-    const fromStr = "";
-    const endStr = "";
+    // デフォルト値を設定
+    const statistics: StatisticsData = {
+        targetDays: data?.targetDays ?? 0,
+        fromStr: data?.fromStr ?? "",
+        endStr: data?.endStr ?? "",
+        totalLinked: data?.totalLinked ?? 0,
+        totalEvents: data?.totalEvents ?? 0,
+        excludedCount: data?.excludedCount ?? 0,
+        unlinkedCount: data?.unlinkedCount ?? 0,
+        paidLeaveDays: data?.paidLeaveDays ?? 0,
+        linkedByTimeOff: data?.linkedByTimeOff ?? 0,
+        linkedByHistory: data?.linkedByHistory ?? 0,
+        linkedByAI: data?.linkedByAI ?? 0,
+        linkedByWorkSchedule: data?.linkedByWorkSchedule ?? 0,
+        linkedByManual: data?.linkedByManual ?? 0,
+    };
 
-    const totalLinked = 0;
-    const totalEvents = 0;
-    const excludedCount = 0;
-    const unlinkedCount = 0;
+    const handleCardClick = (type: DetailDialogType) => {
+        onCardClick?.(type);
+    };
 
-    const handleCardClick = (_type: DetailDialogType) => {};
+    // 統計カードのレンダリング関数
+    const renderStatCard = (
+        cardStyle: string,
+        iconStyle: string,
+        icon: React.ReactNode,
+        label: string,
+        value: string | number,
+        subTexts: (string | React.ReactNode)[],
+        clickable: boolean = false,
+        onClick?: () => void,
+    ) => (
+        <Card className={clickable ? mergeClasses(cardStyle, styles.clickableCard) : cardStyle} onClick={onClick}>
+            <div className={styles.statCardContent}>
+                <div className={styles.statCardHeader}>
+                    <div className={mergeClasses(styles.statIcon, iconStyle)}>{icon}</div>
+                    <div className={styles.statLabel}>{label}</div>
+                </div>
+                <div className={styles.statValue}>{value}</div>
+                {subTexts.map((text, index) =>
+                    typeof text === "string" ? (
+                        <div key={index} className={index === 0 ? styles.statDate : styles.statSubText}>
+                            {text}
+                        </div>
+                    ) : (
+                        <div key={index} className={styles.statSubText}>
+                            {text}
+                        </div>
+                    ),
+                )}
+            </div>
+        </Card>
+    );
 
     return (
         <div className={styles.statsSection}>
             <h3 className={styles.sectionTitle}>自動紐づけ結果</h3>
             <div className={styles.statsGrid}>
                 {/* 対象日数（有給日数を含む） */}
-                <Card className={styles.statCardInfo}>
-                    <div className={styles.statCardContent}>
-                        <div className={styles.statCardHeader}>
-                            <div className={`${styles.statIcon} ${styles.statIconInfo}`}>
-                                <Calendar24Regular />
-                            </div>
-                            <div className={styles.statLabel}>対象日数</div>
-                        </div>
-                        <div className={styles.statValue}>{targetDays}日分</div>
-                        <div className={styles.statDate}>
-                            {fromStr}～{endStr}
-                        </div>
-                        <div className={styles.statSubText}>有給休暇：{0}日</div>
-                    </div>
-                </Card>
+                {renderStatCard(
+                    styles.statCardInfo,
+                    styles.statIconInfo,
+                    <Calendar24Regular />,
+                    "対象日数",
+                    `${statistics.targetDays}日分`,
+                    [`${statistics.fromStr}～${statistics.endStr}`, `有給休暇：${statistics.paidLeaveDays}日`],
+                )}
 
                 {/* 対象イベント（削除対象を含む） */}
-                <Card
-                    className={styles.statCardInfo}
-                    onClick={() => handleCardClick("targetEvents")}
-                    style={{ cursor: "pointer" }}
-                >
-                    <div className={styles.statCardContent}>
-                        <div className={styles.statCardHeader}>
-                            <div className={`${styles.statIcon} ${styles.statIconInfo}`}>
-                                <Link24Regular />
-                            </div>
-                            <div className={styles.statLabel}>対象イベント</div>
-                        </div>
-                        <div className={styles.statValue}>{totalEvents}件</div>
-                        <div className={styles.statSubText}>除外：{excludedCount}件</div>
-                    </div>
-                </Card>
+                {renderStatCard(
+                    styles.statCardInfo,
+                    styles.statIconInfo,
+                    <Link24Regular />,
+                    "対象イベント",
+                    `${statistics.totalEvents}件`,
+                    [`除外：${statistics.excludedCount}件`],
+                    true,
+                    () => handleCardClick("targetEvents"),
+                )}
 
                 {/* 紐づけ済み */}
-                <Card
-                    className={styles.statCardSuccess}
-                    onClick={() => handleCardClick("linked")}
-                    style={{ cursor: "pointer" }}
-                >
-                    <div className={styles.statCardContent}>
-                        <div className={styles.statCardHeader}>
-                            <div className={`${styles.statIcon} ${styles.statIconSuccess}`}>
-                                <CheckmarkCircle24Filled />
-                            </div>
-                            <div className={styles.statLabel}>紐づけ済み</div>
-                        </div>
-                        <div className={styles.statValue}>{totalLinked}件</div>
-                        <div className={styles.statSubText}>
-                            休暇：{0}件 / 履歴：{0}件 / AI：{0}件
-                        </div>
-                        <div className={styles.statSubText}>
-                            勤務時間：{0}件 / 手動：
-                            {0}件
-                        </div>
-                    </div>
-                </Card>
+                {renderStatCard(
+                    styles.statCardSuccess,
+                    styles.statIconSuccess,
+                    <CheckmarkCircle24Filled />,
+                    "紐づけ済み",
+                    `${statistics.totalLinked}件`,
+                    [
+                        `休暇：${statistics.linkedByTimeOff}件 / 履歴：${statistics.linkedByHistory}件 / AI：${statistics.linkedByAI}件`,
+                        `勤務時間：${statistics.linkedByWorkSchedule}件 / 手動：${statistics.linkedByManual}件`,
+                    ],
+                    true,
+                    () => handleCardClick("linked"),
+                )}
 
                 {/* 未紐づけ */}
-                <Card
-                    className={unlinkedCount > 0 ? styles.statCardWarning : styles.statCardSuccess}
-                    onClick={() => handleCardClick("unlinked")}
-                    style={{ cursor: "pointer" }}
-                >
-                    <div className={styles.statCardContent}>
-                        <div className={styles.statCardHeader}>
-                            <div
-                                className={`${styles.statIcon} ${unlinkedCount > 0 ? styles.statIconWarning : styles.statIconSuccess}`}
-                            >
-                                {unlinkedCount > 0 ? <Warning24Filled /> : <Checkmark24Filled />}
-                            </div>
-                            <div className={styles.statLabel}>未紐づけ</div>
-                        </div>
-                        <div className={styles.statValue}>{unlinkedCount}件</div>
-                        <div className={styles.statSubText}>
-                            {unlinkedCount > 0
-                                ? "手動紐づけ/AIによる自動紐づけを実施してください。"
-                                : "すべて紐づけ完了"}
-                        </div>
-                    </div>
-                </Card>
+                {renderStatCard(
+                    statistics.unlinkedCount > 0 ? styles.statCardWarning : styles.statCardSuccess,
+                    statistics.unlinkedCount > 0 ? styles.statIconWarning : styles.statIconSuccess,
+                    statistics.unlinkedCount > 0 ? <Warning24Filled /> : <Checkmark24Filled />,
+                    "未紐づけ",
+                    `${statistics.unlinkedCount}件`,
+                    [
+                        statistics.unlinkedCount > 0
+                            ? "手動紐づけ/AIによる自動紐づけを実施してください。"
+                            : "すべて紐づけ完了",
+                    ],
+                    true,
+                    () => handleCardClick("unlinked"),
+                )}
             </div>
         </div>
     );
