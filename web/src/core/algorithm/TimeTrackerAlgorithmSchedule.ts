@@ -1,6 +1,6 @@
 import { formatDateKey, getLogger, resetTime } from "@/lib";
 import type { Event, Schedule, ScheduleAutoInputInfo, WorkingEventType } from "@/types";
-import { createEvent, EventUtils, ScheduleUtils } from "@/types/utils";
+import { createEvent, createSchedule, EventUtils, ScheduleUtils } from "@/types/utils";
 import { ROUNDING_TIME_UNIT, TimeTrackerAlgorithmCore } from "./TimeTrackerAlgorithmCore";
 
 const logger = getLogger("TimeTrackerAlgorithmSchedule");
@@ -38,22 +38,28 @@ export const TimeTrackerAlgorithmSchedule = {
             let daySchedule: Schedule;
             if (i === 0) {
                 // 初日: 元の開始時間から23:30:00まで
-                daySchedule = {
-                    start: schedule.start,
-                    end: new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 23, 30, 0),
-                };
+                daySchedule = createSchedule(
+                    schedule.start,
+                    new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 23, 30, 0),
+                    schedule.isHoliday,
+                    schedule.isPaidLeave,
+                );
             } else if (formatDateKey(baseDate) === formatDateKey(schedule.end)) {
                 // 最終日: 00:00:00から元の終了時間まで
-                daySchedule = {
-                    start: new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0),
-                    end: schedule.end,
-                };
+                daySchedule = createSchedule(
+                    new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0),
+                    schedule.end,
+                    schedule.isHoliday,
+                    schedule.isPaidLeave,
+                );
             } else {
                 // 中間日: 00:00:00から23:30:00まで
-                daySchedule = {
-                    start: new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0),
-                    end: new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 23, 30, 0),
-                };
+                daySchedule = createSchedule(
+                    new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0),
+                    new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 23, 30, 0),
+                    schedule.isHoliday,
+                    schedule.isPaidLeave,
+                );
             }
             result.push(daySchedule);
         }
@@ -99,14 +105,21 @@ export const TimeTrackerAlgorithmSchedule = {
         };
 
         const rounding = (type: "start" | "end", schedule: Schedule) => {
-            const newSchedule: Schedule = {
-                start: schedule.start,
-                end: schedule.end,
-            };
+            let newSchedule: Schedule;
             if (type == "start") {
-                newSchedule.end = new Date(schedule.start.getTime() + scheduleInputInfo.startEndTime * 60 * 1000);
+                newSchedule = createSchedule(
+                    schedule.start,
+                    new Date(schedule.start.getTime() + scheduleInputInfo.startEndTime * 60 * 1000),
+                    schedule.isHoliday,
+                    schedule.isPaidLeave,
+                );
             } else {
-                newSchedule.start = new Date(schedule.end!.getTime() - scheduleInputInfo.startEndTime * 60 * 1000);
+                newSchedule = createSchedule(
+                    new Date(schedule.end!.getTime() - scheduleInputInfo.startEndTime * 60 * 1000),
+                    schedule.end,
+                    schedule.isHoliday,
+                    schedule.isPaidLeave,
+                );
             }
 
             let roundedSchedule = TimeTrackerAlgorithmCore.roundingSchedule(
@@ -171,10 +184,7 @@ export const TimeTrackerAlgorithmSchedule = {
                     const fillStart = new Date(startDate.getTime() + iTime * roundingTimeUnit * 60 * 1000);
                     const fillEnd = new Date(startDate.getTime() + (iTime + 1) * roundingTimeUnit * 60 * 1000);
 
-                    const fillSchedule: Schedule = {
-                        start: fillStart,
-                        end: fillEnd,
-                    };
+                    const fillSchedule = createSchedule(fillStart, fillEnd, schedule.isHoliday, schedule.isPaidLeave);
 
                     // 既存イベントと重複していない場合のみ追加
                     if (!TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule(fillSchedule, events)) {

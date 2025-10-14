@@ -1,6 +1,6 @@
 import { getLogger } from "@/lib";
 import type { Event, Schedule, TimeCompare } from "@/types";
-import { EventUtils, ScheduleUtils } from "@/types/utils";
+import { createSchedule, EventUtils, ScheduleUtils } from "@/types/utils";
 import { ConvertEventInfo, ExcludedInfo } from "./models";
 import { ROUNDING_TIME_UNIT } from "./TimeTrackerAlgorithmCore";
 
@@ -32,8 +32,8 @@ export const TimeTrackerAlgorithmEvent = {
                 continue;
             }
 
-            const newSchedule: Schedule = {
-                start: new Date(
+            const newSchedule = createSchedule(
+                new Date(
                     recurrence.getFullYear(),
                     recurrence.getMonth(),
                     recurrence.getDate(),
@@ -41,7 +41,7 @@ export const TimeTrackerAlgorithmEvent = {
                     event.schedule.start.getMinutes(),
                     event.schedule.start.getSeconds(),
                 ),
-                end: event.schedule.end
+                event.schedule.end
                     ? new Date(
                           recurrence.getFullYear(),
                           recurrence.getMonth(),
@@ -50,8 +50,10 @@ export const TimeTrackerAlgorithmEvent = {
                           event.schedule.end.getMinutes(),
                           event.schedule.end.getSeconds(),
                       )
-                    : undefined,
-            };
+                    : null,
+                event.schedule.isHoliday,
+                event.schedule.isPaidLeave,
+            );
 
             const newEvent = EventUtils.scheduled(event, newSchedule, true);
             newEvent.recurrence = undefined;
@@ -258,10 +260,12 @@ export const TimeTrackerAlgorithmEvent = {
             // 重複している場合、終了時間を開始時間に合わせる
             for (const event of nextEvents) {
                 if (ScheduleUtils.isOverlap(event.schedule, currentItem.schedule)) {
-                    const newSchedule: Schedule = {
-                        start: currentItem.schedule.end!,
-                        end: event.schedule.end,
-                    };
+                    const newSchedule = createSchedule(
+                        currentItem.schedule.end!,
+                        event.schedule.end,
+                        event.schedule.isHoliday,
+                        event.schedule.isPaidLeave,
+                    );
                     if (newSchedule.start.getTime() !== newSchedule.end!.getTime()) {
                         nextTargetEvents.push(EventUtils.scheduled(event, newSchedule));
                     }
@@ -323,10 +327,12 @@ export const TimeTrackerAlgorithmEvent = {
         }
 
         // 新しいスケジュールを作成
-        const newSchedule: Schedule = {
-            start: nextTarget.schedule.start,
-            end: compareEvent.schedule.start,
-        };
+        const newSchedule = createSchedule(
+            nextTarget.schedule.start,
+            compareEvent.schedule.start,
+            nextTarget.schedule.isHoliday,
+            nextTarget.schedule.isPaidLeave,
+        );
 
         return EventUtils.scheduled(nextTarget, newSchedule);
     },
