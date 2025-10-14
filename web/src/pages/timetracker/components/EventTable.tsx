@@ -2,9 +2,8 @@ import { DataTable } from "@/components/data-table";
 import { TreeView } from "@/components/tree/Tree";
 import type { TreeItem } from "@/components/tree/TreeItem";
 import { treeViewHelper } from "@/components/tree/TreeViewHelper";
-import { useSettings } from "@/store";
 import type { Event, Schedule, WorkItem } from "@/types";
-import { EventUtils } from "@/types/utils";
+import { EventUtils, getMostNestChildren } from "@/types/utils";
 import {
     Button,
     createTableColumn,
@@ -25,21 +24,20 @@ import {
 import {
     Bot20Regular,
     Calendar20Regular,
-    CalendarClock20Regular,
+    Checkmark20Filled,
     CircleSmall20Filled,
     Dismiss20Regular,
     Document20Regular,
     Edit20Regular,
     Folder20Regular,
-    History20Regular,
     PersonEdit20Regular,
-    WeatherSunny20Regular,
 } from "@fluentui/react-icons";
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { LinkingEventWorkItemPair } from "../models";
 
 // イベントテーブル用の型定義
 type TableRow = {
+    id: string;
     event: EventWithOption;
     workItemId: string;
     workItemName: string;
@@ -51,6 +49,7 @@ export type EventWithOption = {
 } & Event;
 
 export type EventTableRow = {
+    id: string;
     item: EventWithOption | LinkingEventWorkItemPair;
 };
 
@@ -58,9 +57,11 @@ export type EventTableProps = {
     events: EventTableRow[];
     workItems: WorkItem[];
     onWorkItemChange: (eventId: string, workItemId: string) => void;
+    recentWorkItemIds?: string[]; // 最近使用したWorkItemのID (最大3件)
 };
 
 const useStyles = makeStyles({
+    // テーブル
     tableWrapper: {
         display: "flex",
         flexDirection: "column",
@@ -71,6 +72,12 @@ const useStyles = makeStyles({
         flex: 1,
         overflow: "auto",
         backgroundColor: tokens.colorNeutralBackground1,
+    },
+    // テーブルセル（共通スタイル）
+    cellWithIcon: {
+        display: "flex",
+        alignItems: "center",
+        gap: tokens.spacingHorizontalXS,
     },
     centeredCell: {
         display: "flex",
@@ -94,6 +101,7 @@ const useStyles = makeStyles({
         textDecorationColor: tokens.colorNeutralForeground3,
         textUnderlineOffset: "2px",
     },
+    // バッジ（共通スタイル）
     inputTypeBadge: {
         display: "inline-flex",
         alignItems: "center",
@@ -103,41 +111,27 @@ const useStyles = makeStyles({
         fontSize: tokens.fontSizeBase100,
         fontWeight: tokens.fontWeightSemibold,
     },
-    badgeManual: {
-        backgroundColor: tokens.colorPaletteGreenBorderActive,
-        color: tokens.colorNeutralForegroundOnBrand,
-    },
-    badgeAI: {
+    badgeAuto: {
         backgroundColor: tokens.colorPaletteBlueBorderActive,
         color: tokens.colorNeutralForegroundOnBrand,
     },
-    badgeHistory: {
-        backgroundColor: tokens.colorPalettePurpleBorderActive,
-        color: tokens.colorNeutralForegroundOnBrand,
-    },
-    badgeWorkSchedule: {
-        backgroundColor: tokens.colorPaletteTealBorderActive,
-        color: tokens.colorNeutralForegroundOnBrand,
-    },
-    badgeTimeOff: {
-        backgroundColor: tokens.colorPaletteDarkOrangeBorderActive,
-        color: tokens.colorNeutralForegroundOnBrand,
-    },
-    badgeAuto: {
-        backgroundColor: tokens.colorPaletteLightGreenBorderActive,
+    badgeManual: {
+        backgroundColor: tokens.colorPaletteGreenBorderActive,
         color: tokens.colorNeutralForegroundOnBrand,
     },
     badgeUnlinked: {
         backgroundColor: tokens.colorNeutralBackground5,
         color: tokens.colorNeutralForeground3,
     },
+    // WorkItem選択ボタン
     workItemButton: {
         minWidth: "120px",
         padding: `${tokens.spacingVerticalSNudge} ${tokens.spacingHorizontalS}`,
         fontSize: tokens.fontSizeBase300,
     },
+    // Dialog
     dialogSurface: {
-        minWidth: "800px",
+        width: "700px",
         maxHeight: "95vh",
     },
     dialogHeader: {
@@ -151,6 +145,7 @@ const useStyles = makeStyles({
         maxHeight: "560px",
         minHeight: "400px",
     },
+    // 履歴表示
     historySection: {
         marginBottom: tokens.spacingVerticalM,
         paddingBottom: tokens.spacingVerticalS,
@@ -197,52 +192,29 @@ const columnSizingOptions = {
     workItemName: { minWidth: 250, idealWidth: 400 },
 };
 
-// 型ガード: LinkingEventWorkItemPair かどうかを判定
-function isLinkingEventWorkItemPair(obj: EventTableRow["item"]): obj is LinkingEventWorkItemPair {
-    return "linkingWorkItem" in obj;
-}
-
-// TreeItem の value から WorkItem を再帰的に検索
-function findWorkItem(value: TreeItemValue, workItems: WorkItem[]): WorkItem | undefined {
-    for (const item of workItems) {
-        const itemValue = treeViewHelper.getPath([item.folderPath, item.folderName, item.name]);
-        if (itemValue === value) {
-            return item;
-        }
-
-        // 子アイテムを再帰的に検索
-        if (item.subItems) {
-            const found = findWorkItem(value, item.subItems);
-            if (found) {
-                return found;
-            }
-        }
-    }
-    return undefined;
-}
-
-// WorkItem を TreeItem に変換（検索クエリでフィルタリング）
+// WorkItem を TreeItem に変換
 function convertWorkItemsToTree(
-    query: string,
     items: WorkItem[],
-    onItemClick: (itemValue: string) => void,
+    selectedId: string,
+    onSelect: (itemValue: string) => void,
 ): TreeItem[] {
-    // 検索クエリでフィルタリング
-    const filteredItems = query
-        ? items.filter((item) => JSON.stringify(item).toLowerCase().includes(query.toLowerCase()))
-        : items;
-
-    return filteredItems.map((item) => {
+    return items.map((item) => {
+        const isSelected = item.id === selectedId;
         const hasChildren = !!item.subItems?.length;
         const itemValue = treeViewHelper.getPath([item.folderPath, item.folderName, item.name]);
 
-        // フォルダーアイテムまたはリーフアイテムのヘッダーを作成
         const header: ReactNode = hasChildren ? (
             <TreeItemLayout iconBefore={<Folder20Regular />}>{item.name}</TreeItemLayout>
         ) : (
             <TreeItemLayout
                 iconBefore={<Document20Regular />}
-                onClick={() => onItemClick(itemValue)}
+                iconAfter={
+                    isSelected ? (
+                        <Checkmark20Filled style={{ color: tokens.colorPaletteGreenForeground2, marginLeft: "auto" }} />
+                    ) : undefined
+                }
+                className={isSelected ? "selected-item" : undefined}
+                onClick={() => onSelect(itemValue)}
                 style={{ cursor: "pointer" }}
             >
                 <div style={{ display: "flex", alignItems: "center", gap: tokens.spacingHorizontalXS }}>
@@ -258,26 +230,9 @@ function convertWorkItemsToTree(
         return {
             header,
             value: itemValue,
-            children: hasChildren ? convertWorkItemsToTree(query, item.subItems!, onItemClick) : undefined,
+            children: hasChildren ? convertWorkItemsToTree(item.subItems!, selectedId, onSelect) : undefined,
         };
     });
-}
-
-// 入力タイプに応じたバッジのアイコンとスタイルを取得
-function getInputTypeBadgeInfo(
-    inputType: string,
-    styles: ReturnType<typeof useStyles>,
-): { icon: ReactNode; badgeClass: string } {
-    const badgeMap: Record<string, { icon: ReactNode; badgeClass: string }> = {
-        手動入力: { icon: <PersonEdit20Regular />, badgeClass: styles.badgeManual },
-        AI自動: { icon: <Bot20Regular />, badgeClass: styles.badgeAI },
-        履歴: { icon: <History20Regular />, badgeClass: styles.badgeHistory },
-        勤務予定: { icon: <CalendarClock20Regular />, badgeClass: styles.badgeWorkSchedule },
-        休暇: { icon: <WeatherSunny20Regular />, badgeClass: styles.badgeTimeOff },
-        自動: { icon: <Bot20Regular />, badgeClass: styles.badgeAuto },
-    };
-
-    return badgeMap[inputType] || { icon: <CircleSmall20Filled />, badgeClass: styles.badgeUnlinked };
 }
 
 // テーブル列定義を生成
@@ -352,12 +307,14 @@ function createEventColumns(
             compare: (a, b) => a.inputType.localeCompare(b.inputType),
             renderHeaderCell: () => "入力状況",
             renderCell: (item) => {
-                const { icon, badgeClass } = getInputTypeBadgeInfo(item.inputType, styles);
+                const isAuto = item.inputType !== "手動入力" && item.inputType !== "-";
+                const isManual = item.inputType === "手動入力";
+                const badgeClass = isAuto ? styles.badgeAuto : isManual ? styles.badgeManual : styles.badgeUnlinked;
 
                 return (
                     <div className={styles.centeredCell}>
                         <span className={`${styles.inputTypeBadge} ${badgeClass}`}>
-                            {icon}
+                            {isAuto ? <Bot20Regular /> : isManual ? <PersonEdit20Regular /> : <CircleSmall20Filled />}
                             {item.inputType}
                         </span>
                     </div>
@@ -377,7 +334,7 @@ function createEventColumns(
                                 icon={<Edit20Regular />}
                                 iconPosition="after"
                                 className={styles.workItemButton}
-                                onClick={() => onOpenWorkItemDialog(item.event.uuid)}
+                                onClick={() => onOpenWorkItemDialog(item.id)}
                             >
                                 {item.workItemId || "未選択"}
                             </Button>
@@ -406,163 +363,213 @@ function createEventColumns(
     ];
 }
 
-// inputTypeを決定するヘルパー関数
-function getInputType(linkingWorkItem: LinkingEventWorkItemPair["linkingWorkItem"]): string {
-    if (linkingWorkItem.type === "manual") {
-        return "手動入力";
-    }
-
-    if (linkingWorkItem.type === "auto") {
-        const autoMethodMap: Record<string, string> = {
-            ai: "AI自動",
-            history: "履歴",
-            workShedule: "勤務予定",
-            timeOff: "休暇",
-        };
-        return autoMethodMap[linkingWorkItem.autoMethod || ""] || "自動";
-    }
-
-    return "-";
-}
-
 // EventTableRowをTableRowに変換するヘルパー関数
 function convertToTableRow(row: EventTableRow): TableRow {
-    const { item } = row;
+    const { id, item } = row;
 
-    // LinkingEventWorkItemPairの場合（紐づけ済み）
-    if (isLinkingEventWorkItemPair(item)) {
-        const { workItem } = item.linkingWorkItem;
-        const folderName = workItem.folderPath.split("/").pop() || "";
+    // LinkingEventWorkItemPairの場合
+    if ("linkingWorkItem" in item) {
+        const pair = item as LinkingEventWorkItemPair;
+        const workItem = pair.linkingWorkItem.workItem;
 
+        // inputTypeの決定
+        let inputType: string;
+        if (pair.linkingWorkItem.type === "manual") {
+            inputType = "手動入力";
+        } else if (pair.linkingWorkItem.type === "auto") {
+            switch (pair.linkingWorkItem.autoMethod) {
+                case "ai":
+                    inputType = "AI自動";
+                    break;
+                case "history":
+                    inputType = "履歴";
+                    break;
+                case "workShedule":
+                    inputType = "勤務予定";
+                    break;
+                case "timeOff":
+                    inputType = "休暇";
+                    break;
+                default:
+                    inputType = "自動";
+            }
+        } else {
+            inputType = "-";
+        }
+
+        const workItemName = workItem.name + " ( " + workItem.folderPath.split("/").pop() + " ) ";
         return {
-            event: item.event,
+            id,
+            event: pair.event,
             workItemId: workItem.id,
-            workItemName: `${workItem.name} ( ${folderName} )`,
-            inputType: getInputType(item.linkingWorkItem),
+            workItemName,
+            inputType,
         };
     }
 
     // Eventの場合（未紐づけ）
+    const event = item as EventWithOption;
     return {
-        event: item,
+        id,
+        event,
         workItemId: "",
         workItemName: "未紐づけ",
         inputType: "-",
     };
 }
 
-// WorkItemツリーを処理して、リーフノードでsubItemsが1つだけの場合は切り上げる
-function getTargetWorkItems(workItems: WorkItem[]): WorkItem[] {
-    return workItems.flatMap((workItem) => {
-        // subItemsがない場合はリーフノードなのでそのまま返す
-        if (!workItem.subItems || workItem.subItems.length === 0) {
-            return [workItem];
-        }
-
-        // subItemsを再帰的に処理
-        const processedSubItems = getTargetWorkItems(workItem.subItems);
-
-        // 処理後のsubItemsが1つだけで、元のsubItemsが1つだけの場合は切り上げ
-        // （つまり、リーフノードが1つだけの親を削除）
-        if (workItem.subItems.length === 1 && processedSubItems.length === 1) {
-            return processedSubItems;
-        }
-
-        // それ以外の場合は、処理済みのsubItemsを持つ新しいWorkItemを返す
-        return [
-            {
-                ...workItem,
-                subItems: processedSubItems,
-            },
-        ];
-    });
-}
-
-export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChange }: EventTableProps) {
+export function EventTable({ events, workItems, onWorkItemChange, recentWorkItemIds = [] }: EventTableProps) {
     const styles = useStyles();
-    const { settings } = useSettings();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<string>("");
     const [query, setQuery] = useState("");
     const [openItemValues, setOpenItemValues] = useState<TreeItemValue[]>([]);
-    const [recentWorkItems, setRecentWorkItems] = useState<WorkItem[]>([]);
 
-    // WorkItemツリーから実際の作業アイテムを取得（subItemsが1つだけの階層を自動展開）
-    const targetWorkItems = useMemo(() => {
-        const rootItems = workItemsNotUse[0]?.subItems ?? [];
-        return getTargetWorkItems(rootItems);
-    }, [workItemsNotUse]);
+    // EventTableRowをTableRowに変換
+    const tableRows: TableRow[] = events.map(convertToTableRow);
 
-    // 選択中のイベントを取得
-    const selectedEvent = useMemo((): Event | undefined => {
-        const row = events.find((e) => {
-            const event = isLinkingEventWorkItemPair(e.item) ? e.item.event : e.item;
-            return event.uuid === selectedEventId;
-        });
+    // 選択中のイベントの現在のWorkItem
+    const selectedWorkItemId = useMemo(() => {
+        const row = tableRows.find((r) => r.id === selectedEventId);
+        return row?.workItemId || "";
+    }, [tableRows, selectedEventId]);
 
-        if (!row) {
-            return undefined;
-        }
+    // 履歴表示用のWorkItem情報を取得（最大3件）
+    const recentWorkItems = useMemo(() => {
+        const allWorkItems = getMostNestChildren(workItems);
+        return recentWorkItemIds
+            .slice(0, 3)
+            .map((id) => allWorkItems.find((wi) => wi.id === id))
+            .filter((wi): wi is WorkItem => wi !== undefined);
+    }, [recentWorkItemIds, workItems]);
 
-        return isLinkingEventWorkItemPair(row.item) ? row.item.event : row.item;
-    }, [events, selectedEventId]);
-
-    const closeDialog = useCallback(() => {
-        setDialogOpen(false);
-        setQuery("");
-    }, []);
-
+    // ダイアログを開く
     const handleOpenDialog = useCallback((eventId: string) => {
         setSelectedEventId(eventId);
         setDialogOpen(true);
         setQuery("");
     }, []);
 
-    const handleClear = useCallback(() => {
-        onWorkItemChange(selectedEventId, "");
-        closeDialog();
-    }, [onWorkItemChange, selectedEventId, closeDialog]);
+    // TreeItem の value から WorkItem を取得
+    const getWorkItemFromValue = useCallback(
+        (value: TreeItemValue): WorkItem | undefined => {
+            const findWorkItem = (items: WorkItem[]): WorkItem | undefined => {
+                for (const item of items) {
+                    const itemValue = treeViewHelper.getPath([item.folderPath, item.folderName, item.name]);
+                    if (itemValue === value) return item;
+                    if (item.subItems) {
+                        const found = findWorkItem(item.subItems);
+                        if (found) return found;
+                    }
+                }
+                return undefined;
+            };
+            return findWorkItem(workItems);
+        },
+        [workItems],
+    );
 
-    const handleItemClick = useCallback(
+    // WorkItem選択処理
+    const handleSelect = useCallback(
         (value: TreeItemValue) => {
-            const workItem = findWorkItem(value, targetWorkItems);
+            const workItem = getWorkItemFromValue(value);
             if (workItem) {
                 onWorkItemChange(selectedEventId, workItem.id);
-
-                // 履歴に追加（重複を除く）
-                if (settings.timetracker?.appearance?.historyDisplayCount) {
-                    const maxCount = settings.timetracker.appearance.historyDisplayCount;
-                    const filteredHistory = recentWorkItems.filter((item) => item.id !== workItem.id);
-                    setRecentWorkItems([workItem, ...filteredHistory.slice(0, maxCount - 1)]);
-                }
-
-                closeDialog();
+                setDialogOpen(false);
+                setQuery("");
             }
         },
-        [onWorkItemChange, targetWorkItems, selectedEventId, closeDialog, settings, recentWorkItems],
+        [getWorkItemFromValue, onWorkItemChange, selectedEventId],
     );
 
+    // 履歴からWorkItem選択
+    const handleSelectFromHistory = useCallback(
+        (workItemId: string) => {
+            onWorkItemChange(selectedEventId, workItemId);
+            setDialogOpen(false);
+            setQuery("");
+        },
+        [onWorkItemChange, selectedEventId],
+    );
+
+    // WorkItem を TreeItem に変換
     const treeItems = useMemo(
-        () => convertWorkItemsToTree(query, targetWorkItems, handleItemClick),
-        [targetWorkItems, handleItemClick, query],
+        () => convertWorkItemsToTree(workItems[0]?.subItems ?? [], selectedWorkItemId, handleSelect),
+        [workItems, selectedWorkItemId, handleSelect],
     );
 
-    // 検索時は全ツリーを展開
-    useEffect(() => {
+    // 検索フィルタリング用の関数
+    const filterTreeItems = useCallback(
+        (items: TreeItem[], lowerQuery: string): TreeItem[] => {
+            const filtered: TreeItem[] = [];
+
+            for (const item of items) {
+                if (!item.value) continue;
+
+                const value = item.value as string;
+                const hasChildren = !!item.children?.length;
+
+                // 子要素を再帰的にフィルタリング
+                const filteredChildren = hasChildren ? filterTreeItems(item.children!, lowerQuery) : undefined;
+
+                // 自身が検索にマッチするか、子要素にマッチがある場合は含める
+                const matchesSelf =
+                    !hasChildren &&
+                    workItems.some((wi) => {
+                        const itemValue = treeViewHelper.getPath([wi.folderPath, wi.folderName, wi.name]);
+                        const matchesPath = itemValue === value;
+                        if (!matchesPath) return false;
+                        return wi.id.toLowerCase().includes(lowerQuery) || wi.name.toLowerCase().includes(lowerQuery);
+                    });
+
+                const hasMatchingChildren = filteredChildren && filteredChildren.length > 0;
+
+                if (matchesSelf || hasMatchingChildren) {
+                    filtered.push({
+                        ...item,
+                        children: hasMatchingChildren ? filteredChildren : undefined,
+                    });
+                }
+            }
+
+            return filtered;
+        },
+        [workItems],
+    );
+
+    const filteredTreeItems = useMemo(() => {
+        if (!query) return treeItems;
+        const lowerQuery = query.toLowerCase();
+        return filterTreeItems(treeItems, lowerQuery);
+    }, [treeItems, query, filterTreeItems]);
+
+    // 検索時は全て展開
+    const getAllValues = useCallback((items: TreeItem[]): TreeItemValue[] => {
+        return items.flatMap((item) => {
+            const values: TreeItemValue[] = [item.value];
+            if (item.children) {
+                values.push(...getAllValues(item.children));
+            }
+            return values;
+        });
+    }, []);
+
+    useMemo(() => {
         if (query) {
-            // ツリーの全ての値を再帰的に取得
-            const getAllTreeValues = (items: TreeItem[]): string[] => {
-                return items.flatMap((item) => [item.value, ...(item.children ? getAllTreeValues(item.children) : [])]);
-            };
-            setOpenItemValues(getAllTreeValues(treeItems));
+            setOpenItemValues(getAllValues(filteredTreeItems));
         } else {
             setOpenItemValues([]);
         }
-    }, [query, treeItems]);
+    }, [query, filteredTreeItems, getAllValues]);
 
-    // テーブルデータと列定義を生成
-    const tableRows: TableRow[] = useMemo(() => events.map(convertToTableRow), [events]);
-    const eventColumns = useMemo(() => createEventColumns(styles, handleOpenDialog), [styles, handleOpenDialog]);
+    // 未選択処理
+    const handleClear = useCallback(() => {
+        onWorkItemChange(selectedEventId, "");
+        setDialogOpen(false);
+        setQuery("");
+    }, [onWorkItemChange, selectedEventId]);
+
+    const eventColumns = createEventColumns(styles, handleOpenDialog);
 
     return (
         <div className={styles.tableWrapper}>
@@ -570,7 +577,7 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
                 <DataTable
                     items={tableRows}
                     columns={eventColumns}
-                    getRowId={(item) => item.event.uuid}
+                    getRowId={(item) => item.id}
                     sortable
                     resizableColumns
                     columnSizingOptions={columnSizingOptions}
@@ -580,7 +587,7 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
             <Dialog open={dialogOpen} onOpenChange={(_, data) => setDialogOpen(data.open)}>
                 <DialogSurface className={styles.dialogSurface}>
                     <DialogBody>
-                        <DialogTitle>作業コード選択{selectedEvent && ": " + selectedEvent.name}</DialogTitle>
+                        <DialogTitle>作業コード選択</DialogTitle>
                         <DialogContent>
                             <div className={styles.dialogHeader}>
                                 <Input
@@ -603,20 +610,17 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
                                             <div
                                                 key={workItem.id}
                                                 className={styles.historyItem}
-                                                onClick={() => {
-                                                    onWorkItemChange(selectedEventId, workItem.id);
-                                                    // 履歴の順序を更新（選択したアイテムを先頭に）
-                                                    const filteredHistory = recentWorkItems.filter(
-                                                        (item) => item.id !== workItem.id,
-                                                    );
-                                                    setRecentWorkItems([workItem, ...filteredHistory]);
-                                                    closeDialog();
-                                                }}
+                                                onClick={() => handleSelectFromHistory(workItem.id)}
                                             >
                                                 <Document20Regular className={styles.historyItemIcon} />
                                                 <span className={styles.historyItemText}>
                                                     {workItem.id} - {workItem.name}
                                                 </span>
+                                                {selectedWorkItemId === workItem.id && (
+                                                    <Checkmark20Filled
+                                                        style={{ color: tokens.colorBrandForeground1 }}
+                                                    />
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -624,13 +628,19 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
                             )}
 
                             <TreeView
-                                items={treeItems}
+                                items={filteredTreeItems}
                                 openItemValues={openItemValues}
                                 onOpenChanged={setOpenItemValues}
-                                onSelectItemChanged={handleItemClick}
+                                selectItemValue={selectedWorkItemId || undefined}
+                                onSelectItemChanged={handleSelect}
                                 className={styles.dialogTree}
                             />
                         </DialogContent>
+                        {/* <DialogActions>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary">閉じる</Button>
+                            </DialogTrigger>
+                        </DialogActions> */}
                     </DialogBody>
                 </DialogSurface>
             </Dialog>

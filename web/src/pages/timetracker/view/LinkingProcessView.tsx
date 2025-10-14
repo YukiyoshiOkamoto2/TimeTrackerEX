@@ -53,101 +53,32 @@ type LinkingProcessViewState = {
 };
 
 const historyManager = new HistoryManager();
-
-// 履歴に保存
-const saveToHistory = (event: Event, workItem: WorkItem) => {
+const setHistrory = (event: Event, workItem: WorkItem) => {
     historyManager.setHistory(event, workItem);
     historyManager.dump();
 };
 
-// 状態から全イベントを取得
 const pickEvents = (state: LinkingProcessViewState): EventWithOption[] => {
-    const allEvents: EventWithOption[] = [];
-
-    if (state.enableEvents) {
+    const allEvents = [];
+    if (state?.enableEvents) {
         allEvents.push(...state.enableEvents);
     }
-
-    if (state.adjustedEvents) {
-        const adjustedEvents = state.adjustedEvents.map((a) => ({
-            ...a.event,
-            oldSchedule: a.oldSchdule,
-        }));
+    if (state?.adjustedEvents) {
+        const adjustedEvents = state.adjustedEvents.map((a) => {
+            return {
+                ...a.event,
+                oldSchedule: a.oldSchdule,
+            };
+        });
         allEvents.push(...adjustedEvents);
     }
-
-    if (state.paidLeaveDayEvents) {
+    if (state?.paidLeaveDayEvents) {
         allEvents.push(...state.paidLeaveDayEvents);
     }
-
-    if (state.scheduleEvents) {
+    if (state?.scheduleEvents) {
         allEvents.push(...state.scheduleEvents);
     }
-
     return allEvents;
-};
-
-// 紐づけの変更・追加・削除を処理
-const changeLinkingEventWorkItemPair = (
-    eventId: string,
-    workItemId: string,
-    workItems: WorkItem[],
-    unLinlinkingEvents: EventWithOption[],
-    linkingEventWorkItemPair: LinkingEventWorkItemPair[],
-): LinkingEventWorkItemPair[] | null => {
-    // WorkItemIdが空の場合は紐づけを削除
-    if (!workItemId) {
-        const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
-        if (linkedEventIndex >= 0) {
-            logger.info(`イベント (${eventId}) の紐づけを削除しました`);
-            return linkingEventWorkItemPair.filter((pair) => pair.event.uuid !== eventId);
-        }
-        return null;
-    }
-
-    // WorkItemを検索
-    const selectedWorkItem = getMostNestChildren(workItems).find((w) => w.id === workItemId);
-    if (!selectedWorkItem) {
-        logger.error(`Unknown WorkItem ID: ${workItemId}`);
-        return null;
-    }
-
-    const linkingWorkItem: LinkingWorkItem = {
-        workItem: selectedWorkItem,
-        type: "manual",
-        autoMethod: "none",
-    };
-
-    // 既存の紐づけを更新
-    const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
-    if (linkedEventIndex >= 0) {
-        const updatedPairs = [...linkingEventWorkItemPair];
-        updatedPairs[linkedEventIndex] = {
-            ...updatedPairs[linkedEventIndex],
-            linkingWorkItem,
-        };
-        saveToHistory(updatedPairs[linkedEventIndex].event, selectedWorkItem);
-        return updatedPairs;
-    }
-
-    // 未紐づけから紐づけ済みに移動
-    const selected = unLinlinkingEvents.find((event) => event.uuid === eventId);
-    if (selected) {
-        // 同名のイベントも一括で紐づける
-        const sameNameEvents = unLinlinkingEvents.filter(
-            (e) => e.uuid !== selected.uuid && EventUtils.isSame(e, selected),
-        );
-        const newLinkings: LinkingEventWorkItemPair[] = [
-            { event: selected, linkingWorkItem },
-            ...sameNameEvents.map((e) => ({ event: e, linkingWorkItem })),
-        ];
-
-        saveToHistory(selected, selectedWorkItem);
-        return [...linkingEventWorkItemPair, ...newLinkings];
-    }
-
-    logger.error(`Event not found: ${eventId}`);
-    return null;
 };
 
 export type LinkingProcessViewProps = {
@@ -180,14 +111,8 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
     });
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
-    const linkingEventUUID = useMemo(
-        () => linkingEventWorkItemPair.map((l) => l.event.uuid),
-        [linkingEventWorkItemPair],
-    );
-    const unLinlinkingEvents = useMemo(
-        () => pickEvents(state).filter((event) => !linkingEventUUID.includes(event.uuid)),
-        [state, linkingEventUUID],
-    );
+    const linkingEventUUID = useMemo(() => linkingEventWorkItemPair.map((l) => l.event.uuid), [linkingEventWorkItemPair])
+    const unLinlinkingEvents = useMemo(() => pickEvents(state).filter((event) => !linkingEventUUID.includes(event.uuid)), [state, linkingEventUUID])
 
     // イベントリストを取得（紐づけ済み + 未紐づけ）
     const allEventTableRow = useMemo((): EventTableRow[] => {
@@ -209,18 +134,64 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
     // WorkItemの変更ハンドラー
     const handleWorkItemChange = useCallback(
         (eventId: string, workItemId: string) => {
-            const newItemPair = changeLinkingEventWorkItemPair(
-                eventId,
-                workItemId,
-                uploadInfo?.workItems ?? [],
-                unLinlinkingEvents,
-                linkingEventWorkItemPair,
-            );
-            if (newItemPair) {
-                setLinkingEventWorkItemPair(newItemPair);
+            // workItemIdが空の場合は紐づけを解除
+            if (!workItemId) {
+                const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
+                if (linkedEventIndex >= 0) {
+                    // 既存の紐づけを削除
+                    const updatedPairs = linkingEventWorkItemPair.filter((_, index) => index !== linkedEventIndex);
+                    setLinkingEventWorkItemPair(updatedPairs);
+                }
+                return;
             }
+
+            const selectedWorkItem = getMostNestChildren(uploadInfo?.workItems || []).find((w) => w.id === workItemId);
+            if (!selectedWorkItem) {
+                logger.error("Selected Unkown WorkItem Id -> " + workItemId);
+                return;
+            }
+
+            const linkingWorkItem: LinkingWorkItem = {
+                workItem: selectedWorkItem,
+                type: "manual",
+                autoMethod: "none",
+            }
+
+            // eventIdから実際のイベントを取得
+            const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
+            if (linkedEventIndex >= 0) {
+                // 既存の紐づけを更新
+                const updatedPairs = [...linkingEventWorkItemPair];
+                updatedPairs[linkedEventIndex] = {
+                    ...updatedPairs[linkedEventIndex],
+                    linkingWorkItem,
+                };
+                setLinkingEventWorkItemPair(updatedPairs);
+                setHistrory(updatedPairs[linkedEventIndex].event, selectedWorkItem);
+                return;
+            }
+
+            // 未紐づけから紐づけ済みに移動
+            const selected = unLinlinkingEvents.find((event) => event.uuid === eventId);
+            if (selected) {
+                setHistrory(selected, selectedWorkItem);
+                const newLinkings: LinkingEventWorkItemPair[] = [{
+                    event: selected,
+                    linkingWorkItem,
+                },
+                ...unLinlinkingEvents.filter(e => e.uuid !== selected.uuid && EventUtils.isSame(e, selected))
+                    .map(e => { return { event: e, linkingWorkItem } })
+                ]
+                setLinkingEventWorkItemPair([
+                    ...linkingEventWorkItemPair,
+                    ...newLinkings,
+                ]);
+                return;
+            }
+
+            logger.error("Not found event -> id: " + eventId);
         },
-        [uploadInfo, unLinlinkingEvents, linkingEventWorkItemPair],
+        [uploadInfo, linkingEventWorkItemPair, state],
     );
 
     const handleSubmit = async () => {
@@ -255,17 +226,8 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
 
     // 有効イベント取得
     useEffect(() => {
-        const state = getAllEvents(
-            settings.timetracker!,
-            uploadInfo?.pdf?.schedule ?? [],
-            uploadInfo?.ics?.event ?? [],
-        );
-        const linling = autoLinkEvents(
-            pickEvents(state),
-            uploadInfo?.workItems ?? [],
-            settings.timetracker!,
-            historyManager,
-        );
+        const state = getAllEvents(settings.timetracker!, uploadInfo?.pdf?.schedule ?? [], uploadInfo?.ics?.event ?? []);
+        const linling = autoLinkEvents(pickEvents(state), uploadInfo?.workItems ?? [], settings.timetracker!, historyManager)
         setState(state);
         setLinkingEventWorkItemPair(linling.linked);
     }, [uploadInfo, settings.timetracker]);

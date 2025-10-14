@@ -26,7 +26,7 @@ import {
     Link24Regular,
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProjectAndWorkItem, useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { ICS, PDF, UploadInfo } from "../models";
 import { validateAndCleanupSettings } from "../services/validate";
@@ -238,40 +238,31 @@ const getEventAsync = async (file: File) => {
     return ev;
 };
 
-// イベントキー生成（メモ化用）
-const getEventKey = (e: Event): string => {
+// イベントキー生成（共通）
+const getEventKey = (e: Event) => {
     const dateTime = formatDateTime(new Date(e.schedule.start), e.schedule.end ? new Date(e.schedule.end) : null);
     return `${dateTime}　${e.name}`;
 };
 
-// スケジュールステータスを取得
-const getScheduleStatus = (s: Schedule): string => {
-    if (!s.isHoliday) return "";
-    return s.isPaidLeave ? "（有給休暇）" : "（休日）";
-};
-
-// スケジュールをテーブルアイテムに変換（パフォーマンス最適化）
+// スケジュールをテーブルアイテムに変換
 const scheduleToCheckItem = (schedule: Schedule[]): CheckedTableItem[] => {
     return schedule.map((s) => {
         const dateTime = formatDateTime(new Date(s.start), s.end ? new Date(s.end) : null);
-        const status = getScheduleStatus(s);
+        const status = s.isHoliday ? (s.isPaidLeave ? "（有給休暇）" : "（休日）") : "";
 
         return {
             key: ScheduleUtils.getText(s),
-            content: status ? `${dateTime} ${status}` : dateTime,
+            content: `${dateTime} ${status}`,
         };
     });
 };
 
-// イベントをテーブルアイテムに変換（重複計算を削減）
+// イベントをテーブルアイテムに変換
 const eventToCheckItem = (event: Event[]): CheckedTableItem[] => {
-    return event.map((e) => {
-        const key = getEventKey(e);
-        return {
-            key,
-            content: key,
-        };
-    });
+    return event.map((e) => ({
+        key: getEventKey(e),
+        content: getEventKey(e),
+    }));
 };
 
 // ヘルプコンテンツ（共通）
@@ -310,16 +301,11 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
     const { settings, updateSettings } = useSettings();
     const timeTrackerSettings = settings.timetracker!;
 
-    // セッション管理（メモ化）
-    const sessionConfig = useMemo(
-        () => ({
-            baseUrl: timeTrackerSettings?.baseUrl || "",
-            userName: timeTrackerSettings?.userName || "",
-        }),
-        [timeTrackerSettings?.baseUrl, timeTrackerSettings?.userName],
-    );
-
-    const { Dialog, isAuthenticated, ...sessionHook } = useTimeTrackerSession(sessionConfig);
+    // セッション管理
+    const { Dialog, isAuthenticated, ...sessionHook } = useTimeTrackerSession({
+        baseUrl: timeTrackerSettings?.baseUrl || "",
+        userName: timeTrackerSettings?.userName || "",
+    });
 
     // テーブルデータの状態管理
     const [scheduleTableItems, setScheduleTableItems] = useState<CheckedTableItem[]>([]);
@@ -327,169 +313,129 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
     const [selectedScheduleKeys, setSelectedScheduleKeys] = useState<Set<string>>(new Set());
     const [selectedEventKeys, setSelectedEventKeys] = useState<Set<string>>(new Set());
 
-    // 処理可能かどうかを判定（メモ化）
-    const canProcess = useMemo(
-        () => selectedScheduleKeys.size > 0 || selectedEventKeys.size > 0,
-        [selectedScheduleKeys.size, selectedEventKeys.size],
-    );
+    const canProcess = selectedScheduleKeys.size > 0 || selectedEventKeys.size > 0;
 
-    // ファイルクリア処理（メモ化）
-    const clearPdfFile = useCallback(
-        (e?: React.MouseEvent) => {
-            e?.stopPropagation();
-            if (pdfInputRef.current) pdfInputRef.current.value = "";
-            onPdfUpdate(undefined);
+    const clearPdfFile = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (pdfInputRef.current) pdfInputRef.current.value = "";
+        onPdfUpdate(undefined);
+    };
+
+    const clearIcsFile = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (icsInputRef.current) icsInputRef.current.value = "";
+        onIcsUpdate(undefined);
+    };
+    // PDFファイルアップロード処理
+    const uploadPdfFile = async (file: File) => {
+        const schedule = await getScheduleAsync(file);
+        if (schedule) {
+            onPdfUpdate({
+                schedule,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+            });
+        } else {
+            clearPdfFile();
+        }
+    };
+
+    // ICSファイルアップロード処理
+    const uploadIcsFile = async (file: File) => {
+        const event = await getEventAsync(file);
+        if (event) {
+            onIcsUpdate({
+                event,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+            });
+        } else {
+            clearIcsFile();
+        }
+    };
+
+    // 汎用イベントハンドラー
+    const createFileHandler = (uploadFn: (file: File) => Promise<void>, validator: (file: File) => boolean) => ({
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+            const file = event.target.files?.[0];
+            if (file && validator(file)) uploadFn(file);
         },
-        [onPdfUpdate],
-    );
-
-    const clearIcsFile = useCallback(
-        (e?: React.MouseEvent) => {
-            e?.stopPropagation();
-            if (icsInputRef.current) icsInputRef.current.value = "";
-            onIcsUpdate(undefined);
+        onDrop: (event: React.DragEvent<HTMLDivElement>) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const file = event.dataTransfer.files?.[0];
+            if (file && validator(file)) uploadFn(file);
         },
-        [onIcsUpdate],
-    );
+    });
 
-    // PDFファイルアップロード処理（メモ化）
-    const uploadPdfFile = useCallback(
-        async (file: File) => {
-            const schedule = await getScheduleAsync(file);
-            if (schedule) {
-                onPdfUpdate({
-                    schedule,
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                });
-            } else {
-                clearPdfFile();
-            }
-        },
-        [onPdfUpdate, clearPdfFile],
-    );
+    const pdfHandlers = createFileHandler(uploadPdfFile, isPdfFile);
+    const icsHandlers = createFileHandler(uploadIcsFile, isIcsFile);
 
-    // ICSファイルアップロード処理（メモ化）
-    const uploadIcsFile = useCallback(
-        async (file: File) => {
-            const event = await getEventAsync(file);
-            if (event) {
-                onIcsUpdate({
-                    event,
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                });
-            } else {
-                clearIcsFile();
-            }
-        },
-        [onIcsUpdate, clearIcsFile],
-    );
-
-    // ドラッグオーバーハンドラー（メモ化）
-    const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
-    }, []);
+    };
 
-    // PDFファイルハンドラー（メモ化）
-    const pdfHandlers = useMemo(
-        () => ({
-            onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-                const file = event.target.files?.[0];
-                if (file && isPdfFile(file)) uploadPdfFile(file);
-            },
-            onDrop: (event: React.DragEvent<HTMLDivElement>) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const file = event.dataTransfer.files?.[0];
-                if (file && isPdfFile(file)) uploadPdfFile(file);
-            },
-        }),
-        [uploadPdfFile],
-    );
-
-    // ICSファイルハンドラー（メモ化）
-    const icsHandlers = useMemo(
-        () => ({
-            onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-                const file = event.target.files?.[0];
-                if (file && isIcsFile(file)) uploadIcsFile(file);
-            },
-            onDrop: (event: React.DragEvent<HTMLDivElement>) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const file = event.dataTransfer.files?.[0];
-                if (file && isIcsFile(file)) uploadIcsFile(file);
-            },
-        }),
-        [uploadIcsFile],
-    );
-
-    // プロジェクト情報取得（メモ化）
-    const fetchProjectData = useCallback(
-        async (projectId: string): Promise<ProjectAndWorkItem | undefined> => {
-            const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId, async () => {
-                // プロジェクトID取得失敗時は設定をクリア
-                if (timeTrackerSettings) {
-                    updateSettings({
-                        timetracker: {
-                            ...timeTrackerSettings,
-                            baseProjectId: -1,
-                        },
-                    });
-                }
-                await appMessageDialogRef.showMessageAsync(
-                    "設定エラー",
-                    `プロジェクトID ( ${projectId} ) が無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。`,
-                    "ERROR",
-                );
-            });
-
-            if (result.isError) {
-                await appMessageDialogRef.showMessageAsync("TimeTrackerデータ取得エラー", result.errorMessage, "ERROR");
-                return;
+    // プロジェクト情報取得
+    const fetchProjectData = async (projectId: string): Promise<ProjectAndWorkItem | undefined> => {
+        const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId, async () => {
+            // プロジェクトID取得失敗時は設定をクリア
+            if (timeTrackerSettings) {
+                updateSettings({
+                    timetracker: {
+                        ...timeTrackerSettings,
+                        baseProjectId: -1,
+                    },
+                });
             }
+            await appMessageDialogRef.showMessageAsync(
+                "設定エラー",
+                `プロジェクトID ( ${projectId} ) が無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。`,
+                "ERROR",
+            );
+        });
 
-            return result.content;
-        },
-        [sessionHook, timeTrackerSettings, updateSettings],
-    );
+        if (result.isError) {
+            await appMessageDialogRef.showMessageAsync("TimeTrackerデータ取得エラー", result.errorMessage, "ERROR");
+            return;
+        }
 
-    // 履歴管理の更新（メモ化）
-    const updateHistory = useCallback((workItems: WorkItem[]) => {
+        return result.content;
+    };
+
+    // 履歴管理の更新
+    const updateHistory = (workItems: WorkItem[]) => {
         const historyManager = new HistoryManager();
         historyManager.load();
-        historyManager.checkWorkItemId(workItems);
+        historyManager.checkWorkItemId(workItems!);
         historyManager.dump();
-    }, []);
+    };
 
-    // 選択済みスケジュールのフィルタリング（メモ化）
-    const filterSelectedSchedule = useCallback((): PDF | undefined => {
+    // 選択済みスケジュールのフィルタリング
+    const filterSelectedSchedule = (): PDF | undefined => {
         if (!pdf || scheduleTableItems.length === 0) return undefined;
 
         const enabledSchedule = pdf.schedule.filter((s) => selectedScheduleKeys.has(ScheduleUtils.getText(s)));
 
         return enabledSchedule.length > 0 ? { ...pdf, schedule: enabledSchedule } : undefined;
-    }, [pdf, scheduleTableItems.length, selectedScheduleKeys]);
+    };
 
-    // 選択済みイベントのフィルタリング（メモ化）
-    const filterSelectedEvents = useCallback((): ICS | undefined => {
+    // 選択済みイベントのフィルタリング
+    const filterSelectedEvents = (): ICS | undefined => {
         if (!ics || eventTableItems.length === 0) return undefined;
 
         const enabledEvents = ics.event.filter((e) => selectedEventKeys.has(getEventKey(e)));
 
         return enabledEvents.length > 0 ? { ...ics, event: enabledEvents } : undefined;
-    }, [ics, eventTableItems.length, selectedEventKeys]);
+    };
 
-    // 紐づけ開始処理（メモ化）
-    const handleLinkedClick = useCallback(async () => {
+    const handleLinkedClick = async () => {
         setIsLoading(true);
         try {
-            // 認証チェック
             if (!isAuthenticated) {
+                // 認証チェック
                 const authResult = await sessionHook.authenticateAsync();
                 if (authResult.isError) {
                     await appMessageDialogRef.showMessageAsync(
@@ -510,7 +456,7 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
             // 履歴の更新
             updateHistory(itemResult.workItems);
 
-            // 設定の検証とクリーンアップ
+            // 設定の更新
             const cleanResult = validateAndCleanupSettings(timeTrackerSettings, itemResult.workItems);
             if (cleanResult.items.length > 0) {
                 await appMessageDialogRef.showMessageAsync(
@@ -520,16 +466,18 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
                     "ERROR",
                 );
                 updateSettings({
-                    timetracker: cleanResult.settings,
+                    timetracker: {
+                        ...cleanResult.settings,
+                    },
                 });
                 return;
             }
 
-            // 選択済みデータのフィルタリング
+            // Step 5: 選択済みデータのフィルタリング
             const filteredPdf = filterSelectedSchedule();
             const filteredIcs = filterSelectedEvents();
 
-            // データ送信
+            // Step 6: データ送信
             if (filteredPdf || filteredIcs) {
                 onSubmit({
                     pdf: filteredPdf,
@@ -548,46 +496,33 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
         } finally {
             setIsLoading(false);
         }
-    }, [
-        isAuthenticated,
-        sessionHook,
-        timeTrackerSettings,
-        fetchProjectData,
-        updateHistory,
-        updateSettings,
-        filterSelectedSchedule,
-        filterSelectedEvents,
-        onSubmit,
-        setIsLoading,
-    ]);
+    };
 
-    // PDFデータが変更されたらテーブルデータを更新（最適化）
+    // PDFデータが変更されたらテーブルデータを更新
     useEffect(() => {
         if (pdf?.schedule && pdf.schedule.length > 0) {
             const items = scheduleToCheckItem(pdf.schedule);
             setScheduleTableItems(items);
-            // デフォルトで全選択（パフォーマンス改善：直接Setを作成）
-            const keys = new Set(items.map((item) => item.key));
-            setSelectedScheduleKeys(keys);
+            // デフォルトで全選択
+            setSelectedScheduleKeys(new Set(items.map((item) => item.key)));
         } else {
             setScheduleTableItems([]);
             setSelectedScheduleKeys(new Set());
         }
-    }, [pdf?.schedule]);
+    }, [pdf]);
 
-    // ICSデータが変更されたらテーブルデータを更新（最適化）
+    // ICSデータが変更されたらテーブルデータを更新
     useEffect(() => {
         if (ics?.event && ics.event.length > 0) {
             const items = eventToCheckItem(ics.event);
             setEventTableItems(items);
-            // デフォルトで全選択（パフォーマンス改善：直接Setを作成）
-            const keys = new Set(items.map((item) => item.key));
-            setSelectedEventKeys(keys);
+            // デフォルトで全選択
+            setSelectedEventKeys(new Set(items.map((item) => item.key)));
         } else {
             setEventTableItems([]);
             setSelectedEventKeys(new Set());
         }
-    }, [ics?.event]);
+    }, [ics]);
 
     return (
         <>

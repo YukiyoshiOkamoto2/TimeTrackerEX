@@ -37,13 +37,15 @@ export interface DataTableProps<T> {
 
 const useStyles = makeStyles({
     tableContainer: {
+        border: `1px solid ${tokens.colorNeutralStroke2}`,
+        borderRadius: tokens.borderRadiusMedium,
         overflow: "hidden",
         backgroundColor: tokens.colorNeutralBackground1,
         // フェードインアニメーション
         animationName: {
             from: {
                 opacity: 0,
-                transform: "translateY(12px)",
+                transform: "translateY(8px)",
             },
             to: {
                 opacity: 1,
@@ -121,83 +123,63 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
     const styles = useStyles();
 
-    // 選択状態の計算（メモ化）
+    // 選択状態の計算
     const selectionState = useMemo(() => {
-        if (!selectable || items.length === 0) {
-            return { allChecked: false, someChecked: false };
-        }
-
-        const allChecked = selectedKeys.size === items.length;
-        const someChecked = selectedKeys.size > 0 && !allChecked;
+        const allChecked = items.length > 0 && selectedKeys.size === items.length;
+        const someChecked = selectedKeys.size > 0 && selectedKeys.size < items.length;
         return { allChecked, someChecked };
-    }, [selectable, items.length, selectedKeys.size]);
+    }, [items.length, selectedKeys.size]);
 
-    // 全選択/全解除ハンドラ（メモ化）
+    // 全選択/全解除ハンドラ
     const handleSelectAll = useCallback(
         (checked: boolean) => {
             if (!onSelectionChange) return;
 
-            if (checked) {
-                // 全選択：既存のSetを再利用可能な場合は再利用
-                const newSelection = new Set(items.map(getRowId));
-                onSelectionChange(newSelection);
-            } else {
-                // 全解除：空のSetを作成
-                onSelectionChange(new Set<string>());
-            }
+            const newSelection = checked ? new Set(items.map(getRowId)) : new Set<string>();
+            onSelectionChange(newSelection);
         },
         [items, getRowId, onSelectionChange],
     );
 
-    // ヘッダーチェックボックスのレンダリング関数（メモ化）
-    const renderHeaderCheckbox = useCallback(
-        () => (
-            <div className={styles.checkboxHeader}>
-                <Checkbox
-                    checked={selectionState.someChecked ? "mixed" : selectionState.allChecked}
-                    onChange={(_, data) => handleSelectAll(data.checked === true)}
-                    label="全選択"
-                />
-            </div>
-        ),
-        [styles.checkboxHeader, selectionState, handleSelectAll],
-    );
-
-    // selectableの場合、最終列にチェックボックス列を追加（メモ化）
+    // selectableの場合、最終列にチェックボックス列を追加
     const effectiveColumns = useMemo(() => {
         if (!selectable) return columns;
 
         const selectionColumn: TableColumnDefinition<T> = {
             columnId: "__selection__",
             compare: () => 0,
-            renderHeaderCell: renderHeaderCheckbox,
+            renderHeaderCell: () => (
+                <div className={styles.checkboxHeader}>
+                    <Checkbox
+                        checked={selectionState.someChecked ? "mixed" : selectionState.allChecked}
+                        onChange={(_, data) => handleSelectAll(data.checked === true)}
+                        label="全選択"
+                    />
+                </div>
+            ),
             renderCell: () => null,
         };
 
         return [...columns, selectionColumn];
-    }, [columns, selectable, renderHeaderCheckbox]);
+    }, [columns, selectable, selectionState, handleSelectAll, styles.checkboxHeader]);
 
-    // 列幅設定を構築（メモ化・最適化）
+    // 列幅設定を構築
     const columnSizingOptions = useMemo(() => {
-        // カスタム設定がある場合
         if (customColumnSizingOptions) {
-            if (!selectable) {
-                return customColumnSizingOptions;
-            }
-            // 選択列を追加
-            return {
-                ...customColumnSizingOptions,
-                __selection__: { minWidth: 120, idealWidth: 120 },
-            };
+            return selectable
+                ? {
+                      ...customColumnSizingOptions,
+                      __selection__: { minWidth: 120, idealWidth: 120 },
+                  }
+                : customColumnSizingOptions;
         }
 
-        // デフォルト設定を構築
         const options: Record<string, { minWidth: number; idealWidth: number }> = {};
-        for (const col of effectiveColumns) {
+        effectiveColumns.forEach((col) => {
             const columnId = col.columnId as string;
             options[columnId] =
                 columnId === "__selection__" ? { minWidth: 80, idealWidth: 80 } : { minWidth: 100, idealWidth: 150 };
-        }
+        });
         return options;
     }, [effectiveColumns, customColumnSizingOptions, selectable]);
 
@@ -213,21 +195,14 @@ export function DataTable<T>({
         ],
     );
 
-    // 個別選択ハンドラ（メモ化）
-    const handleSelectItem = useCallback(
-        (key: string, checked: boolean) => {
-            if (!onSelectionChange) return;
+    // 個別選択ハンドラ
+    const handleSelectItem = (key: string, checked: boolean) => {
+        if (!onSelectionChange) return;
 
-            const newSelection = new Set(selectedKeys);
-            if (checked) {
-                newSelection.add(key);
-            } else {
-                newSelection.delete(key);
-            }
-            onSelectionChange(newSelection);
-        },
-        [selectedKeys, onSelectionChange],
-    );
+        const newSelection = new Set(selectedKeys);
+        checked ? newSelection.add(key) : newSelection.delete(key);
+        onSelectionChange(newSelection);
+    };
 
     return (
         <div className={className || styles.tableContainer}>
@@ -242,56 +217,47 @@ export function DataTable<T>({
             >
                 <DataGridHeader>
                     <DataGridRow>
-                        {({ renderHeaderCell, columnId }) => {
-                            // クリックハンドラーの最適化
-                            const handleClick =
-                                onColumnHeaderClick && columnId !== "__selection__"
-                                    ? () => onColumnHeaderClick(columnId as string)
-                                    : undefined;
-
-                            return (
-                                <DataGridHeaderCell
-                                    onClick={handleClick}
-                                    className={columnId !== "__selection__" ? styles.headerCell : undefined}
-                                    {...columnSizing_unstable.getTableHeaderCellProps(columnId)}
-                                >
-                                    {renderHeaderCell()}
-                                </DataGridHeaderCell>
-                            );
-                        }}
+                        {({ renderHeaderCell, columnId }) => (
+                            <DataGridHeaderCell
+                                onClick={
+                                    onColumnHeaderClick && columnId !== "__selection__"
+                                        ? () => onColumnHeaderClick(columnId as string)
+                                        : undefined
+                                }
+                                className={columnId !== "__selection__" ? styles.headerCell : undefined}
+                                {...columnSizing_unstable.getTableHeaderCellProps(columnId)}
+                            >
+                                {renderHeaderCell()}
+                            </DataGridHeaderCell>
+                        )}
                     </DataGridRow>
                 </DataGridHeader>
                 <DataGridBody<T>>
                     {({ item, rowId }) => {
                         const key = getRowId(item);
-                        const isSelected = selectable ? selectedKeys.has(key) : false;
+                        const isSelected = selectedKeys.has(key);
 
                         return (
                             <DataGridRow<T> key={rowId} className={styles.row}>
-                                {({ renderCell, columnId }) => {
-                                    // セル内容の判定を最適化
-                                    const isSelectionCell = selectable && columnId === "__selection__";
-
-                                    return (
-                                        <DataGridCell
-                                            className={styles.cell}
-                                            {...columnSizing_unstable.getTableCellProps(columnId)}
-                                        >
-                                            {isSelectionCell ? (
-                                                <div className={styles.checkboxCell}>
-                                                    <Checkbox
-                                                        checked={isSelected}
-                                                        onChange={(_, data) =>
-                                                            handleSelectItem(key, data.checked as boolean)
-                                                        }
-                                                    />
-                                                </div>
-                                            ) : (
-                                                renderCell(item)
-                                            )}
-                                        </DataGridCell>
-                                    );
-                                }}
+                                {({ renderCell, columnId }) => (
+                                    <DataGridCell
+                                        className={styles.cell}
+                                        {...columnSizing_unstable.getTableCellProps(columnId)}
+                                    >
+                                        {selectable && columnId === "__selection__" ? (
+                                            <div className={styles.checkboxCell}>
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    onChange={(_, data) =>
+                                                        handleSelectItem(key, data.checked as boolean)
+                                                    }
+                                                />
+                                            </div>
+                                        ) : (
+                                            renderCell(item)
+                                        )}
+                                    </DataGridCell>
+                                )}
                             </DataGridRow>
                         );
                     }}
