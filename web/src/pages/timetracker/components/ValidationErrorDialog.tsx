@@ -168,7 +168,12 @@ export function ValidationErrorDialog({ open, errors }: ValidationErrorDialogPro
                         </div>
                     </DialogContent>
                     <DialogActions className={styles.actions}>
-                        <Button appearance="primary" size="large" icon={<Settings24Regular />} onClick={handleOpenSettings}>
+                        <Button
+                            appearance="primary"
+                            size="large"
+                            icon={<Settings24Regular />}
+                            onClick={handleOpenSettings}
+                        >
                             設定ページを開く
                         </Button>
                     </DialogActions>

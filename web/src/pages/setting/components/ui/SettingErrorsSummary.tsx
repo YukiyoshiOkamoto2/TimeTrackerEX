@@ -2,9 +2,14 @@
  * Setting Errors Summary Component
  *
  * 設定項目のエラーを一覧表示するコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memo でコンポーネントをメモ化
+ * - useMemo でエラーリストのレンダリングをメモ化
  */
 
 import { MessageBar, MessageBarBody, MessageBarGroup, makeStyles, tokens } from "@fluentui/react-components";
+import { memo, useMemo } from "react";
 
 const useStyles = makeStyles({
     errorSummary: {
@@ -34,24 +39,25 @@ export interface SettingErrorsSummaryProps {
 /**
  * 設定エラーのサマリーを表示するコンポーネント
  */
-export function SettingErrorsSummary({ errors }: SettingErrorsSummaryProps) {
+export const SettingErrorsSummary = memo(function SettingErrorsSummary({ errors }: SettingErrorsSummaryProps) {
     const styles = useStyles();
+
+    // エラーメッセージのレンダリングをメモ化
+    const errorMessages = useMemo(
+        () =>
+            errors.map((err, index) => (
+                <MessageBar key={err.id || index} intent="error" className={styles.errorSummary}>
+                    <MessageBarBody>
+                        {err.label}: {err.message}
+                    </MessageBarBody>
+                </MessageBar>
+            )),
+        [errors, styles.errorSummary],
+    );
 
     if (errors.length === 0) {
         return null;
     }
 
-    return (
-        <MessageBarGroup>
-            {errors.map((err, index) => {
-                return (
-                    <MessageBar key={index} intent="error" className={styles.errorSummary}>
-                        <MessageBarBody>
-                            {err.label}: {err.message}
-                        </MessageBarBody>
-                    </MessageBar>
-                );
-            })}
-        </MessageBarGroup>
-    );
-}
+    return <MessageBarGroup>{errorMessages}</MessageBarGroup>;
+});

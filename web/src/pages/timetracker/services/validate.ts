@@ -1,6 +1,6 @@
 import { getLogger } from "@/lib";
 import { TimeTrackerSettings, WorkItem } from "@/types";
-import { getMostNestChildren } from "@/types/utils";
+import { WorkItemUtils } from "@/types/utils";
 
 const logger = getLogger("validate");
 
@@ -22,7 +22,7 @@ export function validateAndCleanupSettings(
 ): { settings: TimeTrackerSettings; items: ValidateItem[] } {
     const items: ValidateItem[] = [];
     const updates: Partial<TimeTrackerSettings> = {};
-    const validWorkItemIds = new Set(getMostNestChildren(workItems).map((w) => w.id));
+    const validWorkItemIds = new Set(WorkItemUtils.getMostNestChildren(workItems).map((w) => w.id));
 
     // 1. timeOffEvent.workItemId の検証
     if (settings.timeOffEvent?.workItemId) {

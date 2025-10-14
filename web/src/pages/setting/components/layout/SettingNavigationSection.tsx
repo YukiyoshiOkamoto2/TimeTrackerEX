@@ -1,5 +1,12 @@
+/**
+ * Setting Navigation Section Component
+ *
+ * パフォーマンス最適化:
+ * - React.memo でコンポーネントをメモ化
+ */
+
 import { makeStyles, tokens } from "@fluentui/react-components";
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 
 const useStyles = makeStyles({
     section: {
@@ -35,7 +42,7 @@ export type SettingNavigationSectionProps = {
  * ナビゲーション項目用のセクション
  * タイトルと説明を持ち、内側に枠線のないナビゲーション項目を配置
  */
-export function SettingNavigationSection({
+export const SettingNavigationSection = memo(function SettingNavigationSection({
     title,
     description,
     required = true,
@@ -67,4 +74,4 @@ export function SettingNavigationSection({
             {children}
         </div>
     );
-}
+});

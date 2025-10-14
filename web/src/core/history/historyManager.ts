@@ -11,7 +11,7 @@
  */
 
 import { getCurrentDate } from "@/lib/dateUtil";
-import { EventUtils, getMostNestChildren } from "@/types/utils";
+import { EventUtils, WorkItemUtils } from "@/types/utils";
 import { getLogger } from "../../lib/logger";
 import { getStorage } from "../../lib/storage";
 import type { Event, WorkItem } from "../../types";
@@ -204,7 +204,7 @@ export class HistoryManager {
      * - 作業項目リストに存在しないIDを持つエントリは削除されます
      */
     checkWorkItemId(workItems: WorkItem[]): void {
-        const workItemMap = new Map(getMostNestChildren(workItems).map((item) => [item.id, item]));
+        const workItemMap = new Map(WorkItemUtils.getMostNestChildren(workItems).map((item) => [item.id, item]));
         const invalidKeys: string[] = [];
 
         for (const [key, entry] of this.history.entries()) {
@@ -263,12 +263,12 @@ export class HistoryManager {
         const key = this.getEventKey(event);
         const existingEntry = this.history.get(key);
         const now = getCurrentDate();
-
+        const itemName = WorkItemUtils.getText(workItem);
         if (existingEntry && existingEntry.itemId === workItem.id) {
             // 既存エントリの使用回数をインクリメント、最終使用日時を更新
             existingEntry.useCount++;
             existingEntry.eventName = event.name; // イベント名を更新
-            existingEntry.itemName = workItem.name; // 項目名を更新
+            existingEntry.itemName = itemName; // 項目名を更新
             existingEntry.lastUsedDate = now;
             logger.debug(`履歴を更新: ${key} -> ${workItem.id} (使用回数: ${existingEntry.useCount})`);
         } else {
@@ -286,7 +286,7 @@ export class HistoryManager {
             this.history.set(key, {
                 eventName: event.name,
                 itemId: workItem.id,
-                itemName: workItem.name,
+                itemName,
                 useCount: 1,
                 lastUsedDate: now,
             });

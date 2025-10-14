@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useSettings } from "@/store";
-import { IgnorableEventPattern, TimeOffEventPattern, TimeTrackerSettings } from "@/types";
+import type { IgnorableEventPattern, TimeOffEventPattern, TimeTrackerSettings } from "@/types";
 import { SettingPageLayout } from "../../components";
 import { AppearanceNavigationPage } from "./AppearanceNavigationPage";
 import { IgnorableEventsNavigationPage } from "./IgnorableEventsNavigationPage";
@@ -16,40 +16,64 @@ import {
 
 type SettingView = "main" | "ignorableEvents" | "timeOffEvents" | "appearance";
 
+/**
+ * TimeTracker設定ページ
+ *
+ * パフォーマンス最適化:
+ * - useCallback でハンドラーをメモ化
+ * - useMemo で設定オブジェクトとエラーをメモ化
+ * - ビュー切り替えでのコンポーネント再作成を最小化
+ */
 export function TimeTrackerSettingsPage() {
     const [currentView, setCurrentView] = useState<SettingView>("main");
     const { settings, updateSettings, validationErrors } = useSettings();
-    const tt = settings.timetracker as TimeTrackerSettings;
-    const errors = validationErrors.timeTracker;
 
-    const handleIgnorableEventsChange = (patterns: IgnorableEventPattern[]) => {
-        // const uniquePatterns = removeDuplicateEventPatterns(patterns);
-        const uniquePatterns = patterns;
-        updateSettings({
-            timetracker: {
-                ...tt,
-                ignorableEvents: uniquePatterns.length > 0 ? uniquePatterns : undefined,
-            },
-        });
-    };
+    // 設定とエラーをメモ化
+    const tt = useMemo(() => settings.timetracker as TimeTrackerSettings, [settings.timetracker]);
+    const errors = useMemo(() => validationErrors.timeTracker, [validationErrors.timeTracker]);
 
-    const handleTimeOffEventChange = (patterns: TimeOffEventPattern[], workItemId: number) => {
-        // const uniquePatterns = removeDuplicateEventPatterns(patterns);
-        const uniquePatterns = patterns;
-        const timeOffEvent =
-            uniquePatterns.length > 0
-                ? {
-                      namePatterns: uniquePatterns,
-                      workItemId,
-                  }
-                : undefined;
-        updateSettings({
-            timetracker: {
-                ...tt,
-                timeOffEvent,
-            },
-        });
-    };
+    // 無視可能イベント変更ハンドラー（メモ化）
+    const handleIgnorableEventsChange = useCallback(
+        (patterns: IgnorableEventPattern[]) => {
+            // const uniquePatterns = removeDuplicateEventPatterns(patterns);
+            const uniquePatterns = patterns;
+            updateSettings({
+                timetracker: {
+                    ...tt,
+                    ignorableEvents: uniquePatterns.length > 0 ? uniquePatterns : undefined,
+                },
+            });
+        },
+        [tt, updateSettings],
+    );
+
+    // 休暇イベント変更ハンドラー（メモ化）
+    const handleTimeOffEventChange = useCallback(
+        (patterns: TimeOffEventPattern[], workItemId: number) => {
+            // const uniquePatterns = removeDuplicateEventPatterns(patterns);
+            const uniquePatterns = patterns;
+            const timeOffEvent =
+                uniquePatterns.length > 0
+                    ? {
+                          namePatterns: uniquePatterns,
+                          workItemId,
+                      }
+                    : undefined;
+            updateSettings({
+                timetracker: {
+                    ...tt,
+                    timeOffEvent,
+                },
+            });
+        },
+        [tt, updateSettings],
+    );
+
+    // ビュー切り替えハンドラー（メモ化）
+    const handleNavigateToMain = useCallback(() => setCurrentView("main"), []);
+    const handleNavigateToIgnorableEvents = useCallback(() => setCurrentView("ignorableEvents"), []);
+    const handleNavigateToTimeOffEvents = useCallback(() => setCurrentView("timeOffEvents"), []);
+    const handleNavigateToAppearance = useCallback(() => setCurrentView("appearance"), []);
 
     // 無視可能イベント設定ビュー
     if (currentView === "ignorableEvents") {
@@ -57,7 +81,7 @@ export function TimeTrackerSettingsPage() {
             <IgnorableEventsNavigationPage
                 patterns={tt?.ignorableEvents || []}
                 onChange={handleIgnorableEventsChange}
-                onBack={() => setCurrentView("main")}
+                onBack={handleNavigateToMain}
             />
         );
     }
@@ -69,14 +93,14 @@ export function TimeTrackerSettingsPage() {
                 patterns={tt?.timeOffEvent?.namePatterns}
                 workItemId={tt?.timeOffEvent?.workItemId}
                 onChange={handleTimeOffEventChange}
-                onBack={() => setCurrentView("main")}
+                onBack={handleNavigateToMain}
             />
         );
     }
 
     // 外観設定ビュー
     if (currentView === "appearance") {
-        return <AppearanceNavigationPage onBack={() => setCurrentView("main")} />;
+        return <AppearanceNavigationPage onBack={handleNavigateToMain} />;
     }
 
     // メイン設定ビュー
@@ -87,9 +111,9 @@ export function TimeTrackerSettingsPage() {
             <ScheduleAutoInputSettings />
             <PaidLeaveInputSettings />
             <NavigationSettings
-                onNavigateToTimeOffEvents={() => setCurrentView("timeOffEvents")}
-                onNavigateToIgnorableEvents={() => setCurrentView("ignorableEvents")}
-                onNavigateToAppearance={() => setCurrentView("appearance")}
+                onNavigateToTimeOffEvents={handleNavigateToTimeOffEvents}
+                onNavigateToIgnorableEvents={handleNavigateToIgnorableEvents}
+                onNavigateToAppearance={handleNavigateToAppearance}
             />
         </SettingPageLayout>
     );

@@ -1,7 +1,7 @@
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { ArrowRight20Regular, ChevronDown20Regular, ChevronUp20Regular } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 // アニメーション関連の定数
 const ACTION_HOVER_SCALE = 0.98;
@@ -200,8 +200,12 @@ export type InteractiveCardProps = {
  * 統合されたインタラクティブカードコンポーネント
  * - variant="action": クリック可能なアクションボタンとして機能
  * - variant="expandable": 展開可能なセクションとして機能
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - 既存のuseCallback/useMemoによる計算最適化を維持
  */
-export function InteractiveCard({
+export const InteractiveCard = memo(function InteractiveCard({
     title,
     description,
     icon,
@@ -360,4 +364,4 @@ export function InteractiveCard({
             )}
         </div>
     );
-}
+});

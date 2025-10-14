@@ -238,6 +238,65 @@ export const EventUtils = {
 };
 
 /**
+ *
+ */
+export const WorkItemUtils = {
+    /**
+     *
+     * @param workItem
+     * @returns
+     */
+    getText(workItem: WorkItemChldren) {
+        const pathReplace = workItem.folderPath.split("/").pop() || "";
+        const folderName = workItem.folderPath.replace("/" + pathReplace, "");
+        return `${workItem.name} ( ${folderName} )`;
+    },
+    /**
+     *
+     * @param workItem
+     * @returns
+     */
+    getMostNestChildren(workItem: WorkItem | WorkItem[]): WorkItemChldren[] {
+        if (Array.isArray(workItem)) {
+            return workItem.flatMap((item) => WorkItemUtils.getMostNestChildren(item));
+        }
+        if (workItem.subItems && workItem.subItems.length > 0) {
+            return workItem.subItems.flatMap((s) => WorkItemUtils.getMostNestChildren(s));
+        }
+        return [workItem];
+    },
+    /**
+     * WorkItemツリーを処理して、リーフノードでsubItemsが1つだけの場合は切り上げる
+     * @param workItems 処理対象のWorkItem配列
+     * @returns 処理済みのWorkItem配列
+     */
+    getTargetWorkItems(workItems: WorkItem[]): WorkItem[] {
+        return workItems.flatMap((workItem) => {
+            // subItemsがない場合はリーフノードなのでそのまま返す
+            if (!workItem.subItems || workItem.subItems.length === 0) {
+                return [workItem];
+            }
+
+            // subItemsを再帰的に処理
+            const processedSubItems = WorkItemUtils.getTargetWorkItems(workItem.subItems);
+
+            // 処理後のsubItemsが1つだけで、元のsubItemsが1つだけの場合は切り上げ
+            if (workItem.subItems.length === 1 && processedSubItems.length === 1) {
+                return processedSubItems;
+            }
+
+            // それ以外の場合は、処理済みのsubItemsを持つ新しいWorkItemを返す
+            return [
+                {
+                    ...workItem,
+                    subItems: processedSubItems,
+                },
+            ];
+        });
+    },
+};
+
+/**
  * UUID生成（ブラウザ互換）
  */
 function generateUUID(): string {
@@ -293,14 +352,4 @@ export function createSchedule(
         isPaidLeave,
         errorMessage,
     });
-}
-
-export function getMostNestChildren(workItem: WorkItem | WorkItem[]): WorkItemChldren[] {
-    if (Array.isArray(workItem)) {
-        return workItem.flatMap((item) => getMostNestChildren(item));
-    }
-    if (workItem.subItems && workItem.subItems.length > 0) {
-        return workItem.subItems.flatMap((s) => getMostNestChildren(s));
-    }
-    return [workItem];
 }

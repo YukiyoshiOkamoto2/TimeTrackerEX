@@ -1,5 +1,13 @@
+/**
+ * Setting Item Component
+ *
+ * パフォーマンス最適化:
+ * - React.memo でコンポーネントをメモ化
+ * - useMemo でラベル表示をメモ化
+ */
+
 import { makeStyles, tokens } from "@fluentui/react-components";
-import type { ReactNode } from "react";
+import { memo, useMemo, type ReactNode } from "react";
 
 const useStyles = makeStyles({
     item: {
@@ -46,19 +54,27 @@ export type SettingItemProps = {
     required?: boolean;
 };
 
-export function SettingItem({ label, description, control, required }: SettingItemProps) {
+export const SettingItem = memo(function SettingItem({ label, description, control, required }: SettingItemProps) {
     const styles = useStyles();
+
+    // ラベルコンテンツをメモ化
+    const labelContent = useMemo(
+        () => (
+            <>
+                {label}
+                {required && <span className={styles.itemLabelRequired}>*</span>}
+            </>
+        ),
+        [label, required, styles.itemLabelRequired],
+    );
 
     return (
         <div className={styles.item}>
             <div className={styles.itemContent}>
-                <div className={styles.itemLabel}>
-                    {label}
-                    {required && <span className={styles.itemLabelRequired}>*</span>}
-                </div>
+                <div className={styles.itemLabel}>{labelContent}</div>
                 {description && <div className={styles.itemDescription}>{description}</div>}
             </div>
             {control && <div className={styles.itemControl}>{control}</div>}
         </div>
     );
-}
+});

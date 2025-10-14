@@ -4,8 +4,9 @@
  * 統計情報を表示するカードコンポーネント
  */
 
-import { makeStyles, tokens } from "@fluentui/react-components";
+import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import type { ReactNode } from "react";
+import { memo, useMemo } from "react";
 
 export interface StatCardProps {
     /** アイコン要素 */
@@ -65,20 +66,35 @@ const useStyles = makeStyles({
 
 /**
  * 統計情報カードコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - クラス名とvalue表示をuseMemoで最適化
  */
-export function StatCard({ icon, label, value, unit, className }: StatCardProps) {
+export const StatCard = memo(function StatCard({ icon, label, value, unit, className }: StatCardProps) {
     const styles = useStyles();
 
+    // クラス名計算を最適化
+    const cardClassName = useMemo(() => mergeClasses(styles.statCard, className), [styles.statCard, className]);
+
+    // value表示を最適化
+    const displayValue = useMemo(
+        () => (
+            <>
+                {value}
+                {unit}
+            </>
+        ),
+        [value, unit],
+    );
+
     return (
-        <div className={`${styles.statCard} ${className || ""}`}>
+        <div className={cardClassName}>
             <div className={styles.statHeader}>
                 <div className={styles.statIcon}>{icon}</div>
                 <div className={styles.statLabel}>{label}</div>
             </div>
-            <div className={styles.statValue}>
-                {value}
-                {unit}
-            </div>
+            <div className={styles.statValue}>{displayValue}</div>
         </div>
     );
-}
+});

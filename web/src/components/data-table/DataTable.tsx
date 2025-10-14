@@ -50,6 +50,7 @@ const useStyles = makeStyles({
                 transform: "translateY(0)",
             },
         },
+        animationDelay: "0.1s",
         animationDuration: tokens.durationUltraSlow,
         animationTimingFunction: tokens.curveEasyEase,
         animationFillMode: "both",

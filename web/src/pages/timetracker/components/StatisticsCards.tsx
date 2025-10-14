@@ -10,6 +10,7 @@
 
 import { Card } from "@/components/card";
 import { DataTable } from "@/components/data-table";
+import { formatDateTime } from "@/lib/dateUtil";
 import type { Event, Schedule } from "@/types";
 import {
     Button,
@@ -43,7 +44,6 @@ import {
 } from "@fluentui/react-icons";
 import { useCallback, useMemo, useState } from "react";
 import type { AdjustedEventInfo, ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair } from "../models";
-import { formatDateTime } from "@/lib/dateUtil";
 
 /** ダイアログの種類 */
 type DetailDialogType = "targetDays" | "targetEvents";
@@ -270,7 +270,7 @@ const useStyles = makeStyles({
     eventCell: {
         display: "flex",
         flexDirection: "column",
-        gap: tokens.spacingVerticalS, 
+        gap: tokens.spacingVerticalS,
         paddingTop: tokens.spacingVerticalS,
         paddingBottom: tokens.spacingVerticalS,
     },
@@ -459,7 +459,11 @@ const calcStatisticsData = (
     const { fromStr, endStr } = getDateRangeString(data.enableSchedules);
 
     // 対象イベント数 = 有効なイベント
-    const totalEvents = data.enableEvents.length + data.adjustedEvents.length + data.paidLeaveDayEvents.length + data.scheduleEvents.length;
+    const totalEvents =
+        data.enableEvents.length +
+        data.adjustedEvents.length +
+        data.paidLeaveDayEvents.length +
+        data.scheduleEvents.length;
     const adjustedCount = data.adjustedEvents.length;
     const excludedCount = data.excludedEvents.length;
     const totalLinked = linkingEventWorkItemPair.length;

@@ -8,7 +8,7 @@ import {
     WorkItem,
     WorkItemChldren,
 } from "@/types";
-import { getMostNestChildren } from "@/types/utils";
+import { WorkItemUtils } from "@/types/utils";
 import { LinkingEventWorkItemPair, LinkingWorkItem } from "../models";
 
 const logger = getLogger("linking");
@@ -151,7 +151,7 @@ export function autoLinkEvents(
     settings: TimeTrackerSettings,
     historyManager: HistoryManager,
 ) {
-    const workItemsChildren = getMostNestChildren(workItems);
+    const workItemsChildren = WorkItemUtils.getMostNestChildren(workItems);
 
     let remainingEvents = events;
     const allLinked: LinkingEventWorkItemPair[] = [];

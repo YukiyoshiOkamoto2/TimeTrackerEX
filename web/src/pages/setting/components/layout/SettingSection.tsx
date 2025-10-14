@@ -77,6 +77,19 @@ const useStyles = makeStyles({
     },
     collapsibleContent: {
         borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+        animationName: {
+            from: {
+                opacity: 0,
+                transform: "translateY(-10px)",
+            },
+            to: {
+                opacity: 1,
+                transform: "translateY(0)",
+            },
+        },
+        animationDuration: tokens.durationNormal,
+        animationTimingFunction: tokens.curveEasyEase,
+        animationFillMode: "both",
     },
 });
 

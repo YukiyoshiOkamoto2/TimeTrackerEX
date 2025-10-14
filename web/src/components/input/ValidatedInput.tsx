@@ -17,7 +17,7 @@ import {
     tokens,
 } from "@fluentui/react-components";
 import { Checkmark20Regular, Dismiss20Regular, ErrorCircle20Regular } from "@fluentui/react-icons";
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 const useStyles = makeStyles({
     container: {
@@ -67,6 +67,11 @@ export interface ValidatedInputProps extends Omit<InputProps, "onChange" | "valu
  * - キャンセルボタンで元の値に戻せます
  * - 値の確定時にのみバリデーションが実行されるため、入力中のエラーを防げます
  *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - すべてのハンドラーをuseCallbackで最適化
+ * - 計算値（isEditing, currentValue, hasChanged）をuseMemoで最適化
+ *
  * @example
  * ```tsx
  * <ValidatedInput
@@ -77,17 +82,27 @@ export interface ValidatedInputProps extends Omit<InputProps, "onChange" | "valu
  * />
  * ```
  */
-export function ValidatedInput({ value, onCommit, className, ...inputProps }: ValidatedInputProps) {
+export const ValidatedInput = memo(function ValidatedInput({
+    value,
+    onCommit,
+    className,
+    ...inputProps
+}: ValidatedInputProps) {
     const styles = useStyles();
     const [editingValue, setEditingValue] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [showError, setShowError] = useState(false);
 
-    const isEditing = editingValue !== null;
-    const currentValue = isEditing ? editingValue : value;
-    const hasChanged = isEditing && editingValue !== value;
+    // 計算値を最適化
+    const isEditing = useMemo(() => editingValue !== null, [editingValue]);
+    const currentValue = useMemo<string>(
+        () => (isEditing ? (editingValue ?? "") : value),
+        [isEditing, editingValue, value],
+    );
+    const hasChanged = useMemo(() => isEditing && editingValue !== value, [isEditing, editingValue, value]);
 
-    const handleCommit = () => {
+    // ハンドラーを最適化
+    const handleCommit = useCallback(() => {
         if (editingValue !== null && editingValue !== value) {
             try {
                 onCommit(editingValue);
@@ -101,30 +116,36 @@ export function ValidatedInput({ value, onCommit, className, ...inputProps }: Va
                 setShowError(true);
             }
         }
-    };
+    }, [editingValue, value, onCommit]);
 
-    const handleCancel = () => {
+    const handleCancel = useCallback(() => {
         setEditingValue(null);
         setErrorMessage(null);
         setShowError(false);
-    };
+    }, []);
 
-    const handleChange = (_: unknown, data: { value: string }) => {
-        setEditingValue(data.value);
-        // 入力中はエラーをクリア
-        if (errorMessage) {
-            setErrorMessage(null);
-            setShowError(false);
-        }
-    };
+    const handleChange = useCallback(
+        (_: unknown, data: { value: string }) => {
+            setEditingValue(data.value);
+            // 入力中はエラーをクリア
+            if (errorMessage) {
+                setErrorMessage(null);
+                setShowError(false);
+            }
+        },
+        [errorMessage],
+    );
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-            handleCommit();
-        } else if (e.key === "Escape") {
-            handleCancel();
-        }
-    };
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+            if (e.key === "Enter") {
+                handleCommit();
+            } else if (e.key === "Escape") {
+                handleCancel();
+            }
+        },
+        [handleCommit, handleCancel],
+    );
 
     return (
         <div className={mergeClasses(styles.container, className)}>
@@ -165,4 +186,4 @@ export function ValidatedInput({ value, onCommit, className, ...inputProps }: Va
             )}
         </div>
     );
-}
+});

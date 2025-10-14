@@ -1,6 +1,7 @@
 import { useSettings } from "@/store/settings/SettingsProvider";
 import type { Language } from "@/types/settings";
 import { Field, makeStyles, Radio, RadioGroup, tokens } from "@fluentui/react-components";
+import { useCallback, useMemo } from "react";
 import { SettingPageLayout, SettingSection } from "../../components";
 
 const useStyles = makeStyles({
@@ -11,18 +12,30 @@ const useStyles = makeStyles({
     },
 });
 
+/**
+ * 一般設定ページ
+ *
+ * パフォーマンス最適化:
+ * - useCallback でハンドラーをメモ化
+ * - useMemo で設定とエラーをメモ化
+ */
 export function GeneralSettingsPage() {
     const styles = useStyles();
     const { settings, updateSettings, validationErrors } = useSettings();
-    const general = settings.general;
-    const errors = validationErrors.general;
 
-    // 言語変更ハンドラー
-    const handleLanguageChange = (_e: unknown, data: { value: string }) => {
-        updateSettings({
-            general: { language: data.value as Language },
-        });
-    };
+    // 設定とエラーをメモ化
+    const general = useMemo(() => settings.general, [settings.general]);
+    const errors = useMemo(() => validationErrors.general, [validationErrors.general]);
+
+    // 言語変更ハンドラー（メモ化）
+    const handleLanguageChange = useCallback(
+        (_e: unknown, data: { value: string }) => {
+            updateSettings({
+                general: { language: data.value as Language },
+            });
+        },
+        [updateSettings],
+    );
 
     return (
         <SettingPageLayout errors={errors}>

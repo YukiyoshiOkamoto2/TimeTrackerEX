@@ -3,10 +3,16 @@
  *
  * settingsDefinitionの定義から自動的にSettingItemを生成するヘルパーコンポーネント
  * 設定値の型に応じて適切なUIコントロールを自動生成します
+ *
+ * パフォーマンス最適化:
+ * - React.memo でコンポーネントをメモ化
+ * - useCallback でコントロール生成関数をメモ化
+ * - useMemo でスタイルオブジェクトをメモ化
  */
 
 import type { NumberSettingValueInfo, SettingValueInfo, StringSettingValueInfo } from "@/schema";
 import { Dropdown, Option, Switch } from "@fluentui/react-components";
+import { memo, useCallback, useMemo } from "react";
 import { SettingItem } from "./SettingItem";
 import { SettingValidatedInput } from "./SettingValidatedInput";
 
@@ -85,7 +91,7 @@ export type AutoSettingItemProps = {
 /**
  * 設定定義から自動的にSettingItemを生成する
  */
-export function AutoSettingItem({
+export const AutoSettingItem = memo(function AutoSettingItem({
     definition,
     value,
     onChange,
@@ -96,22 +102,37 @@ export function AutoSettingItem({
     placeholder,
     disabled,
 }: AutoSettingItemProps) {
-    const style = {
-        minWidth: minWidth,
-        maxWidth: maxWidth,
-    };
+    // スタイルオブジェクトをメモ化（参照の安定性を保証）
+    const style = useMemo(
+        () => ({
+            minWidth: minWidth,
+            maxWidth: maxWidth,
+        }),
+        [minWidth, maxWidth],
+    );
 
-    const control = renderControl(definition, value, onChange, style, placeholder, disabled);
+    // コントロールのレンダリングをメモ化
+    const control = useMemo(
+        () => renderControl(definition, value, onChange, style, placeholder, disabled),
+        [definition, value, onChange, style, placeholder, disabled],
+    );
+
+    // ラベルと説明をメモ化
+    const finalLabel = useMemo(() => label || definition.name, [label, definition.name]);
+    const finalDescription = useMemo(
+        () => description || definition.description,
+        [description, definition.description],
+    );
 
     return (
         <SettingItem
-            label={label || definition.name}
-            description={description || definition.description}
+            label={finalLabel}
+            description={finalDescription}
             control={control}
             required={definition.required}
         />
     );
-}
+});
 
 /**
  * 設定値の型に応じて適切なUIコントロールを返す
@@ -174,17 +195,39 @@ function renderControl(
  */
 type StringControlProps = BaseControlProps<string, StringSettingValueInfo>;
 
-function StringControl({ definition, value, onChange, style, placeholder, disabled }: StringControlProps) {
+const StringControl = memo(function StringControl({
+    definition,
+    value,
+    onChange,
+    style,
+    placeholder,
+    disabled,
+}: StringControlProps) {
+    // ドロップダウンのハンドラーをメモ化
+    const handleDropdownChange = useCallback(
+        (_: unknown, data: { optionValue?: string }) => onChange(data.optionValue as string),
+        [onChange],
+    );
+
+    // テキスト入力のハンドラーをメモ化
+    const handleInputCommit = useCallback((val: string | number) => onChange(val as string), [onChange]);
+
+    // プレースホルダーをメモ化
+    const finalPlaceholder = useMemo(
+        () => placeholder || (definition.literals ? `${definition.name}を選択` : definition.description),
+        [placeholder, definition.literals, definition.name, definition.description],
+    );
+
     // リテラル値がある場合はドロップダウン
     if (definition.literals && definition.literals.length > 0) {
         return (
             <Dropdown
                 value={value ?? ""}
                 selectedOptions={[value ?? ""]}
-                onOptionSelect={(_, data) => onChange(data.optionValue as string)}
+                onOptionSelect={handleDropdownChange}
                 style={style}
                 disabled={disabled}
-                placeholder={placeholder || `${definition.name}を選択`}
+                placeholder={finalPlaceholder}
             >
                 {definition.literals.map((literal) => (
                     <Option key={literal} value={literal}>
@@ -200,14 +243,14 @@ function StringControl({ definition, value, onChange, style, placeholder, disabl
         <SettingValidatedInput
             type={definition.isUrl ? "url" : "text"}
             value={value}
-            onCommit={(val) => onChange(val as string)}
+            onCommit={handleInputCommit}
             definition={definition}
-            placeholder={placeholder || definition.description}
+            placeholder={finalPlaceholder}
             style={style}
             disabled={disabled}
         />
     );
-}
+});
 
 // ========================================
 // ブール型コントロール
@@ -219,9 +262,12 @@ function StringControl({ definition, value, onChange, style, placeholder, disabl
  */
 type BooleanControlProps = Omit<BaseControlProps<boolean>, "definition" | "style" | "placeholder">;
 
-function BooleanControl({ value, onChange, disabled }: BooleanControlProps) {
-    return <Switch checked={value ?? false} onChange={(_, data) => onChange(data.checked)} disabled={disabled} />;
-}
+const BooleanControl = memo(function BooleanControl({ value, onChange, disabled }: BooleanControlProps) {
+    // ハンドラーをメモ化
+    const handleChange = useCallback((_: unknown, data: { checked: boolean }) => onChange(data.checked), [onChange]);
+
+    return <Switch checked={value ?? false} onChange={handleChange} disabled={disabled} />;
+});
 
 // ========================================
 // 数値型コントロール
@@ -233,17 +279,42 @@ function BooleanControl({ value, onChange, disabled }: BooleanControlProps) {
  */
 type NumberControlProps = BaseControlProps<number, NumberSettingValueInfo>;
 
-function NumberControl({ definition, value, onChange, style, placeholder, disabled }: NumberControlProps) {
+const NumberControl = memo(function NumberControl({
+    definition,
+    value,
+    onChange,
+    style,
+    placeholder,
+    disabled,
+}: NumberControlProps) {
+    // ドロップダウンのハンドラーをメモ化
+    const handleDropdownChange = useCallback(
+        (_: unknown, data: { optionValue?: string }) => onChange(Number(data.optionValue)),
+        [onChange],
+    );
+
+    // テキスト入力のハンドラーをメモ化
+    const handleInputCommit = useCallback((val: string | number) => onChange(val as number), [onChange]);
+
+    // プレースホルダーをメモ化
+    const finalPlaceholder = useMemo(
+        () => placeholder || (definition.literals ? `${definition.name}を選択` : definition.description),
+        [placeholder, definition.literals, definition.name, definition.description],
+    );
+
+    // 値の文字列表現をメモ化
+    const stringValue = useMemo(() => value?.toString() ?? "", [value]);
+
     // リテラル値がある場合はドロップダウン
     if (definition.literals && definition.literals.length > 0) {
         return (
             <Dropdown
-                value={value?.toString() ?? ""}
-                selectedOptions={[value?.toString() ?? ""]}
-                onOptionSelect={(_, data) => onChange(Number(data.optionValue))}
+                value={stringValue}
+                selectedOptions={[stringValue]}
+                onOptionSelect={handleDropdownChange}
                 style={style}
                 disabled={disabled}
-                placeholder={placeholder || `${definition.name}を選択`}
+                placeholder={finalPlaceholder}
             >
                 {definition.literals.map((literal) => (
                     <Option key={literal} value={literal.toString()} text={literal.toString()}>
@@ -259,11 +330,11 @@ function NumberControl({ definition, value, onChange, style, placeholder, disabl
         <SettingValidatedInput
             type="number"
             value={value}
-            onCommit={(val) => onChange(val as number)}
+            onCommit={handleInputCommit}
             definition={definition}
-            placeholder={placeholder || definition.description}
+            placeholder={finalPlaceholder}
             style={style}
             disabled={disabled}
         />
     );
-}
+});

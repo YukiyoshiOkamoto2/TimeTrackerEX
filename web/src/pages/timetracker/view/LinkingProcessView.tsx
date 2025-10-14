@@ -3,7 +3,7 @@ import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
 import type { Event, Schedule, WorkItem } from "@/types";
-import { EventUtils, getMostNestChildren } from "@/types/utils";
+import { EventUtils, WorkItemUtils } from "@/types/utils";
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { Sparkle24Regular } from "@fluentui/react-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -105,7 +105,7 @@ const changeLinkingEventWorkItemPair = (
     }
 
     // WorkItemを検索
-    const selectedWorkItem = getMostNestChildren(workItems).find((w) => w.id === workItemId);
+    const selectedWorkItem = WorkItemUtils.getMostNestChildren(workItems).find((w) => w.id === workItemId);
     if (!selectedWorkItem) {
         logger.error(`Unknown WorkItem ID: ${workItemId}`);
         return null;
@@ -177,7 +177,6 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
         paidLeaveDayEvents: [],
         scheduleEvents: [],
     });
-    const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [linkingEventWorkItemPair, setLinkingEventWorkItemPair] = useState<LinkingEventWorkItemPair[]>([]);
     const linkingEventUUID = useMemo(
         () => linkingEventWorkItemPair.map((l) => l.event.uuid),

@@ -1,6 +1,13 @@
+/**
+ * Setting Navigation Item Component
+ *
+ * パフォーマンス最適化:
+ * - React.memo でコンポーネントをメモ化
+ */
+
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { ChevronRight20Regular } from "@fluentui/react-icons";
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { Card } from "../../../../components/card";
 
 const useStyles = makeStyles({
@@ -62,7 +69,12 @@ export type SettingNavigationItemProps = {
  * Windows設定画面スタイルのナビゲーション項目
  * 項目全体がクリック可能で、右側にバッジとシェブロンアイコンを表示
  */
-export function SettingNavigationItem({ title, description, badge, onClick }: SettingNavigationItemProps) {
+export const SettingNavigationItem = memo(function SettingNavigationItem({
+    title,
+    description,
+    badge,
+    onClick,
+}: SettingNavigationItemProps) {
     const styles = useStyles();
 
     return (
@@ -79,4 +91,4 @@ export function SettingNavigationItem({ title, description, badge, onClick }: Se
             </div>
         </Card>
     );
-}
+});

@@ -1,5 +1,13 @@
+/**
+ * Card Component
+ *
+ * パフォーマンス最適化:
+ * - React.memo でコンポーネントをメモ化
+ * - useMemo でクラス名の計算をメモ化
+ */
+
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
-import type { ReactNode } from "react";
+import { memo, useMemo, type ReactNode } from "react";
 
 const useStyles = makeStyles({
     card: {
@@ -47,26 +55,31 @@ export type CardProps = {
     style?: React.CSSProperties;
 };
 
-export function Card({ children, hoverable = false, onClick, className, style }: CardProps) {
+export const Card = memo(function Card({ children, hoverable = false, onClick, className, style }: CardProps) {
     const styles = useStyles();
 
-    let cardClassName = styles.card;
+    // クラス名の計算をメモ化
+    const cardClassName = useMemo(() => {
+        let result = styles.card;
 
-    if (className) {
-        cardClassName = mergeClasses(cardClassName, className);
-    }
+        if (className) {
+            result = mergeClasses(result, className);
+        }
 
-    if (hoverable) {
-        cardClassName = mergeClasses(cardClassName, styles.hoverable);
-    }
+        if (hoverable) {
+            result = mergeClasses(result, styles.hoverable);
+        }
 
-    if (onClick) {
-        cardClassName = mergeClasses(cardClassName, styles.clickable);
-    }
+        if (onClick) {
+            result = mergeClasses(result, styles.clickable);
+        }
+
+        return result;
+    }, [styles.card, styles.hoverable, styles.clickable, className, hoverable, onClick]);
 
     return (
         <div className={cardClassName} onClick={onClick} style={style}>
             {children}
         </div>
     );
-}
+});

@@ -10,7 +10,7 @@ import { appMessageDialogRef } from "@/components/message-dialog";
 import type { HistoryEntry } from "@/core/history";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
-import type { WorkItem } from "@/types";
+import { WorkItemUtils, type WorkItem } from "@/types";
 import {
     Badge,
     Button,
@@ -19,21 +19,19 @@ import {
     DrawerBody,
     DrawerHeader,
     DrawerHeaderTitle,
-    Dropdown,
     Menu,
     MenuItem,
     MenuList,
     MenuPopover,
     MenuTrigger,
-    Option,
     TableCellLayout,
-    type TableColumnDefinition,
     Toolbar,
     ToolbarButton,
     ToolbarDivider,
     createTableColumn,
     makeStyles,
     tokens,
+    type TableColumnDefinition,
 } from "@fluentui/react-components";
 import {
     ArrowDownload24Regular,
@@ -42,10 +40,12 @@ import {
     CheckmarkCircle24Regular,
     Delete24Regular,
     Dismiss24Regular,
+    Edit20Regular,
     History24Regular,
     MoreVertical24Regular,
 } from "@fluentui/react-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { WorkItemTreeViewDialog } from "./WorkItemTreeViewDialog";
 
 const logger = getLogger("HistoryDrawer");
 
@@ -169,9 +169,13 @@ const useStyles = makeStyles({
     },
 });
 
-// ============================================================================
-// ユーティリティ関数
-// ============================================================================
+/** テーブル列の幅設定 */
+const columnSizingOptions = {
+    eventName: { minWidth: 250, idealWidth: 350 },
+    itemName: { minWidth: 230, idealWidth: 300 },
+    useCount: { minWidth: 80, idealWidth: 90 },
+    lastUsedDate: { minWidth: 140, idealWidth: 170 },
+};
 
 /**
  * 最終更新日時をフォーマット
@@ -206,6 +210,13 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
     const [historyData, setHistoryData] = useState<HistoryRow[]>([]);
     const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
     const [editingKey, setEditingKey] = useState<string | null>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    // WorkItemツリーから実際の作業アイテムを取得（subItemsが1つだけの階層を自動展開）
+    const targetWorkItems = useMemo(() => {
+        const rootItems = workItems[0]?.subItems ?? [];
+        return WorkItemUtils.getTargetWorkItems(rootItems);
+    }, [workItems]);
 
     /**
      * 履歴データを読み込む
@@ -245,7 +256,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
         const deletedCount = historyManager.deleteByKeys(Array.from(selectedKeys));
         historyManager.dump();
         await appMessageDialogRef.showMessageAsync("削除完了", `${deletedCount}件の履歴を削除しました`, "INFO");
-        
+
         loadHistory();
     }, [selectedKeys, historyManager, loadHistory]);
 
@@ -325,14 +336,66 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
     }, [historyManager, loadHistory]);
 
     /**
+     * WorkItemを再帰的に検索
+     */
+    const findWorkItemById = useCallback((workItemId: string, items: WorkItem[]): WorkItem | undefined => {
+        for (const item of items) {
+            if (item.id === workItemId) {
+                return item;
+            }
+            if (item.subItems) {
+                const found = findWorkItemById(workItemId, item.subItems);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+        return undefined;
+    }, []);
+
+    /**
+     * 作業項目選択ダイアログを開く
+     */
+    const handleOpenDialog = useCallback((key: string) => {
+        setEditingKey(key);
+        setDialogOpen(true);
+    }, []);
+
+    /**
      * 作業項目を変更
      */
-    const handleWorkItemChange = useCallback(
-        async (key: string, newItemId: string) => {
-            const workItem = workItems.find((w) => w.id === newItemId);
+    const handleSelectWorkItem = useCallback(
+        async (workItemId: string) => {
+            if (!editingKey) return;
+
+            // 空文字の場合は履歴削除の確認
+            if (!workItemId) {
+                const confirmed = await appMessageDialogRef.showConfirmAsync(
+                    "履歴削除",
+                    "この履歴を削除しますか？\nこの操作は取り消せません。",
+                    "WARN",
+                );
+
+                if (!confirmed) {
+                    setDialogOpen(false);
+                    setEditingKey(null);
+                    return;
+                }
+
+                // 履歴を削除
+                const deletedCount = historyManager.deleteByKeys([editingKey]);
+                historyManager.dump();
+                await appMessageDialogRef.showMessageAsync("削除完了", `${deletedCount}件の履歴を削除しました`, "INFO");
+                loadHistory();
+                setEditingKey(null);
+                setDialogOpen(false);
+                return;
+            }
+
+            const workItem = findWorkItemById(workItemId, workItems);
             if (!workItem) return;
 
-            historyManager.updateWorkItemId(key, newItemId, workItem.name);
+            historyManager.updateWorkItemId(editingKey, workItemId, workItem.name);
             await appMessageDialogRef.showMessageAsync(
                 "更新完了",
                 `作業項目を「${workItem.name}」に変更しました`,
@@ -341,8 +404,16 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
             loadHistory();
             setEditingKey(null);
         },
-        [workItems, historyManager, loadHistory],
+        [editingKey, workItems, historyManager, loadHistory, findWorkItemById],
     );
+
+    /**
+     * クリア（未選択）時の処理
+     */
+    const handleClear = useCallback(() => {
+        // 空文字を渡して削除確認へ
+        handleSelectWorkItem("");
+    }, [handleSelectWorkItem]);
 
     /**
      * Drawerを閉じる
@@ -351,66 +422,45 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
 
     const columns: TableColumnDefinition<HistoryRow>[] = useMemo(
         () => [
-        createTableColumn<HistoryRow>({
-            columnId: "eventName",
-            compare: (a, b) => a.eventName.localeCompare(b.eventName),
-            renderHeaderCell: () => <TableCellLayout>イベント名</TableCellLayout>,
-            renderCell: (item) => <TableCellLayout>{item.eventName || "無題"}</TableCellLayout>,
-        }),
-        createTableColumn<HistoryRow>({
-            columnId: "itemName",
-            compare: (a, b) => a.itemName.localeCompare(b.itemName),
-            renderHeaderCell: () => <TableCellLayout>作業項目</TableCellLayout>,
-            renderCell: (item) => {
-                const isEditing = editingKey === item.key;
-                return (
+            createTableColumn<HistoryRow>({
+                columnId: "eventName",
+                compare: (a, b) => a.eventName.localeCompare(b.eventName),
+                renderHeaderCell: () => <TableCellLayout>イベント名</TableCellLayout>,
+                renderCell: (item) => <TableCellLayout>{item.eventName || "無題"}</TableCellLayout>,
+            }),
+            createTableColumn<HistoryRow>({
+                columnId: "itemName",
+                compare: (a, b) => a.itemName.localeCompare(b.itemName),
+                renderHeaderCell: () => <TableCellLayout>コード名称</TableCellLayout>,
+                renderCell: (item) => (
                     <TableCellLayout>
-                        {isEditing ? (
-                            <Dropdown
-                                placeholder="作業項目を選択..."
-                                value={item.itemName}
-                                defaultSelectedOptions={[item.itemId]}
-                                onOptionSelect={(_, data) => {
-                                    if (data.optionValue) {
-                                        handleWorkItemChange(item.key, data.optionValue);
-                                    }
-                                }}
-                                onBlur={() => setEditingKey(null)}
-                            >
-                                {workItems.map((w) => (
-                                    <Option key={w.id} value={w.id}>
-                                        {w.name}
-                                    </Option>
-                                ))}
-                            </Dropdown>
-                        ) : (
-                            <span onClick={() => setEditingKey(item.key)} className={styles.editableCell}>
-                                {item.itemName}
-                            </span>
-                        )}
+                        <Button
+                            appearance="subtle"
+                            icon={<Edit20Regular />}
+                            iconPosition="after"
+                            onClick={() => handleOpenDialog(item.key)}
+                            style={{ minWidth: "120px" }}
+                        >
+                            {item.itemName}
+                        </Button>
                     </TableCellLayout>
-                );
-            },
-        }),
-        createTableColumn<HistoryRow>({
-            columnId: "useCount",
-            compare: (a, b) => b.useCount - a.useCount,
-            renderHeaderCell: () => <TableCellLayout>使用回数</TableCellLayout>,
-            renderCell: (item) => <TableCellLayout>{item.useCount}回</TableCellLayout>,
-        }),
-        createTableColumn<HistoryRow>({
-            columnId: "lastUsedDate",
-            compare: (a, b) => b.lastUsedDate.getTime() - a.lastUsedDate.getTime(),
-            renderHeaderCell: () => <TableCellLayout>最終使用日時</TableCellLayout>,
-            renderCell: (item) => <TableCellLayout>{item.lastUsedDate.toLocaleString("ja-JP")}</TableCellLayout>,
-        }),
+                ),
+            }),
+            createTableColumn<HistoryRow>({
+                columnId: "useCount",
+                compare: (a, b) => b.useCount - a.useCount,
+                renderHeaderCell: () => <TableCellLayout>使用回数</TableCellLayout>,
+                renderCell: (item) => <TableCellLayout>{item.useCount}回</TableCellLayout>,
+            }),
+            createTableColumn<HistoryRow>({
+                columnId: "lastUsedDate",
+                compare: (a, b) => b.lastUsedDate.getTime() - a.lastUsedDate.getTime(),
+                renderHeaderCell: () => <TableCellLayout>最終使用日時</TableCellLayout>,
+                renderCell: (item) => <TableCellLayout>{item.lastUsedDate.toLocaleString("ja-JP")}</TableCellLayout>,
+            }),
         ],
-        [editingKey, handleWorkItemChange, styles.editableCell, workItems],
+        [handleOpenDialog],
     );
-
-    // ============================================================================
-    // レンダリング
-    // ============================================================================
 
     return (
         <Drawer
@@ -423,7 +473,12 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
             <DrawerHeader>
                 <DrawerHeaderTitle
                     action={
-                        <Button appearance="subtle" aria-label="閉じる" icon={<Dismiss24Regular />} onClick={handleClose} />
+                        <Button
+                            appearance="subtle"
+                            aria-label="閉じる"
+                            icon={<Dismiss24Regular />}
+                            onClick={handleClose}
+                        />
                     }
                 >
                     <div className={styles.drawerHeader}>
@@ -498,13 +553,23 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                         columns={columns}
                         getRowId={(item) => item.key}
                         sortable
+                        resizableColumns
                         selectable
                         selectedKeys={selectedKeys}
                         onSelectionChange={setSelectedKeys}
+                        columnSizingOptions={columnSizingOptions}
                         className={styles.tableContainer}
                     />
                 )}
             </DrawerBody>
+
+            <WorkItemTreeViewDialog
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+                workItems={targetWorkItems}
+                onSelectWorkItem={handleSelectWorkItem}
+                onClear={handleClear}
+            />
         </Drawer>
     );
 }

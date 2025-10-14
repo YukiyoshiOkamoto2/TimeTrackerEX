@@ -7,11 +7,38 @@ const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalS,
+        animationName: {
+            from: {
+                opacity: 0,
+                transform: "translateY(12px)",
+            },
+            to: {
+                opacity: 1,
+                transform: "translateY(0)",
+            },
+        },
+        animationDuration: tokens.durationFast,
+        animationTimingFunction: tokens.curveEasyEase,
+        animationFillMode: "both",
     },
     content: {
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalXXL,
+        animationName: {
+            from: {
+                opacity: 0,
+                transform: "translateY(12px)",
+            },
+            to: {
+                opacity: 1,
+                transform: "translateY(0)",
+            },
+        },
+        animationDuration: tokens.durationNormal,
+        animationDelay: "0.1s",
+        animationTimingFunction: tokens.curveEasyEase,
+        animationFillMode: "both",
     },
 });
 

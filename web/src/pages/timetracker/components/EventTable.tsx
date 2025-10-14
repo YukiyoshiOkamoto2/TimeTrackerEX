@@ -1,43 +1,30 @@
 import { DataTable } from "@/components/data-table";
-import { TreeView } from "@/components/tree/Tree";
-import type { TreeItem } from "@/components/tree/TreeItem";
-import { treeViewHelper } from "@/components/tree/TreeViewHelper";
+import { formatDateTime } from "@/lib/dateUtil";
 import { useSettings } from "@/store";
 import type { Event, Schedule, WorkItem } from "@/types";
-import { EventUtils } from "@/types/utils";
+import { EventUtils, WorkItemUtils } from "@/types/utils";
 import {
     Button,
     createTableColumn,
-    Dialog,
-    DialogBody,
-    DialogContent,
-    DialogSurface,
-    DialogTitle,
-    Input,
     makeStyles,
     TableCellLayout,
     TableColumnDefinition,
     tokens,
     Tooltip,
-    TreeItemLayout,
-    TreeItemValue,
 } from "@fluentui/react-components";
 import {
     Bot20Regular,
     Calendar20Regular,
     CalendarClock20Regular,
     CircleSmall20Filled,
-    Dismiss20Regular,
-    Document20Regular,
     Edit20Regular,
-    Folder20Regular,
     History20Regular,
     PersonEdit20Regular,
     WeatherSunny20Regular,
 } from "@fluentui/react-icons";
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { LinkingEventWorkItemPair } from "../models";
-import { formatDateTime } from "@/lib/dateUtil";
+import { WorkItemTreeViewDialog } from "./WorkItemTreeViewDialog";
 
 // イベントテーブル用の型定義
 type TableRow = {
@@ -137,57 +124,6 @@ const useStyles = makeStyles({
         padding: `${tokens.spacingVerticalSNudge} ${tokens.spacingHorizontalS}`,
         fontSize: tokens.fontSizeBase300,
     },
-    dialogSurface: {
-        minWidth: "800px",
-        maxHeight: "95vh",
-    },
-    dialogHeader: {
-        display: "flex",
-        gap: tokens.spacingHorizontalS,
-        alignItems: "center",
-        marginBottom: tokens.spacingVerticalM,
-    },
-    dialogTree: {
-        overflowY: "auto",
-        maxHeight: "560px",
-        minHeight: "400px",
-    },
-    historySection: {
-        marginBottom: tokens.spacingVerticalM,
-        paddingBottom: tokens.spacingVerticalS,
-        borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
-    },
-    historyTitle: {
-        fontSize: tokens.fontSizeBase200,
-        fontWeight: tokens.fontWeightSemibold,
-        color: tokens.colorNeutralForeground3,
-        marginBottom: tokens.spacingVerticalXS,
-    },
-    historyList: {
-        display: "flex",
-        flexDirection: "column",
-        gap: tokens.spacingVerticalXXS,
-    },
-    historyItem: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalXS,
-        padding: `${tokens.spacingVerticalXXS} ${tokens.spacingHorizontalS}`,
-        borderRadius: tokens.borderRadiusMedium,
-        cursor: "pointer",
-        transition: "background-color 0.1s ease",
-        ":hover": {
-            backgroundColor: tokens.colorNeutralBackground1Hover,
-        },
-    },
-    historyItemIcon: {
-        color: tokens.colorNeutralForeground3,
-    },
-    historyItemText: {
-        fontSize: tokens.fontSizeBase300,
-        color: tokens.colorNeutralForeground1,
-        flex: 1,
-    },
 });
 
 const columnSizingOptions = {
@@ -201,67 +137,6 @@ const columnSizingOptions = {
 // 型ガード: LinkingEventWorkItemPair かどうかを判定
 function isLinkingEventWorkItemPair(obj: EventTableRow["item"]): obj is LinkingEventWorkItemPair {
     return "linkingWorkItem" in obj;
-}
-
-// TreeItem の value から WorkItem を再帰的に検索
-function findWorkItem(value: TreeItemValue, workItems: WorkItem[]): WorkItem | undefined {
-    for (const item of workItems) {
-        const itemValue = treeViewHelper.getPath([item.folderPath, item.folderName, item.name]);
-        if (itemValue === value) {
-            return item;
-        }
-
-        // 子アイテムを再帰的に検索
-        if (item.subItems) {
-            const found = findWorkItem(value, item.subItems);
-            if (found) {
-                return found;
-            }
-        }
-    }
-    return undefined;
-}
-
-// WorkItem を TreeItem に変換（検索クエリでフィルタリング）
-function convertWorkItemsToTree(
-    query: string,
-    items: WorkItem[],
-    onItemClick: (itemValue: string) => void,
-): TreeItem[] {
-    // 検索クエリでフィルタリング
-    const filteredItems = query
-        ? items.filter((item) => JSON.stringify(item).toLowerCase().includes(query.toLowerCase()))
-        : items;
-
-    return filteredItems.map((item) => {
-        const hasChildren = !!item.subItems?.length;
-        const itemValue = treeViewHelper.getPath([item.folderPath, item.folderName, item.name]);
-
-        // フォルダーアイテムまたはリーフアイテムのヘッダーを作成
-        const header: ReactNode = hasChildren ? (
-            <TreeItemLayout iconBefore={<Folder20Regular />}>{item.name}</TreeItemLayout>
-        ) : (
-            <TreeItemLayout
-                iconBefore={<Document20Regular />}
-                onClick={() => onItemClick(itemValue)}
-                style={{ cursor: "pointer" }}
-            >
-                <div style={{ display: "flex", alignItems: "center", gap: tokens.spacingHorizontalXS }}>
-                    <span style={{ fontWeight: tokens.fontWeightSemibold, color: tokens.colorBrandForeground1 }}>
-                        {item.id}
-                    </span>
-                    {" - "}
-                    <span>{item.name}</span>
-                </div>
-            </TreeItemLayout>
-        );
-
-        return {
-            header,
-            value: itemValue,
-            children: hasChildren ? convertWorkItemsToTree(query, item.subItems!, onItemClick) : undefined,
-        };
-    });
 }
 
 // 入力タイプに応じたバッジのアイコンとスタイルを取得
@@ -296,9 +171,7 @@ function createEventColumns(
                     <div className={styles.dateTimeCell}>
                         <Calendar20Regular />
                         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                            <div>
-                                {formatDateTime(item.event.schedule.start, item.event.schedule.end)}
-                            </div>
+                            <div>{formatDateTime(item.event.schedule.start, item.event.schedule.end)}</div>
                             {item.event.oldSchedule && (
                                 <div
                                     style={{
@@ -420,12 +293,10 @@ function convertToTableRow(row: EventTableRow): TableRow {
     // LinkingEventWorkItemPairの場合（紐づけ済み）
     if (isLinkingEventWorkItemPair(item)) {
         const { workItem } = item.linkingWorkItem;
-        const pathReplace = workItem.folderPath.split("/").pop() || "";
-        const folderName = workItem.folderPath.replace("/" + pathReplace, "");
         return {
             event: item.event,
             workItemId: workItem.id,
-            workItemName: `${workItem.name} ( ${folderName} )`,
+            workItemName: WorkItemUtils.getText(workItem),
             inputType: getInputType(item.linkingWorkItem),
         };
     }
@@ -439,46 +310,16 @@ function convertToTableRow(row: EventTableRow): TableRow {
     };
 }
 
-// WorkItemツリーを処理して、リーフノードでsubItemsが1つだけの場合は切り上げる
-function getTargetWorkItems(workItems: WorkItem[]): WorkItem[] {
-    return workItems.flatMap((workItem) => {
-        // subItemsがない場合はリーフノードなのでそのまま返す
-        if (!workItem.subItems || workItem.subItems.length === 0) {
-            return [workItem];
-        }
-
-        // subItemsを再帰的に処理
-        const processedSubItems = getTargetWorkItems(workItem.subItems);
-
-        // 処理後のsubItemsが1つだけで、元のsubItemsが1つだけの場合は切り上げ
-        // （つまり、リーフノードが1つだけの親を削除）
-        if (workItem.subItems.length === 1 && processedSubItems.length === 1) {
-            return processedSubItems;
-        }
-
-        // それ以外の場合は、処理済みのsubItemsを持つ新しいWorkItemを返す
-        return [
-            {
-                ...workItem,
-                subItems: processedSubItems,
-            },
-        ];
-    });
-}
-
 export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChange }: EventTableProps) {
     const styles = useStyles();
     const { settings } = useSettings();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<string>("");
-    const [query, setQuery] = useState("");
-    const [openItemValues, setOpenItemValues] = useState<TreeItemValue[]>([]);
-    const [recentWorkItems, setRecentWorkItems] = useState<WorkItem[]>([]);
 
     // WorkItemツリーから実際の作業アイテムを取得（subItemsが1つだけの階層を自動展開）
     const targetWorkItems = useMemo(() => {
         const rootItems = workItemsNotUse[0]?.subItems ?? [];
-        return getTargetWorkItems(rootItems);
+        return WorkItemUtils.getTargetWorkItems(rootItems);
     }, [workItemsNotUse]);
 
     // 選択中のイベントを取得
@@ -495,58 +336,21 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
         return isLinkingEventWorkItemPair(row.item) ? row.item.event : row.item;
     }, [events, selectedEventId]);
 
-    const closeDialog = useCallback(() => {
-        setDialogOpen(false);
-        setQuery("");
-    }, []);
-
     const handleOpenDialog = useCallback((eventId: string) => {
         setSelectedEventId(eventId);
         setDialogOpen(true);
-        setQuery("");
     }, []);
+
+    const handleSelectWorkItem = useCallback(
+        (workItemId: string) => {
+            onWorkItemChange(selectedEventId, workItemId);
+        },
+        [onWorkItemChange, selectedEventId],
+    );
 
     const handleClear = useCallback(() => {
         onWorkItemChange(selectedEventId, "");
-        closeDialog();
-    }, [onWorkItemChange, selectedEventId, closeDialog]);
-
-    const handleItemClick = useCallback(
-        (value: TreeItemValue) => {
-            const workItem = findWorkItem(value, targetWorkItems);
-            if (workItem) {
-                onWorkItemChange(selectedEventId, workItem.id);
-
-                // 履歴に追加（重複を除く）
-                if (settings.timetracker?.appearance?.historyDisplayCount) {
-                    const maxCount = settings.timetracker.appearance.historyDisplayCount;
-                    const filteredHistory = recentWorkItems.filter((item) => item.id !== workItem.id);
-                    setRecentWorkItems([workItem, ...filteredHistory.slice(0, maxCount - 1)]);
-                }
-
-                closeDialog();
-            }
-        },
-        [onWorkItemChange, targetWorkItems, selectedEventId, closeDialog, settings, recentWorkItems],
-    );
-
-    const treeItems = useMemo(
-        () => convertWorkItemsToTree(query, targetWorkItems, handleItemClick),
-        [targetWorkItems, handleItemClick, query],
-    );
-
-    // 検索時は全ツリーを展開
-    useEffect(() => {
-        if (query) {
-            // ツリーの全ての値を再帰的に取得
-            const getAllTreeValues = (items: TreeItem[]): string[] => {
-                return items.flatMap((item) => [item.value, ...(item.children ? getAllTreeValues(item.children) : [])]);
-            };
-            setOpenItemValues(getAllTreeValues(treeItems));
-        } else {
-            setOpenItemValues([]);
-        }
-    }, [query, treeItems]);
+    }, [onWorkItemChange, selectedEventId]);
 
     // テーブルデータと列定義を生成
     const tableRows: TableRow[] = useMemo(() => events.map(convertToTableRow), [events]);
@@ -565,63 +369,15 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
                 />
             </div>
 
-            <Dialog open={dialogOpen} onOpenChange={(_, data) => setDialogOpen(data.open)}>
-                <DialogSurface className={styles.dialogSurface}>
-                    <DialogBody>
-                        <DialogTitle>作業コード選択{selectedEvent && ": " + selectedEvent.name}</DialogTitle>
-                        <DialogContent>
-                            <div className={styles.dialogHeader}>
-                                <Input
-                                    placeholder="検索..."
-                                    value={query}
-                                    onChange={(_, data) => setQuery(data.value)}
-                                    style={{ flex: 1 }}
-                                />
-                                <Button appearance="outline" icon={<Dismiss20Regular />} onClick={handleClear}>
-                                    未選択
-                                </Button>
-                            </div>
-
-                            {/* 履歴表示（検索していない時のみ） */}
-                            {!query && recentWorkItems.length > 0 && (
-                                <div className={styles.historySection}>
-                                    <div className={styles.historyTitle}>最近使用した項目</div>
-                                    <div className={styles.historyList}>
-                                        {recentWorkItems.map((workItem) => (
-                                            <div
-                                                key={workItem.id}
-                                                className={styles.historyItem}
-                                                onClick={() => {
-                                                    onWorkItemChange(selectedEventId, workItem.id);
-                                                    // 履歴の順序を更新（選択したアイテムを先頭に）
-                                                    const filteredHistory = recentWorkItems.filter(
-                                                        (item) => item.id !== workItem.id,
-                                                    );
-                                                    setRecentWorkItems([workItem, ...filteredHistory]);
-                                                    closeDialog();
-                                                }}
-                                            >
-                                                <Document20Regular className={styles.historyItemIcon} />
-                                                <span className={styles.historyItemText}>
-                                                    {workItem.id} - {workItem.name}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <TreeView
-                                items={treeItems}
-                                openItemValues={openItemValues}
-                                onOpenChanged={setOpenItemValues}
-                                onSelectItemChanged={handleItemClick}
-                                className={styles.dialogTree}
-                            />
-                        </DialogContent>
-                    </DialogBody>
-                </DialogSurface>
-            </Dialog>
+            <WorkItemTreeViewDialog
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+                selectedEvent={selectedEvent}
+                workItems={targetWorkItems}
+                historyDisplayCount={settings.timetracker?.appearance?.historyDisplayCount}
+                onSelectWorkItem={handleSelectWorkItem}
+                onClear={handleClear}
+            />
         </div>
     );
 }

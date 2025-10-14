@@ -150,12 +150,7 @@ export function TimeTrackerPage() {
      * アニメーションクラスを取得（スライド方向に応じたクラスを返す）
      */
     const animationClass = useMemo(
-        () =>
-            slideDirection === "right"
-                ? styles.slideInRight
-                : slideDirection === "left"
-                  ? styles.slideInLeft
-                  : "",
+        () => (slideDirection === "right" ? styles.slideInRight : slideDirection === "left" ? styles.slideInLeft : ""),
         [slideDirection, styles.slideInLeft, styles.slideInRight],
     );
 
@@ -191,12 +186,9 @@ export function TimeTrackerPage() {
     /**
      * CompletionViewのメッセージ表示ハンドラー
      */
-    const handleShowMessage = useCallback(
-        (type: "success" | "error", title: string, message: string) => {
-            appMessageDialogRef.showMessageAsync(title, message, type === "success" ? "INFO" : "ERROR");
-        },
-        [],
-    );
+    const handleShowMessage = useCallback((type: "success" | "error", title: string, message: string) => {
+        appMessageDialogRef.showMessageAsync(title, message, type === "success" ? "INFO" : "ERROR");
+    }, []);
 
     return (
         <>
