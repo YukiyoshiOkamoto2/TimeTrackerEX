@@ -37,6 +37,7 @@ import {
 } from "@fluentui/react-icons";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { LinkingEventWorkItemPair } from "../models";
+import { formatDateTime } from "@/lib/dateUtil";
 
 // イベントテーブル用の型定義
 type TableRow = {
@@ -296,20 +297,7 @@ function createEventColumns(
                         <Calendar20Regular />
                         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                             <div>
-                                {item.event.schedule.start.toLocaleDateString("ja-JP", {
-                                    month: "numeric",
-                                    day: "numeric",
-                                    weekday: "short",
-                                })}{" "}
-                                {item.event.schedule.start.toLocaleTimeString("ja-JP", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })}
-                                ~
-                                {item.event.schedule.end?.toLocaleTimeString("ja-JP", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })}
+                                {formatDateTime(item.event.schedule.start, item.event.schedule.end)}
                             </div>
                             {item.event.oldSchedule && (
                                 <div

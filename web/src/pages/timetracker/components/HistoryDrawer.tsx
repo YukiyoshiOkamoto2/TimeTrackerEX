@@ -27,7 +27,7 @@ import {
     MenuTrigger,
     Option,
     TableCellLayout,
-    TableColumnDefinition,
+    type TableColumnDefinition,
     Toolbar,
     ToolbarButton,
     ToolbarDivider,
@@ -45,15 +45,31 @@ import {
     History24Regular,
     MoreVertical24Regular,
 } from "@fluentui/react-icons";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const logger = getLogger("HistoryDrawer");
 
+/** DrawerのProps */
+export interface HistoryDrawerProps {
+    /** Drawerの開閉状態 */
+    open: boolean;
+    /** Drawerの開閉状態変更ハンドラー */
+    onOpenChange: (open: boolean) => void;
+    /** 作業項目のリスト */
+    workItems: WorkItem[];
+}
+
+/** 履歴テーブルの行データ */
+type HistoryRow = HistoryEntry & { key: string };
+
 const useStyles = makeStyles({
+    // Drawer
     drawer: {
         width: "900px",
         maxWidth: "95vw",
     },
+
+    // ヘッダー
     drawerHeader: {
         display: "flex",
         alignItems: "center",
@@ -77,6 +93,8 @@ const useStyles = makeStyles({
         fontWeight: "600",
         color: tokens.colorNeutralForeground1,
     },
+
+    // 統計情報
     statsContainer: {
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
@@ -84,6 +102,8 @@ const useStyles = makeStyles({
         marginBottom: tokens.spacingVerticalL,
         paddingTop: tokens.spacingVerticalM,
     },
+
+    // ツールバー
     toolbar: {
         marginBottom: tokens.spacingVerticalM,
         padding: "12px",
@@ -94,6 +114,8 @@ const useStyles = makeStyles({
         flexWrap: "wrap",
         border: `1px solid ${tokens.colorNeutralStroke2}`,
     },
+
+    // テーブル
     tableContainer: {
         height: "calc(100vh - 450px)",
         overflowY: "auto",
@@ -101,6 +123,18 @@ const useStyles = makeStyles({
         borderRadius: tokens.borderRadiusMedium,
         backgroundColor: tokens.colorNeutralBackground1,
     },
+    editableCell: {
+        cursor: "pointer",
+        padding: "4px 8px",
+        borderRadius: tokens.borderRadiusSmall,
+        transition: "all 0.15s ease",
+        ":hover": {
+            backgroundColor: tokens.colorNeutralBackground1Hover,
+            color: tokens.colorBrandForeground1,
+        },
+    },
+
+    // 空状態
     emptyState: {
         display: "flex",
         flexDirection: "column",
@@ -127,29 +161,44 @@ const useStyles = makeStyles({
         color: tokens.colorNeutralForeground3,
         maxWidth: "400px",
     },
+
+    // その他
     divider: {
         marginTop: tokens.spacingVerticalM,
         marginBottom: tokens.spacingVerticalM,
     },
-    editableCell: {
-        cursor: "pointer",
-        padding: "4px 8px",
-        borderRadius: tokens.borderRadiusSmall,
-        transition: "all 0.15s ease",
-        ":hover": {
-            backgroundColor: tokens.colorNeutralBackground1Hover,
-            color: tokens.colorBrandForeground1,
-        },
-    },
 });
 
-export type HistoryDrawerProps = {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    workItems: WorkItem[];
+// ============================================================================
+// ユーティリティ関数
+// ============================================================================
+
+/**
+ * 最終更新日時をフォーマット
+ * @param historyData 履歴データ配列
+ * @returns フォーマットされた日時文字列
+ */
+const formatLastUpdated = (historyData: HistoryRow[]): string => {
+    if (historyData.length === 0) return "-";
+
+    const lastUsedTimestamp = Math.max(...historyData.map((h) => h.lastUsedDate.getTime()));
+    return new Date(lastUsedTimestamp).toLocaleString("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 };
 
-type HistoryRow = HistoryEntry & { key: string };
+/**
+ * エクスポート用のファイル名を生成
+ * @returns ファイル名文字列
+ */
+const generateExportFileName = (): string => {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    return `timetracker-history-${dateStr}.json`;
+};
 
 export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerProps) {
     const styles = useStyles();
@@ -158,28 +207,31 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
     const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
     const [editingKey, setEditingKey] = useState<string | null>(null);
 
-    // 履歴データを読み込む
-    const loadHistory = () => {
+    /**
+     * 履歴データを読み込む
+     */
+    const loadHistory = useCallback(() => {
         historyManager.load();
         const entries = historyManager.getAllEntries();
         setHistoryData(entries);
         setSelectedKeys(new Set());
         logger.info(`履歴を読み込み: ${entries.length}件`);
-    };
+    }, [historyManager]);
 
     // 初回読み込み
     useEffect(() => {
         if (open) {
-            historyManager.load();
-            const entries = historyManager.getAllEntries();
-            setHistoryData(entries);
-            setSelectedKeys(new Set());
-            logger.info(`履歴を読み込み: ${entries.length}件`);
+            loadHistory();
         }
-    }, [open]);
+    }, [open, loadHistory]);
 
-    // 選択削除
-    const handleDeleteSelected = async () => {
+    // 最終更新日時を計算
+    const lastUpdatedText = useMemo(() => formatLastUpdated(historyData), [historyData]);
+
+    /**
+     * 選択された履歴を削除
+     */
+    const handleDeleteSelected = useCallback(async () => {
         if (selectedKeys.size === 0) return;
 
         const confirmed = await appMessageDialogRef.showConfirmAsync(
@@ -191,12 +243,16 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
         if (!confirmed) return;
 
         const deletedCount = historyManager.deleteByKeys(Array.from(selectedKeys));
+        historyManager.dump();
         await appMessageDialogRef.showMessageAsync("削除完了", `${deletedCount}件の履歴を削除しました`, "INFO");
+        
         loadHistory();
-    };
+    }, [selectedKeys, historyManager, loadHistory]);
 
-    // 全クリア
-    const handleClearAll = async () => {
+    /**
+     * すべての履歴をクリア
+     */
+    const handleClearAll = useCallback(async () => {
         const confirmed = await appMessageDialogRef.showConfirmAsync(
             "履歴全削除",
             "すべての履歴を削除しますか？\nこの操作は取り消せません。",
@@ -208,17 +264,19 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
         historyManager.clear();
         await appMessageDialogRef.showMessageAsync("削除完了", "すべての履歴を削除しました", "INFO");
         loadHistory();
-    };
+    }, [historyManager, loadHistory]);
 
-    // エクスポート
-    const handleExport = () => {
+    /**
+     * 履歴をJSONファイルとしてエクスポート
+     */
+    const handleExport = useCallback(() => {
         try {
             const jsonData = historyManager.exportToJSON();
             const blob = new Blob([jsonData], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `timetracker-history-${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = generateExportFileName();
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -232,10 +290,12 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                 "ERROR",
             );
         }
-    };
+    }, [historyManager]);
 
-    // インポート
-    const handleImport = () => {
+    /**
+     * JSONファイルから履歴をインポート
+     */
+    const handleImport = useCallback(() => {
         const input = document.createElement("input");
         input.type = "file";
         input.accept = "application/json";
@@ -262,21 +322,35 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
             }
         };
         input.click();
-    };
+    }, [historyManager, loadHistory]);
 
-    // WorkItem変更
-    const handleWorkItemChange = async (key: string, newItemId: string) => {
-        const workItem = workItems.find((w) => w.id === newItemId);
-        if (!workItem) return;
+    /**
+     * 作業項目を変更
+     */
+    const handleWorkItemChange = useCallback(
+        async (key: string, newItemId: string) => {
+            const workItem = workItems.find((w) => w.id === newItemId);
+            if (!workItem) return;
 
-        historyManager.updateWorkItemId(key, newItemId, workItem.name);
-        await appMessageDialogRef.showMessageAsync("更新完了", `作業項目を「${workItem.name}」に変更しました`, "INFO");
-        loadHistory();
-        setEditingKey(null);
-    };
+            historyManager.updateWorkItemId(key, newItemId, workItem.name);
+            await appMessageDialogRef.showMessageAsync(
+                "更新完了",
+                `作業項目を「${workItem.name}」に変更しました`,
+                "INFO",
+            );
+            loadHistory();
+            setEditingKey(null);
+        },
+        [workItems, historyManager, loadHistory],
+    );
 
-    // テーブル列定義
-    const columns: TableColumnDefinition<HistoryRow>[] = [
+    /**
+     * Drawerを閉じる
+     */
+    const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+    const columns: TableColumnDefinition<HistoryRow>[] = useMemo(
+        () => [
         createTableColumn<HistoryRow>({
             columnId: "eventName",
             compare: (a, b) => a.eventName.localeCompare(b.eventName),
@@ -330,7 +404,13 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
             renderHeaderCell: () => <TableCellLayout>最終使用日時</TableCellLayout>,
             renderCell: (item) => <TableCellLayout>{item.lastUsedDate.toLocaleString("ja-JP")}</TableCellLayout>,
         }),
-    ];
+        ],
+        [editingKey, handleWorkItemChange, styles.editableCell, workItems],
+    );
+
+    // ============================================================================
+    // レンダリング
+    // ============================================================================
 
     return (
         <Drawer
@@ -343,12 +423,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
             <DrawerHeader>
                 <DrawerHeaderTitle
                     action={
-                        <Button
-                            appearance="subtle"
-                            aria-label="閉じる"
-                            icon={<Dismiss24Regular />}
-                            onClick={() => onOpenChange(false)}
-                        />
+                        <Button appearance="subtle" aria-label="閉じる" icon={<Dismiss24Regular />} onClick={handleClose} />
                     }
                 >
                     <div className={styles.drawerHeader}>
@@ -365,23 +440,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                 <div className={styles.statsContainer}>
                     <StatCard icon={<History24Regular />} label="総件数" value={historyData.length} unit="件" />
                     <StatCard icon={<CheckmarkCircle24Regular />} label="選択中" value={selectedKeys.size} unit="件" />
-                    <StatCard
-                        icon={<Calendar24Regular />}
-                        label="最終更新"
-                        value={
-                            historyData.length > 0
-                                ? new Date(
-                                      Math.max(...historyData.map((h) => h.lastUsedDate.getTime())),
-                                  ).toLocaleString("ja-JP", {
-                                      year: "numeric",
-                                      month: "2-digit",
-                                      day: "2-digit",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                  })
-                                : "-"
-                        }
-                    />
+                    <StatCard icon={<Calendar24Regular />} label="最終更新" value={lastUpdatedText} />
                 </div>
 
                 <Divider className={styles.divider} />

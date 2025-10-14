@@ -43,10 +43,7 @@ import {
 } from "@fluentui/react-icons";
 import { useCallback, useMemo, useState } from "react";
 import type { AdjustedEventInfo, ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair } from "../models";
-
-// ============================================================================
-// 型定義
-// ============================================================================
+import { formatDateTime } from "@/lib/dateUtil";
 
 /** ダイアログの種類 */
 type DetailDialogType = "targetDays" | "targetEvents";
@@ -90,6 +87,7 @@ interface StatisticsData {
     endStr: string;
     totalLinked: number;
     totalEvents: number;
+    adjustedCount: number;
     excludedCount: number;
     unlinkedCount: number;
     paidLeaveDays: number;
@@ -117,7 +115,12 @@ export interface StatisticsCardsProps {
     linkingEventWorkItemPair: LinkingEventWorkItemPair[];
 }
 
+// ============================================================================
+// スタイル定義
+// ============================================================================
+
 const useStyles = makeStyles({
+    // 統計セクション
     statsSection: {
         width: "100%",
     },
@@ -132,6 +135,8 @@ const useStyles = makeStyles({
         gap: tokens.spacingVerticalM,
         marginTop: tokens.spacingVerticalM,
     },
+
+    // 統計カードの基本スタイル（共通部分を統合）
     statCardInfo: {
         padding: "12px 16px",
         backgroundColor: tokens.colorNeutralBackground1,
@@ -171,19 +176,8 @@ const useStyles = makeStyles({
             backgroundColor: tokens.colorPaletteYellowBackground1,
         },
     },
-    statCardNeutral: {
-        padding: "12px 16px",
-        backgroundColor: tokens.colorNeutralBackground1,
-        borderLeftWidth: "3px",
-        borderLeftStyle: "solid",
-        borderLeftColor: tokens.colorNeutralStroke1,
-        transition: "all 0.2s ease",
-        "&:hover": {
-            boxShadow: tokens.shadow8,
-            transform: "translateY(-2px)",
-            backgroundColor: tokens.colorNeutralBackground2,
-        },
-    },
+
+    // カード内要素
     statCardContent: {
         display: "flex",
         flexDirection: "column",
@@ -209,9 +203,6 @@ const useStyles = makeStyles({
     statIconWarning: {
         color: tokens.colorPaletteYellowForeground2,
     },
-    statIconNeutral: {
-        color: tokens.colorNeutralForeground3,
-    },
     statLabel: {
         fontSize: "12px",
         color: tokens.colorNeutralForeground2,
@@ -224,13 +215,8 @@ const useStyles = makeStyles({
         color: tokens.colorNeutralForeground1,
         lineHeight: "1.2",
     },
-    statDate: {
-        fontSize: "12px",
-        color: tokens.colorNeutralForeground3,
-        marginTop: "2px",
-        lineHeight: "1.3",
-    },
-    statSubText: {
+    // statDateとstatSubTextを統合（同じスタイル）
+    statText: {
         fontSize: "12px",
         color: tokens.colorNeutralForeground3,
         marginTop: "2px",
@@ -239,7 +225,8 @@ const useStyles = makeStyles({
     clickableCard: {
         cursor: "pointer",
     },
-    // ダイアログスタイル
+
+    // ダイアログ
     dialogSurface: {
         width: "90vw",
         maxWidth: "1200px",
@@ -278,10 +265,14 @@ const useStyles = makeStyles({
         overflow: "auto",
         padding: tokens.spacingVerticalM,
     },
+
+    // テーブルセル
     eventCell: {
         display: "flex",
         flexDirection: "column",
-        gap: "4px",
+        gap: tokens.spacingVerticalS, 
+        paddingTop: tokens.spacingVerticalS,
+        paddingBottom: tokens.spacingVerticalS,
     },
     eventName: {
         fontWeight: "600",
@@ -293,6 +284,29 @@ const useStyles = makeStyles({
         display: "flex",
         alignItems: "center",
         gap: "4px",
+    },
+    dateTimeRange: {
+        fontSize: "14px",
+        color: tokens.colorNeutralForeground2,
+    },
+    reasonList: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+        fontSize: "13px",
+        lineHeight: "1.5",
+    },
+    reasonItem: {
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "8px",
+        "&::before": {
+            content: '"●"',
+            color: tokens.colorNeutralForeground3,
+            fontSize: "16px",
+            fontWeight: "bold",
+            lineHeight: "1.5",
+        },
     },
     emptyState: {
         display: "flex",
@@ -320,6 +334,8 @@ const useStyles = makeStyles({
 
 /**
  * 日付範囲を文字列形式で取得
+ * @param schedules スケジュールの配列
+ * @returns 開始日と終了日の文字列
  */
 const getDateRangeString = (schedules: Schedule[]): { fromStr: string; endStr: string } => {
     if (schedules.length === 0) {
@@ -334,7 +350,36 @@ const getDateRangeString = (schedules: Schedule[]): { fromStr: string; endStr: s
 };
 
 /**
+ * 除外理由のメッセージをカンマ区切りで分割し、ユニークな理由のリストを作成
+ * @param details 除外理由の詳細情報の配列
+ * @returns ユニークな理由のテキスト配列
+ */
+const parseExcludeReasons = (details: ExcludedEventInfo["details"]): string[] => {
+    const allReasons = details
+        .flatMap((d) => d.message.split(",").map((msg) => msg.trim()))
+        .filter((msg) => msg.length > 0);
+    return Array.from(new Set(allReasons));
+};
+
+/** 除外イベントテーブルの列幅設定 */
+const EXCLUDED_EVENTS_COLUMN_SIZING = {
+    eventName: { minWidth: 350, idealWidth: 400 },
+    date: { minWidth: 250, idealWidth: 250 },
+    excludeReasonIcons: { minWidth: 120, idealWidth: 150 },
+    excludeReasonDetails: { minWidth: 350, idealWidth: 400 },
+} as const;
+
+/** 有給休暇日テーブルの列幅設定 */
+const PAID_LEAVE_DAYS_COLUMN_SIZING = {
+    displayDate: { minWidth: 200, idealWidth: 300 },
+} as const;
+
+/**
  * 紐づけ方法別の件数をカウント
+ * @param pairs 紐づけペアの配列
+ * @param type 紐づけタイプ（auto | manual）
+ * @param autoMethod 自動紐づけの方法
+ * @returns マッチするペアの件数
  */
 const countLinkingsByMethod = (
     pairs: LinkingEventWorkItemPair[],
@@ -349,6 +394,60 @@ const countLinkingsByMethod = (
 };
 
 /**
+ * 統計カードの設定を生成
+ * @param statistics 統計データ
+ * @param styles スタイルオブジェクト
+ * @returns 統計カード設定の配列
+ */
+const createStatCardConfigs = (statistics: StatisticsData, styles: ReturnType<typeof useStyles>): StatCardConfig[] => {
+    return [
+        {
+            cardStyle: styles.statCardInfo,
+            iconStyle: styles.statIconInfo,
+            icon: <Calendar24Regular />,
+            label: "対象日数",
+            getValue: (stats) => `${stats.targetDays}日分`,
+            getSubTexts: (stats) => [`${stats.fromStr}～${stats.endStr}`, `有給休暇：${stats.paidLeaveDays}日`],
+            clickable: true,
+            dialogType: "targetDays" as const,
+        },
+        {
+            cardStyle: styles.statCardInfo,
+            iconStyle: styles.statIconInfo,
+            icon: <Link24Regular />,
+            label: "対象イベント",
+            getValue: (stats) => `${stats.totalEvents}件`,
+            getSubTexts: (stats) => [`除外：${stats.excludedCount}件`, `時間調整：${stats.adjustedCount}件`],
+            clickable: true,
+            dialogType: "targetEvents" as const,
+        },
+        {
+            cardStyle: styles.statCardSuccess,
+            iconStyle: styles.statIconSuccess,
+            icon: <CheckmarkCircle24Filled />,
+            label: "紐づけ済み",
+            getValue: (stats) => `${stats.totalLinked}件`,
+            getSubTexts: (stats) => [
+                `休暇：${stats.linkedByTimeOff}件 / 履歴：${stats.linkedByHistory}件 / AI：${stats.linkedByAI}件`,
+                `勤務時間：${stats.linkedByWorkSchedule}件 / 手動：${stats.linkedByManual}件`,
+            ],
+            clickable: false,
+        },
+        {
+            cardStyle: statistics.unlinkedCount > 0 ? styles.statCardWarning : styles.statCardSuccess,
+            iconStyle: statistics.unlinkedCount > 0 ? styles.statIconWarning : styles.statIconSuccess,
+            icon: statistics.unlinkedCount > 0 ? <Warning24Filled /> : <Checkmark24Filled />,
+            label: "未紐づけ",
+            getValue: (stats) => `${stats.unlinkedCount}件`,
+            getSubTexts: (stats) => [
+                stats.unlinkedCount > 0 ? "手動紐づけ/AIによる自動紐づけを実施してください。" : "すべて紐づけ完了",
+            ],
+            clickable: false,
+        },
+    ];
+};
+
+/**
  * 統計情報を算出
  */
 const calcStatisticsData = (
@@ -359,11 +458,12 @@ const calcStatisticsData = (
     const paidLeaveDays = data.paidLeaveDayEvents.length;
     const { fromStr, endStr } = getDateRangeString(data.enableSchedules);
 
-    // 対象イベント数 = 有効なイベント + 除外されたイベント
-    const totalEvents = data.enableEvents.length + data.excludedEvents.length;
+    // 対象イベント数 = 有効なイベント
+    const totalEvents = data.enableEvents.length + data.adjustedEvents.length + data.paidLeaveDayEvents.length + data.scheduleEvents.length;
+    const adjustedCount = data.adjustedEvents.length;
     const excludedCount = data.excludedEvents.length;
     const totalLinked = linkingEventWorkItemPair.length;
-    const unlinkedCount = Math.max(0, data.enableEvents.length - totalLinked);
+    const unlinkedCount = Math.max(0, totalEvents - totalLinked);
 
     // 紐づけ方法別の件数
     const linkedByTimeOff = countLinkingsByMethod(linkingEventWorkItemPair, undefined, "timeOff");
@@ -378,6 +478,7 @@ const calcStatisticsData = (
         endStr,
         totalLinked,
         totalEvents,
+        adjustedCount,
         excludedCount,
         unlinkedCount,
         paidLeaveDays,
@@ -460,54 +561,8 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
         });
     }, [dialogType, data.paidLeaveDayEvents]);
 
-    // 統計カードの設定
-    const statCardConfigs: StatCardConfig[] = [
-        {
-            cardStyle: styles.statCardInfo,
-            iconStyle: styles.statIconInfo,
-            icon: <Calendar24Regular />,
-            label: "対象日数",
-            getValue: (stats) => `${stats.targetDays}日分`,
-            getSubTexts: (stats) => [`${stats.fromStr}～${stats.endStr}`, `有給休暇：${stats.paidLeaveDays}日`],
-            clickable: true, // 常にクリック可能（有給休暇日一覧を表示）
-            dialogType: "targetDays",
-        },
-        {
-            cardStyle: styles.statCardInfo,
-            iconStyle: styles.statIconInfo,
-            icon: <Link24Regular />,
-            label: "対象イベント",
-            getValue: (stats) => `${stats.totalEvents}件`,
-            getSubTexts: (stats) => [`除外：${stats.excludedCount}件`],
-            clickable: true,
-            dialogType: "targetEvents",
-        },
-        {
-            cardStyle: styles.statCardSuccess,
-            iconStyle: styles.statIconSuccess,
-            icon: <CheckmarkCircle24Filled />,
-            label: "紐づけ済み",
-            getValue: (stats) => `${stats.totalLinked}件`,
-            getSubTexts: (stats) => [
-                `休暇：${stats.linkedByTimeOff}件 / 履歴：${stats.linkedByHistory}件 / AI：${stats.linkedByAI}件`,
-                `勤務時間：${stats.linkedByWorkSchedule}件 / 手動：${stats.linkedByManual}件`,
-            ],
-            clickable: false, // TODO: 今後実装予定
-            // dialogType: "linked",
-        },
-        {
-            cardStyle: statistics.unlinkedCount > 0 ? styles.statCardWarning : styles.statCardSuccess,
-            iconStyle: statistics.unlinkedCount > 0 ? styles.statIconWarning : styles.statIconSuccess,
-            icon: statistics.unlinkedCount > 0 ? <Warning24Filled /> : <Checkmark24Filled />,
-            label: "未紐づけ",
-            getValue: (stats) => `${stats.unlinkedCount}件`,
-            getSubTexts: (stats) => [
-                stats.unlinkedCount > 0 ? "手動紐づけ/AIによる自動紐づけを実施してください。" : "すべて紐づけ完了",
-            ],
-            clickable: false, // TODO: 今後実装予定
-            // dialogType: "unlinked",
-        },
-    ];
+    // 統計カードの設定をメモ化
+    const statCardConfigs = useMemo(() => createStatCardConfigs(statistics, styles), [statistics, styles]);
 
     // 統計カードのレンダリング関数
     const renderStatCard = useCallback(
@@ -528,7 +583,7 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                         </div>
                         <div className={styles.statValue}>{config.getValue(statistics)}</div>
                         {config.getSubTexts(statistics).map((text, index) => (
-                            <div key={index} className={index === 0 ? styles.statDate : styles.statSubText}>
+                            <div key={index} className={styles.statText}>
                                 {text}
                             </div>
                         ))}
@@ -576,20 +631,15 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                 compare: (a, b) =>
                     new Date(a.event.schedule.start).getTime() - new Date(b.event.schedule.start).getTime(),
                 renderHeaderCell: () => "日時",
-                renderCell: (item) => (
-                    <TableCellLayout>
-                        <div className={styles.eventDetail}>
-                            <CalendarLtr24Regular />
-                            {new Date(item.event.schedule.start).toLocaleString("ja-JP", {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                        </div>
-                    </TableCellLayout>
-                ),
+                renderCell: (item) => {
+                    const startDate = new Date(item.event.schedule.start);
+                    const endDate = item.event.schedule.end ? new Date(item.event.schedule.end) : undefined;
+                    return (
+                        <TableCellLayout>
+                            <div className={styles.dateTimeRange}>{formatDateTime(startDate, endDate)}</div>
+                        </TableCellLayout>
+                    );
+                },
             }),
             createTableColumn<ExcludedEventRow>({
                 columnId: "excludeReasonIcons",
@@ -615,11 +665,20 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                     return aText.localeCompare(bText);
                 },
                 renderHeaderCell: () => "詳細",
-                renderCell: (item) => (
-                    <TableCellLayout>
-                        <div className={styles.eventDetail}>{item.excludeReasons.map((d) => d.message).join(", ")}</div>
-                    </TableCellLayout>
-                ),
+                renderCell: (item) => {
+                    const uniqueReasons = parseExcludeReasons(item.excludeReasons);
+                    return (
+                        <TableCellLayout>
+                            <div className={styles.reasonList}>
+                                {uniqueReasons.map((reason, index) => (
+                                    <div key={index} className={styles.reasonItem}>
+                                        {reason}
+                                    </div>
+                                ))}
+                            </div>
+                        </TableCellLayout>
+                    );
+                },
             }),
         ],
         [getExcludeReasonIcon, styles],
@@ -642,25 +701,6 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                 ),
             }),
         ],
-        [],
-    );
-
-    // 除外イベントテーブルの列幅設定
-    const excludedEventsColumnSizingOptions = useMemo(
-        () => ({
-            eventName: { minWidth: 250, idealWidth: 350 },
-            date: { minWidth: 180, idealWidth: 200 },
-            excludeReasonIcons: { minWidth: 120, idealWidth: 150 },
-            excludeReasonDetails: { minWidth: 300, idealWidth: 400 },
-        }),
-        [],
-    );
-
-    // 有給休暇日テーブルの列幅設定
-    const paidLeaveDaysColumnSizingOptions = useMemo(
-        () => ({
-            displayDate: { minWidth: 200, idealWidth: 300 },
-        }),
         [],
     );
 
@@ -738,7 +778,7 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                                         getRowId={(item) => item.id}
                                         sortable
                                         resizableColumns
-                                        columnSizingOptions={paidLeaveDaysColumnSizingOptions}
+                                        columnSizingOptions={PAID_LEAVE_DAYS_COLUMN_SIZING}
                                     />
                                 )
                             ) : dialogType === "targetEvents" ? (
@@ -759,7 +799,7 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                                         getRowId={(item) => item.event.uuid}
                                         sortable
                                         resizableColumns
-                                        columnSizingOptions={excludedEventsColumnSizingOptions}
+                                        columnSizingOptions={EXCLUDED_EVENTS_COLUMN_SIZING}
                                     />
                                 )
                             ) : null}

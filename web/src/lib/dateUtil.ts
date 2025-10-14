@@ -51,12 +51,12 @@ export function formatDateKey(date: Date): string {
  *
  * @example
  * formatDateTime(new Date(2024, 1, 3, 9, 0), new Date(2024, 1, 3, 18, 0))
- * // "2024/2/3 (土)　09:00～18:00"
+ * // "2024/2/3 (土) 09:00～18:00"
  *
  * formatDateTime(new Date(2024, 1, 3, 9, 0), null)
- * // "2024/2/3 (土)　09:00"
+ * // "2024/2/3 (土) 09:00"
  */
-export function formatDateTime(start: Date, end: Date | null): string {
+export function formatDateTime(start: Date, end: Date | null | undefined): string {
     const dateStr = start.toLocaleDateString("ja-JP", {
         year: "numeric",
         month: "numeric",
@@ -68,7 +68,7 @@ export function formatDateTime(start: Date, end: Date | null): string {
         ? `${start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}～${end.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`
         : start.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
 
-    return `${dateStr}　${timeStr}`;
+    return `${dateStr} ${timeStr}`;
 }
 
 /**

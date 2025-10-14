@@ -8,7 +8,6 @@ import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { Sparkle24Regular } from "@fluentui/react-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AiLinkingSection } from "../components/AiLinkingSection";
-import { AutoLinkingResultDialog } from "../components/AutoLinkingResultDialog";
 import { EventTable, EventWithOption, type EventTableRow } from "../components/EventTable";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { StatisticsCards } from "../components/StatisticsCards";
@@ -323,9 +322,6 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
 
             {/* 履歴管理Drawer */}
             <HistoryDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} workItems={uploadInfo?.workItems ?? []} />
-
-            {/* 自動紐付け結果ダイアログ */}
-            <AutoLinkingResultDialog open={isResultDialogOpen} onClose={() => setIsResultDialogOpen(false)} />
         </>
     );
 }

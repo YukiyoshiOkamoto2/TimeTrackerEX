@@ -1,11 +1,11 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { useSettings } from "@/store";
 import { makeStyles, tokens } from "@fluentui/react-components";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Page } from "../../components/page";
 import { ScheduleItem } from "./components";
 import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
-import { ICS, PDF, UploadInfo } from "./models";
+import type { ICS, PDF, UploadInfo } from "./models";
 import { CompletionView } from "./view/CompletionView";
 import { FileUploadView } from "./view/FileUploadView";
 import { LinkingProcessView } from "./view/LinkingProcessView";
@@ -51,43 +51,65 @@ const useStyles = makeStyles({
     },
 });
 
-type view = "upload" | "linking" | "completion";
-const views: view[] = ["upload", "linking", "completion"];
-type viewIndex = 0 | 1 | 2;
+/** ビュー種別 */
+type View = "upload" | "linking" | "completion";
 
-const useTimeTrackerViewState = (): [
-    view,
-    "left" | "right" | "none",
-    (back?: viewIndex) => void,
-    (back?: viewIndex) => void,
-] => {
-    const [currentIndex, setCurrentIndex] = useState<viewIndex>(0);
-    const [currentView, setCurrentView] = useState<view>(views[currentIndex]);
+/** ビューインデックス */
+type ViewIndex = 0 | 1 | 2;
+
+/** TimeTrackerのビュー状態を管理するカスタムフック */
+interface UseTimeTrackerViewStateReturn {
+    /** 現在のビュー */
+    currentView: View;
+    /** スライド方向 */
+    slideDirection: "left" | "right" | "none";
+    /** 前のビューに戻る */
+    backTo: (back?: ViewIndex) => void;
+    /** 次のビューに進む */
+    nextTo: (next?: ViewIndex) => void;
+}
+
+/** 利用可能なビューのリスト */
+const VIEWS: View[] = ["upload", "linking", "completion"];
+
+/**
+ * TimeTrackerページのビュー状態を管理するカスタムフック
+ * ビューの切り替えとスライドアニメーションの方向を管理します
+ */
+const useTimeTrackerViewState = (): UseTimeTrackerViewStateReturn => {
+    const [currentIndex, setCurrentIndex] = useState<ViewIndex>(0);
     const [slideDirection, setSlideDirection] = useState<"left" | "right" | "none">("none");
 
-    const backTo = (back?: viewIndex) => {
-        const backIndex = currentIndex - (back ?? 1);
-        if (backIndex < 0) {
-            throw new Error(`TimeTrackerPage invalid back.: current ${views[currentIndex]}`);
-        }
-        setCurrentIndex(backIndex as viewIndex);
-        setSlideDirection("left");
-    };
+    // 現在のビューを計算
+    const currentView = useMemo(() => VIEWS[currentIndex], [currentIndex]);
 
-    const nextTo = (next?: viewIndex) => {
-        const nextIndex = currentIndex + (next ?? 1);
-        if (nextIndex > views.length - 1) {
-            throw new Error(`TimeTrackerPage invalid next.: current ${views[currentIndex]}`);
-        }
-        setCurrentIndex(nextIndex as viewIndex);
-        setSlideDirection("right");
-    };
+    // 前のビューに戻る関数（useCallbackでメモ化）
+    const backTo = useCallback(
+        (back: ViewIndex = 1) => {
+            const backIndex = currentIndex - back;
+            if (backIndex < 0) {
+                throw new Error(`TimeTrackerPage invalid back.: current ${VIEWS[currentIndex]}`);
+            }
+            setCurrentIndex(backIndex as ViewIndex);
+            setSlideDirection("left");
+        },
+        [currentIndex],
+    );
 
-    useEffect(() => {
-        setCurrentView(views[currentIndex]);
-    }, [currentIndex]);
+    // 次のビューに進む関数（useCallbackでメモ化）
+    const nextTo = useCallback(
+        (next: ViewIndex = 1) => {
+            const nextIndex = currentIndex + next;
+            if (nextIndex > VIEWS.length - 1) {
+                throw new Error(`TimeTrackerPage invalid next.: current ${VIEWS[currentIndex]}`);
+            }
+            setCurrentIndex(nextIndex as ViewIndex);
+            setSlideDirection("right");
+        },
+        [currentIndex],
+    );
 
-    return [currentView, slideDirection, backTo, nextTo];
+    return { currentView, slideDirection, backTo, nextTo };
 };
 
 export function TimeTrackerPage() {
@@ -103,9 +125,12 @@ export function TimeTrackerPage() {
     // @ts-expect-error Phase 7: TimeTracker API登録で使用予定
     const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
 
-    const [currentView, slideDirection, backTo, nextTo] = useTimeTrackerViewState();
+    const { currentView, slideDirection, backTo, nextTo } = useTimeTrackerViewState();
 
-    // TimeTracker設定のバリデーションチェック
+    /**
+     * TimeTracker設定のバリデーションチェック
+     * エラーがある場合はFileUploadViewに戻り、エラーダイアログを表示
+     */
     useEffect(() => {
         const hasTimeTrackerErrors = validationErrors.timeTracker.length > 0;
         if (hasTimeTrackerErrors) {
@@ -121,17 +146,57 @@ export function TimeTrackerPage() {
         }
     }, [validationErrors.timeTracker, currentView, backTo]);
 
-    // アニメーションクラス取得
-    const getAnimationClass = () =>
-        slideDirection === "right" ? styles.slideInRight : slideDirection === "left" ? styles.slideInLeft : "";
+    /**
+     * アニメーションクラスを取得（スライド方向に応じたクラスを返す）
+     */
+    const animationClass = useMemo(
+        () =>
+            slideDirection === "right"
+                ? styles.slideInRight
+                : slideDirection === "left"
+                  ? styles.slideInLeft
+                  : "",
+        [slideDirection, styles.slideInLeft, styles.slideInRight],
+    );
 
-    // イベントハンドラー
-    const handleFileUploadViewSubmit = (uploadInfo: UploadInfo) => {
-        setUploadInfo(uploadInfo);
-        nextTo();
-    };
+    /**
+     * ファイルアップロード完了時のハンドラー
+     */
+    const handleFileUploadViewSubmit = useCallback(
+        (uploadInfo: UploadInfo) => {
+            setUploadInfo(uploadInfo);
+            nextTo();
+        },
+        [nextTo],
+    );
 
-    const handleLinkingProcessSubmit = (_tasks: any[]) => {};
+    /**
+     * 紐づけ処理完了時のハンドラー
+     * @todo Phase 7で実装予定
+     */
+    const handleLinkingProcessSubmit = useCallback((_tasks: any[]) => {
+        // TODO: Phase 7 - 紐づけ処理の実装
+    }, []);
+
+    /**
+     * CompletionViewの「戻る」ボタン押下時のハンドラー
+     */
+    const handleCompletionBack = useCallback(() => backTo(2), [backTo]);
+
+    /**
+     * CompletionViewの登録成功時のハンドラー
+     */
+    const handleRegisterSuccess = useCallback(() => backTo(2), [backTo]);
+
+    /**
+     * CompletionViewのメッセージ表示ハンドラー
+     */
+    const handleShowMessage = useCallback(
+        (type: "success" | "error", title: string, message: string) => {
+            appMessageDialogRef.showMessageAsync(title, message, type === "success" ? "INFO" : "ERROR");
+        },
+        [],
+    );
 
     return (
         <>
@@ -141,22 +206,16 @@ export function TimeTrackerPage() {
                 loading={isLoading}
                 loadingText="処理中..."
             >
-                <div className={`${styles.viewContainer} ${getAnimationClass()}`} key={currentView}>
+                <div className={`${styles.viewContainer} ${animationClass}`} key={currentView}>
                     {currentView === "completion" ? (
                         <CompletionView
                             schedules={scheduleItems}
                             itemCodes={[]} // TODO: Phase 7 - 必要に応じて実装
                             itemCodeOptions={[]}
-                            onBack={() => backTo(2)}
+                            onBack={handleCompletionBack}
                             onBackToLinking={backTo}
-                            onRegisterSuccess={() => backTo(2)} // 登録成功後FileUploadViewへ
-                            onShowMessage={(type, title, message) => {
-                                appMessageDialogRef.showMessageAsync(
-                                    title,
-                                    message,
-                                    type === "success" ? "INFO" : "ERROR",
-                                );
-                            }}
+                            onRegisterSuccess={handleRegisterSuccess}
+                            onShowMessage={handleShowMessage}
                         />
                     ) : currentView === "linking" ? (
                         <LinkingProcessView

@@ -12,75 +12,9 @@ import {
     tokens,
 } from "@fluentui/react-components";
 import { ErrorCircle24Filled, Settings24Regular } from "@fluentui/react-icons";
+import { useCallback, useMemo } from "react";
 
-const useStyles = makeStyles({
-    surface: {
-        maxWidth: "600px",
-    },
-    titleContainer: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalM,
-    },
-    errorIcon: {
-        color: tokens.colorPaletteRedForeground1,
-        fontSize: "24px",
-    },
-    contentContainer: {
-        display: "flex",
-        flexDirection: "column",
-        gap: tokens.spacingVerticalL,
-    },
-    description: {
-        color: tokens.colorNeutralForeground2,
-        lineHeight: "1.5",
-    },
-    errorListContainer: {
-        backgroundColor: tokens.colorNeutralBackground3,
-        borderRadius: tokens.borderRadiusMedium,
-        padding: tokens.spacingVerticalM,
-        maxHeight: "300px",
-        overflowY: "auto",
-    },
-    errorListTitle: {
-        fontWeight: tokens.fontWeightSemibold,
-        marginBottom: tokens.spacingVerticalS,
-        color: tokens.colorNeutralForeground1,
-    },
-    errorList: {
-        margin: 0,
-        paddingLeft: tokens.spacingHorizontalXL,
-    },
-    errorItem: {
-        marginBottom: tokens.spacingVerticalS,
-        lineHeight: "1.6",
-    },
-    errorLabel: {
-        fontWeight: tokens.fontWeightSemibold,
-        color: tokens.colorPaletteRedForeground1,
-    },
-    errorMessage: {
-        color: tokens.colorNeutralForeground2,
-    },
-    actionHint: {
-        display: "flex",
-        alignItems: "center",
-        gap: tokens.spacingHorizontalS,
-        padding: tokens.spacingVerticalM,
-        backgroundColor: tokens.colorNeutralBackground4,
-        borderRadius: tokens.borderRadiusMedium,
-        color: tokens.colorNeutralForeground2,
-        fontSize: tokens.fontSizeBase200,
-    },
-    settingsIcon: {
-        color: tokens.colorBrandForeground1,
-    },
-    actions: {
-        display: "flex",
-        gap: tokens.spacingHorizontalS,
-    },
-});
-
+/** ValidationErrorDialogのProps */
 export interface ValidationErrorDialogProps {
     /** ダイアログの表示状態 */
     open: boolean;
@@ -88,16 +22,114 @@ export interface ValidationErrorDialogProps {
     errors: SettingError[];
 }
 
+const useStyles = makeStyles({
+    // Dialog
+    surface: {
+        maxWidth: "650px",
+        minWidth: "500px",
+    },
+
+    // タイトル
+    titleContainer: {
+        display: "flex",
+        alignItems: "center",
+        gap: tokens.spacingHorizontalL,
+        paddingBottom: tokens.spacingVerticalM,
+    },
+    errorIcon: {
+        color: tokens.colorPaletteRedForeground1,
+        fontSize: "28px",
+    },
+
+    // コンテンツ
+    contentContainer: {
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingVerticalXL,
+        padding: `${tokens.spacingVerticalL} 0`,
+    },
+    description: {
+        color: tokens.colorNeutralForeground2,
+        lineHeight: "1.7",
+        fontSize: tokens.fontSizeBase300,
+        margin: 0,
+    },
+
+    // エラーリスト
+    errorListContainer: {
+        backgroundColor: tokens.colorNeutralBackground3,
+        borderRadius: tokens.borderRadiusLarge,
+        padding: tokens.spacingVerticalXL,
+        maxHeight: "350px",
+        overflowY: "auto",
+        border: `1px solid ${tokens.colorNeutralStroke2}`,
+    },
+    errorListTitle: {
+        fontWeight: tokens.fontWeightSemibold,
+        marginBottom: tokens.spacingVerticalM,
+        color: tokens.colorNeutralForeground1,
+        fontSize: tokens.fontSizeBase300,
+    },
+    errorList: {
+        margin: 0,
+        paddingLeft: tokens.spacingHorizontalXXL,
+    },
+    errorItem: {
+        marginBottom: tokens.spacingVerticalM,
+        lineHeight: "1.8",
+        fontSize: tokens.fontSizeBase200,
+    },
+    errorLabel: {
+        fontWeight: tokens.fontWeightSemibold,
+        color: tokens.colorPaletteRedForeground1,
+        marginRight: tokens.spacingHorizontalXS,
+    },
+    errorMessage: {
+        color: tokens.colorNeutralForeground2,
+    },
+
+    // アクションヒント
+    actionHint: {
+        display: "flex",
+        alignItems: "center",
+        gap: tokens.spacingHorizontalM,
+        padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalL}`,
+        backgroundColor: tokens.colorBrandBackground2,
+        borderRadius: tokens.borderRadiusLarge,
+        color: tokens.colorNeutralForeground1,
+        fontSize: tokens.fontSizeBase300,
+        border: `1px solid ${tokens.colorBrandStroke1}`,
+    },
+    settingsIcon: {
+        color: tokens.colorBrandForeground1,
+        fontSize: "20px",
+    },
+
+    // アクション
+    actions: {
+        display: "flex",
+        gap: tokens.spacingHorizontalM,
+        paddingTop: tokens.spacingVerticalL,
+    },
+});
+
 /**
- * バリデーションエラーを表示するリッチなダイアログコンポーネント
+ * TimeTracker設定のバリデーションエラーを表示するダイアログ
+ * エラー内容を分かりやすく表示し、設定ページへの誘導を行う
  */
 export function ValidationErrorDialog({ open, errors }: ValidationErrorDialogProps) {
     const styles = useStyles();
     const { navigate } = useNavigation();
 
-    const handleOpenSettings = () => {
+    /**
+     * 設定ページを開く
+     */
+    const handleOpenSettings = useCallback(() => {
         navigate("Settings", undefined, "timetracker");
-    };
+    }, [navigate]);
+
+    // エラー数のメモ化
+    const errorCount = useMemo(() => errors.length, [errors.length]);
 
     return (
         <Dialog open={open}>
@@ -106,7 +138,7 @@ export function ValidationErrorDialog({ open, errors }: ValidationErrorDialogPro
                     <DialogTitle>
                         <div className={styles.titleContainer}>
                             <ErrorCircle24Filled className={styles.errorIcon} />
-                            TimeTracker設定エラー
+                            <span>TimeTracker設定エラー ({errorCount}件)</span>
                         </div>
                     </DialogTitle>
                     <DialogContent>
@@ -118,12 +150,12 @@ export function ValidationErrorDialog({ open, errors }: ValidationErrorDialogPro
                             </p>
 
                             <div className={styles.errorListContainer}>
-                                <div className={styles.errorListTitle}>エラー内容</div>
+                                <div className={styles.errorListTitle}>エラー内容 ({errorCount}件)</div>
                                 <ul className={styles.errorList}>
                                     {errors.map((error, index) => (
                                         <li key={index} className={styles.errorItem}>
                                             <span className={styles.errorLabel}>{error.label}</span>
-                                            <span className={styles.errorMessage}>: {error.message}</span>
+                                            <span className={styles.errorMessage}>{error.message}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -136,10 +168,7 @@ export function ValidationErrorDialog({ open, errors }: ValidationErrorDialogPro
                         </div>
                     </DialogContent>
                     <DialogActions className={styles.actions}>
-                        {/* <Button appearance="secondary" icon={<Dismiss24Regular />} onClick={onClose}>
-                            閉じる
-                        </Button> */}
-                        <Button appearance="primary" icon={<Settings24Regular />} onClick={handleOpenSettings}>
+                        <Button appearance="primary" size="large" icon={<Settings24Regular />} onClick={handleOpenSettings}>
                             設定ページを開く
                         </Button>
                     </DialogActions>
