@@ -131,7 +131,7 @@ export function TimeTrackerPage() {
         nextTo();
     };
 
-    const handleLinkingProcessSubmit = (_tasks: any[]) => { };
+    const handleLinkingProcessSubmit = (_tasks: any[]) => {};
 
     return (
         <>

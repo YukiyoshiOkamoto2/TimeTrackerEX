@@ -326,9 +326,7 @@ export function InteractiveCard({
     const renderRightIcon = useMemo(() => {
         if (showChevron) {
             return (
-                <div className={styles.rightIcon}>
-                    {isExpanded ? <ChevronUp20Regular /> : <ChevronDown20Regular />}
-                </div>
+                <div className={styles.rightIcon}>{isExpanded ? <ChevronUp20Regular /> : <ChevronDown20Regular />}</div>
             );
         }
         if (showArrow) {
