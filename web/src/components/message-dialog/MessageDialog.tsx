@@ -11,7 +11,7 @@ import {
     tokens,
 } from "@fluentui/react-components";
 import { ErrorCircle24Filled, Info24Filled, Warning24Filled } from "@fluentui/react-icons";
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 const useStyles = makeStyles({
     titleContainer: {
@@ -117,7 +117,13 @@ const LEVEL_CONFIG = {
     },
 } as const;
 
-export const MessageDialog = () => {
+/**
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - すべてのハンドラーをuseCallbackで最適化
+ * - アイコンとクラス名の計算をuseMemoで最適化
+ */
+export const MessageDialog = memo(function MessageDialog() {
     const styles = useStyles();
     const [state, setState] = useState<MessageState>({
         open: false,
@@ -127,73 +133,96 @@ export const MessageDialog = () => {
     });
     const [isConfirm, setIsConfirm] = useState(false);
 
-    _appMessageDialogRef.setDelegate(
-        (title, message, level) => {
-            setState({
-                open: true,
-                title,
-                message,
-                level: level ?? "INFO",
-            });
-            setIsConfirm(false);
-        },
-        (title, message, level) => {
-            setState({
-                open: true,
-                title,
-                message,
-                level: level ?? "WARN",
-            });
-            setIsConfirm(true);
-        },
-        () => setState((prev) => ({ ...prev, open: false })),
-    );
-
-    const handleClose = () => {
+    // ハンドラーの最適化
+    const handleClose = useCallback(() => {
         _appMessageDialogRef.closed();
-    };
+    }, []);
 
-    const handleConfirm = (result: boolean) => {
+    const handleConfirm = useCallback((result: boolean) => {
         _appMessageDialogRef.confirmedResult(result);
-    };
+    }, []);
 
-    const config = LEVEL_CONFIG[state.level];
+    const showMessage = useCallback((title: string, message: string, level?: MessageLevel) => {
+        setState({
+            open: true,
+            title,
+            message,
+            level: level ?? "INFO",
+        });
+        setIsConfirm(false);
+    }, []);
+
+    const showConfirmMessage = useCallback((title: string, message: string, level?: MessageLevel) => {
+        setState({
+            open: true,
+            title,
+            message,
+            level: level ?? "WARN",
+        });
+        setIsConfirm(true);
+    }, []);
+
+    const closeDialog = useCallback(() => {
+        setState((prev) => ({ ...prev, open: false }));
+    }, []);
+
+    _appMessageDialogRef.setDelegate(showMessage, showConfirmMessage, closeDialog);
+
+    // アイコンとクラス名の計算を最適化
+    const config = useMemo(() => LEVEL_CONFIG[state.level], [state.level]);
     const IconComponent = config.icon;
 
+    const handleOpenChange = useCallback(
+        (_: unknown, data: { open: boolean }) => {
+            if (!data.open) {
+                isConfirm ? handleConfirm(false) : handleClose();
+            }
+        },
+        [isConfirm, handleConfirm, handleClose],
+    );
+
+    const iconClassName = useMemo(
+        () => mergeClasses(styles.icon, styles[config.className]),
+        [styles.icon, styles[config.className], config.className],
+    );
+
+    // ダイアログアクションボタンを最適化
+    const dialogActions = useMemo(() => {
+        if (isConfirm) {
+            return (
+                <>
+                    <Button appearance="secondary" onClick={() => handleConfirm(false)}>
+                        いいえ
+                    </Button>
+                    <Button appearance="primary" onClick={() => handleConfirm(true)}>
+                        はい
+                    </Button>
+                </>
+            );
+        }
+        return (
+            <Button appearance="primary" onClick={handleClose}>
+                OK
+            </Button>
+        );
+    }, [isConfirm, handleConfirm, handleClose]);
+
     return (
-        <Dialog
-            open={state.open}
-            onOpenChange={(_, data) => !data.open && (isConfirm ? handleConfirm(false) : handleClose())}
-        >
+        <Dialog open={state.open} onOpenChange={handleOpenChange}>
             <DialogSurface>
                 <DialogBody>
                     <DialogTitle>
                         <div className={styles.titleContainer}>
-                            <IconComponent className={mergeClasses(styles.icon, styles[config.className])} />
+                            <IconComponent className={iconClassName} />
                             {state.title}
                         </div>
                     </DialogTitle>
                     <DialogContent>
                         <div className={styles.message}>{state.message}</div>
                     </DialogContent>
-                    <DialogActions>
-                        {isConfirm ? (
-                            <>
-                                <Button appearance="secondary" onClick={() => handleConfirm(false)}>
-                                    いいえ
-                                </Button>
-                                <Button appearance="primary" onClick={() => handleConfirm(true)}>
-                                    はい
-                                </Button>
-                            </>
-                        ) : (
-                            <Button appearance="primary" onClick={handleClose}>
-                                OK
-                            </Button>
-                        )}
-                    </DialogActions>
+                    <DialogActions>{dialogActions}</DialogActions>
                 </DialogBody>
             </DialogSurface>
         </Dialog>
     );
-};
+});

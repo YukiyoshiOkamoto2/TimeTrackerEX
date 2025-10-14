@@ -1,5 +1,5 @@
 import { makeStyles, Spinner, tokens } from "@fluentui/react-components";
-import { type ReactNode } from "react";
+import { memo, useMemo, type ReactNode } from "react";
 
 const useStyles = makeStyles({
     container: {
@@ -122,8 +122,36 @@ export type PageProps = {
     loadingText?: string;
 };
 
-export function Page({ title, subtitle, children, maxWidth, loading = false, loadingText = "処理中..." }: PageProps) {
+/**
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - bodyスタイルとloadingコンテンツをuseMemoで最適化
+ */
+export const Page = memo(function Page({
+    title,
+    subtitle,
+    children,
+    maxWidth,
+    loading = false,
+    loadingText = "処理中...",
+}: PageProps) {
     const styles = useStyles();
+
+    // bodyスタイルを最適化
+    const bodyStyle = useMemo(() => (maxWidth ? { maxWidth } : undefined), [maxWidth]);
+
+    // ローディングコンテンツを最適化
+    const loadingContent = useMemo(() => {
+        if (!loading) return null;
+        return (
+            <div className={styles.loadingOverlay}>
+                <div className={styles.loadingContent}>
+                    <Spinner size="extra-large" />
+                    <div className={styles.loadingText}>{loadingText}</div>
+                </div>
+            </div>
+        );
+    }, [loading, loadingText, styles.loadingOverlay, styles.loadingContent, styles.loadingText]);
 
     return (
         <div className={styles.container} style={{ position: "relative" }}>
@@ -131,17 +159,10 @@ export function Page({ title, subtitle, children, maxWidth, loading = false, loa
                 <div className={styles.title}>{title}</div>
                 {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
             </div>
-            <div className={styles.body} style={maxWidth ? { maxWidth } : undefined}>
+            <div className={styles.body} style={bodyStyle}>
                 {children}
             </div>
-            {loading && (
-                <div className={styles.loadingOverlay}>
-                    <div className={styles.loadingContent}>
-                        <Spinner size="extra-large" />
-                        <div className={styles.loadingText}>{loadingText}</div>
-                    </div>
-                </div>
-            )}
+            {loadingContent}
         </div>
     );
-}
+});

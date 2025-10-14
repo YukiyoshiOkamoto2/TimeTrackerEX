@@ -30,8 +30,8 @@ export type AIInferenceResponseNG = {
 
 export type AIInferenceResponse = AIInferenceResponseOK | AIInferenceResponseNG;
 
-async function infer(request: AIInferenceRequest): Promise<AIInferenceResponse> {
-    logger.info("");
+export async function infer(request: AIInferenceRequest): Promise<AIInferenceResponse> {
+    logger.info("AI Request -> " + JSON.stringify(request));
     try {
         const response = await fetch(url, {
             method: "POST",
@@ -50,6 +50,7 @@ async function infer(request: AIInferenceRequest): Promise<AIInferenceResponse> 
 
         if (!response.ok) {
             const errorMessage = await response.json().catch(() => ({ error: { message: response.statusText } }));
+            logger.info("AI Response NG -> " + errorMessage);
             return {
                 ok: false,
                 errorMessage,
@@ -58,6 +59,7 @@ async function infer(request: AIInferenceRequest): Promise<AIInferenceResponse> 
 
         const data = await response.json();
         const content = data.choices?.[0]?.message?.content;
+        logger.info("AI Response -> " + content);
 
         if (!content) {
             return {
@@ -72,6 +74,7 @@ async function infer(request: AIInferenceRequest): Promise<AIInferenceResponse> 
         };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error(errorMessage);
         return {
             ok: false,
             errorMessage,
