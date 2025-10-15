@@ -177,7 +177,7 @@ export function useTimeTrackerSession({
                 const errorMessage = err instanceof Error ? err.message : "認証に失敗しました";
                 logger.error("認証に失敗しました:", errorMessage);
                 // 認証失敗はダイアログ内でエラー表示するだけで、Promiseは解決しない
-                throw new Error("errorMessage");
+                throw new Error(errorMessage);
             }
         };
 

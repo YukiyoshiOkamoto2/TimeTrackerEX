@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { pickEvents, EventState } from "./pick";
-import { Event, Schedule } from "@/types";
-import { AdjustedEventInfo } from "../models";
 import { TimeTrackerAlgorithmCore } from "@/core/algorithm/TimeTrackerAlgorithmCore";
+import { Event, Schedule } from "@/types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AdjustedEventInfo } from "../models";
+import { EventState, pickEvents } from "./pick";
 
 // TimeTrackerAlgorithmCoreのモック
 vi.mock("@/core/algorithm/TimeTrackerAlgorithmCore", () => ({
@@ -27,7 +27,7 @@ describe("pickEvents", () => {
         organizer: "",
         isPrivate: false,
         isCancelled: false,
-        location: ""
+        location: "",
     });
 
     // ヘルパー関数: テスト用のScheduleを作成
@@ -87,7 +87,12 @@ describe("pickEvents", () => {
         });
 
         it("scheduleEventsのみの場合、そのまま返す", () => {
-            const event = createEvent("uuid1", "Schedule Event", new Date(2024, 0, 1, 9, 0), new Date(2024, 0, 1, 18, 0));
+            const event = createEvent(
+                "uuid1",
+                "Schedule Event",
+                new Date(2024, 0, 1, 9, 0),
+                new Date(2024, 0, 1, 18, 0),
+            );
 
             const state = createEmptyState();
             state.scheduleEvents = [event];
@@ -137,9 +142,24 @@ describe("pickEvents", () => {
         });
 
         it("すべてのイベントタイプを結合する", () => {
-            const enableEvent = createEvent("uuid1", "Enable Event", new Date(2024, 0, 1, 9, 0), new Date(2024, 0, 1, 10, 0));
-            const scheduleEvent = createEvent("uuid2", "Schedule Event", new Date(2024, 0, 1, 10, 0), new Date(2024, 0, 1, 11, 0));
-            const paidLeaveEvent = createEvent("uuid3", "有給休暇", new Date(2024, 0, 1, 0, 0), new Date(2024, 0, 1, 23, 59));
+            const enableEvent = createEvent(
+                "uuid1",
+                "Enable Event",
+                new Date(2024, 0, 1, 9, 0),
+                new Date(2024, 0, 1, 10, 0),
+            );
+            const scheduleEvent = createEvent(
+                "uuid2",
+                "Schedule Event",
+                new Date(2024, 0, 1, 10, 0),
+                new Date(2024, 0, 1, 11, 0),
+            );
+            const paidLeaveEvent = createEvent(
+                "uuid3",
+                "有給休暇",
+                new Date(2024, 0, 1, 0, 0),
+                new Date(2024, 0, 1, 23, 59),
+            );
             const adjustedInfo = createAdjustedEventInfo(
                 "uuid4",
                 "Adjusted Event",
@@ -190,22 +210,22 @@ describe("pickEvents", () => {
             state.enableEvents = [event1, event2];
 
             // event1とevent2が重複しているとモック
-            vi.mocked(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).mockImplementation(
-                (event, otherEvents) => {
-                    const target = event as Event;
-                    const other = otherEvents[0] as Event;
-                    
-                    // 自分自身との比較はスキップ（実際の実装では自動的に除外される）
-                    if (target.uuid === other.uuid) return false;
-                    
-                    // event1とevent2は重複
-                    if ((target.uuid === "uuid1" && other.uuid === "uuid2") || 
-                        (target.uuid === "uuid2" && other.uuid === "uuid1")) {
-                        return true;
-                    }
-                    return false;
-                },
-            );
+            vi.mocked(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).mockImplementation((event, otherEvents) => {
+                const target = event as Event;
+                const other = otherEvents[0] as Event;
+
+                // 自分自身との比較はスキップ（実際の実装では自動的に除外される）
+                if (target.uuid === other.uuid) return false;
+
+                // event1とevent2は重複
+                if (
+                    (target.uuid === "uuid1" && other.uuid === "uuid2") ||
+                    (target.uuid === "uuid2" && other.uuid === "uuid1")
+                ) {
+                    return true;
+                }
+                return false;
+            });
 
             const result = pickEvents(state);
 
@@ -223,18 +243,16 @@ describe("pickEvents", () => {
             state.enableEvents = [event1, event2, event3];
 
             // すべてが重複しているとモック
-            vi.mocked(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).mockImplementation(
-                (event, otherEvents) => {
-                    const target = event as Event;
-                    const other = otherEvents[0] as Event;
-                    
-                    // 自分自身との比較はスキップ
-                    if (target.uuid === other.uuid) return false;
-                    
-                    // すべて重複
-                    return true;
-                },
-            );
+            vi.mocked(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).mockImplementation((event, otherEvents) => {
+                const target = event as Event;
+                const other = otherEvents[0] as Event;
+
+                // 自分自身との比較はスキップ
+                if (target.uuid === other.uuid) return false;
+
+                // すべて重複
+                return true;
+            });
 
             const result = pickEvents(state);
 
@@ -253,20 +271,20 @@ describe("pickEvents", () => {
             state.enableEvents = [event1, event2, event3];
 
             // event1とevent2のみ重複
-            vi.mocked(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).mockImplementation(
-                (event, otherEvents) => {
-                    const target = event as Event;
-                    const other = otherEvents[0] as Event;
-                    
-                    if (target.uuid === other.uuid) return false;
-                    
-                    if ((target.uuid === "uuid1" && other.uuid === "uuid2") || 
-                        (target.uuid === "uuid2" && other.uuid === "uuid1")) {
-                        return true;
-                    }
-                    return false;
-                },
-            );
+            vi.mocked(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).mockImplementation((event, otherEvents) => {
+                const target = event as Event;
+                const other = otherEvents[0] as Event;
+
+                if (target.uuid === other.uuid) return false;
+
+                if (
+                    (target.uuid === "uuid1" && other.uuid === "uuid2") ||
+                    (target.uuid === "uuid2" && other.uuid === "uuid1")
+                ) {
+                    return true;
+                }
+                return false;
+            });
 
             const result = pickEvents(state);
 
@@ -277,28 +295,38 @@ describe("pickEvents", () => {
         });
 
         it("異なるタイプのイベント間で重複を検出する", () => {
-            const enableEvent = createEvent("uuid1", "Enable Event", new Date(2024, 0, 1, 9, 0), new Date(2024, 0, 1, 10, 0));
-            const scheduleEvent = createEvent("uuid2", "Schedule Event", new Date(2024, 0, 1, 9, 30), new Date(2024, 0, 1, 10, 30));
+            const enableEvent = createEvent(
+                "uuid1",
+                "Enable Event",
+                new Date(2024, 0, 1, 9, 0),
+                new Date(2024, 0, 1, 10, 0),
+            );
+            const scheduleEvent = createEvent(
+                "uuid2",
+                "Schedule Event",
+                new Date(2024, 0, 1, 9, 30),
+                new Date(2024, 0, 1, 10, 30),
+            );
 
             const state = createEmptyState();
             state.enableEvents = [enableEvent];
             state.scheduleEvents = [scheduleEvent];
 
             // 異なるタイプ間でも重複検出
-            vi.mocked(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).mockImplementation(
-                (event, otherEvents) => {
-                    const target = event as Event;
-                    const other = otherEvents[0] as Event;
-                    
-                    if (target.uuid === other.uuid) return false;
-                    
-                    if ((target.uuid === "uuid1" && other.uuid === "uuid2") || 
-                        (target.uuid === "uuid2" && other.uuid === "uuid1")) {
-                        return true;
-                    }
-                    return false;
-                },
-            );
+            vi.mocked(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).mockImplementation((event, otherEvents) => {
+                const target = event as Event;
+                const other = otherEvents[0] as Event;
+
+                if (target.uuid === other.uuid) return false;
+
+                if (
+                    (target.uuid === "uuid1" && other.uuid === "uuid2") ||
+                    (target.uuid === "uuid2" && other.uuid === "uuid1")
+                ) {
+                    return true;
+                }
+                return false;
+            });
 
             const result = pickEvents(state);
 
@@ -377,11 +405,11 @@ describe("pickEvents", () => {
             // event1に対してevent1とevent2をチェック
             expect(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).toHaveBeenCalledWith(event1, [event1]);
             expect(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).toHaveBeenCalledWith(event1, [event2]);
-            
+
             // event2に対してevent1とevent2をチェック
             expect(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).toHaveBeenCalledWith(event2, [event1]);
             expect(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).toHaveBeenCalledWith(event2, [event2]);
-            
+
             // 合計4回呼ばれる（2イベント × 2回チェック）
             expect(TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule).toHaveBeenCalledTimes(4);
         });

@@ -1,6 +1,7 @@
 import { SettingValueInfo } from "@/schema";
 import { Button, Dropdown, Option, makeStyles, tokens } from "@fluentui/react-components";
 import { Add20Regular, Dismiss20Regular } from "@fluentui/react-icons";
+import { memo } from "react";
 import type { EventPattern } from "../../../../types/settings";
 import { SettingValidatedInput } from "./SettingValidatedInput";
 
@@ -36,7 +37,13 @@ interface EventPatternEditorProps {
     addButtonText?: string;
 }
 
-export function EventPatternEditor({
+/**
+ * イベントパターンエディターコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ */
+export const EventPatternEditor = memo(function EventPatternEditor({
     patternDefinition,
     patterns,
     onChange,
@@ -122,4 +129,4 @@ export function EventPatternEditor({
             </Button>
         </div>
     );
-}
+});

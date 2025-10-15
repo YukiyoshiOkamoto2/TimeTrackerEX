@@ -18,7 +18,7 @@ import {
     useTableColumnSizing_unstable,
     useTableFeatures,
 } from "@fluentui/react-components";
-import { useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 
 export interface DataTableProps<T> {
     items: T[];
@@ -50,7 +50,7 @@ const useStyles = makeStyles({
                 transform: "translateY(0)",
             },
         },
-        animationDelay: "0.1s",
+        animationDelay: "0.3s",
         animationDuration: tokens.durationUltraSlow,
         animationTimingFunction: tokens.curveEasyEase,
         animationFillMode: "both",
@@ -97,6 +97,11 @@ const useStyles = makeStyles({
 /**
  * 汎用DataTableコンポーネント
  *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - 選択状態の計算をuseMemoで最適化
+ * - ハンドラーをuseCallbackでメモ化
+ *
  * @example
  * ```tsx
  * <DataTable
@@ -107,7 +112,7 @@ const useStyles = makeStyles({
  * />
  * ```
  */
-export function DataTable<T>({
+export const DataTable = memo(function DataTable<T>({
     items,
     columns,
     getRowId,
@@ -300,4 +305,4 @@ export function DataTable<T>({
             </DataGrid>
         </div>
     );
-}
+}) as <T>(props: DataTableProps<T>) => JSX.Element;

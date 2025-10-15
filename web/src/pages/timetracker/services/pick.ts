@@ -1,7 +1,7 @@
-import { Schedule, Event } from "@/types";
-import { EventWithOption } from "../components/EventTable";
-import { AdjustedEventInfo, ExcludedScheduleInfo, ExcludedEventInfo } from "../models";
 import { TimeTrackerAlgorithmCore } from "@/core/algorithm/TimeTrackerAlgorithmCore";
+import { Event, Schedule } from "@/types";
+import { EventWithOption } from "../components/EventTable";
+import { AdjustedEventInfo, ExcludedEventInfo, ExcludedScheduleInfo } from "../models";
 
 export type EventState = {
     // 有効なスケジュール（休日・エラーを除く）
@@ -46,7 +46,9 @@ export const pickEvents = (state: EventState): EventWithOption[] => {
     // 各イベントに対して重複をチェックし、重複しているイベントのUUIDを収集
     return allEvents.map((event) => {
         // 自分自身以外で重複しているイベントを検索
-        const duplicatedEvents = allEvents.filter((otherEvent) => TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule(event, [otherEvent]));
+        const duplicatedEvents = allEvents.filter((otherEvent) =>
+            TimeTrackerAlgorithmCore.isDuplicateEventOrSchedule(event, [otherEvent]),
+        );
         // 重複がある場合、すべての重複UUIDを付与
         if (duplicatedEvents.length > 0) {
             const duplicationUUID = duplicatedEvents.map((e) => e.uuid);
@@ -57,4 +59,4 @@ export const pickEvents = (state: EventState): EventWithOption[] => {
         }
         return event;
     });
-}
+};

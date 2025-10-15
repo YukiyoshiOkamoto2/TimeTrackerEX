@@ -13,7 +13,7 @@ import type {
 } from "@/types/settings";
 import { Button, makeStyles, SelectTabData, SelectTabEvent, Tab, TabList, tokens } from "@fluentui/react-components";
 import { CodeRegular } from "@fluentui/react-icons";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Page } from "../../components/page";
 import { AppearanceSettingsPage, GeneralSettingsPage, JsonEditorView, TimeTrackerSettingsPage } from "./view";
 
@@ -87,7 +87,13 @@ const CATEGORY_CONFIG: Record<SettingCategory, CategoryConfig<Record<string, unk
     },
 };
 
-export function SettingPage() {
+/**
+ * 設定ページコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ */
+export const SettingPage = memo(function SettingPage() {
     const styles = useStyles();
     const { link } = useNavigation();
     const { settings, updateSettings } = useSettings();
@@ -168,4 +174,4 @@ export function SettingPage() {
             </div>
         </Page>
     );
-}
+});

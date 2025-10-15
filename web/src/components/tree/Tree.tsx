@@ -13,7 +13,7 @@ import {
     TreeOpenChangeEvent,
     useHeadlessFlatTree_unstable,
 } from "@fluentui/react-components";
-import { isValidElement, useCallback, useEffect, useRef, useState } from "react";
+import { isValidElement, memo, useCallback, useEffect, useRef, useState } from "react";
 import type { TreeItem } from "./TreeItem";
 import { treeViewHelper } from "./TreeViewHelper";
 
@@ -113,7 +113,14 @@ export type TreeViewProps = {
     onCheckedItemChanged?: (value: TreeItemValue[]) => void;
 };
 
-export const TreeView = ({
+/**
+ * ツリービューコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - ハンドラーをuseCallbackでメモ化
+ */
+export const TreeView = memo(function TreeView({
     items,
     className,
     isMultiSelect,
@@ -123,7 +130,7 @@ export const TreeView = ({
     onOpenChanged,
     onSelectItemChanged,
     onCheckedItemChanged,
-}: TreeViewProps) => {
+}: TreeViewProps) {
     const styles = useStyles();
     const flatTree = useFlatTree({
         items,
@@ -170,4 +177,4 @@ export const TreeView = ({
             </FlatTree>
         </div>
     );
-};
+});

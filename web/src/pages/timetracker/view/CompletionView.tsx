@@ -10,7 +10,7 @@ import {
     DocumentBulletList24Regular,
     Warning24Regular,
 } from "@fluentui/react-icons";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { ItemCodeOption, ScheduleItem, ScheduleTable } from "../components/index";
 import { SectionTitle, ViewHeader, ViewSection } from "../components/ViewLayout";
 
@@ -105,7 +105,13 @@ export type CompletionViewProps = {
     onShowMessage: (type: "success" | "error", title: string, message: string) => void;
 };
 
-export function CompletionView({
+/**
+ * 完了ビューコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ */
+export const CompletionView = memo(function CompletionView({
     schedules,
     itemCodes,
     itemCodeOptions,
@@ -257,4 +263,4 @@ export function CompletionView({
             </ViewSection>
         </>
     );
-}
+});

@@ -1,7 +1,7 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { useSettings } from "@/store";
 import { makeStyles, tokens } from "@fluentui/react-components";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Page } from "../../components/page";
 import { ScheduleItem } from "./components";
 import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
@@ -112,7 +112,15 @@ const useTimeTrackerViewState = (): UseTimeTrackerViewStateReturn => {
     return { currentView, slideDirection, backTo, nextTo };
 };
 
-export function TimeTrackerPage() {
+/**
+ * TimeTrackerページコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - ハンドラーをuseCallbackでメモ化
+ * - 計算値をuseMemoで最適化
+ */
+export const TimeTrackerPage = memo(function TimeTrackerPage() {
     const styles = useStyles();
 
     const { validationErrors } = useSettings();
@@ -232,4 +240,4 @@ export function TimeTrackerPage() {
             <ValidationErrorDialog open={showErrorDialog} errors={validationErrors.timeTracker} />
         </>
     );
-}
+});

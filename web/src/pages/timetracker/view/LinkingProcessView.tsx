@@ -1,26 +1,18 @@
 import { PageHeader } from "@/components/page";
-import { TimeTrackerAlgorithmCore } from "@/core/algorithm/TimeTrackerAlgorithmCore";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
-import type { Event, Schedule, WorkItem } from "@/types";
+import type { Event, WorkItem } from "@/types";
 import { EventUtils, WorkItemUtils } from "@/types/utils";
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { Sparkle24Regular } from "@fluentui/react-icons";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { AiLinkingSection } from "../components/AiLinkingSection";
 import { EventTable, EventWithOption, type EventTableRow } from "../components/EventTable";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { StatisticsCards } from "../components/StatisticsCards";
 import { ViewHeader, ViewSection } from "../components/ViewLayout";
-import {
-    AdjustedEventInfo,
-    ExcludedEventInfo,
-    ExcludedScheduleInfo,
-    LinkingEventWorkItemPair,
-    LinkingWorkItem,
-    UploadInfo,
-} from "../models";
+import { LinkingEventWorkItemPair, LinkingWorkItem, UploadInfo } from "../models";
 import { getAllEvents } from "../services/converter";
 import { autoLinkEvents } from "../services/linking";
 import { EventState, pickEvents } from "../services/pick";
@@ -143,7 +135,15 @@ export type LinkingProcessViewProps = {
     onSubmit?: (linkingEventWorkItemPair: LinkingEventWorkItemPair[]) => void;
 };
 
-export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewProps) {
+/**
+ * 紐づけ処理ビューコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - ハンドラーをuseCallbackでメモ化
+ * - 計算値をuseMemoで最適化
+ */
+export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewProps) {
     const styles = useStyles();
     const { settings } = useSettings();
 
@@ -307,4 +307,4 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
             <HistoryDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} workItems={uploadInfo?.workItems ?? []} />
         </>
     );
-}
+});

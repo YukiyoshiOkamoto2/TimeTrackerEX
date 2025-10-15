@@ -26,7 +26,7 @@ import {
     Link24Regular,
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ProjectAndWorkItem, useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
 import { ICS, PDF, UploadInfo } from "../models";
 import { validateAndCleanupSettings } from "../services/validate";
@@ -37,12 +37,22 @@ type CheckedTableItem = {
     content: string;
 };
 
+// ============================================================================
+// メモ化サブコンポーネント
+// ============================================================================
+
+/** テーブルセルコンポーネント（メモ化） */
+const TableContentCell = memo(function TableContentCell({ content }: { content: string }) {
+    return <TableCellLayout>{content}</TableCellLayout>;
+});
+
+/** ファイル情報表示コンポーネント（メモ化） */
 // テーブル列定義（共通）
 const tableColumns = [
     createTableColumn<CheckedTableItem>({
         columnId: "content",
         renderHeaderCell: () => "日付情報",
-        renderCell: (item) => <TableCellLayout>{item.content}</TableCellLayout>,
+        renderCell: (item) => <TableContentCell content={item.content} />,
     }),
 ];
 
@@ -301,7 +311,67 @@ const helpContent = (
     </>
 );
 
-export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoading, onSubmit }: FileUploadViewProps) {
+/** 情報セクションコンポーネント（メモ化） */
+const InfoSection = memo(function InfoSection({
+    title,
+    items,
+    selectedKeys,
+    onSelectionChange,
+    styles,
+}: {
+    title: string;
+    items: CheckedTableItem[];
+    selectedKeys: Set<string>;
+    onSelectionChange: (keys: Set<string>) => void;
+    styles: ReturnType<typeof useStyles>;
+}) {
+    return (
+        <div className={styles.infoSection}>
+            <div className={styles.infoSectionHeader}>
+                {title}
+                <Popover withArrow positioning="above-start">
+                    <PopoverTrigger disableButtonEnhancement>
+                        <QuestionCircle20Regular className={styles.helpIcon} />
+                    </PopoverTrigger>
+                    <PopoverSurface>
+                        <div className={styles.popoverContent}>{helpContent}</div>
+                    </PopoverSurface>
+                </Popover>
+            </div>
+            {items.length > 0 && (
+                <div className={styles.tableWrapper}>
+                    <DataTable
+                        items={items}
+                        columns={tableColumns}
+                        getRowId={(item) => item.key}
+                        selectable
+                        columnSizingOptions={columnSizingOptions}
+                        selectedKeys={selectedKeys}
+                        onSelectionChange={onSelectionChange}
+                    />
+                </div>
+            )}
+        </div>
+    );
+});
+
+/**
+ * ファイルアップロードビューコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - InfoSectionコンポーネントを分離してメモ化
+ * - すべてのハンドラーをuseCallbackでメモ化
+ * - 計算値をuseMemoで最適化
+ */
+export const FileUploadView = memo(function FileUploadView({
+    pdf,
+    ics,
+    onPdfUpdate,
+    onIcsUpdate,
+    setIsLoading,
+    onSubmit,
+}: FileUploadViewProps) {
     const styles = useStyles();
     const pdfInputRef = useRef<HTMLInputElement>(null);
     const icsInputRef = useRef<HTMLInputElement>(null);
@@ -705,60 +775,22 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
             <div className={styles.actionSection}>
                 <div className={styles.infoSectionContainer}>
                     {/* 処理対象日時 */}
-                    <div className={styles.infoSection}>
-                        <div className={styles.infoSectionHeader}>
-                            📋 処理対象日時
-                            <Popover withArrow positioning="above-start">
-                                <PopoverTrigger disableButtonEnhancement>
-                                    <QuestionCircle20Regular className={styles.helpIcon} />
-                                </PopoverTrigger>
-                                <PopoverSurface>
-                                    <div className={styles.popoverContent}>{helpContent}</div>
-                                </PopoverSurface>
-                            </Popover>
-                        </div>
-                        {scheduleTableItems.length > 0 && (
-                            <div className={styles.tableWrapper}>
-                                <DataTable
-                                    items={scheduleTableItems}
-                                    columns={tableColumns}
-                                    getRowId={(item) => item.key}
-                                    selectable
-                                    columnSizingOptions={columnSizingOptions}
-                                    selectedKeys={selectedScheduleKeys}
-                                    onSelectionChange={setSelectedScheduleKeys}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    <InfoSection
+                        title="📋 処理対象日時"
+                        items={scheduleTableItems}
+                        selectedKeys={selectedScheduleKeys}
+                        onSelectionChange={setSelectedScheduleKeys}
+                        styles={styles}
+                    />
 
                     {/* スケジュール情報 */}
-                    <div className={styles.infoSection}>
-                        <div className={styles.infoSectionHeader}>
-                            📅 スケジュール情報
-                            <Popover withArrow positioning="above-start">
-                                <PopoverTrigger disableButtonEnhancement>
-                                    <QuestionCircle20Regular className={styles.helpIcon} />
-                                </PopoverTrigger>
-                                <PopoverSurface>
-                                    <div className={styles.popoverContent}>{helpContent}</div>
-                                </PopoverSurface>
-                            </Popover>
-                        </div>
-                        {eventTableItems.length > 0 && (
-                            <div className={styles.tableWrapper}>
-                                <DataTable
-                                    items={eventTableItems}
-                                    columns={tableColumns}
-                                    getRowId={(item) => item.key}
-                                    selectable
-                                    columnSizingOptions={columnSizingOptions}
-                                    selectedKeys={selectedEventKeys}
-                                    onSelectionChange={setSelectedEventKeys}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    <InfoSection
+                        title="📅 スケジュール情報"
+                        items={eventTableItems}
+                        selectedKeys={selectedEventKeys}
+                        onSelectionChange={setSelectedEventKeys}
+                        styles={styles}
+                    />
                 </div>
                 <InteractiveCard
                     title="紐づけ開始"
@@ -772,4 +804,4 @@ export function FileUploadView({ pdf, ics, onPdfUpdate, onIcsUpdate, setIsLoadin
             <Dialog />
         </>
     );
-}
+});

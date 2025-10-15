@@ -185,10 +185,10 @@ function isLinkingEventWorkItemPair(obj: EventTableRow["item"]): obj is LinkingE
 }
 
 // 重複イベントカードをレンダリング（メモ化用コンポーネント）
-const DuplicationEventCard = memo(function DuplicationEventCard({ 
-    event 
-}: { 
-    event: { name: string; schedule: Schedule } 
+const DuplicationEventCard = memo(function DuplicationEventCard({
+    event,
+}: {
+    event: { name: string; schedule: Schedule };
 }) {
     return (
         <StatCard
@@ -254,10 +254,13 @@ const WorkItemActionCell = memo(function WorkItemActionCell({
 
 // 作業アイテム名セルをレンダリング（メモ化用コンポーネント）
 const WorkItemNameCell = memo(function WorkItemNameCell({ workItemName }: { workItemName: string }) {
-    const cellStyle = useMemo(() => ({
-        color: workItemName === "未紐づけ" ? tokens.colorNeutralForeground3 : undefined,
-        fontWeight: workItemName === "未紐づけ" ? undefined : tokens.fontWeightSemibold,
-    }), [workItemName]);
+    const cellStyle = useMemo(
+        () => ({
+            color: workItemName === "未紐づけ" ? tokens.colorNeutralForeground3 : undefined,
+            fontWeight: workItemName === "未紐づけ" ? undefined : tokens.fontWeightSemibold,
+        }),
+        [workItemName],
+    );
 
     return (
         <TableCellLayout>
@@ -494,13 +497,17 @@ function convertToTableRow(row: EventTableRow): TableRow {
 
 /**
  * イベントテーブルコンポーネント
- * 
+ *
  * パフォーマンス最適化:
  * - React.memoでラップして不要な再レンダリングを防止
  * - すべてのハンドラーをuseCallbackで最適化
  * - テーブルデータと列定義をuseMemoで最適化
  */
-export const EventTable = memo(function EventTable({ events, workItems: workItemsNotUse, onWorkItemChange }: EventTableProps) {
+export const EventTable = memo(function EventTable({
+    events,
+    workItems: workItemsNotUse,
+    onWorkItemChange,
+}: EventTableProps) {
     const styles = useStyles();
     const { settings } = useSettings();
     const [dialogOpen, setDialogOpen] = useState(false);

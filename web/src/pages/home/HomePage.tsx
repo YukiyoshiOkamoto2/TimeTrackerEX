@@ -1,5 +1,6 @@
 import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import { Calendar24Regular, Clock24Regular, Settings24Regular } from "@fluentui/react-icons";
+import { memo } from "react";
 import { Card } from "../../components/card";
 import { Page } from "../../components/page";
 
@@ -83,7 +84,13 @@ const CARDS = [
     },
 ];
 
-export function HomePage() {
+/**
+ * ホームページコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ */
+export const HomePage = memo(function HomePage() {
     const styles = useStyles();
 
     return (
@@ -119,4 +126,4 @@ export function HomePage() {
             </div>
         </Page>
     );
-}
+});

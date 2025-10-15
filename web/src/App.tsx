@@ -1,6 +1,7 @@
 import type { SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Button, makeStyles, Persona, SearchBox, Tab, TabList, tokens } from "@fluentui/react-components";
 import { Clock24Regular, Home24Regular, Search20Regular, SettingsRegular } from "@fluentui/react-icons";
+import { memo } from "react";
 import { MessageDialog } from "./components/message-dialog";
 import { HomePage } from "./pages/home";
 import { SettingPage } from "./pages/setting";
@@ -57,7 +58,13 @@ const navItems: NavItem[] = [
     { id: "TimeTracker", label: "TimeTracker", icon: <Clock24Regular /> },
 ];
 
-function App() {
+/**
+ * メインアプリケーションコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ */
+const App = memo(function App() {
     const styles = useStyles();
     const { currentPageName, navigate } = useNavigation();
 
@@ -115,6 +122,6 @@ function App() {
             <MessageDialog />
         </div>
     );
-}
+});
 
 export default App;

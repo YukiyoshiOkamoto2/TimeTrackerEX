@@ -19,7 +19,7 @@ import {
     tokens,
 } from "@fluentui/react-components";
 import { KeyRegular, LockClosedRegular, PersonRegular, ShieldCheckmarkRegular } from "@fluentui/react-icons";
-import { useState } from "react";
+import { memo, useState } from "react";
 
 const useStyles = makeStyles({
     dialogSurface: {
@@ -139,7 +139,18 @@ export interface PasswordInputDialogProps {
     userName: string;
 }
 
-export function PasswordInputDialog({ open, onCancel, onSubmit, userName }: PasswordInputDialogProps) {
+/**
+ * パスワード入力ダイアログコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ */
+export const PasswordInputDialog = memo(function PasswordInputDialog({
+    open,
+    onCancel,
+    onSubmit,
+    userName,
+}: PasswordInputDialogProps) {
     const styles = useStyles();
     const [password, setPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -257,4 +268,4 @@ export function PasswordInputDialog({ open, onCancel, onSubmit, userName }: Pass
             </DialogSurface>
         </Dialog>
     );
-}
+});

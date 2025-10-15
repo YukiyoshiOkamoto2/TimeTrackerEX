@@ -42,7 +42,7 @@ import {
     Search24Regular,
     Warning24Filled,
 } from "@fluentui/react-icons";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import type { ExcludedEventInfo, LinkingEventWorkItemPair } from "../models";
 import { EventState, pickEvents } from "../services/pick";
 
@@ -102,7 +102,7 @@ interface StatisticsData {
 }
 
 /** 統計カードのデータソース */
-type StatisticsCardsData = EventState
+type StatisticsCardsData = EventState;
 
 /** コンポーネントのProps */
 export interface StatisticsCardsProps {
@@ -366,9 +366,84 @@ const EXCLUDED_EVENTS_COLUMN_SIZING = {
 
 /** 1日ごとのイベント数テーブルの列幅設定 */
 const DAILY_EVENT_COUNT_COLUMN_SIZING = {
-    displayDate: { minWidth: 300, idealWidth: 400 },
-    eventCount: { minWidth: 200, idealWidth: 250 },
+    displayDate: { minWidth: 400, idealWidth: 700 },
+    eventCount: { minWidth: 120, idealWidth: 150 },
 } as const;
+
+/** 日付セルコンポーネント（メモ化） */
+const DateCell = memo(function DateCell({ displayDate }: { displayDate: string }) {
+    return (
+        <TableCellLayout>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                }}
+            >
+                <CalendarLtr24Regular />
+                {displayDate}
+            </div>
+        </TableCellLayout>
+    );
+});
+
+/** イベント数セルコンポーネント（メモ化） */
+const EventCountCell = memo(function EventCountCell({ count }: { count: number }) {
+    return (
+        <TableCellLayout>
+            <div style={{ fontSize: "16px", fontWeight: "600" }}>{count}件</div>
+        </TableCellLayout>
+    );
+});
+
+/** 除外イベント名セルコンポーネント（メモ化） */
+const ExcludedEventNameCell = memo(function ExcludedEventNameCell({
+    name,
+    organizer,
+    styles,
+}: {
+    name: string;
+    organizer: string;
+    styles: ReturnType<typeof useStyles>;
+}) {
+    return (
+        <TableCellLayout>
+            <div className={styles.eventCell}>
+                <div className={styles.eventName}>{name}</div>
+                <div className={styles.eventDetail}>
+                    <PersonCircle24Regular />
+                    {organizer || "不明"}
+                </div>
+            </div>
+        </TableCellLayout>
+    );
+});
+
+/** 除外理由詳細セルコンポーネント（メモ化） */
+const ExcludeReasonDetailCell = memo(function ExcludeReasonDetailCell({
+    details,
+    styles,
+}: {
+    details: ExcludedEventInfo["details"];
+    styles: ReturnType<typeof useStyles>;
+}) {
+    const uniqueReasons = useMemo(() => parseExcludeReasons(details), [details]);
+
+    return (
+        <TableCellLayout>
+            <div className={styles.reasonList}>
+                {uniqueReasons.map((reason, index) => (
+                    <div key={index} className={styles.reasonItem}>
+                        {reason}
+                    </div>
+                ))}
+            </div>
+        </TableCellLayout>
+    );
+});
 
 /**
  * 紐づけ方法別の件数をカウント
@@ -450,26 +525,23 @@ const calcStatisticsData = (
     data: StatisticsCardsData,
     linkingEventWorkItemPair: LinkingEventWorkItemPair[],
 ): StatisticsData => {
-    const allEvenst = pickEvents(data)
+    const allEvenst = pickEvents(data);
 
     let targetDays = data.enableSchedules.length + data.paidLeaveDayEvents.length;
     let { fromStr, endStr } = getDateRangeString(data.enableSchedules);
-    
+
     // 有効なスケジュールがない場合は、すべてのイベントから日付範囲を算出
     if (targetDays === 0 && allEvenst.length > 0) {
         const eventSchedules = allEvenst.map((e) => e.schedule);
         const dateRange = getDateRangeString(eventSchedules);
         fromStr = dateRange.fromStr;
         endStr = dateRange.endStr;
-        
+
         // イベントの日数をユニークな日付でカウント
-        const uniqueDates = new Set(
-            eventSchedules.map((s) => new Date(s.start).toLocaleDateString())
-        );
+        const uniqueDates = new Set(eventSchedules.map((s) => new Date(s.start).toLocaleDateString()));
         targetDays = uniqueDates.size;
     }
 
-    
     const paidLeaveDays = data.paidLeaveDayEvents.length;
     const totalEvents = allEvenst.length;
     const adjustedCount = data.adjustedEvents.length;
@@ -508,7 +580,16 @@ export interface StatisticsCardsProps {
     linkingEventWorkItemPair: LinkingEventWorkItemPair[];
 }
 
-export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCardsProps) {
+/**
+ * 統計カードコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - すべてのサブコンポーネントをメモ化
+ * - イベントハンドラーをuseCallbackで最適化
+ * - 計算処理をuseMemoで最適化
+ */
+export const StatisticsCards = memo(function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCardsProps) {
     const styles = useStyles();
     const statistics = useMemo(
         () => calcStatisticsData(data, linkingEventWorkItemPair),
@@ -554,29 +635,30 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
         }));
     }, [dialogType, data.excludedEvents, searchQuery]);
 
-    // 1日ごとのイベント数データを取得
+    // 1日ごとのイベント数データを取得（メモ化最適化）
     const dailyEventCountData = useMemo((): DailyEventCountRow[] => {
         if (dialogType !== "targetDays") return [];
 
         // すべてのイベントを取得
         const allEvents = pickEvents(data);
-        
-        // 日付ごとにイベントをグループ化
-        const eventsByDate = new Map<string, Event[]>();
-        
-        allEvents.forEach((event) => {
-            const dateKey = new Date(event.schedule.start).toLocaleDateString("ja-JP");
-            if (!eventsByDate.has(dateKey)) {
-                eventsByDate.set(dateKey, []);
-            }
-            eventsByDate.get(dateKey)!.push(event);
-        });
 
-        // テーブル行データに変換
+        // 日付ごとにイベントをグループ化
+        const eventsByDate = allEvents.reduce<Map<string, Event[]>>((acc, event) => {
+            const dateKey = new Date(event.schedule.start).toLocaleDateString("ja-JP");
+            const events = acc.get(dateKey);
+            if (events) {
+                events.push(event);
+            } else {
+                acc.set(dateKey, [event]);
+            }
+            return acc;
+        }, new Map());
+
+        // テーブル行データに変換してソート
         return Array.from(eventsByDate.entries())
             .map(([dateKey, events]) => {
                 const date = new Date(events[0].schedule.start);
-                
+
                 return {
                     id: dateKey,
                     date: date.toISOString(),
@@ -639,7 +721,7 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
         }
     }, []);
 
-    // 除外イベント用のテーブル列定義
+    // 除外イベント用のテーブル列定義（メモ化最適化）
     const excludedEventsColumns = useMemo(
         (): TableColumnDefinition<ExcludedEventRow>[] => [
             createTableColumn<ExcludedEventRow>({
@@ -647,15 +729,7 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                 compare: (a, b) => a.event.name.localeCompare(b.event.name),
                 renderHeaderCell: () => "イベント名",
                 renderCell: (item) => (
-                    <TableCellLayout>
-                        <div className={styles.eventCell}>
-                            <div className={styles.eventName}>{item.event.name}</div>
-                            <div className={styles.eventDetail}>
-                                <PersonCircle24Regular />
-                                {item.event.organizer || "不明"}
-                            </div>
-                        </div>
-                    </TableCellLayout>
+                    <ExcludedEventNameCell name={item.event.name} organizer={item.event.organizer} styles={styles} />
                 ),
             }),
             createTableColumn<ExcludedEventRow>({
@@ -697,65 +771,33 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                     return aText.localeCompare(bText);
                 },
                 renderHeaderCell: () => "詳細",
-                renderCell: (item) => {
-                    const uniqueReasons = parseExcludeReasons(item.excludeReasons);
-                    return (
-                        <TableCellLayout>
-                            <div className={styles.reasonList}>
-                                {uniqueReasons.map((reason, index) => (
-                                    <div key={index} className={styles.reasonItem}>
-                                        {reason}
-                                    </div>
-                                ))}
-                            </div>
-                        </TableCellLayout>
-                    );
-                },
+                renderCell: (item) => <ExcludeReasonDetailCell details={item.excludeReasons} styles={styles} />,
             }),
         ],
         [getExcludeReasonIcon, styles],
     );
 
-    // 1日ごとのイベント数テーブル列定義
+    // 1日ごとのイベント数テーブル列定義（メモ化最適化）
     const dailyEventCountColumns = useMemo(
         (): TableColumnDefinition<DailyEventCountRow>[] => [
             createTableColumn<DailyEventCountRow>({
                 columnId: "displayDate",
                 compare: (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
                 renderHeaderCell: () => "日付",
-                renderCell: (item) => (
-                    <TableCellLayout>
-                        <div style={{ 
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            fontSize: "16px",
-                            fontWeight: "600",
-                        }}>
-                            <CalendarLtr24Regular />
-                            {item.displayDate}
-                        </div>
-                    </TableCellLayout>
-                ),
+                renderCell: (item) => <DateCell displayDate={item.displayDate} />,
             }),
             createTableColumn<DailyEventCountRow>({
                 columnId: "eventCount",
                 compare: (a, b) => a.eventCount - b.eventCount,
                 renderHeaderCell: () => "イベント数",
-                renderCell: (item) => (
-                    <TableCellLayout>
-                        <div style={{ fontSize: "16px", fontWeight: "600" }}>
-                            {item.eventCount}件
-                        </div>
-                    </TableCellLayout>
-                ),
+                renderCell: (item) => <EventCountCell count={item.eventCount} />,
             }),
         ],
-        [styles],
+        [],
     );
 
-    // ダイアログ情報を取得
-    const getDialogInfo = (): DialogInfo | null => {
+    // ダイアログ情報をメモ化
+    const currentDialogInfo = useMemo((): DialogInfo | null => {
         if (!dialogType) return null;
 
         switch (dialogType) {
@@ -772,9 +814,7 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                     color: tokens.colorPaletteRedForeground2,
                 };
         }
-    };
-
-    const currentDialogInfo = getDialogInfo();
+    }, [dialogType]);
 
     return (
         <>
@@ -794,7 +834,8 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                             </div>
                             <span>{currentDialogInfo?.title}</span>
                             <span style={{ marginLeft: "auto" }}>
-                                ({dialogType === "targetDays" ? dailyEventCountData.length : excludedEventsData.length}件)
+                                ({dialogType === "targetDays" ? dailyEventCountData.length : excludedEventsData.length}
+                                件)
                             </span>
                             <Button appearance="subtle" icon={<Dismiss24Regular />} onClick={handleCloseDialog} />
                         </DialogTitle>
@@ -859,4 +900,4 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
             </Dialog>
         </>
     );
-}
+});
