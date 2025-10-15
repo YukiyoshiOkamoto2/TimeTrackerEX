@@ -1,4 +1,5 @@
 import { InteractiveCard } from "@/components/card";
+import { appMessageDialogRef } from "@/components/message-dialog";
 import { PageHeader } from "@/components/page";
 import { TimeTrackerAlgorithmEvent } from "@/core/algorithm/TimeTrackerAlgorithmEvent";
 import { HistoryManager } from "@/core/history";
@@ -17,9 +18,12 @@ import { LinkingEventWorkItemPair, LinkingInfo } from "../models";
 import { getAllEvents } from "../services/converter";
 import { autoLinkEvents } from "../services/linking";
 import { EventState, pickEvents } from "../services/pick";
-import { appMessageDialogRef } from "@/components/message-dialog";
 
 const logger = getLogger("LinkingProcessView");
+
+// ============================================================================
+// スタイル定義
+// ============================================================================
 
 const useStyles = makeStyles({
     actionSection: {
@@ -28,9 +32,14 @@ const useStyles = makeStyles({
     },
 });
 
+// ============================================================================
+// 型定義とシングルトン
+// ============================================================================
+
 type LinkingProcessViewState = EventState;
 
 const historyManager = new HistoryManager();
+historyManager.load();
 
 export type LinkingProcessViewProps = {
     linkingInfo?: LinkingInfo;
@@ -46,7 +55,11 @@ export type LinkingProcessViewProps = {
  * - ハンドラーをuseCallbackでメモ化
  * - 計算値をuseMemoで最適化
  */
-export const LinkingProcessView = memo(function LinkingProcessView({ linkingInfo, onBack, onRegisterEvents }: LinkingProcessViewProps) {
+export const LinkingProcessView = memo(function LinkingProcessView({
+    linkingInfo,
+    onBack,
+    onRegisterEvents,
+}: LinkingProcessViewProps) {
     const styles = useStyles();
     const { settings } = useSettings();
     const timetracker = settings.timetracker;
@@ -65,30 +78,27 @@ export const LinkingProcessView = memo(function LinkingProcessView({ linkingInfo
         scheduleEvents: [],
     });
 
-    // 紐づけ管理フック（状態とハンドラーを含む）
+    // 紐づけ管理フック
     const { linkingEventWorkItemPair, setLinkingEventWorkItemPair, handleManualLinking, handleAiLinking } =
-        useLinkingManager({
-            historyManager,
-        });
+        useLinkingManager({ historyManager });
+
+    // 紐づけ済みイベントUUID（メモ化）
     const linkingEventUUID = useMemo(
         () => linkingEventWorkItemPair.map((l) => l.event.uuid),
         [linkingEventWorkItemPair],
     );
+
+    // 未紐づけイベント（メモ化）
     const unLinkedEvents = useMemo(
         () => pickEvents(state).filter((event) => !linkingEventUUID.includes(event.uuid)),
         [state, linkingEventUUID],
     );
 
-    // イベントリストを取得（紐づけ済み + 未紐づけ）
+    // イベントテーブル行データ（紐づけ済み + 未紐づけ、日時順にソート）
     const allEventTableRow = useMemo((): EventTableRow[] => {
-        const linked = linkingEventWorkItemPair.map((pair) => ({
-            id: pair.event.uuid,
-            item: pair,
-        }));
-        const unlinked = unLinkedEvents.map((event) => ({
-            id: event.uuid,
-            item: event,
-        }));
+        const linked = linkingEventWorkItemPair.map((pair) => ({ id: pair.event.uuid, item: pair }));
+        const unlinked = unLinkedEvents.map((event) => ({ id: event.uuid, item: event }));
+
         return [...linked, ...unlinked].sort((a, b) => {
             const aEvent = "event" in a.item ? a.item.event : a.item;
             const bEvent = "event" in b.item ? b.item.event : b.item;
@@ -115,38 +125,41 @@ export const LinkingProcessView = memo(function LinkingProcessView({ linkingInfo
     // 登録実行可能かどうかを判定（メモ化）
     const canSubmit = useMemo(() => linkingEventWorkItemPair.length > 0, [linkingEventWorkItemPair.length]);
 
+    // 登録実行ハンドラー
     const handleSubmit = useCallback(async () => {
-        const linking = linkingEventWorkItemPair.length;
-        const unLinking = unLinkedEvents.length;
-        logger.info(`登録実行: ${linking}件の紐づけを処理`);
+        const linkedCount = linkingEventWorkItemPair.length;
+        const unlinkedCount = unLinkedEvents.length;
 
-        // 未紐づけイベントがある場合は確認ダイアログを表示
-        if (unLinking > 0) {
+        logger.info(`登録実行: ${linkedCount}件の紐づけを処理`);
+
+        // 未紐づけイベント確認ダイアログ
+        if (unlinkedCount > 0) {
             const proceed = await appMessageDialogRef.showConfirmAsync(
                 "未紐づけイベントがあります",
-                `${unLinking}件のイベントがまだ紐づけられていません。\n\n` +
-                `未紐づけのイベントは登録されませんが、このまま進みますか？\n\n` +
-                `✅ 紐づけ済み: ${linking}件\n` +
-                `❌ 未紐づけ: ${unLinking}件`,
+                `${unlinkedCount}件のイベントがまだ紐づけられていません。\n\n` +
+                    `未紐づけのイベントは登録されませんが、このまま進みますか？\n\n` +
+                    `✅ 紐づけ済み: ${linkedCount}件\n` +
+                    `❌ 未紐づけ: ${unlinkedCount}件`,
                 "WARN",
             );
-            if (!proceed) {
-                return;
-            }
+            if (!proceed) return;
         }
 
         try {
-            // イベントの重複を解消
+            // イベント重複解消
             const events = linkingEventWorkItemPair.map((pair) => pair.event);
-            const [cleanedEvents, excludedEvents] = TimeTrackerAlgorithmEvent.cleanDuplicateEvent(events, timetracker?.eventDuplicatePriority.timeCompare ?? "small");
+            const [cleanedEvents, excludedEvents] = TimeTrackerAlgorithmEvent.cleanDuplicateEvent(
+                events,
+                timetracker?.eventDuplicatePriority.timeCompare ?? "small",
+            );
             logger.info(`重複解消後: ${cleanedEvents.length}件（除外: ${excludedEvents.length}件）`);
 
-            // クリーンアップされたイベントに対応する紐づけペアを作成
+            // クリーンアップされた紐づけペアを作成
             const cleanedPairs = cleanedEvents
                 .map((event) => linkingEventWorkItemPair.find((pair) => pair.event.uuid === event.uuid))
                 .filter((pair): pair is LinkingEventWorkItemPair => pair !== undefined);
 
-            // 重複解消後に紐づけペアが残っているか確認
+            // 空配列チェック
             if (cleanedPairs.length === 0) {
                 await appMessageDialogRef.showMessageAsync(
                     "紐づけエラー",
@@ -157,8 +170,6 @@ export const LinkingProcessView = memo(function LinkingProcessView({ linkingInfo
             }
 
             logger.info(`次の画面へ遷移: ${cleanedPairs.length}件の紐づけペア`);
-
-            // 次の画面（CompletionView）へ遷移
             onRegisterEvents(cleanedPairs);
         } catch (error) {
             logger.error("登録処理エラー:", error);
@@ -168,24 +179,29 @@ export const LinkingProcessView = memo(function LinkingProcessView({ linkingInfo
                 "ERROR",
             );
         }
-    }, [linkingEventWorkItemPair, unLinkedEvents.length, onRegisterEvents]);
+    }, [
+        linkingEventWorkItemPair,
+        unLinkedEvents.length,
+        timetracker?.eventDuplicatePriority.timeCompare,
+        onRegisterEvents,
+    ]);
 
-    // 有効イベント取得
+    // 有効イベント取得と自動紐づけ
     useEffect(() => {
-        const state = getAllEvents(
-            settings.timetracker!,
-            linkingInfo?.schedules ?? [],
-            linkingInfo?.events ?? [],
-        );
-        const linling = autoLinkEvents(
-            pickEvents(state),
-            linkingInfo?.workItems ?? [],
-            settings.timetracker!,
+        if (!settings.timetracker || !linkingInfo) return;
+
+        const eventState = getAllEvents(settings.timetracker, linkingInfo.schedules ?? [], linkingInfo.events ?? []);
+
+        const autoLinking = autoLinkEvents(
+            pickEvents(eventState),
+            linkingInfo.workItems ?? [],
+            settings.timetracker,
             historyManager,
         );
-        setState(state);
-        setLinkingEventWorkItemPair(linling.linked);
-    }, [linkingInfo, settings.timetracker]);
+
+        setState(eventState);
+        setLinkingEventWorkItemPair(autoLinking.linked);
+    }, [linkingInfo, settings.timetracker, setLinkingEventWorkItemPair]);
 
     return (
         <>
@@ -205,7 +221,7 @@ export const LinkingProcessView = memo(function LinkingProcessView({ linkingInfo
                 {/* イベントテーブル */}
                 <EventTable
                     events={allEventTableRow}
-                    workItems={linkingInfo?.workItems || []}
+                    workItems={linkingInfo?.workItems ?? []}
                     onWorkItemChange={handleWorkItemChange}
                 />
 
@@ -236,7 +252,11 @@ export const LinkingProcessView = memo(function LinkingProcessView({ linkingInfo
             </ViewSection>
 
             {/* 履歴管理Drawer */}
-            <HistoryDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} workItems={linkingInfo?.workItems ?? []} />
+            <HistoryDrawer
+                open={isDrawerOpen}
+                onOpenChange={setIsDrawerOpen}
+                workItems={linkingInfo?.workItems ?? []}
+            />
         </>
     );
 });

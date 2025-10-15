@@ -48,9 +48,7 @@ export type CompletionViewProps = {
  * パフォーマンス最適化:
  * - React.memoでラップして不要な再レンダリングを防止
  */
-export const CompletionView = memo(function CompletionView({
-    onBack,
-}: CompletionViewProps) {
+export const CompletionView = memo(function CompletionView({ onBack }: CompletionViewProps) {
     const styles = useStyles();
 
     const breadcrumbs = ["TimeTracker", "紐づけ処理", "スケジュール確認"];
@@ -63,16 +61,13 @@ export const CompletionView = memo(function CompletionView({
         }
     };
 
-
     // 未設定の作業項目コード数をカウント
     const missingCodesCount = 0;
     const hasErrors = missingCodesCount > 0;
 
     return (
         <>
-            <ViewHeader
-                left={<PageHeader breadcrumbs={breadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />}
-            />
+            <ViewHeader left={<PageHeader breadcrumbs={breadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />} />
 
             <ViewSection>
                 {/* 警告メッセージ */}

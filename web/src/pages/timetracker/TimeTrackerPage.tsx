@@ -1,22 +1,26 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
+import { HistoryManager } from "@/core";
+import { getLogger } from "@/lib";
 import { useSettings } from "@/store";
 import { usePageContent } from "@/store/content";
+import { Event, Schedule, WorkItem } from "@/types";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Page } from "../../components/page";
 import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
+import { useTimeTrackerSession, type TimeTrackerAPIResult } from "./hooks";
+import { ProjectAndWorkItem } from "./hooks/useTimeTrackerSession";
 import type { LinkingEventWorkItemPair, LinkingInfo, UploadInfo } from "./models";
+import { validateAndCleanupSettings } from "./services/validate";
 import { CompletionView } from "./view/CompletionView";
 import { FileUploadView } from "./view/FileUploadView";
 import { LinkingProcessView } from "./view/LinkingProcessView";
-import { useTimeTrackerSession } from "./hooks";
-import { HistoryManager } from "@/core";
-import { getLogger } from "@/lib";
-import { Schedule, WorkItem, Event } from "@/types";
-import { validateAndCleanupSettings } from "./services/validate";
-import { ProjectAndWorkItem } from "./hooks/useTimeTrackerSession";
 
 const logger = getLogger("TimeTrackerPage");
+
+// ============================================================================
+// シングルトンとスタイル定義
+// ============================================================================
 
 const historyManager = new HistoryManager();
 historyManager.load();
@@ -60,6 +64,10 @@ const useStyles = makeStyles({
     },
 });
 
+// ============================================================================
+// 型定義と定数
+// ============================================================================
+
 /** ビュー種別 */
 type View = "upload" | "linking" | "completion";
 
@@ -78,8 +86,20 @@ interface UseTimeTrackerViewStateReturn {
     nextTo: (next?: ViewIndex) => void;
 }
 
+/**
+ * TimeTrackerページの永続化データ型定義
+ * uploadInfoにpdfとicsが含まれているため、uploadInfoのみを管理
+ */
+interface TimeTrackerPageContent {
+    uploadInfo?: UploadInfo;
+}
+
 /** 利用可能なビューのリスト */
 const VIEWS: View[] = ["upload", "linking", "completion"];
+
+// ============================================================================
+// カスタムフック
+// ============================================================================
 
 /**
  * TimeTrackerページのビュー状態を管理するカスタムフック
@@ -121,13 +141,43 @@ const useTimeTrackerViewState = (): UseTimeTrackerViewStateReturn => {
     return { currentView, slideDirection, backTo, nextTo };
 };
 
+// ============================================================================
+// ヘルパー関数
+// ============================================================================
+
 /**
- * TimeTrackerページの永続化データ型定義
- * uploadInfoにpdfとicsが含まれているため、uploadInfoのみを管理
+ * 認証チェックを実行し、未認証の場合は認証を試行
+ * @returns 認証成功時true、失敗時false
  */
-interface TimeTrackerPageContent {
-    uploadInfo?: UploadInfo;
-}
+const ensureAuthenticated = async (
+    isAuthenticated: boolean,
+    authenticateAsync: () => Promise<TimeTrackerAPIResult>,
+): Promise<boolean> => {
+    if (isAuthenticated) return true;
+
+    const authResult = await authenticateAsync();
+    if (authResult.isError) {
+        await appMessageDialogRef.showMessageAsync("認証エラー", "TimeTrackerの認証に失敗しました。", "ERROR");
+        return false;
+    }
+    return true;
+};
+
+/**
+ * エラーをログに記録し、ユーザーにダイアログで通知
+ */
+const handleError = async (error: unknown, context: string): Promise<void> => {
+    logger.error(`Error in ${context}:`, error);
+    await appMessageDialogRef.showMessageAsync(
+        "処理エラー",
+        error instanceof Error ? error.message : "不明なエラーが発生しました。",
+        "ERROR",
+    );
+};
+
+// ============================================================================
+// メインコンポーネント
+// ============================================================================
 
 /**
  * TimeTrackerページコンポーネント
@@ -162,6 +212,10 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     );
     const { Dialog, isAuthenticated, ...sessionHook } = useTimeTrackerSession(sessionConfig);
 
+    // ============================================================================
+    // イベントハンドラー
+    // ============================================================================
+
     // UploadInfo更新用のセッター（ContentProviderに保存）
     const setUploadInfo = useCallback(
         (uploadInfo: UploadInfo | undefined) => {
@@ -183,7 +237,6 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     const fetchProjectData = useCallback(
         async (projectId: string): Promise<ProjectAndWorkItem | undefined> => {
             const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId, async () => {
-
                 // プロジェクトID取得失敗時は設定をクリア
                 if (timetracker) {
                     updateSettings({
@@ -211,137 +264,107 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     );
 
     // 紐づけ開始処理（メモ化）
-    const handleLinking = useCallback(async (selectedInfo: {
-        schedules: Schedule[]
-        events: Event[]
-    }) => {
-        if (!timetracker) {
-            logger.error("Nothing. Timetracker settings.");
-            return;
-        }
-
-        if (selectedInfo.schedules.length === 0 || selectedInfo.events.length === 0) {
-            logger.error("Nothing. schedules and events.");
-            return;
-        }
-
-        if (!isAuthenticated) {
-            const authResult = await sessionHook.authenticateAsync();
-            if (authResult.isError) {
-                await appMessageDialogRef.showMessageAsync(
-                    "認証エラー",
-                    "TimeTrackerの認証に失敗しました。",
-                    "ERROR",
-                );
-                return;
-            }
-        }
-
-        try {
-            setIsLoading(true);
-
-            // プロジェクト情報取得
-            const itemResult = await fetchProjectData(String(timetracker?.baseProjectId));
-            if (!itemResult) {
+    const handleLinking = useCallback(
+        async (selectedInfo: { schedules: Schedule[]; events: Event[] }) => {
+            if (!timetracker) {
+                logger.error("Nothing. Timetracker settings.");
                 return;
             }
 
-            // 履歴の更新
-            updateHistory(itemResult.workItems);
+            if (selectedInfo.schedules.length === 0 || selectedInfo.events.length === 0) {
+                logger.error("Nothing. schedules and events.");
+                return;
+            }
 
-            // 設定の検証とクリーンアップ
-            const cleanResult = validateAndCleanupSettings(timetracker, itemResult.workItems);
-            if (cleanResult.items.length > 0) {
-                await appMessageDialogRef.showMessageAsync(
-                    "設定エラー",
-                    `設定項目に不正なIDが存在します。削除します。（ ${cleanResult.items.length}件 ）\n\n` +
-                    cleanResult.items.map((i) => "・ " + i).join("\n"),
-                    "ERROR",
-                );
-                updateSettings({
-                    timetracker: cleanResult.settings,
+            // 認証チェック
+            const authenticated = await ensureAuthenticated(isAuthenticated, sessionHook.authenticateAsync);
+            if (!authenticated) return;
+
+            try {
+                setIsLoading(true);
+
+                // プロジェクト情報取得
+                const itemResult = await fetchProjectData(String(timetracker?.baseProjectId));
+                if (!itemResult) {
+                    return;
+                }
+
+                // 履歴の更新
+                updateHistory(itemResult.workItems);
+
+                // 設定の検証とクリーンアップ
+                const cleanResult = validateAndCleanupSettings(timetracker, itemResult.workItems);
+                if (cleanResult.items.length > 0) {
+                    await appMessageDialogRef.showMessageAsync(
+                        "設定エラー",
+                        `設定項目に不正なIDが存在します。削除します。（ ${cleanResult.items.length}件 ）\n\n` +
+                            cleanResult.items.map((i) => "・ " + i).join("\n"),
+                        "ERROR",
+                    );
+                    updateSettings({
+                        timetracker: cleanResult.settings,
+                    });
+                    return;
+                }
+
+                // 紐づけ情報を設定
+                setLinkingInfo({
+                    ...selectedInfo,
+                    workItems: itemResult.workItems,
                 });
-                return;
-            }
 
-            // 
-            setLinkingInfo({
-                ...selectedInfo,
-                workItems: itemResult.workItems,
-            })
-            
-            // 成功時のみ次画面へ遷移
-            nextTo();
-        } catch (error) {
-            logger.error("Error in handleLinkedClick:", error);
-            await appMessageDialogRef.showMessageAsync(
-                "処理エラー",
-                error instanceof Error ? error.message : "不明なエラーが発生しました。",
-                "ERROR",
-            );
-            // エラー時は遷移しない
-        } finally {
-            setIsLoading(false);
-        }
-    }, [
-        isAuthenticated,
-        sessionHook,
-        timetracker,
-        fetchProjectData,
-        updateHistory,
-        updateSettings,
-        setIsLoading,
-        nextTo,
-    ]);
+                // 成功時のみ次画面へ遷移
+                nextTo();
+            } catch (error) {
+                await handleError(error, "handleLinking");
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [isAuthenticated, sessionHook, timetracker, fetchProjectData, updateHistory, updateSettings, nextTo],
+    );
 
     /**
      * 紐づけ処理完了時のハンドラー
      */
-    const handleRegisterEvents = useCallback(async (linkingEventWorkItemPair: LinkingEventWorkItemPair[]) => {
-        if (!isAuthenticated) {
-            const authResult = await sessionHook.authenticateAsync();
-            if (authResult.isError) {
-                await appMessageDialogRef.showMessageAsync(
-                    "認証エラー",
-                    "TimeTrackerの認証に失敗しました。",
-                    "ERROR",
-                );
-                return;
-            }
-        }
-        try {
-            setIsLoading(true);
+    const handleRegisterEvents = useCallback(
+        async (linkingEventWorkItemPair: LinkingEventWorkItemPair[]) => {
+            // 認証チェック
+            const authenticated = await ensureAuthenticated(isAuthenticated, sessionHook.authenticateAsync);
+            if (!authenticated) return;
 
-            const tasks = linkingEventWorkItemPair.map(l => {
-                return {
+            try {
+                setIsLoading(true);
+
+                const tasks = linkingEventWorkItemPair.map((l) => ({
                     workItemId: l.linkingWorkItem.workItem.id,
                     startTime: l.event.schedule.start,
                     endTime: l.event.schedule.end!,
+                }));
+
+                for (const task of tasks) {
+                    await sessionHook.registerTaskAsync(task);
                 }
-            })
-            for (const task of tasks) {
-                await sessionHook.registerTaskAsync(task)
+
+                // 成功時のみ次画面へ遷移
+                nextTo();
+            } catch (error) {
+                await handleError(error, "handleRegisterEvents");
+            } finally {
+                setIsLoading(false);
             }
-            
-            // 成功時のみ次画面へ遷移
-            nextTo();
-        } catch (error) {
-            logger.error("Error in handleRegisterEvents:", error);
-            await appMessageDialogRef.showMessageAsync(
-                "処理エラー",
-                error instanceof Error ? error.message : "不明なエラーが発生しました。",
-                "ERROR",
-            );
-            // エラー時は遷移しない
-        } finally {
-            setIsLoading(false);
-        }
-    }, [isAuthenticated, sessionHook, setIsLoading, nextTo]);
+        },
+        [isAuthenticated, sessionHook, nextTo],
+    );
+
+    // ============================================================================
+    // エフェクト
+    // ============================================================================
 
     /**
-    * TimeTracker設定のバリデーションチェック
-    * エラーがある場合はFileUploadViewに戻り、エラーダイアログを表示
-    */
+     * TimeTracker設定のバリデーションチェック
+     * エラーがある場合はFileUploadViewに戻り、エラーダイアログを表示
+     */
     useEffect(() => {
         const hasTimeTrackerErrors = validationErrors.timeTracker.length > 0;
         if (hasTimeTrackerErrors) {
@@ -357,14 +380,18 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
         }
     }, [validationErrors.timeTracker, currentView, backTo]);
 
+    // ============================================================================
+    // レンダリング
+    // ============================================================================
 
     /**
-    * アニメーションクラスを取得（スライド方向に応じたクラスを返す）
-    */
+     * アニメーションクラスを取得（スライド方向に応じたクラスを返す）
+     */
     const animationClass = useMemo(
         () => (slideDirection === "right" ? styles.slideInRight : slideDirection === "left" ? styles.slideInLeft : ""),
         [slideDirection, styles.slideInLeft, styles.slideInRight],
     );
+
     return (
         <>
             <Page
@@ -375,9 +402,7 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
             >
                 <div className={mergeClasses(styles.viewContainer, animationClass)} key={currentView}>
                     {currentView === "completion" ? (
-                        <CompletionView
-                            onBack={backTo}
-                        />
+                        <CompletionView onBack={backTo} />
                     ) : currentView === "linking" ? (
                         <LinkingProcessView
                             linkingInfo={linkingInfo}

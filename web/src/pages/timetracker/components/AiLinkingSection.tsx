@@ -139,7 +139,7 @@ async function autoLinkAsync(request: AILinkingRequest) {
         return {
             ok: false,
             errorMessage,
-        }
+        };
     }
 }
 
@@ -175,8 +175,8 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
     }>({ current: 0, total: 0, chunkSize: 0, successCount: 0, errorCount: 0, filteredCount: 0 });
 
     const actionDisabled = useMemo(() => {
-        return !token || token.trim() === "" || unlinkedEvents.length === 0
-    }, [token, unlinkedEvents])
+        return !token || token.trim() === "" || unlinkedEvents.length === 0;
+    }, [token, unlinkedEvents]);
 
     // AI自動紐づけハンドラー
     const handleAILinking = useCallback(async () => {
@@ -243,7 +243,7 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
                 filteredByConfidenceCount++;
                 logger.info(
                     `AI紐づけ提案除外（信頼度不足）: Event=${suggestion.eventUuid} → WorkItem=${suggestion.workItemId} ` +
-                    `(信頼度:${suggestion.confidence} < 閾値:${confidenceThreshold})`,
+                        `(信頼度:${suggestion.confidence} < 閾値:${confidenceThreshold})`,
                 );
                 continue;
             }
@@ -261,7 +261,7 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
                 });
                 logger.info(
                     `AI紐づけ提案: Event=${suggestion.eventUuid} → WorkItem=${suggestion.workItemId} ` +
-                    `(信頼度:${suggestion.confidence}, 理由:${suggestion.reason})`,
+                        `(信頼度:${suggestion.confidence}, 理由:${suggestion.reason})`,
                 );
             } else {
                 failedCount++;
@@ -279,13 +279,12 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
         await appMessageDialogRef.showMessageAsync(
             "AI紐づけ完了",
             `${successCount}件のイベントを自動紐づけしました。\n` +
-            (filteredByConfidenceCount > 0
-                ? `${filteredByConfidenceCount}件は信頼度が低くスキップされました。\n`
-                : "") +
-            (failedCount > 0 ? `${failedCount}件は紐づけに失敗しました。` : ""),
+                (filteredByConfidenceCount > 0
+                    ? `${filteredByConfidenceCount}件は信頼度が低くスキップされました。\n`
+                    : "") +
+                (failedCount > 0 ? `${failedCount}件は紐づけに失敗しました。` : ""),
             successCount > 0 ? "INFO" : "WARN",
         );
-
     }, [token, useHistory, confidenceThreshold, unlinkedEvents, linkedPairs, workItems, onAiLinkingChange]);
 
     return (
@@ -412,37 +411,37 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
                                 {(progressInfo.successCount > 0 ||
                                     progressInfo.errorCount > 0 ||
                                     progressInfo.filteredCount > 0) && (
-                                        <div className={styles.progressStats}>
+                                    <div className={styles.progressStats}>
+                                        <div className={styles.progressStatItem}>
+                                            <div className={styles.progressStatLabel}>成功</div>
+                                            <div className={styles.progressStatValue}>
+                                                {progressInfo.successCount}件
+                                            </div>
+                                        </div>
+                                        {progressInfo.filteredCount > 0 && (
                                             <div className={styles.progressStatItem}>
-                                                <div className={styles.progressStatLabel}>成功</div>
-                                                <div className={styles.progressStatValue}>
-                                                    {progressInfo.successCount}件
+                                                <div className={styles.progressStatLabel}>信頼度不足</div>
+                                                <div
+                                                    className={styles.progressStatValue}
+                                                    style={{ color: tokens.colorPaletteYellowForeground1 }}
+                                                >
+                                                    {progressInfo.filteredCount}件
                                                 </div>
                                             </div>
-                                            {progressInfo.filteredCount > 0 && (
-                                                <div className={styles.progressStatItem}>
-                                                    <div className={styles.progressStatLabel}>信頼度不足</div>
-                                                    <div
-                                                        className={styles.progressStatValue}
-                                                        style={{ color: tokens.colorPaletteYellowForeground1 }}
-                                                    >
-                                                        {progressInfo.filteredCount}件
-                                                    </div>
+                                        )}
+                                        {progressInfo.errorCount > 0 && (
+                                            <div className={styles.progressStatItem}>
+                                                <div className={styles.progressStatLabel}>エラー</div>
+                                                <div
+                                                    className={styles.progressStatValue}
+                                                    style={{ color: tokens.colorPaletteDarkOrangeForeground1 }}
+                                                >
+                                                    {progressInfo.errorCount}件
                                                 </div>
-                                            )}
-                                            {progressInfo.errorCount > 0 && (
-                                                <div className={styles.progressStatItem}>
-                                                    <div className={styles.progressStatLabel}>エラー</div>
-                                                    <div
-                                                        className={styles.progressStatValue}
-                                                        style={{ color: tokens.colorPaletteDarkOrangeForeground1 }}
-                                                    >
-                                                        {progressInfo.errorCount}件
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className={styles.progressInfo}>AIが未紐づけイベントを解析しています...</div>
                             </div>

@@ -175,79 +175,80 @@ const useStyles = makeStyles({
     },
 });
 
-// ファイルバリデータ
+// ============================================================================
+// ファイル処理ヘルパー関数
+// ============================================================================
+
+/** ファイルバリデータ */
 const isPdfFile = (file: File) => file.type === "application/pdf";
 const isIcsFile = (file: File) => file.name.endsWith(".ics") || file.type === "text/calendar";
 
-// イベントキー生成（メモ化用）
+/** イベントキー生成（メモ化用） */
 const getEventKey = (e: Event): string => {
     const dateTime = formatDateTime(new Date(e.schedule.start), e.schedule.end ? new Date(e.schedule.end) : null);
     return `${dateTime}　${EventUtils.getKey(e)}`;
 };
 
-const getScheduleAsync = async (file: File) => {
-    let result;
+/** ファイル読み込みエラーメッセージを表示 */
+const showFileError = async (fileType: "PDF" | "ICS", fileName: string, error: string) => {
+    await appMessageDialogRef?.showMessageAsync(
+        `${fileType}ファイルエラー`,
+        `${fileType}ファイルの読み込みに失敗しました。\n\nファイル名: ${fileName}\nエラー: ${error}`,
+        "ERROR",
+    );
+};
+
+/** PDFファイルからスケジュールを取得 */
+const getScheduleAsync = async (file: File): Promise<Schedule[] | undefined> => {
     try {
-        result = await parsePDF(file);
+        const result = await parsePDF(file);
+
+        if (result.errorMessage) {
+            await showFileError("PDF", file.name, result.errorMessage);
+            return undefined;
+        }
+
+        return result.schedule.filter((s: Schedule) => !s.errorMessage);
     } catch (error) {
         logger.error("PDFのパースに失敗しました:", error);
-        await appMessageDialogRef?.showMessageAsync(
-            "PDFファイルエラー",
-            `PDFファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-            "ERROR",
-        );
+        await showFileError("PDF", file.name, error instanceof Error ? error.message : "不明なエラー");
         return undefined;
     }
-
-    if (result.errorMessage) {
-        await appMessageDialogRef?.showMessageAsync(
-            "PDFファイルエラー",
-            `PDFファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${result.errorMessage}`,
-            "ERROR",
-        );
-
-        return undefined;
-    }
-
-    return result.schedule.filter((s: Schedule) => !s.errorMessage);
 };
 
-const getEventAsync = async (file: File) => {
-    let result;
+/** ICSファイルからイベントを取得 */
+const getEventAsync = async (file: File): Promise<Event[] | undefined> => {
     try {
         const text = await file.text();
-        result = parseICS(text);
+        const result = parseICS(text);
+        const events = result.events.filter((e: Event) => !e.isCancelled && !e.isPrivate);
+
+        if (events.length === 0 && result.errorMessages) {
+            await showFileError(
+                "ICS",
+                file.name,
+                Array.isArray(result.errorMessages) ? result.errorMessages.join(", ") : result.errorMessages,
+            );
+            return undefined;
+        }
+
+        return events;
     } catch (error) {
         logger.error("ICSのパースに失敗しました:", error);
-        await appMessageDialogRef?.showMessageAsync(
-            "ICSファイルエラー",
-            `ICSファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
-            "ERROR",
-        );
+        await showFileError("ICS", file.name, error instanceof Error ? error.message : "不明なエラー");
         return undefined;
     }
-
-    const ev = result.events.filter((e: Event) => !e.isCancelled && !e.isPrivate);
-    if (ev.length === 0 && result.errorMessages) {
-        await appMessageDialogRef?.showMessageAsync(
-            "ICSファイルエラー",
-            `ICSファイルの読み込みに失敗しました。\n\nファイル名: ${file.name}\nエラー: ${result.errorMessages}`,
-            "ERROR",
-        );
-        return undefined;
-    }
-
-    return ev;
 };
 
-// スケジュールをテーブルアイテムに変換（パフォーマンス最適化）
+// ============================================================================
+// データ変換関数
+// ============================================================================
+
+/** スケジュールをテーブルアイテムに変換 */
 const scheduleToCheckItem = (schedule: Schedule[]): CheckedTableItem[] => {
     return schedule.map((s) => {
         const dateTime = formatDateTime(new Date(s.start), s.end ? new Date(s.end) : null);
-        let status = "";
-        if (s.isHoliday) {
-            status = s.isPaidLeave ? "（有給休暇）" : "（休日）";
-        }
+        const status = s.isHoliday ? (s.isPaidLeave ? "（有給休暇）" : "（休日）") : "";
         return {
             key: ScheduleUtils.getText(s),
             content: status ? `${dateTime} ${status}` : dateTime,
@@ -255,7 +256,7 @@ const scheduleToCheckItem = (schedule: Schedule[]): CheckedTableItem[] => {
     });
 };
 
-// イベントをテーブルアイテムに変換（重複計算を削減）
+/** イベントをテーブルアイテムに変換 */
 const eventToCheckItem = (event: Event[]): CheckedTableItem[] => {
     return event.map((e) => {
         const dateTime = formatDateTime(new Date(e.schedule.start), e.schedule.end ? new Date(e.schedule.end) : null);
@@ -294,15 +295,97 @@ const helpContent = (
 );
 
 type SelectedInfo = {
-    schedules: Schedule[]
-    events: Event[]
-}
+    schedules: Schedule[];
+    events: Event[];
+};
 
 export type FileUploadViewProps = {
-    uploadInfo?: UploadInfo,
+    uploadInfo?: UploadInfo;
     onChangeUploadInfo: (info: UploadInfo) => void;
     onLinking: (info: SelectedInfo) => void;
 };
+
+/** ファイルアップロードカードコンポーネント（メモ化） */
+const FileUploadCard = memo(function FileUploadCard({
+    title,
+    description,
+    icon,
+    accept,
+    file,
+    inputRef,
+    handlers,
+    onClear,
+    onDragOver,
+    styles,
+}: {
+    title: string;
+    description: string;
+    icon: React.ReactElement;
+    accept: string;
+    file?: { name: string; size: number };
+    inputRef: React.RefObject<HTMLInputElement>;
+    handlers: {
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+        onDrop: (event: React.DragEvent<HTMLDivElement>) => void;
+    };
+    onClear: (e?: React.MouseEvent) => void;
+    onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+    styles: ReturnType<typeof useStyles>;
+}) {
+    return (
+        <div
+            className={styles.dropZone}
+            onDrop={handlers.onDrop}
+            onDragOver={onDragOver}
+            onClick={() => inputRef.current?.click()}
+        >
+            <Card hoverable>
+                <div className={styles.uploadCardContent}>
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        accept={accept}
+                        onChange={handlers.onChange}
+                        className={styles.hiddenInput}
+                    />
+                    <div className={styles.uploadCardHeader}>
+                        <div className={styles.uploadCardInner}>
+                            <div className={styles.uploadCardTitle}>
+                                {icon}
+                                {title}
+                            </div>
+                            <div className={styles.uploadCardDescription}>{description}</div>
+                            <div className={`${styles.dropHint} drop-hint`}>
+                                <ArrowUpload20Regular className={styles.dropIcon} />
+                                <span>クリックまたはドラッグ&ドロップ</span>
+                            </div>
+                        </div>
+                        {file && (
+                            <Button
+                                appearance="subtle"
+                                icon={<Dismiss24Regular />}
+                                onClick={onClear}
+                                size="medium"
+                                aria-label={`${title}を削除`}
+                                title={`${title}を削除`}
+                            />
+                        )}
+                    </div>
+                    {file && (
+                        <div className={styles.fileInfo}>
+                            <div>
+                                <strong>ファイル名:</strong> {file.name}
+                            </div>
+                            <div>
+                                <strong>サイズ:</strong> {(file.size / 1024).toFixed(2)} KB
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </Card>
+        </div>
+    );
+});
 
 /** 情報セクションコンポーネント（メモ化） */
 const InfoSection = memo(function InfoSection({
@@ -386,10 +469,7 @@ export const FileUploadView = memo(function FileUploadView({
         (e?: React.MouseEvent) => {
             e?.stopPropagation();
             if (pdfInputRef.current) pdfInputRef.current.value = "";
-            onChangeUploadInfo({
-                ...uploadInfo,
-                pdf: undefined,
-            });
+            onChangeUploadInfo({ ...uploadInfo, pdf: undefined });
         },
         [uploadInfo, onChangeUploadInfo],
     );
@@ -398,10 +478,7 @@ export const FileUploadView = memo(function FileUploadView({
         (e?: React.MouseEvent) => {
             e?.stopPropagation();
             if (icsInputRef.current) icsInputRef.current.value = "";
-            onChangeUploadInfo({
-                ...uploadInfo,
-                ics: undefined,
-            });
+            onChangeUploadInfo({ ...uploadInfo, ics: undefined });
         },
         [uploadInfo, onChangeUploadInfo],
     );
@@ -488,45 +565,35 @@ export const FileUploadView = memo(function FileUploadView({
         [uploadIcsFile],
     );
 
-    const handleLinkedClick = useCallback(async () => {
-        let enabledSchedule: Schedule[] = [];
-        if (pdf && scheduleTableItems.length > 0) {
-            enabledSchedule = pdf.schedule.filter((s) => selectedScheduleKeys.has(ScheduleUtils.getText(s)));
-        }
-
-        let enabledEvents: Event[] = [];
-        if (ics && eventTableItems.length > 0) {
-            enabledEvents = ics.event.filter((e) => selectedEventKeys.has(getEventKey(e)));
-        }
+    // 紐づけ開始ハンドラー（メモ化）
+    const handleLinkedClick = useCallback(() => {
+        const enabledSchedules = pdf?.schedule.filter((s) => selectedScheduleKeys.has(ScheduleUtils.getText(s))) ?? [];
+        const enabledEvents = ics?.event.filter((e) => selectedEventKeys.has(getEventKey(e))) ?? [];
 
         onLinking({
-            schedules: enabledSchedule,
+            schedules: enabledSchedules,
             events: enabledEvents,
         });
-    }, [pdf, ics, onLinking, scheduleTableItems.length, selectedScheduleKeys, eventTableItems.length, selectedEventKeys])
+    }, [pdf, ics, selectedScheduleKeys, selectedEventKeys, onLinking]);
 
-    // PDFデータが変更されたらテーブルデータを更新（最適化）
+    // PDFデータが変更されたらテーブルデータを更新
     useEffect(() => {
-        if (pdf?.schedule && pdf.schedule.length > 0) {
+        if (pdf?.schedule?.length) {
             const items = scheduleToCheckItem(pdf.schedule);
             setScheduleTableItems(items);
-            // デフォルトで全選択（パフォーマンス改善：直接Setを作成）
-            const keys = new Set(items.map((item) => item.key));
-            setSelectedScheduleKeys(keys);
+            setSelectedScheduleKeys(new Set(items.map((item) => item.key)));
         } else {
             setScheduleTableItems([]);
             setSelectedScheduleKeys(new Set());
         }
     }, [pdf?.schedule]);
 
-    // ICSデータが変更されたらテーブルデータを更新（最適化）
+    // ICSデータが変更されたらテーブルデータを更新
     useEffect(() => {
-        if (ics?.event && ics.event.length > 0) {
+        if (ics?.event?.length) {
             const items = eventToCheckItem(ics.event);
             setEventTableItems(items);
-            // デフォルトで全選択（パフォーマンス改善：直接Setを作成）
-            const keys = new Set(items.map((item) => item.key));
-            setSelectedEventKeys(keys);
+            setSelectedEventKeys(new Set(items.map((item) => item.key)));
         } else {
             setEventTableItems([]);
             setSelectedEventKeys(new Set());
@@ -537,112 +604,32 @@ export const FileUploadView = memo(function FileUploadView({
         <>
             <div className={styles.uploadSection}>
                 {/* PDF Upload Card */}
-                <div
-                    className={styles.dropZone}
-                    onDrop={pdfHandlers.onDrop}
+                <FileUploadCard
+                    title="勤怠情報（PDF）"
+                    description="勤務実績データを含むPDFファイル"
+                    icon={<Document24Regular className={styles.uploadCardIcon} />}
+                    accept=".pdf"
+                    file={pdf}
+                    inputRef={pdfInputRef}
+                    handlers={pdfHandlers}
+                    onClear={clearPdfFile}
                     onDragOver={handleDragOver}
-                    onClick={() => pdfInputRef.current?.click()}
-                >
-                    <Card hoverable>
-                        <div className={styles.uploadCardContent}>
-                            <input
-                                ref={pdfInputRef}
-                                type="file"
-                                accept=".pdf"
-                                onChange={pdfHandlers.onChange}
-                                className={styles.hiddenInput}
-                            />
-                            <div className={styles.uploadCardHeader}>
-                                <div className={styles.uploadCardInner}>
-                                    <div className={styles.uploadCardTitle}>
-                                        <Document24Regular className={styles.uploadCardIcon} />
-                                        勤怠情報（PDF）
-                                    </div>
-                                    <div className={styles.uploadCardDescription}>勤務実績データを含むPDFファイル</div>
-                                    <div className={`${styles.dropHint} drop-hint`}>
-                                        <ArrowUpload20Regular className={styles.dropIcon} />
-                                        <span>クリックまたはドラッグ&ドロップ</span>
-                                    </div>
-                                </div>
-                                {pdf && (
-                                    <Button
-                                        appearance="subtle"
-                                        icon={<Dismiss24Regular />}
-                                        onClick={clearPdfFile}
-                                        size="medium"
-                                        aria-label="PDFファイルを削除"
-                                        title="PDFファイルを削除"
-                                    />
-                                )}
-                            </div>
-                            {pdf && (
-                                <div className={styles.fileInfo}>
-                                    <div>
-                                        <strong>ファイル名:</strong> {pdf.name}
-                                    </div>
-                                    <div>
-                                        <strong>サイズ:</strong> {(pdf.size / 1024).toFixed(2)} KB
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                </div>
+                    styles={styles}
+                />
 
                 {/* ICS Upload Card */}
-                <div
-                    className={styles.dropZone}
-                    onDrop={icsHandlers.onDrop}
+                <FileUploadCard
+                    title="スケジュール情報（ICS）"
+                    description="カレンダーイベントを含むICSファイル"
+                    icon={<Calendar24Regular className={styles.uploadCardIcon} />}
+                    accept=".ics"
+                    file={ics}
+                    inputRef={icsInputRef}
+                    handlers={icsHandlers}
+                    onClear={clearIcsFile}
                     onDragOver={handleDragOver}
-                    onClick={() => icsInputRef.current?.click()}
-                >
-                    <Card hoverable>
-                        <div className={styles.uploadCardContent}>
-                            <input
-                                ref={icsInputRef}
-                                type="file"
-                                accept=".ics"
-                                onChange={icsHandlers.onChange}
-                                className={styles.hiddenInput}
-                            />
-                            <div className={styles.uploadCardHeader}>
-                                <div className={styles.uploadCardInner}>
-                                    <div className={styles.uploadCardTitle}>
-                                        <Calendar24Regular className={styles.uploadCardIcon} />
-                                        スケジュール情報（ICS）
-                                    </div>
-                                    <div className={styles.uploadCardDescription}>
-                                        カレンダーイベントを含むICSファイル
-                                    </div>
-                                    <div className={`${styles.dropHint} drop-hint`}>
-                                        <ArrowUpload20Regular className={styles.dropIcon} />
-                                        <span>クリックまたはドラッグ&ドロップ</span>
-                                    </div>
-                                </div>
-                                {ics && (
-                                    <Button
-                                        appearance="subtle"
-                                        icon={<Dismiss24Regular />}
-                                        onClick={clearIcsFile}
-                                        size="medium"
-                                        aria-label="ICSファイルを削除"
-                                        title="ICSファイルを削除"
-                                    />
-                                )}
-                            </div>
-                            {ics && (
-                                <div className={styles.fileInfo}>
-                                    <div>
-                                        <strong>ファイル名:</strong> {ics.name}
-                                    </div>
-                                    <div>
-                                        <strong>サイズ:</strong> {(ics.size / 1024).toFixed(2)} KB
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                </div>
+                    styles={styles}
+                />
             </div>
 
             {/* Action Section */}

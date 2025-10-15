@@ -153,10 +153,7 @@ describe("useLinkingManager", () => {
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(1);
             expect(result.current.linkingEventWorkItemPair[0].linkingWorkItem.workItem.id).toBe("work-2");
-            expect(mockHistoryManager.setHistory).toHaveBeenCalledWith(
-                initialPairs[0].event,
-                newWorkItem,
-            );
+            expect(mockHistoryManager.setHistory).toHaveBeenCalledWith(initialPairs[0].event, newWorkItem);
         });
 
         it("紐づけを削除できる（workItemIdが空）", () => {
@@ -331,9 +328,7 @@ describe("useLinkingManager", () => {
                 }),
             );
 
-            const suggestions = [
-                { eventId: "invalid-event-id", workItemId: "invalid-work-id", confidence: 0.9 },
-            ];
+            const suggestions = [{ eventId: "invalid-event-id", workItemId: "invalid-work-id", confidence: 0.9 }];
 
             act(() => {
                 result.current.handleAiLinking(suggestions, [], []);

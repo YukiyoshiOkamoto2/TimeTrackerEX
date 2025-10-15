@@ -3,7 +3,11 @@
  */
 
 export { useTimeTrackerSession } from "./useTimeTrackerSession";
-export type { TimeTrackerSessionHook, UseTimeTrackerSessionOptions } from "./useTimeTrackerSession";
+export type {
+    TimeTrackerAPIResult,
+    TimeTrackerSessionHook,
+    UseTimeTrackerSessionOptions,
+} from "./useTimeTrackerSession";
 
 export { useLinkingManager, type UseLinkingManagerOptions } from "./useLinkingManager";
 
