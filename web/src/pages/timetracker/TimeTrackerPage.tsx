@@ -1,5 +1,6 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { useSettings } from "@/store";
+import { usePageContent } from "@/store/content";
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Page } from "../../components/page";
@@ -113,22 +114,70 @@ const useTimeTrackerViewState = (): UseTimeTrackerViewStateReturn => {
 };
 
 /**
+ * TimeTrackerページの永続化データ型定義
+ * uploadInfoにpdfとicsが含まれているため、uploadInfoのみを管理
+ */
+interface TimeTrackerPageContent {
+    uploadInfo?: UploadInfo;
+}
+
+/**
  * TimeTrackerページコンポーネント
  *
  * パフォーマンス最適化:
  * - React.memoでラップして不要な再レンダリングを防止
  * - ハンドラーをuseCallbackでメモ化
  * - 計算値をuseMemoで最適化
+ * - ContentProviderでpdf、ics、uploadInfoを永続化
  */
 export const TimeTrackerPage = memo(function TimeTrackerPage() {
     const styles = useStyles();
-
     const { validationErrors } = useSettings();
+    const [pageContent, setPageContent] = usePageContent<TimeTrackerPageContent>("TimeTracker");
+
     const [isLoading, setIsLoading] = useState(false);
-    const [pdf, setPdf] = useState<PDF | undefined>(undefined);
-    const [ics, setIcs] = useState<ICS | undefined>(undefined);
-    const [uploadInfo, setUploadInfo] = useState<UploadInfo | undefined>(undefined);
     const [showErrorDialog, setShowErrorDialog] = useState(false);
+
+    // 永続化データから状態を取得（ページ遷移時も保持される）
+    const uploadInfo = pageContent?.uploadInfo;
+    const pdf = uploadInfo?.pdf;
+    const ics = uploadInfo?.ics;
+
+    // PDF更新用のセッター（uploadInfoを更新してContentProviderに保存）
+    const setPdf = useCallback(
+        (pdf: PDF | undefined) => {
+            setPageContent({
+                uploadInfo: {
+                    ...uploadInfo,
+                    pdf,
+                },
+            });
+        },
+        [uploadInfo, setPageContent],
+    );
+
+    // ICS更新用のセッター（uploadInfoを更新してContentProviderに保存）
+    const setIcs = useCallback(
+        (ics: ICS | undefined) => {
+            setPageContent({
+                uploadInfo: {
+                    ...uploadInfo,
+                    ics,
+                },
+            });
+        },
+        [uploadInfo, setPageContent],
+    );
+
+    // UploadInfo更新用のセッター（ContentProviderに保存）
+    const setUploadInfo = useCallback(
+        (uploadInfo: UploadInfo | undefined) => {
+            setPageContent({
+                uploadInfo,
+            });
+        },
+        [setPageContent],
+    );
 
     // @ts-expect-error Phase 7: TimeTracker API登録で使用予定
     const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
