@@ -4,5 +4,7 @@ export { EventTable } from "./EventTable";
 export type { EventTableProps, EventTableRow } from "./EventTable";
 export { HistoryDrawer } from "./HistoryDrawer";
 export type { HistoryDrawerProps } from "./HistoryDrawer";
+export { RegistrationProgressDialog } from "./RegistrationProgressDialog";
+export type { RegistrationProgressDialogProps, TaskProgress } from "./RegistrationProgressDialog";
 export { StatisticsCards } from "./StatisticsCards";
 export type { StatisticsCardsProps } from "./StatisticsCards";

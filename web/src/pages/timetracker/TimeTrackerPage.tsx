@@ -7,6 +7,7 @@ import { Event, Schedule, WorkItem } from "@/types";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Page } from "../../components/page";
+import { RegistrationProgressDialog, type TaskProgress } from "./components/RegistrationProgressDialog";
 import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
 import { useTimeTrackerSession, type TimeTrackerAPIResult } from "./hooks";
 import { ProjectAndWorkItem } from "./hooks/useTimeTrackerSession";
@@ -175,6 +176,87 @@ const handleError = async (error: unknown, context: string): Promise<void> => {
     );
 };
 
+/**
+ * タスク進捗の状態更新ヘルパー
+ */
+const updateTaskStatus = (
+    setTaskProgress: React.Dispatch<React.SetStateAction<TaskProgress[]>>,
+    index: number,
+    status: TaskProgress["status"],
+    errorMessage?: string,
+): void => {
+    setTaskProgress((prev) =>
+        prev.map((task, idx) =>
+            idx === index
+                ? {
+                      ...task,
+                      status,
+                      ...(errorMessage && { errorMessage }),
+                  }
+                : task,
+        ),
+    );
+};
+
+/**
+ * 単一タスクを登録
+ */
+const registerSingleTask = async (
+    pair: LinkingEventWorkItemPair,
+    index: number,
+    setTaskProgress: React.Dispatch<React.SetStateAction<TaskProgress[]>>,
+    registerTaskAsync: (task: { workItemId: string; startTime: Date; endTime: Date }) => Promise<TimeTrackerAPIResult>,
+): Promise<void> => {
+    // 処理中に更新
+    updateTaskStatus(setTaskProgress, index, "processing");
+
+    try {
+        const result = await registerTaskAsync({
+            workItemId: pair.linkingWorkItem.workItem.id,
+            startTime: pair.event.schedule.start,
+            endTime: pair.event.schedule.end!,
+        });
+
+        // 結果をチェック
+        if (result.isError) {
+            // APIエラーレスポンスの場合
+            updateTaskStatus(setTaskProgress, index, "error", result.errorMessage);
+            logger.error(`Task registration failed for index ${index}:`, result.errorMessage);
+        } else {
+            // 成功に更新
+            updateTaskStatus(setTaskProgress, index, "success");
+        }
+    } catch (taskError) {
+        // 例外が発生した場合（ネットワークエラー等）
+        const errorMessage = taskError instanceof Error ? taskError.message : "不明なエラーが発生しました";
+        updateTaskStatus(setTaskProgress, index, "error", errorMessage);
+        logger.error(`Task registration exception for index ${index}:`, taskError);
+    }
+};
+
+/**
+ * タスク進捗を初期化
+ */
+const initializeTaskProgress = (linkingEventWorkItemPair: LinkingEventWorkItemPair[]): TaskProgress[] => {
+    return linkingEventWorkItemPair.map((l, index) => ({
+        id: `task-${index}`,
+        event: l.event,
+        workItem: l.linkingWorkItem.workItem,
+        status: "pending" as const,
+    }));
+};
+
+/**
+ * 選択情報のバリデーション
+ */
+const validateSelectedInfo = (selectedInfo: { schedules: Schedule[]; events: Event[] }): boolean => {
+    if (selectedInfo.schedules.length === 0 && selectedInfo.events.length === 0) {
+        logger.error("Nothing. schedules and events.");
+        return false;
+    }
+    return true;
+};
+
 // ============================================================================
 // メインコンポーネント
 // ============================================================================
@@ -201,6 +283,10 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     const { currentView, slideDirection, backTo, nextTo } = useTimeTrackerViewState();
 
     const [linkingInfo, setLinkingInfo] = useState<LinkingInfo>();
+
+    // 登録進捗ダイアログの状態
+    const [showProgressDialog, setShowProgressDialog] = useState(false);
+    const [taskProgress, setTaskProgress] = useState<TaskProgress[]>([]);
 
     // セッション管理（メモ化）
     const sessionConfig = useMemo(
@@ -271,8 +357,7 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
                 return;
             }
 
-            if (selectedInfo.schedules.length === 0 || selectedInfo.events.length === 0) {
-                logger.error("Nothing. schedules and events.");
+            if (!validateSelectedInfo(selectedInfo)) {
                 return;
             }
 
@@ -334,28 +419,41 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
             if (!authenticated) return;
 
             try {
-                setIsLoading(true);
+                // タスク進捗を初期化
+                const initialProgress = initializeTaskProgress(linkingEventWorkItemPair);
+                setTaskProgress(initialProgress);
+                setShowProgressDialog(true);
 
-                const tasks = linkingEventWorkItemPair.map((l) => ({
-                    workItemId: l.linkingWorkItem.workItem.id,
-                    startTime: l.event.schedule.start,
-                    endTime: l.event.schedule.end!,
-                }));
-
-                for (const task of tasks) {
-                    await sessionHook.registerTaskAsync(task);
+                // 各タスクを順次処理
+                for (let i = 0; i < linkingEventWorkItemPair.length; i++) {
+                    await registerSingleTask(
+                        linkingEventWorkItemPair[i],
+                        i,
+                        setTaskProgress,
+                        sessionHook.registerTaskAsync,
+                    );
                 }
 
-                // 成功時のみ次画面へ遷移
-                nextTo();
+                // すべての処理が完了
+                // 少し待ってから次画面へ（ユーザーが結果を確認できるように）
+                setTimeout(() => {
+                    nextTo();
+                }, 1500);
             } catch (error) {
                 await handleError(error, "handleRegisterEvents");
-            } finally {
-                setIsLoading(false);
+                setShowProgressDialog(false);
             }
         },
         [isAuthenticated, sessionHook, nextTo],
     );
+
+    /**
+     * 進捗ダイアログを閉じる
+     */
+    const handleCloseProgressDialog = useCallback(() => {
+        setShowProgressDialog(false);
+        setTaskProgress([]);
+    }, []);
 
     // ============================================================================
     // エフェクト
@@ -420,6 +518,12 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
             </Page>
 
             <ValidationErrorDialog open={showErrorDialog} errors={validationErrors.timeTracker} />
+            <RegistrationProgressDialog
+                open={showProgressDialog}
+                tasks={taskProgress}
+                onClose={handleCloseProgressDialog}
+                onCancel={handleCloseProgressDialog}
+            />
             <Dialog />
         </>
     );
