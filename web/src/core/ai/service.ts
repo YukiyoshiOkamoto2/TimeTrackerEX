@@ -1,4 +1,5 @@
 import { getLogger } from "@/lib";
+import { AsyncQueue } from "@/lib/asyncQueue";
 
 const logger = getLogger("AI Service");
 
@@ -16,6 +17,7 @@ export interface AIInferenceRequest {
     apiKey: string;
     user: string;
     system: string;
+    abortController?: AbortController;
 }
 
 export type AIInferenceResponseOK = {
@@ -30,8 +32,54 @@ export type AIInferenceResponseNG = {
 
 export type AIInferenceResponse = AIInferenceResponseOK | AIInferenceResponseNG;
 
+/**
+ * AI推論キューのデータ型
+ */
+interface AIInferenceQueueData {
+    request: AIInferenceRequest;
+}
+
+/**
+ * AI推論用のキュークラス
+ * レート制限を考慮して1秒間隔で処理
+ */
+class AIInferenceQueue extends AsyncQueue<AIInferenceQueueData, AIInferenceResponse> {
+    constructor() {
+        // 1秒間隔で処理、タイムアウト60秒
+        super(1000, 60000);
+    }
+
+    protected async execute(data: AIInferenceQueueData, abort: AbortController): Promise<AIInferenceResponse> {
+        try {
+            // AbortControllerをリクエストに追加
+            const requestWithAbort: AIInferenceRequest = {
+                ...data.request,
+                abortController: abort,
+            };
+            return await infer(requestWithAbort);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logger.error("AI推論エラー:", errorMessage);
+            return {
+                ok: false,
+                errorMessage,
+            };
+        }
+    }
+}
+
+// グローバルなAI推論キューインスタンス
+const aiInferenceQueue = new AIInferenceQueue();
+
+/**
+ * AI推論をキューに追加して実行
+ */
+export async function inferWithQueue(request: AIInferenceRequest): Promise<AIInferenceResponse> {
+    return await aiInferenceQueue.enqueueAsync({ request });
+}
+
 export async function infer(request: AIInferenceRequest): Promise<AIInferenceResponse> {
-    logger.info("AI Request -> " + JSON.stringify(request));
+    logger.info("AI Request -> " + JSON.stringify({ apiKey: "***", system: request.system, user: request.user }));
     try {
         const response = await fetch(url, {
             method: "POST",
@@ -46,6 +94,7 @@ export async function infer(request: AIInferenceRequest): Promise<AIInferenceRes
                     { role: "user", content: request.user },
                 ],
             }),
+            signal: request.abortController?.signal,
         });
 
         if (!response.ok) {
@@ -83,8 +132,17 @@ export async function infer(request: AIInferenceRequest): Promise<AIInferenceRes
             content,
         };
     } catch (error) {
+        // AbortErrorの場合はタイムアウトメッセージ
+        if (error instanceof Error && error.name === "AbortError") {
+            logger.error("AI Request aborted (timeout)");
+            return {
+                ok: false,
+                errorMessage: "AI推論がタイムアウトしました。時間をおいて再度お試しください。",
+            };
+        }
+
         const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error(errorMessage);
+        logger.error("AI Request error:", errorMessage);
         return {
             ok: false,
             errorMessage,

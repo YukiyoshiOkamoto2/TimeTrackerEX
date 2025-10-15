@@ -152,6 +152,75 @@ const changeLinkingEventWorkItemPair = (
     return createNewLinking(eventId, linkingWorkItem, unLinkedEvents, linkingEventWorkItemPair);
 };
 
+/**
+ * AI紐づけ専用（バッチ処理）：複数の紐づけをまとめて処理
+ * 履歴に保存せず、type=auto, autoMethod=aiで紐づけを作成
+ */
+const batchAiLinkingEventWorkItemPair = (
+    suggestions: Array<{ eventId: string; workItemId: string; confidence: number }>,
+    workItems: WorkItem[],
+    unLinkedEvents: EventWithOption[],
+    linkingEventWorkItemPair: LinkingEventWorkItemPair[],
+): LinkingEventWorkItemPair[] | null => {
+    const allNewLinkings: LinkingEventWorkItemPair[] = [];
+    const processedEventIds = new Set<string>();
+
+    for (const suggestion of suggestions) {
+        const { eventId, workItemId } = suggestion;
+
+        // 既に処理済みのイベントはスキップ（同名イベントで重複する可能性がある）
+        if (processedEventIds.has(eventId)) {
+            continue;
+        }
+
+        // WorkItemを検索
+        const selectedWorkItem = WorkItemUtils.getMostNestChildren(workItems).find((w) => w.id === workItemId);
+        if (!selectedWorkItem) {
+            logger.error(`Unknown WorkItem ID: ${workItemId}`);
+            continue;
+        }
+
+        // AI紐づけ用のLinkingWorkItem（履歴に保存しない）
+        const linkingWorkItem: LinkingWorkItem = {
+            workItem: selectedWorkItem,
+            type: "auto",
+            autoMethod: "ai",
+        };
+
+        // 新規に紐づけを作成（同名イベントも一括紐づけ、履歴保存なし）
+        const selectedEvent = unLinkedEvents.find((event) => event.uuid === eventId);
+        if (!selectedEvent) {
+            logger.error(`Event not found: ${eventId}`);
+            continue;
+        }
+
+        // 同名のイベントを取得
+        const sameNameEvents = unLinkedEvents.filter(
+            (e) => e.uuid !== selectedEvent.uuid && EventUtils.isSame(e, selectedEvent),
+        );
+
+        // 新しい紐づけを作成
+        const newLinkings: LinkingEventWorkItemPair[] = [
+            { event: selectedEvent, linkingWorkItem },
+            ...sameNameEvents.map((e) => ({ event: e, linkingWorkItem })),
+        ];
+
+        allNewLinkings.push(...newLinkings);
+
+        // 処理済みとしてマーク（同名イベントも含む）
+        processedEventIds.add(selectedEvent.uuid);
+        sameNameEvents.forEach((e) => processedEventIds.add(e.uuid));
+    }
+
+    if (allNewLinkings.length === 0) {
+        logger.warn("AI紐づけ: 有効な紐づけが作成されませんでした");
+        return null;
+    }
+
+    // 履歴には保存しない
+    return [...linkingEventWorkItemPair, ...allNewLinkings];
+};
+
 export type LinkingProcessViewProps = {
     uploadInfo?: UploadInfo;
     setIsLoading: (isLoading: boolean) => void;
@@ -211,12 +280,28 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
         });
     }, [linkingEventWorkItemPair, unLinkedEvents]);
 
-    // WorkItemの変更ハンドラー
+    // WorkItemの変更ハンドラー（手動紐づけ）
     const handleWorkItemChange = useCallback(
         (eventId: string, workItemId: string) => {
             const newItemPair = changeLinkingEventWorkItemPair(
                 eventId,
                 workItemId,
+                uploadInfo?.workItems ?? [],
+                unLinkedEvents,
+                linkingEventWorkItemPair,
+            );
+            if (newItemPair) {
+                setLinkingEventWorkItemPair(newItemPair);
+            }
+        },
+        [uploadInfo, unLinkedEvents, linkingEventWorkItemPair],
+    );
+
+    // AI紐づけ専用ハンドラー（履歴に保存しない、バッチ処理）
+    const handleAiLinkingChange = useCallback(
+        (suggestions: Array<{ eventId: string; workItemId: string; confidence: number }>) => {
+            const newItemPair = batchAiLinkingEventWorkItemPair(
+                suggestions,
                 uploadInfo?.workItems ?? [],
                 unLinkedEvents,
                 linkingEventWorkItemPair,
@@ -309,7 +394,7 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
                         unlinkedEvents={unLinkedEvents}
                         linkedPairs={linkingEventWorkItemPair}
                         workItems={uploadInfo?.workItems ?? []}
-                        onLinkingChange={handleWorkItemChange}
+                        onAiLinkingChange={handleAiLinkingChange}
                     />
 
                     {/* 登録実行セクション */}
