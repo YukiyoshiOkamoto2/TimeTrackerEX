@@ -151,7 +151,7 @@ const useStyles = makeStyles({
     tableWrapper: {
         flex: 1,
         overflow: "auto",
-        maxHeight: "420px",
+        maxHeight: "calc(100vh - 480px)",
     },
     infoSectionHeader: {
         fontSize: tokens.fontSizeBase400,

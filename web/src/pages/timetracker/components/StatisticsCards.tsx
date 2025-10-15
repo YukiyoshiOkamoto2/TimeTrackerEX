@@ -205,7 +205,7 @@ const useStyles = makeStyles({
         flex: 1,
     },
     statValue: {
-        fontSize: "28px",
+        fontSize: "24px",
         fontWeight: "700",
         color: tokens.colorNeutralForeground1,
         lineHeight: "1.2",

@@ -16,6 +16,3 @@ export {
     validateTimeTrackerTask,
 } from "./timeTracker";
 export type { RegisterTasksRequest, RegisterTasksResponse, TimeTrackerAuth, TimeTrackerTask } from "./timeTracker";
-
-// 旧クラスベースAPI（非推奨）
-export { TimeTracker } from "./timeTracker";

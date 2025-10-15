@@ -4,5 +4,4 @@
  * AI推論機能のエントリーポイント
  */
 
-export { AIService, AnthropicProvider, BaseAIProvider, OpenAIProvider } from "./service";
-export * from "./types";
+export { infer } from "./service";
