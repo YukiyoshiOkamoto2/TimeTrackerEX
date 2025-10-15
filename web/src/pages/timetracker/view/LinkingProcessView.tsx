@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/page";
+import { TimeTrackerAlgorithmCore } from "@/core/algorithm/TimeTrackerAlgorithmCore";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
@@ -22,6 +23,7 @@ import {
 } from "../models";
 import { getAllEvents } from "../services/converter";
 import { autoLinkEvents } from "../services/linking";
+import { EventState, pickEvents } from "../services/pick";
 
 const logger = getLogger("LinkingProcessView");
 
@@ -32,24 +34,36 @@ const useStyles = makeStyles({
         display: "flex",
         justifyContent: "flex-end",
     },
+    // 登録実行ボタン
+    submitButton: {
+        minWidth: "200px",
+        height: "48px",
+        transitionDuration: tokens.durationNormal,
+        transitionTimingFunction: tokens.curveEasyEase,
+        transitionProperty: "transform, box-shadow",
+        // ホバー時のアニメーション
+        ":hover": {
+            transform: "translateY(-2px)",
+            boxShadow: tokens.shadow16,
+        },
+        // アクティブ時（クリック時）のアニメーション
+        ":active": {
+            transform: "translateY(0px)",
+            boxShadow: tokens.shadow8,
+        },
+        // アイコンの回転アニメーション
+        "& svg": {
+            transitionDuration: tokens.durationSlow,
+            transitionTimingFunction: tokens.curveEasyEase,
+            transitionProperty: "transform",
+        },
+        ":hover svg": {
+            transform: "rotate(15deg) scale(1.1)",
+        },
+    },
 });
 
-type LinkingProcessViewState = {
-    // 有効なスケジュール（休日・エラーを除く）
-    enableSchedules: Schedule[];
-    // 有効なイベント
-    enableEvents: Event[];
-    // 勤務日イベント
-    scheduleEvents: Event[];
-    // 時間調整されたイベント
-    adjustedEvents: AdjustedEventInfo[];
-    // 有給休暇の日別イベント
-    paidLeaveDayEvents: Event[];
-    // 除外されたスケジュール
-    excludedSchedules: ExcludedScheduleInfo[];
-    // 除外されたイベント
-    excludedEvents: ExcludedEventInfo[];
-};
+type LinkingProcessViewState = EventState;
 
 const historyManager = new HistoryManager();
 
@@ -57,33 +71,6 @@ const historyManager = new HistoryManager();
 const saveToHistory = (event: Event, workItem: WorkItem) => {
     historyManager.setHistory(event, workItem);
     historyManager.dump();
-};
-
-// 状態から全イベントを取得
-const pickEvents = (state: LinkingProcessViewState): EventWithOption[] => {
-    const allEvents: EventWithOption[] = [];
-
-    if (state.enableEvents) {
-        allEvents.push(...state.enableEvents);
-    }
-
-    if (state.adjustedEvents) {
-        const adjustedEvents = state.adjustedEvents.map((a) => ({
-            ...a.event,
-            oldSchedule: a.oldSchdule,
-        }));
-        allEvents.push(...adjustedEvents);
-    }
-
-    if (state.paidLeaveDayEvents) {
-        allEvents.push(...state.paidLeaveDayEvents);
-    }
-
-    if (state.scheduleEvents) {
-        allEvents.push(...state.scheduleEvents);
-    }
-
-    return allEvents;
 };
 
 // 紐づけの変更・追加・削除を処理
@@ -309,10 +296,7 @@ export function LinkingProcessView({ uploadInfo, onBack }: LinkingProcessViewPro
                         size="large"
                         onClick={handleSubmit}
                         icon={<Sparkle24Regular />}
-                        style={{
-                            minWidth: "200px",
-                            height: "48px",
-                        }}
+                        className={styles.submitButton}
                     >
                         登録実行
                     </Button>

@@ -43,7 +43,8 @@ import {
     Warning24Filled,
 } from "@fluentui/react-icons";
 import { useCallback, useMemo, useState } from "react";
-import type { AdjustedEventInfo, ExcludedEventInfo, ExcludedScheduleInfo, LinkingEventWorkItemPair } from "../models";
+import type { ExcludedEventInfo, LinkingEventWorkItemPair } from "../models";
+import { EventState, pickEvents } from "../services/pick";
 
 /** ダイアログの種類 */
 type DetailDialogType = "targetDays" | "targetEvents";
@@ -54,11 +55,13 @@ type ExcludedEventRow = {
     excludeReasons: ExcludedEventInfo["details"];
 };
 
-/** 有給休暇日のテーブル行 */
-type PaidLeaveDayRow = {
+/** 1日ごとのイベント数のテーブル行 */
+type DailyEventCountRow = {
     id: string;
     date: string;
     displayDate: string;
+    eventCount: number;
+    events: Event[];
 };
 
 /** ダイアログ情報 */
@@ -99,15 +102,7 @@ interface StatisticsData {
 }
 
 /** 統計カードのデータソース */
-export interface StatisticsCardsData {
-    enableSchedules: Schedule[];
-    enableEvents: Event[];
-    scheduleEvents: Event[];
-    adjustedEvents: AdjustedEventInfo[];
-    paidLeaveDayEvents: Event[];
-    excludedSchedules: ExcludedScheduleInfo[];
-    excludedEvents: ExcludedEventInfo[];
-}
+type StatisticsCardsData = EventState
 
 /** コンポーネントのProps */
 export interface StatisticsCardsProps {
@@ -369,9 +364,10 @@ const EXCLUDED_EVENTS_COLUMN_SIZING = {
     excludeReasonDetails: { minWidth: 350, idealWidth: 400 },
 } as const;
 
-/** 有給休暇日テーブルの列幅設定 */
-const PAID_LEAVE_DAYS_COLUMN_SIZING = {
-    displayDate: { minWidth: 200, idealWidth: 300 },
+/** 1日ごとのイベント数テーブルの列幅設定 */
+const DAILY_EVENT_COUNT_COLUMN_SIZING = {
+    displayDate: { minWidth: 300, idealWidth: 400 },
+    eventCount: { minWidth: 200, idealWidth: 250 },
 } as const;
 
 /**
@@ -454,16 +450,28 @@ const calcStatisticsData = (
     data: StatisticsCardsData,
     linkingEventWorkItemPair: LinkingEventWorkItemPair[],
 ): StatisticsData => {
-    const targetDays = data.enableSchedules.length + data.paidLeaveDayEvents.length;
-    const paidLeaveDays = data.paidLeaveDayEvents.length;
-    const { fromStr, endStr } = getDateRangeString(data.enableSchedules);
+    const allEvenst = pickEvents(data)
 
-    // 対象イベント数 = 有効なイベント
-    const totalEvents =
-        data.enableEvents.length +
-        data.adjustedEvents.length +
-        data.paidLeaveDayEvents.length +
-        data.scheduleEvents.length;
+    let targetDays = data.enableSchedules.length + data.paidLeaveDayEvents.length;
+    let { fromStr, endStr } = getDateRangeString(data.enableSchedules);
+    
+    // 有効なスケジュールがない場合は、すべてのイベントから日付範囲を算出
+    if (targetDays === 0 && allEvenst.length > 0) {
+        const eventSchedules = allEvenst.map((e) => e.schedule);
+        const dateRange = getDateRangeString(eventSchedules);
+        fromStr = dateRange.fromStr;
+        endStr = dateRange.endStr;
+        
+        // イベントの日数をユニークな日付でカウント
+        const uniqueDates = new Set(
+            eventSchedules.map((s) => new Date(s.start).toLocaleDateString())
+        );
+        targetDays = uniqueDates.size;
+    }
+
+    
+    const paidLeaveDays = data.paidLeaveDayEvents.length;
+    const totalEvents = allEvenst.length;
     const adjustedCount = data.adjustedEvents.length;
     const excludedCount = data.excludedEvents.length;
     const totalLinked = linkingEventWorkItemPair.length;
@@ -546,24 +554,44 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
         }));
     }, [dialogType, data.excludedEvents, searchQuery]);
 
-    // 有給休暇日の一覧データを取得
-    const paidLeaveDaysData = useMemo((): PaidLeaveDayRow[] => {
+    // 1日ごとのイベント数データを取得
+    const dailyEventCountData = useMemo((): DailyEventCountRow[] => {
         if (dialogType !== "targetDays") return [];
 
-        return data.paidLeaveDayEvents.map((event) => {
-            const date = new Date(event.schedule.start);
-            return {
-                id: event.uuid,
-                date: date.toISOString(),
-                displayDate: date.toLocaleDateString("ja-JP", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    weekday: "short",
-                }),
-            };
+        // すべてのイベントを取得
+        const allEvents = pickEvents(data);
+        
+        // 日付ごとにイベントをグループ化
+        const eventsByDate = new Map<string, Event[]>();
+        
+        allEvents.forEach((event) => {
+            const dateKey = new Date(event.schedule.start).toLocaleDateString("ja-JP");
+            if (!eventsByDate.has(dateKey)) {
+                eventsByDate.set(dateKey, []);
+            }
+            eventsByDate.get(dateKey)!.push(event);
         });
-    }, [dialogType, data.paidLeaveDayEvents]);
+
+        // テーブル行データに変換
+        return Array.from(eventsByDate.entries())
+            .map(([dateKey, events]) => {
+                const date = new Date(events[0].schedule.start);
+                
+                return {
+                    id: dateKey,
+                    date: date.toISOString(),
+                    displayDate: date.toLocaleDateString("ja-JP", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        weekday: "short",
+                    }),
+                    eventCount: events.length,
+                    events,
+                };
+            })
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }, [dialogType, data]);
 
     // 統計カードの設定をメモ化
     const statCardConfigs = useMemo(() => createStatCardConfigs(statistics, styles), [statistics, styles]);
@@ -688,24 +716,42 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
         [getExcludeReasonIcon, styles],
     );
 
-    // 有給休暇日のテーブル列定義
-    const paidLeaveDaysColumns = useMemo(
-        (): TableColumnDefinition<PaidLeaveDayRow>[] => [
-            createTableColumn<PaidLeaveDayRow>({
+    // 1日ごとのイベント数テーブル列定義
+    const dailyEventCountColumns = useMemo(
+        (): TableColumnDefinition<DailyEventCountRow>[] => [
+            createTableColumn<DailyEventCountRow>({
                 columnId: "displayDate",
                 compare: (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-                renderHeaderCell: () => "有給休暇日",
+                renderHeaderCell: () => "日付",
                 renderCell: (item) => (
                     <TableCellLayout>
-                        <div className={styles.eventDetail}>
+                        <div style={{ 
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                        }}>
                             <CalendarLtr24Regular />
                             {item.displayDate}
                         </div>
                     </TableCellLayout>
                 ),
             }),
+            createTableColumn<DailyEventCountRow>({
+                columnId: "eventCount",
+                compare: (a, b) => a.eventCount - b.eventCount,
+                renderHeaderCell: () => "イベント数",
+                renderCell: (item) => (
+                    <TableCellLayout>
+                        <div style={{ fontSize: "16px", fontWeight: "600" }}>
+                            {item.eventCount}件
+                        </div>
+                    </TableCellLayout>
+                ),
+            }),
         ],
-        [],
+        [styles],
     );
 
     // ダイアログ情報を取得
@@ -715,7 +761,7 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
         switch (dialogType) {
             case "targetDays":
                 return {
-                    title: "有給休暇日一覧",
+                    title: "日別イベント数一覧",
                     icon: <Calendar24Regular />,
                     color: tokens.colorBrandForeground1,
                 };
@@ -748,7 +794,7 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                             </div>
                             <span>{currentDialogInfo?.title}</span>
                             <span style={{ marginLeft: "auto" }}>
-                                ({dialogType === "targetDays" ? paidLeaveDaysData.length : excludedEventsData.length}件)
+                                ({dialogType === "targetDays" ? dailyEventCountData.length : excludedEventsData.length}件)
                             </span>
                             <Button appearance="subtle" icon={<Dismiss24Regular />} onClick={handleCloseDialog} />
                         </DialogTitle>
@@ -769,20 +815,20 @@ export function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCa
                         {/* データテーブル */}
                         <DialogContent className={styles.tableContainer}>
                             {dialogType === "targetDays" ? (
-                                // 有給休暇日一覧
-                                paidLeaveDaysData.length === 0 ? (
+                                // 日別イベント数一覧
+                                dailyEventCountData.length === 0 ? (
                                     <div className={styles.emptyState}>
                                         <div className={styles.emptyStateIcon}>{currentDialogInfo?.icon}</div>
-                                        <div className={styles.emptyStateText}>有給休暇日がありません</div>
+                                        <div className={styles.emptyStateText}>対象日がありません</div>
                                     </div>
                                 ) : (
                                     <DataTable
-                                        items={paidLeaveDaysData}
-                                        columns={paidLeaveDaysColumns}
+                                        items={dailyEventCountData}
+                                        columns={dailyEventCountColumns}
                                         getRowId={(item) => item.id}
                                         sortable
                                         resizableColumns
-                                        columnSizingOptions={PAID_LEAVE_DAYS_COLUMN_SIZING}
+                                        columnSizingOptions={DAILY_EVENT_COUNT_COLUMN_SIZING}
                                     />
                                 )
                             ) : dialogType === "targetEvents" ? (

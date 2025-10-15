@@ -1,12 +1,17 @@
+import { StatCard } from "@/components/card";
 import { DataTable } from "@/components/data-table";
 import { formatDateTime } from "@/lib/dateUtil";
 import { useSettings } from "@/store";
 import type { Event, Schedule, WorkItem } from "@/types";
 import { EventUtils, WorkItemUtils } from "@/types/utils";
 import {
+    Badge,
     Button,
     createTableColumn,
     makeStyles,
+    Popover,
+    PopoverSurface,
+    PopoverTrigger,
     TableCellLayout,
     TableColumnDefinition,
     tokens,
@@ -22,7 +27,7 @@ import {
     PersonEdit20Regular,
     WeatherSunny20Regular,
 } from "@fluentui/react-icons";
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { memo, type ReactNode, useCallback, useMemo, useState } from "react";
 import { LinkingEventWorkItemPair } from "../models";
 import { WorkItemTreeViewDialog } from "./WorkItemTreeViewDialog";
 
@@ -36,6 +41,7 @@ type TableRow = {
 
 export type EventWithOption = {
     oldSchedule?: Schedule;
+    duplicationUUID?: string[];
 } & Event;
 
 export type EventTableRow = {
@@ -124,11 +130,50 @@ const useStyles = makeStyles({
         padding: `${tokens.spacingVerticalSNudge} ${tokens.spacingHorizontalS}`,
         fontSize: tokens.fontSizeBase300,
     },
+    // 重複バッジ（数値のみ）
+    duplicationBadge: {
+        marginLeft: tokens.spacingHorizontalS,
+        cursor: "pointer",
+        fontWeight: tokens.fontWeightSemibold,
+        fontSize: tokens.fontSizeBase200,
+        minWidth: "24px",
+        height: "20px",
+        paddingLeft: tokens.spacingHorizontalXS,
+        paddingRight: tokens.spacingHorizontalXS,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transitionDuration: tokens.durationNormal,
+        transitionTimingFunction: tokens.curveEasyEase,
+        transitionProperty: "transform, box-shadow",
+        ":hover": {
+            transform: "scale(1.15)",
+            boxShadow: tokens.shadow4,
+        },
+    },
+    // 重複リストポップアップ
+    duplicationPopover: {
+        width: "520px",
+        padding: tokens.spacingVerticalXXL,
+    },
+    duplicationListTitle: {
+        display: "flex",
+        alignItems: "center",
+        gap: tokens.spacingHorizontalS,
+        marginBottom: tokens.spacingVerticalM,
+        fontSize: tokens.fontSizeBase400,
+        fontWeight: tokens.fontWeightSemibold,
+    },
+    duplicationList: {
+        display: "grid",
+        gridTemplateColumns: "1fr",
+        gap: tokens.spacingVerticalS,
+    },
 });
 
 const columnSizingOptions = {
-    dateTime: { minWidth: 150, idealWidth: 200 },
-    eventName: { minWidth: 250, idealWidth: 400 },
+    dateTime: { minWidth: 250, idealWidth: 250 },
+    eventName: { minWidth: 300, idealWidth: 400 },
     inputType: { minWidth: 120, idealWidth: 120 },
     workItemId: { minWidth: 140, idealWidth: 160 },
     workItemName: { minWidth: 250, idealWidth: 400 },
@@ -139,27 +184,221 @@ function isLinkingEventWorkItemPair(obj: EventTableRow["item"]): obj is LinkingE
     return "linkingWorkItem" in obj;
 }
 
+// 重複イベントカードをレンダリング（メモ化用コンポーネント）
+const DuplicationEventCard = memo(function DuplicationEventCard({ 
+    event 
+}: { 
+    event: { name: string; schedule: Schedule } 
+}) {
+    return (
+        <StatCard
+            icon={<Calendar20Regular />}
+            label={formatDateTime(event.schedule.start, event.schedule.end)}
+            value={event.name}
+        />
+    );
+});
+
+// 入力タイプセルをレンダリング（メモ化用コンポーネント）
+const InputTypeCell = memo(function InputTypeCell({
+    inputType,
+    styles,
+}: {
+    inputType: string;
+    styles: ReturnType<typeof useStyles>;
+}) {
+    const badgeInfo = useMemo(() => getInputTypeBadgeInfo(inputType, styles), [inputType, styles]);
+
+    return (
+        <div className={styles.centeredCell}>
+            <span className={`${styles.inputTypeBadge} ${badgeInfo.badgeClass}`}>
+                {badgeInfo.icon}
+                {inputType}
+            </span>
+        </div>
+    );
+});
+
+// 作業アイテム選択ボタンセルをレンダリング（メモ化用コンポーネント）
+const WorkItemActionCell = memo(function WorkItemActionCell({
+    eventUuid,
+    workItemId,
+    styles,
+    onOpenDialog,
+}: {
+    eventUuid: string;
+    workItemId: string;
+    styles: ReturnType<typeof useStyles>;
+    onOpenDialog: (eventId: string) => void;
+}) {
+    const handleClick = useCallback(() => {
+        onOpenDialog(eventUuid);
+    }, [onOpenDialog, eventUuid]);
+
+    return (
+        <TableCellLayout>
+            <div className={styles.centeredCell}>
+                <Button
+                    appearance="subtle"
+                    icon={<Edit20Regular />}
+                    iconPosition="after"
+                    className={styles.workItemButton}
+                    onClick={handleClick}
+                >
+                    {workItemId || "未選択"}
+                </Button>
+            </div>
+        </TableCellLayout>
+    );
+});
+
+// 作業アイテム名セルをレンダリング（メモ化用コンポーネント）
+const WorkItemNameCell = memo(function WorkItemNameCell({ workItemName }: { workItemName: string }) {
+    const cellStyle = useMemo(() => ({
+        color: workItemName === "未紐づけ" ? tokens.colorNeutralForeground3 : undefined,
+        fontWeight: workItemName === "未紐づけ" ? undefined : tokens.fontWeightSemibold,
+    }), [workItemName]);
+
+    return (
+        <TableCellLayout>
+            <div style={cellStyle}>{workItemName}</div>
+        </TableCellLayout>
+    );
+});
+
+// イベント名セルをレンダリング（メモ化用コンポーネント）
+const EventNameCell = memo(function EventNameCell({
+    event,
+    styles,
+}: {
+    event: Event;
+    styles: ReturnType<typeof useStyles>;
+}) {
+    const tooltipContent = useMemo(() => EventUtils.getText(event), [event]);
+
+    return (
+        <TableCellLayout>
+            <Tooltip content={tooltipContent} relationship="description">
+                <div className={styles.eventNameCell}>{event.name}</div>
+            </Tooltip>
+        </TableCellLayout>
+    );
+});
+
+// 日時セルをレンダリング（メモ化用コンポーネント）
+const DateTimeCell = memo(function DateTimeCell({
+    event,
+    styles,
+    allEvents,
+    openDuplicationPopoverId,
+    onShowDuplicationPopover,
+}: {
+    event: EventWithOption;
+    styles: ReturnType<typeof useStyles>;
+    allEvents: TableRow[];
+    openDuplicationPopoverId: string | null;
+    onShowDuplicationPopover: (eventId: string, open: boolean) => void;
+}) {
+    const hasDuplication = event.duplicationUUID && event.duplicationUUID.length > 0;
+    const duplicationCount = hasDuplication ? event.duplicationUUID!.length : 0;
+
+    const duplicateCards = useMemo(() => {
+        if (!hasDuplication) return null;
+        return event.duplicationUUID!.map((uuid) => {
+            const duplicatedEvent = allEvents.find((e) => e.event.uuid === uuid);
+            if (!duplicatedEvent) return null;
+            return <DuplicationEventCard key={uuid} event={duplicatedEvent.event} />;
+        });
+    }, [hasDuplication, event.duplicationUUID, allEvents]);
+
+    return (
+        <TableCellLayout>
+            <div className={styles.dateTimeCell}>
+                <Calendar20Regular />
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        {formatDateTime(event.schedule.start, event.schedule.end)}
+                        {hasDuplication && (
+                            <Popover
+                                open={openDuplicationPopoverId === event.uuid}
+                                onOpenChange={(_, data) => onShowDuplicationPopover(event.uuid, data.open)}
+                            >
+                                <PopoverTrigger disableButtonEnhancement>
+                                    <Badge appearance="filled" color="danger" className={styles.duplicationBadge}>
+                                        {duplicationCount}
+                                    </Badge>
+                                </PopoverTrigger>
+                                <PopoverSurface className={styles.duplicationPopover}>
+                                    <div className={styles.duplicationListTitle}>
+                                        重複しているイベント ({duplicationCount}件)
+                                    </div>
+                                    <div className={styles.duplicationList}>{duplicateCards}</div>
+                                </PopoverSurface>
+                            </Popover>
+                        )}
+                    </div>
+                    {event.oldSchedule && (
+                        <div
+                            style={{
+                                fontSize: tokens.fontSizeBase200,
+                                color: tokens.colorPaletteRedForeground1,
+                            }}
+                        >
+                            変更前：
+                            {event.oldSchedule.start.toLocaleTimeString("ja-JP", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
+                            ~
+                            {event.oldSchedule.end?.toLocaleTimeString("ja-JP", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </TableCellLayout>
+    );
+});
+
+// 入力タイプバッジのマッピング（定数として定義）
+const INPUT_TYPE_BADGE_MAP: Record<string, { icon: ReactNode }> = {
+    手動入力: { icon: <PersonEdit20Regular /> },
+    AI自動: { icon: <Bot20Regular /> },
+    履歴: { icon: <History20Regular /> },
+    勤務予定: { icon: <CalendarClock20Regular /> },
+    休暇: { icon: <WeatherSunny20Regular /> },
+    自動: { icon: <Bot20Regular /> },
+};
+
 // 入力タイプに応じたバッジのアイコンとスタイルを取得
 function getInputTypeBadgeInfo(
     inputType: string,
     styles: ReturnType<typeof useStyles>,
 ): { icon: ReactNode; badgeClass: string } {
-    const badgeMap: Record<string, { icon: ReactNode; badgeClass: string }> = {
-        手動入力: { icon: <PersonEdit20Regular />, badgeClass: styles.badgeManual },
-        AI自動: { icon: <Bot20Regular />, badgeClass: styles.badgeAI },
-        履歴: { icon: <History20Regular />, badgeClass: styles.badgeHistory },
-        勤務予定: { icon: <CalendarClock20Regular />, badgeClass: styles.badgeWorkSchedule },
-        休暇: { icon: <WeatherSunny20Regular />, badgeClass: styles.badgeTimeOff },
-        自動: { icon: <Bot20Regular />, badgeClass: styles.badgeAuto },
+    const badgeStyleMap: Record<string, string> = {
+        手動入力: styles.badgeManual,
+        AI自動: styles.badgeAI,
+        履歴: styles.badgeHistory,
+        勤務予定: styles.badgeWorkSchedule,
+        休暇: styles.badgeTimeOff,
+        自動: styles.badgeAuto,
     };
 
-    return badgeMap[inputType] || { icon: <CircleSmall20Filled />, badgeClass: styles.badgeUnlinked };
+    const icon = INPUT_TYPE_BADGE_MAP[inputType]?.icon || <CircleSmall20Filled />;
+    const badgeClass = badgeStyleMap[inputType] || styles.badgeUnlinked;
+
+    return { icon, badgeClass };
 }
 
 // テーブル列定義を生成
 function createEventColumns(
     styles: ReturnType<typeof useStyles>,
     onOpenWorkItemDialog: (eventId: string) => void,
+    allEvents: TableRow[],
+    onShowDuplicationPopover: (eventId: string, open: boolean) => void,
+    openDuplicationPopoverId: string | null,
 ): TableColumnDefinition<TableRow>[] {
     return [
         createTableColumn<TableRow>({
@@ -167,102 +406,45 @@ function createEventColumns(
             compare: (a, b) => a.event.schedule.start.getTime() - b.event.schedule.start.getTime(),
             renderHeaderCell: () => "日時",
             renderCell: (item) => (
-                <TableCellLayout>
-                    <div className={styles.dateTimeCell}>
-                        <Calendar20Regular />
-                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                            <div>{formatDateTime(item.event.schedule.start, item.event.schedule.end)}</div>
-                            {item.event.oldSchedule && (
-                                <div
-                                    style={{
-                                        fontSize: tokens.fontSizeBase200,
-                                        color: tokens.colorPaletteRedForeground1,
-                                    }}
-                                >
-                                    変更前：
-                                    {item.event.oldSchedule.start.toLocaleTimeString("ja-JP", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
-                                    ~
-                                    {item.event.oldSchedule.end?.toLocaleTimeString("ja-JP", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </TableCellLayout>
+                <DateTimeCell
+                    event={item.event}
+                    styles={styles}
+                    allEvents={allEvents}
+                    openDuplicationPopoverId={openDuplicationPopoverId}
+                    onShowDuplicationPopover={onShowDuplicationPopover}
+                />
             ),
         }),
         createTableColumn<TableRow>({
             columnId: "eventName",
             compare: (a, b) => a.event.name.localeCompare(b.event.name),
             renderHeaderCell: () => "イベント名",
-            renderCell: (item) => (
-                <TableCellLayout>
-                    <Tooltip content={EventUtils.getText(item.event)} relationship="description">
-                        <div className={styles.eventNameCell}>{item.event.name}</div>
-                    </Tooltip>
-                </TableCellLayout>
-            ),
+            renderCell: (item) => <EventNameCell event={item.event} styles={styles} />,
         }),
         createTableColumn<TableRow>({
             columnId: "inputType",
             compare: (a, b) => a.inputType.localeCompare(b.inputType),
             renderHeaderCell: () => "入力状況",
-            renderCell: (item) => {
-                const { icon, badgeClass } = getInputTypeBadgeInfo(item.inputType, styles);
-
-                return (
-                    <div className={styles.centeredCell}>
-                        <span className={`${styles.inputTypeBadge} ${badgeClass}`}>
-                            {icon}
-                            {item.inputType}
-                        </span>
-                    </div>
-                );
-            },
+            renderCell: (item) => <InputTypeCell inputType={item.inputType} styles={styles} />,
         }),
         createTableColumn<TableRow>({
             columnId: "workItemId",
             compare: (a, b) => a.workItemId.localeCompare(b.workItemId),
             renderHeaderCell: () => "コード",
-            renderCell: (item) => {
-                return (
-                    <TableCellLayout>
-                        <div className={styles.centeredCell}>
-                            <Button
-                                appearance="subtle"
-                                icon={<Edit20Regular />}
-                                iconPosition="after"
-                                className={styles.workItemButton}
-                                onClick={() => onOpenWorkItemDialog(item.event.uuid)}
-                            >
-                                {item.workItemId || "未選択"}
-                            </Button>
-                        </div>
-                    </TableCellLayout>
-                );
-            },
+            renderCell: (item) => (
+                <WorkItemActionCell
+                    eventUuid={item.event.uuid}
+                    workItemId={item.workItemId}
+                    styles={styles}
+                    onOpenDialog={onOpenWorkItemDialog}
+                />
+            ),
         }),
         createTableColumn<TableRow>({
             columnId: "workItemName",
             compare: (a, b) => a.workItemName.localeCompare(b.workItemName),
             renderHeaderCell: () => "コード名称",
-            renderCell: (item) => (
-                <TableCellLayout>
-                    <div
-                        style={{
-                            color: item.workItemName === "未紐づけ" ? tokens.colorNeutralForeground3 : undefined,
-                            fontWeight: item.workItemName === "未紐づけ" ? undefined : tokens.fontWeightSemibold,
-                        }}
-                    >
-                        {item.workItemName}
-                    </div>
-                </TableCellLayout>
-            ),
+            renderCell: (item) => <WorkItemNameCell workItemName={item.workItemName} />,
         }),
     ];
 }
@@ -310,11 +492,20 @@ function convertToTableRow(row: EventTableRow): TableRow {
     };
 }
 
-export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChange }: EventTableProps) {
+/**
+ * イベントテーブルコンポーネント
+ * 
+ * パフォーマンス最適化:
+ * - React.memoでラップして不要な再レンダリングを防止
+ * - すべてのハンドラーをuseCallbackで最適化
+ * - テーブルデータと列定義をuseMemoで最適化
+ */
+export const EventTable = memo(function EventTable({ events, workItems: workItemsNotUse, onWorkItemChange }: EventTableProps) {
     const styles = useStyles();
     const { settings } = useSettings();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<string>("");
+    const [openDuplicationPopoverId, setOpenDuplicationPopoverId] = useState<string | null>(null);
 
     // WorkItemツリーから実際の作業アイテムを取得（subItemsが1つだけの階層を自動展開）
     const targetWorkItems = useMemo(() => {
@@ -341,6 +532,10 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
         setDialogOpen(true);
     }, []);
 
+    const handleShowDuplicationPopover = useCallback((eventId: string, open: boolean) => {
+        setOpenDuplicationPopoverId(open ? eventId : null);
+    }, []);
+
     const handleSelectWorkItem = useCallback(
         (workItemId: string) => {
             onWorkItemChange(selectedEventId, workItemId);
@@ -354,7 +549,17 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
 
     // テーブルデータと列定義を生成
     const tableRows: TableRow[] = useMemo(() => events.map(convertToTableRow), [events]);
-    const eventColumns = useMemo(() => createEventColumns(styles, handleOpenDialog), [styles, handleOpenDialog]);
+    const eventColumns = useMemo(
+        () =>
+            createEventColumns(
+                styles,
+                handleOpenDialog,
+                tableRows,
+                handleShowDuplicationPopover,
+                openDuplicationPopoverId,
+            ),
+        [styles, handleOpenDialog, tableRows, handleShowDuplicationPopover, openDuplicationPopoverId],
+    );
 
     return (
         <div className={styles.tableWrapper}>
@@ -380,4 +585,4 @@ export function EventTable({ events, workItems: workItemsNotUse, onWorkItemChang
             />
         </div>
     );
-}
+});
