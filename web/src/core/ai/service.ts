@@ -49,7 +49,17 @@ export async function infer(request: AIInferenceRequest): Promise<AIInferenceRes
         });
 
         if (!response.ok) {
-            const errorMessage = await response.json().catch(() => ({ error: { message: response.statusText } }));
+            // 401エラーの場合はAPIキーが不正
+            if (response.status === 401) {
+                logger.info("AI Response NG -> 401 Unauthorized");
+                return {
+                    ok: false,
+                    errorMessage: "APIキーが無効です。正しいAPIキーを入力してください。",
+                };
+            }
+
+            // その他のエラー
+            const errorMessage = JSON.stringify(await response.json());
             logger.info("AI Response NG -> " + errorMessage);
             return {
                 ok: false,
@@ -58,7 +68,7 @@ export async function infer(request: AIInferenceRequest): Promise<AIInferenceRes
         }
 
         const data = await response.json();
-        const content = data.choices?.[0]?.message?.content;
+        const content = String(data.choices?.[0]?.message?.content);
         logger.info("AI Response -> " + content);
 
         if (!content) {

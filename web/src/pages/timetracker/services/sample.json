@@ -1,0 +1,2249 @@
+[
+    {
+        "id": "62368",
+        "name": "BtoB開発",
+        "folderName": "",
+        "folderPath": "",
+        "subItems": [
+            {
+                "id": "62370",
+                "name": "10人日以上の開発案件(完了)",
+                "folderName": "BtoB開発",
+                "folderPath": "BtoB開発",
+                "subItems": [
+                    {
+                        "id": "66254",
+                        "name": "【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                        "folderName": "10人日以上の開発案件(完了)",
+                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)",
+                        "subItems": [
+                            {
+                                "id": "66255",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66256",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66257",
+                                "name": "設計",
+                                "folderName": "【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66258",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66259",
+                                "name": "実装",
+                                "folderName": "【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66260",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66261",
+                                "name": "リリース",
+                                "folderName": "【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66262",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66263",
+                                "name": "テスト",
+                                "folderName": "【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66264",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66265",
+                                "name": "ミーティング",
+                                "folderName": "【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66266",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66267",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66268",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】PJ Trylion_R3.2（大型仕様変更）No.3-2（内製）/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66314",
+                        "name": "【投資】MD改革プロジェクト Ph1",
+                        "folderName": "10人日以上の開発案件(完了)",
+                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)",
+                        "subItems": [
+                            {
+                                "id": "66315",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】MD改革プロジェクト Ph1",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1",
+                                "subItems": [
+                                    {
+                                        "id": "66316",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66317",
+                                "name": "設計",
+                                "folderName": "【投資】MD改革プロジェクト Ph1",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1",
+                                "subItems": [
+                                    {
+                                        "id": "66318",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66319",
+                                "name": "実装",
+                                "folderName": "【投資】MD改革プロジェクト Ph1",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1",
+                                "subItems": [
+                                    {
+                                        "id": "66320",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66321",
+                                "name": "リリース",
+                                "folderName": "【投資】MD改革プロジェクト Ph1",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1",
+                                "subItems": [
+                                    {
+                                        "id": "66322",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66323",
+                                "name": "テスト",
+                                "folderName": "【投資】MD改革プロジェクト Ph1",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1",
+                                "subItems": [
+                                    {
+                                        "id": "66324",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66325",
+                                "name": "ミーティング",
+                                "folderName": "【投資】MD改革プロジェクト Ph1",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1",
+                                "subItems": [
+                                    {
+                                        "id": "66326",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66327",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】MD改革プロジェクト Ph1",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1",
+                                "subItems": [
+                                    {
+                                        "id": "66328",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】MD改革プロジェクト Ph1/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66031",
+                        "name": "【投資】まとめ割UI改善",
+                        "folderName": "10人日以上の開発案件(完了)",
+                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)",
+                        "subItems": [
+                            {
+                                "id": "66032",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】まとめ割UI改善",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善",
+                                "subItems": [
+                                    {
+                                        "id": "66033",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66034",
+                                "name": "設計",
+                                "folderName": "【投資】まとめ割UI改善",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善",
+                                "subItems": [
+                                    {
+                                        "id": "66035",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66036",
+                                "name": "実装",
+                                "folderName": "【投資】まとめ割UI改善",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善",
+                                "subItems": [
+                                    {
+                                        "id": "66037",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66038",
+                                "name": "リリース",
+                                "folderName": "【投資】まとめ割UI改善",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善",
+                                "subItems": [
+                                    {
+                                        "id": "66039",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66040",
+                                "name": "テスト",
+                                "folderName": "【投資】まとめ割UI改善",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善",
+                                "subItems": [
+                                    {
+                                        "id": "66041",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66042",
+                                "name": "ミーティング",
+                                "folderName": "【投資】まとめ割UI改善",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善",
+                                "subItems": [
+                                    {
+                                        "id": "66043",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66044",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】まとめ割UI改善",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善",
+                                "subItems": [
+                                    {
+                                        "id": "66045",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】まとめ割UI改善/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66344",
+                        "name": "【投資】EDLP売場構築投資",
+                        "folderName": "10人日以上の開発案件(完了)",
+                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)",
+                        "subItems": [
+                            {
+                                "id": "66345",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】EDLP売場構築投資",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資",
+                                "subItems": [
+                                    {
+                                        "id": "66346",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66347",
+                                "name": "設計",
+                                "folderName": "【投資】EDLP売場構築投資",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資",
+                                "subItems": [
+                                    {
+                                        "id": "66348",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66349",
+                                "name": "実装",
+                                "folderName": "【投資】EDLP売場構築投資",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資",
+                                "subItems": [
+                                    {
+                                        "id": "66350",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66351",
+                                "name": "リリース",
+                                "folderName": "【投資】EDLP売場構築投資",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資",
+                                "subItems": [
+                                    {
+                                        "id": "66352",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66353",
+                                "name": "テスト",
+                                "folderName": "【投資】EDLP売場構築投資",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資",
+                                "subItems": [
+                                    {
+                                        "id": "66354",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66355",
+                                "name": "ミーティング",
+                                "folderName": "【投資】EDLP売場構築投資",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資",
+                                "subItems": [
+                                    {
+                                        "id": "66356",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66357",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】EDLP売場構築投資",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資",
+                                "subItems": [
+                                    {
+                                        "id": "66358",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】EDLP売場構築投資/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66389",
+                        "name": "【投資】新規登録PJ",
+                        "folderName": "10人日以上の開発案件(完了)",
+                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)",
+                        "subItems": [
+                            {
+                                "id": "66390",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】新規登録PJ",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ",
+                                "subItems": [
+                                    {
+                                        "id": "66391",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66392",
+                                "name": "設計",
+                                "folderName": "【投資】新規登録PJ",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ",
+                                "subItems": [
+                                    {
+                                        "id": "66393",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66394",
+                                "name": "実装",
+                                "folderName": "【投資】新規登録PJ",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ",
+                                "subItems": [
+                                    {
+                                        "id": "66395",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66396",
+                                "name": "リリース",
+                                "folderName": "【投資】新規登録PJ",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ",
+                                "subItems": [
+                                    {
+                                        "id": "66397",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66398",
+                                "name": "テスト",
+                                "folderName": "【投資】新規登録PJ",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ",
+                                "subItems": [
+                                    {
+                                        "id": "66399",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66400",
+                                "name": "ミーティング",
+                                "folderName": "【投資】新規登録PJ",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ",
+                                "subItems": [
+                                    {
+                                        "id": "66401",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66402",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】新規登録PJ",
+                                "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ",
+                                "subItems": [
+                                    {
+                                        "id": "66403",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件(完了)/【投資】新規登録PJ/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "62371",
+                "name": "10人日以上の開発案件",
+                "folderName": "BtoB開発",
+                "folderPath": "BtoB開発",
+                "subItems": [
+                    {
+                        "id": "65056",
+                        "name": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "65057",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "65058",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65059",
+                                "name": "システム企画",
+                                "folderName": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "65060",
+                                        "name": "システム企画",
+                                        "folderName": "システム企画",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）/システム企画",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65065",
+                                "name": "設計",
+                                "folderName": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "65066",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65067",
+                                "name": "実装",
+                                "folderName": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "65068",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65069",
+                                "name": "リリース",
+                                "folderName": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "65070",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65071",
+                                "name": "テスト",
+                                "folderName": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "65072",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65061",
+                                "name": "ミーティング",
+                                "folderName": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "65062",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65063",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "65064",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUBR2統合リリース（R2）、ドメイン統合（内製）/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66269",
+                        "name": "【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66270",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66271",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66272",
+                                "name": "設計",
+                                "folderName": "【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66273",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66274",
+                                "name": "実装",
+                                "folderName": "【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66275",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66276",
+                                "name": "リリース",
+                                "folderName": "【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66277",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66278",
+                                "name": "テスト",
+                                "folderName": "【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66279",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66280",
+                                "name": "ミーティング",
+                                "folderName": "【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66281",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66282",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66283",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion_R3.2大型仕様変更No.5、スマホ対応（内製）/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66284",
+                        "name": "【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66285",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66286",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66287",
+                                "name": "設計",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66288",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66289",
+                                "name": "実装",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66290",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66291",
+                                "name": "リリース",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66292",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66293",
+                                "name": "テスト",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66294",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66295",
+                                "name": "ミーティング",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66296",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66297",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66298",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.2）（内製）/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66299",
+                        "name": "【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66300",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66301",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66302",
+                                "name": "設計",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66303",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66304",
+                                "name": "実装",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66305",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66306",
+                                "name": "リリース",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66307",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66308",
+                                "name": "テスト",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66309",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66310",
+                                "name": "ミーティング",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66311",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66312",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）",
+                                "subItems": [
+                                    {
+                                        "id": "66313",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】PJ Trylion CLUB統合リリース（R2.3）（内製）/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66590",
+                        "name": "【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66591",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "subItems": [
+                                    {
+                                        "id": "66592",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66593",
+                                "name": "設計",
+                                "folderName": "【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "subItems": [
+                                    {
+                                        "id": "66594",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66595",
+                                "name": "実装",
+                                "folderName": "【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "subItems": [
+                                    {
+                                        "id": "66596",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66597",
+                                "name": "リリース",
+                                "folderName": "【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "subItems": [
+                                    {
+                                        "id": "66598",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66599",
+                                "name": "テスト",
+                                "folderName": "【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "subItems": [
+                                    {
+                                        "id": "66600",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66601",
+                                "name": "ミーティング",
+                                "folderName": "【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "subItems": [
+                                    {
+                                        "id": "66602",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66603",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修",
+                                "subItems": [
+                                    {
+                                        "id": "66604",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】【LOHACO】LOHACO問い合わせフォームシステム改修/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66434",
+                        "name": "【投資】商品詳細クーポン適用価格表示",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66435",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】商品詳細クーポン適用価格表示",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示",
+                                "subItems": [
+                                    {
+                                        "id": "66436",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66437",
+                                "name": "設計",
+                                "folderName": "【投資】商品詳細クーポン適用価格表示",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示",
+                                "subItems": [
+                                    {
+                                        "id": "66438",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66439",
+                                "name": "実装",
+                                "folderName": "【投資】商品詳細クーポン適用価格表示",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示",
+                                "subItems": [
+                                    {
+                                        "id": "66440",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66441",
+                                "name": "リリース",
+                                "folderName": "【投資】商品詳細クーポン適用価格表示",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示",
+                                "subItems": [
+                                    {
+                                        "id": "66442",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66443",
+                                "name": "テスト",
+                                "folderName": "【投資】商品詳細クーポン適用価格表示",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示",
+                                "subItems": [
+                                    {
+                                        "id": "66444",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66445",
+                                "name": "ミーティング",
+                                "folderName": "【投資】商品詳細クーポン適用価格表示",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示",
+                                "subItems": [
+                                    {
+                                        "id": "66446",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66447",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】商品詳細クーポン適用価格表示",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示",
+                                "subItems": [
+                                    {
+                                        "id": "66448",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】商品詳細クーポン適用価格表示/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66605",
+                        "name": "【投資】MD改革プロジェクト Ph2",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66606",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】MD改革プロジェクト Ph2",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2",
+                                "subItems": [
+                                    {
+                                        "id": "66607",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66608",
+                                "name": "設計",
+                                "folderName": "【投資】MD改革プロジェクト Ph2",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2",
+                                "subItems": [
+                                    {
+                                        "id": "66609",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66610",
+                                "name": "実装",
+                                "folderName": "【投資】MD改革プロジェクト Ph2",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2",
+                                "subItems": [
+                                    {
+                                        "id": "66611",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66612",
+                                "name": "リリース",
+                                "folderName": "【投資】MD改革プロジェクト Ph2",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2",
+                                "subItems": [
+                                    {
+                                        "id": "66613",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66614",
+                                "name": "テスト",
+                                "folderName": "【投資】MD改革プロジェクト Ph2",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2",
+                                "subItems": [
+                                    {
+                                        "id": "66615",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66616",
+                                "name": "ミーティング",
+                                "folderName": "【投資】MD改革プロジェクト Ph2",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2",
+                                "subItems": [
+                                    {
+                                        "id": "66617",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66618",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】MD改革プロジェクト Ph2",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2",
+                                "subItems": [
+                                    {
+                                        "id": "66619",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】MD改革プロジェクト Ph2/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66664",
+                        "name": "【投資】関東DC店舗販売OTC2拠点化",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66665",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】関東DC店舗販売OTC2拠点化",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化",
+                                "subItems": [
+                                    {
+                                        "id": "66666",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66667",
+                                "name": "設計",
+                                "folderName": "【投資】関東DC店舗販売OTC2拠点化",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化",
+                                "subItems": [
+                                    {
+                                        "id": "66668",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66669",
+                                "name": "実装",
+                                "folderName": "【投資】関東DC店舗販売OTC2拠点化",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化",
+                                "subItems": [
+                                    {
+                                        "id": "66670",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66671",
+                                "name": "リリース",
+                                "folderName": "【投資】関東DC店舗販売OTC2拠点化",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化",
+                                "subItems": [
+                                    {
+                                        "id": "66672",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66673",
+                                "name": "テスト",
+                                "folderName": "【投資】関東DC店舗販売OTC2拠点化",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化",
+                                "subItems": [
+                                    {
+                                        "id": "66674",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66675",
+                                "name": "ミーティング",
+                                "folderName": "【投資】関東DC店舗販売OTC2拠点化",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化",
+                                "subItems": [
+                                    {
+                                        "id": "66676",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66677",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】関東DC店舗販売OTC2拠点化",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化",
+                                "subItems": [
+                                    {
+                                        "id": "66678",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】関東DC店舗販売OTC2拠点化/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66709",
+                        "name": "【投資】広告pf刷新",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66710",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】広告pf刷新",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新",
+                                "subItems": [
+                                    {
+                                        "id": "66711",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66712",
+                                "name": "設計",
+                                "folderName": "【投資】広告pf刷新",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新",
+                                "subItems": [
+                                    {
+                                        "id": "66713",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66714",
+                                "name": "実装",
+                                "folderName": "【投資】広告pf刷新",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新",
+                                "subItems": [
+                                    {
+                                        "id": "66715",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66716",
+                                "name": "リリース",
+                                "folderName": "【投資】広告pf刷新",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新",
+                                "subItems": [
+                                    {
+                                        "id": "66717",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66718",
+                                "name": "テスト",
+                                "folderName": "【投資】広告pf刷新",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新",
+                                "subItems": [
+                                    {
+                                        "id": "66719",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66720",
+                                "name": "ミーティング",
+                                "folderName": "【投資】広告pf刷新",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新",
+                                "subItems": [
+                                    {
+                                        "id": "66721",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66722",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】広告pf刷新",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新",
+                                "subItems": [
+                                    {
+                                        "id": "66723",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】広告pf刷新/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66739",
+                        "name": "【投資】接客ツールR3導入",
+                        "folderName": "10人日以上の開発案件",
+                        "folderPath": "BtoB開発/10人日以上の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66740",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "【投資】接客ツールR3導入",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66741",
+                                        "name": "要件定義/仕様作成",
+                                        "folderName": "要件定義/仕様作成",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入/要件定義/仕様作成",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66742",
+                                "name": "設計",
+                                "folderName": "【投資】接客ツールR3導入",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66743",
+                                        "name": "設計",
+                                        "folderName": "設計",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入/設計",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66744",
+                                "name": "実装",
+                                "folderName": "【投資】接客ツールR3導入",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66745",
+                                        "name": "実装",
+                                        "folderName": "実装",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入/実装",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66746",
+                                "name": "リリース",
+                                "folderName": "【投資】接客ツールR3導入",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66747",
+                                        "name": "リリース",
+                                        "folderName": "リリース",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入/リリース",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66748",
+                                "name": "テスト",
+                                "folderName": "【投資】接客ツールR3導入",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66749",
+                                        "name": "テスト",
+                                        "folderName": "テスト",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入/テスト",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66750",
+                                "name": "ミーティング",
+                                "folderName": "【投資】接客ツールR3導入",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66751",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66752",
+                                "name": "プロジェクト管理",
+                                "folderName": "【投資】接客ツールR3導入",
+                                "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66753",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/10人日以上の開発案件/【投資】接客ツールR3導入/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "62373",
+                "name": "10人日未満の開発案件(BtoB開発)",
+                "folderName": "BtoB開発",
+                "folderPath": "BtoB開発",
+                "subItems": [
+                    {
+                        "id": "62385",
+                        "name": "要件定義/仕様作成",
+                        "folderName": "10人日未満の開発案件(BtoB開発)",
+                        "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)",
+                        "subItems": [
+                            {
+                                "id": "62402",
+                                "name": "要件定義/仕様作成",
+                                "folderName": "要件定義/仕様作成",
+                                "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)/要件定義/仕様作成",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62386",
+                        "name": "システム企画",
+                        "folderName": "10人日未満の開発案件(BtoB開発)",
+                        "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)",
+                        "subItems": [
+                            {
+                                "id": "62403",
+                                "name": "システム企画",
+                                "folderName": "システム企画",
+                                "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)/システム企画",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62387",
+                        "name": "設計",
+                        "folderName": "10人日未満の開発案件(BtoB開発)",
+                        "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)",
+                        "subItems": [
+                            {
+                                "id": "62404",
+                                "name": "設計",
+                                "folderName": "設計",
+                                "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)/設計",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62388",
+                        "name": "実装",
+                        "folderName": "10人日未満の開発案件(BtoB開発)",
+                        "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)",
+                        "subItems": [
+                            {
+                                "id": "62405",
+                                "name": "実装",
+                                "folderName": "実装",
+                                "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)/実装",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62390",
+                        "name": "リリース",
+                        "folderName": "10人日未満の開発案件(BtoB開発)",
+                        "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)",
+                        "subItems": [
+                            {
+                                "id": "62407",
+                                "name": "リリース",
+                                "folderName": "リリース",
+                                "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)/リリース",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62389",
+                        "name": "テスト",
+                        "folderName": "10人日未満の開発案件(BtoB開発)",
+                        "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)",
+                        "subItems": [
+                            {
+                                "id": "62406",
+                                "name": "テスト",
+                                "folderName": "テスト",
+                                "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)/テスト",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62392",
+                        "name": "ミーティング",
+                        "folderName": "10人日未満の開発案件(BtoB開発)",
+                        "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)",
+                        "subItems": [
+                            {
+                                "id": "62409",
+                                "name": "ミーティング",
+                                "folderName": "ミーティング",
+                                "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)/ミーティング",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62391",
+                        "name": "プロジェクト管理",
+                        "folderName": "10人日未満の開発案件(BtoB開発)",
+                        "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)",
+                        "subItems": [
+                            {
+                                "id": "62408",
+                                "name": "プロジェクト管理",
+                                "folderName": "プロジェクト管理",
+                                "folderPath": "BtoB開発/10人日未満の開発案件(BtoB開発)/プロジェクト管理",
+                                "subItems": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "65414",
+                "name": "上申前の開発案件",
+                "folderName": "BtoB開発",
+                "folderPath": "BtoB開発",
+                "subItems": [
+                    {
+                        "id": "65431",
+                        "name": "レコメンドPJ",
+                        "folderName": "上申前の開発案件",
+                        "folderPath": "BtoB開発/上申前の開発案件",
+                        "subItems": [
+                            {
+                                "id": "65432",
+                                "name": "システム企画書（上申時の資料作成）",
+                                "folderName": "レコメンドPJ",
+                                "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ",
+                                "subItems": [
+                                    {
+                                        "id": "65433",
+                                        "name": "システム企画書（上申時の資料作成）",
+                                        "folderName": "システム企画書（上申時の資料作成）",
+                                        "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ/システム企画書（上申時の資料作成）",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65434",
+                                "name": "工数見積",
+                                "folderName": "レコメンドPJ",
+                                "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ",
+                                "subItems": [
+                                    {
+                                        "id": "65435",
+                                        "name": "工数見積",
+                                        "folderName": "工数見積",
+                                        "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ/工数見積",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65436",
+                                "name": "申請なのど手続き",
+                                "folderName": "レコメンドPJ",
+                                "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ",
+                                "subItems": [
+                                    {
+                                        "id": "65437",
+                                        "name": "申請なのど手続き",
+                                        "folderName": "申請なのど手続き",
+                                        "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ/申請なのど手続き",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65438",
+                                "name": "ミーティング",
+                                "folderName": "レコメンドPJ",
+                                "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ",
+                                "subItems": [
+                                    {
+                                        "id": "65439",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "65440",
+                                "name": "プロジェクト管理",
+                                "folderName": "レコメンドPJ",
+                                "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ",
+                                "subItems": [
+                                    {
+                                        "id": "65441",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/上申前の開発案件/レコメンドPJ/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66769",
+                        "name": "接客ツールR3導入",
+                        "folderName": "上申前の開発案件",
+                        "folderPath": "BtoB開発/上申前の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66770",
+                                "name": "システム企画書（上申時の資料作成）",
+                                "folderName": "接客ツールR3導入",
+                                "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66771",
+                                        "name": "システム企画書（上申時の資料作成）",
+                                        "folderName": "システム企画書（上申時の資料作成）",
+                                        "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入/システム企画書（上申時の資料作成）",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66772",
+                                "name": "工数見積",
+                                "folderName": "接客ツールR3導入",
+                                "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66773",
+                                        "name": "工数見積",
+                                        "folderName": "工数見積",
+                                        "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入/工数見積",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66774",
+                                "name": "申請なのど手続き",
+                                "folderName": "接客ツールR3導入",
+                                "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66775",
+                                        "name": "申請なのど手続き",
+                                        "folderName": "申請なのど手続き",
+                                        "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入/申請なのど手続き",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66776",
+                                "name": "ミーティング",
+                                "folderName": "接客ツールR3導入",
+                                "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66777",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66778",
+                                "name": "プロジェクト管理",
+                                "folderName": "接客ツールR3導入",
+                                "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入",
+                                "subItems": [
+                                    {
+                                        "id": "66779",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/上申前の開発案件/接客ツールR3導入/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": "66780",
+                        "name": "獲得型クーポン案件",
+                        "folderName": "上申前の開発案件",
+                        "folderPath": "BtoB開発/上申前の開発案件",
+                        "subItems": [
+                            {
+                                "id": "66781",
+                                "name": "システム企画書（上申時の資料作成）",
+                                "folderName": "獲得型クーポン案件",
+                                "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件",
+                                "subItems": [
+                                    {
+                                        "id": "66782",
+                                        "name": "システム企画書（上申時の資料作成）",
+                                        "folderName": "システム企画書（上申時の資料作成）",
+                                        "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件/システム企画書（上申時の資料作成）",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66783",
+                                "name": "工数見積",
+                                "folderName": "獲得型クーポン案件",
+                                "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件",
+                                "subItems": [
+                                    {
+                                        "id": "66784",
+                                        "name": "工数見積",
+                                        "folderName": "工数見積",
+                                        "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件/工数見積",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66785",
+                                "name": "申請なのど手続き",
+                                "folderName": "獲得型クーポン案件",
+                                "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件",
+                                "subItems": [
+                                    {
+                                        "id": "66786",
+                                        "name": "申請なのど手続き",
+                                        "folderName": "申請なのど手続き",
+                                        "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件/申請なのど手続き",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66787",
+                                "name": "ミーティング",
+                                "folderName": "獲得型クーポン案件",
+                                "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件",
+                                "subItems": [
+                                    {
+                                        "id": "66788",
+                                        "name": "ミーティング",
+                                        "folderName": "ミーティング",
+                                        "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件/ミーティング",
+                                        "subItems": []
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "66789",
+                                "name": "プロジェクト管理",
+                                "folderName": "獲得型クーポン案件",
+                                "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件",
+                                "subItems": [
+                                    {
+                                        "id": "66790",
+                                        "name": "プロジェクト管理",
+                                        "folderName": "プロジェクト管理",
+                                        "folderPath": "BtoB開発/上申前の開発案件/獲得型クーポン案件/プロジェクト管理",
+                                        "subItems": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "62374",
+                "name": "非開発案件",
+                "folderName": "BtoB開発",
+                "folderPath": "BtoB開発",
+                "subItems": [
+                    {
+                        "id": "62375",
+                        "name": "休暇",
+                        "folderName": "非開発案件",
+                        "folderPath": "BtoB開発/非開発案件",
+                        "subItems": [
+                            {
+                                "id": "62393",
+                                "name": "休暇",
+                                "folderName": "休暇",
+                                "folderPath": "BtoB開発/非開発案件/休暇",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62377",
+                        "name": "保守",
+                        "folderName": "非開発案件",
+                        "folderPath": "BtoB開発/非開発案件",
+                        "subItems": [
+                            {
+                                "id": "62418",
+                                "name": "保守",
+                                "folderName": "保守",
+                                "folderPath": "BtoB開発/非開発案件/保守",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62378",
+                        "name": "障害対応",
+                        "folderName": "非開発案件",
+                        "folderPath": "BtoB開発/非開発案件",
+                        "subItems": [
+                            {
+                                "id": "62395",
+                                "name": "障害対応",
+                                "folderName": "障害対応",
+                                "folderPath": "BtoB開発/非開発案件/障害対応",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62379",
+                        "name": "システム運用",
+                        "folderName": "非開発案件",
+                        "folderPath": "BtoB開発/非開発案件",
+                        "subItems": [
+                            {
+                                "id": "62396",
+                                "name": "システム運用",
+                                "folderName": "システム運用",
+                                "folderPath": "BtoB開発/非開発案件/システム運用",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62380",
+                        "name": "サービス運用",
+                        "folderName": "非開発案件",
+                        "folderPath": "BtoB開発/非開発案件",
+                        "subItems": [
+                            {
+                                "id": "62397",
+                                "name": "サービス運用",
+                                "folderName": "サービス運用",
+                                "folderPath": "BtoB開発/非開発案件/サービス運用",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62381",
+                        "name": "調査",
+                        "folderName": "非開発案件",
+                        "folderPath": "BtoB開発/非開発案件",
+                        "subItems": [
+                            {
+                                "id": "62398",
+                                "name": "調査",
+                                "folderName": "調査",
+                                "folderPath": "BtoB開発/非開発案件/調査",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62382",
+                        "name": "管理業務、事務業務全般",
+                        "folderName": "非開発案件",
+                        "folderPath": "BtoB開発/非開発案件",
+                        "subItems": [
+                            {
+                                "id": "62399",
+                                "name": "管理業務、事務業務全般",
+                                "folderName": "管理業務、事務業務全般",
+                                "folderPath": "BtoB開発/非開発案件/管理業務、事務業務全般",
+                                "subItems": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "62383",
+                        "name": "ミーティング",
+                        "folderName": "非開発案件",
+                        "folderPath": "BtoB開発/非開発案件",
+                        "subItems": [
+                            {
+                                "id": "62400",
+                                "name": "ミーティング",
+                                "folderName": "ミーティング",
+                                "folderPath": "BtoB開発/非開発案件/ミーティング",
+                                "subItems": []
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

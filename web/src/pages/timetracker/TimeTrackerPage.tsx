@@ -1,7 +1,7 @@
 import { appMessageDialogRef } from "@/components/message-dialog";
 import { useSettings } from "@/store";
 import { usePageContent } from "@/store/content";
-import { makeStyles, tokens } from "@fluentui/react-components";
+import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Page } from "../../components/page";
 import { ScheduleItem } from "./components";
@@ -255,7 +255,7 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
                 loading={isLoading}
                 loadingText="処理中..."
             >
-                <div className={`${styles.viewContainer} ${animationClass}`} key={currentView}>
+                <div className={mergeClasses(styles.viewContainer, animationClass)} key={currentView}>
                     {currentView === "completion" ? (
                         <CompletionView
                             schedules={scheduleItems}

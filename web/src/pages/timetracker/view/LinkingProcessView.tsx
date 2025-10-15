@@ -1,11 +1,12 @@
+import { InteractiveCard } from "@/components/card";
 import { PageHeader } from "@/components/page";
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
 import type { Event, WorkItem } from "@/types";
 import { EventUtils, WorkItemUtils } from "@/types/utils";
-import { Button, makeStyles, tokens } from "@fluentui/react-components";
-import { Sparkle24Regular } from "@fluentui/react-icons";
+import { Button, makeStyles } from "@fluentui/react-components";
+import { CheckmarkCircle24Regular } from "@fluentui/react-icons";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { AiLinkingSection } from "../components/AiLinkingSection";
 import { EventTable, EventWithOption, type EventTableRow } from "../components/EventTable";
@@ -20,38 +21,9 @@ import { EventState, pickEvents } from "../services/pick";
 const logger = getLogger("LinkingProcessView");
 
 const useStyles = makeStyles({
-    // ボタンコンテナ
-    buttonContainer: {
-        paddingTop: tokens.spacingVerticalS,
+    actionSection: {
         display: "flex",
-        justifyContent: "flex-end",
-    },
-    // 登録実行ボタン
-    submitButton: {
-        minWidth: "200px",
-        height: "48px",
-        transitionDuration: tokens.durationNormal,
-        transitionTimingFunction: tokens.curveEasyEase,
-        transitionProperty: "transform, box-shadow",
-        // ホバー時のアニメーション
-        ":hover": {
-            transform: "translateY(-2px)",
-            boxShadow: tokens.shadow16,
-        },
-        // アクティブ時（クリック時）のアニメーション
-        ":active": {
-            transform: "translateY(0px)",
-            boxShadow: tokens.shadow8,
-        },
-        // アイコンの回転アニメーション
-        "& svg": {
-            transitionDuration: tokens.durationSlow,
-            transitionTimingFunction: tokens.curveEasyEase,
-            transitionProperty: "transform",
-        },
-        ":hover svg": {
-            transform: "rotate(15deg) scale(1.1)",
-        },
+        flexDirection: "column",
     },
 });
 
@@ -65,67 +37,119 @@ const saveToHistory = (event: Event, workItem: WorkItem) => {
     historyManager.dump();
 };
 
-// 紐づけの変更・追加・削除を処理
-const changeLinkingEventWorkItemPair = (
+/**
+ * 紐づけを削除する
+ */
+const removeLinking = (
     eventId: string,
-    workItemId: string,
-    workItems: WorkItem[],
-    unLinlinkingEvents: EventWithOption[],
     linkingEventWorkItemPair: LinkingEventWorkItemPair[],
 ): LinkingEventWorkItemPair[] | null => {
-    // WorkItemIdが空の場合は紐づけを削除
-    if (!workItemId) {
-        const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
-        if (linkedEventIndex >= 0) {
-            logger.info(`イベント (${eventId}) の紐づけを削除しました`);
-            return linkingEventWorkItemPair.filter((pair) => pair.event.uuid !== eventId);
-        }
-        return null;
+    const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
+    if (linkedEventIndex >= 0) {
+        logger.info(`イベント (${eventId}) の紐づけを削除しました`);
+        return linkingEventWorkItemPair.filter((pair) => pair.event.uuid !== eventId);
     }
+    return null;
+};
 
-    // WorkItemを検索
+/**
+ * WorkItemを検索して、LinkingWorkItemを作成する
+ */
+const findAndCreateLinkingWorkItem = (workItemId: string, workItems: WorkItem[]): LinkingWorkItem | null => {
     const selectedWorkItem = WorkItemUtils.getMostNestChildren(workItems).find((w) => w.id === workItemId);
     if (!selectedWorkItem) {
         logger.error(`Unknown WorkItem ID: ${workItemId}`);
         return null;
     }
 
-    const linkingWorkItem: LinkingWorkItem = {
+    return {
         workItem: selectedWorkItem,
         type: "manual",
         autoMethod: "none",
     };
+};
+
+/**
+ * 既存の紐づけを更新する
+ */
+const updateExistingLinking = (
+    eventId: string,
+    linkingWorkItem: LinkingWorkItem,
+    linkingEventWorkItemPair: LinkingEventWorkItemPair[],
+): LinkingEventWorkItemPair[] | null => {
+    const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
+    if (linkedEventIndex < 0) {
+        return null;
+    }
+
+    const updatedPairs = [...linkingEventWorkItemPair];
+    updatedPairs[linkedEventIndex] = {
+        ...updatedPairs[linkedEventIndex],
+        linkingWorkItem,
+    };
+
+    saveToHistory(updatedPairs[linkedEventIndex].event, linkingWorkItem.workItem);
+    return updatedPairs;
+};
+
+/**
+ * 新規に紐づけを作成する（同名イベントも一括紐づけ）
+ */
+const createNewLinking = (
+    eventId: string,
+    linkingWorkItem: LinkingWorkItem,
+    unLinkedEvents: EventWithOption[],
+    linkingEventWorkItemPair: LinkingEventWorkItemPair[],
+): LinkingEventWorkItemPair[] | null => {
+    const selectedEvent = unLinkedEvents.find((event) => event.uuid === eventId);
+    if (!selectedEvent) {
+        logger.error(`Event not found: ${eventId}`);
+        return null;
+    }
+
+    // 同名のイベントも一括で紐づける
+    const sameNameEvents = unLinkedEvents.filter(
+        (e) => e.uuid !== selectedEvent.uuid && EventUtils.isSame(e, selectedEvent),
+    );
+
+    const newLinkings: LinkingEventWorkItemPair[] = [
+        { event: selectedEvent, linkingWorkItem },
+        ...sameNameEvents.map((e) => ({ event: e, linkingWorkItem })),
+    ];
+
+    saveToHistory(selectedEvent, linkingWorkItem.workItem);
+    return [...linkingEventWorkItemPair, ...newLinkings];
+};
+
+/**
+ * 紐づけの変更・追加・削除を処理する
+ */
+const changeLinkingEventWorkItemPair = (
+    eventId: string,
+    workItemId: string,
+    workItems: WorkItem[],
+    unLinkedEvents: EventWithOption[],
+    linkingEventWorkItemPair: LinkingEventWorkItemPair[],
+): LinkingEventWorkItemPair[] | null => {
+    // WorkItemIdが空の場合は紐づけを削除
+    if (!workItemId) {
+        return removeLinking(eventId, linkingEventWorkItemPair);
+    }
+
+    // WorkItemを検索してLinkingWorkItemを作成
+    const linkingWorkItem = findAndCreateLinkingWorkItem(workItemId, workItems);
+    if (!linkingWorkItem) {
+        return null;
+    }
 
     // 既存の紐づけを更新
-    const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
-    if (linkedEventIndex >= 0) {
-        const updatedPairs = [...linkingEventWorkItemPair];
-        updatedPairs[linkedEventIndex] = {
-            ...updatedPairs[linkedEventIndex],
-            linkingWorkItem,
-        };
-        saveToHistory(updatedPairs[linkedEventIndex].event, selectedWorkItem);
+    const updatedPairs = updateExistingLinking(eventId, linkingWorkItem, linkingEventWorkItemPair);
+    if (updatedPairs) {
         return updatedPairs;
     }
 
-    // 未紐づけから紐づけ済みに移動
-    const selected = unLinlinkingEvents.find((event) => event.uuid === eventId);
-    if (selected) {
-        // 同名のイベントも一括で紐づける
-        const sameNameEvents = unLinlinkingEvents.filter(
-            (e) => e.uuid !== selected.uuid && EventUtils.isSame(e, selected),
-        );
-        const newLinkings: LinkingEventWorkItemPair[] = [
-            { event: selected, linkingWorkItem },
-            ...sameNameEvents.map((e) => ({ event: e, linkingWorkItem })),
-        ];
-
-        saveToHistory(selected, selectedWorkItem);
-        return [...linkingEventWorkItemPair, ...newLinkings];
-    }
-
-    logger.error(`Event not found: ${eventId}`);
-    return null;
+    // 新規に紐づけを作成
+    return createNewLinking(eventId, linkingWorkItem, unLinkedEvents, linkingEventWorkItemPair);
 };
 
 export type LinkingProcessViewProps = {
@@ -147,10 +171,6 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
     const styles = useStyles();
     const { settings } = useSettings();
 
-    // AI
-    const [token, setToken] = useState<string>("");
-    const [useHistory, setUseHistory] = useState<boolean>(false);
-
     // 履歴
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -169,7 +189,7 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
         () => linkingEventWorkItemPair.map((l) => l.event.uuid),
         [linkingEventWorkItemPair],
     );
-    const unLinlinkingEvents = useMemo(
+    const unLinkedEvents = useMemo(
         () => pickEvents(state).filter((event) => !linkingEventUUID.includes(event.uuid)),
         [state, linkingEventUUID],
     );
@@ -180,7 +200,7 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
             id: pair.event.uuid,
             item: pair,
         }));
-        const unlinked = unLinlinkingEvents.map((event) => ({
+        const unlinked = unLinkedEvents.map((event) => ({
             id: event.uuid,
             item: event,
         }));
@@ -189,7 +209,7 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
             const bEvent = "event" in b.item ? b.item.event : b.item;
             return aEvent.schedule.start.getTime() - bEvent.schedule.start.getTime();
         });
-    }, [linkingEventWorkItemPair, state]);
+    }, [linkingEventWorkItemPair, unLinkedEvents]);
 
     // WorkItemの変更ハンドラー
     const handleWorkItemChange = useCallback(
@@ -198,17 +218,22 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
                 eventId,
                 workItemId,
                 uploadInfo?.workItems ?? [],
-                unLinlinkingEvents,
+                unLinkedEvents,
                 linkingEventWorkItemPair,
             );
             if (newItemPair) {
                 setLinkingEventWorkItemPair(newItemPair);
             }
         },
-        [uploadInfo, unLinlinkingEvents, linkingEventWorkItemPair],
+        [uploadInfo, unLinkedEvents, linkingEventWorkItemPair],
     );
 
-    const handleSubmit = async () => {
+    // 登録実行可能かどうかを判定（メモ化）
+    const canSubmit = useMemo(() => linkingEventWorkItemPair.length > 0, [linkingEventWorkItemPair.length]);
+
+    const handleSubmit = useCallback(async () => {
+        logger.info(`登録実行: ${linkingEventWorkItemPair.length}件の紐づけを処理`);
+        // TODO: 登録実行の処理を実装
         // // すべてのイベントが未処理の場合は進めない
         // if (linkingEventWorkItemPair.length === 0) {
         //     await appMessageDialogRef.showMessageAsync(
@@ -236,7 +261,7 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
         // if (onSubmit && dayTasks.length > 0) {
         //     onSubmit(dayTasks);
         // }
-    };
+    }, [linkingEventWorkItemPair]);
 
     // 有効イベント取得
     useEffect(() => {
@@ -270,18 +295,6 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
                 {/* サマリーカード */}
                 <StatisticsCards data={state} linkingEventWorkItemPair={linkingEventWorkItemPair} />
 
-                {/* AIによる自動紐づけセクション */}
-                <AiLinkingSection
-                    token={token}
-                    onTokenChange={setToken}
-                    useHistory={useHistory}
-                    onUseHistoryChange={setUseHistory}
-                    onStartLinking={async () => {
-                        // TODO: AI自動紐づけ処理を実装
-                        logger.info("AI自動紐づけを開始します");
-                    }}
-                />
-
                 {/* イベントテーブル */}
                 <EventTable
                     events={allEventTableRow}
@@ -289,17 +302,29 @@ export const LinkingProcessView = memo(function LinkingProcessView({ uploadInfo,
                     onWorkItemChange={handleWorkItemChange}
                 />
 
-                {/* 登録実行ボタン */}
-                <div className={styles.buttonContainer}>
-                    <Button
-                        appearance="primary"
-                        size="large"
+                {/*操作セクション */}
+                <div className={styles.actionSection}>
+                    {/* AIによる自動紐づけセクション */}
+                    <AiLinkingSection
+                        unlinkedEvents={unLinkedEvents}
+                        linkedPairs={linkingEventWorkItemPair}
+                        workItems={uploadInfo?.workItems ?? []}
+                        onLinkingChange={handleWorkItemChange}
+                    />
+
+                    {/* 登録実行セクション */}
+                    <InteractiveCard
+                        title="登録実行"
+                        description={
+                            canSubmit
+                                ? `${linkingEventWorkItemPair.length}件の紐づけ済みイベントをTimeTrackerに登録します`
+                                : "紐づけ済みイベントがありません。イベントをWorkItemに紐づけてください"
+                        }
+                        variant="action"
+                        disabled={!canSubmit}
                         onClick={handleSubmit}
-                        icon={<Sparkle24Regular />}
-                        className={styles.submitButton}
-                    >
-                        登録実行
-                    </Button>
+                        icon={<CheckmarkCircle24Regular />}
+                    />
                 </div>
             </ViewSection>
 

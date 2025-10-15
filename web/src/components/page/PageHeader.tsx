@@ -15,7 +15,7 @@ import { memo, useCallback, useMemo } from "react";
 
 const useStyles = makeStyles({
     navigation: {
-        marginBottom: "16px",
+        marginBottom: "4px",
     },
 });
 

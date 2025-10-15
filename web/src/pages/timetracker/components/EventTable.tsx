@@ -58,7 +58,7 @@ const useStyles = makeStyles({
     tableWrapper: {
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 540px)",
+        height: "calc(100vh - 520px)",
         minHeight: "300px",
     },
     tableContainer: {

@@ -146,13 +146,12 @@ const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalM,
-        maxHeight: "520px",
         overflow: "hidden",
     },
     tableWrapper: {
         flex: 1,
         overflow: "auto",
-        maxHeight: "360px",
+        maxHeight: "420px",
     },
     infoSectionHeader: {
         fontSize: tokens.fontSizeBase400,

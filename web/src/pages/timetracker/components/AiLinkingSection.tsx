@@ -3,8 +3,18 @@
  */
 
 import { InteractiveCard } from "@/components/card";
+import { appMessageDialogRef } from "@/components/message-dialog";
+import { getLogger } from "@/lib/logger";
+import type { WorkItem } from "@/types";
+import { WorkItemUtils } from "@/types/utils";
 import { Button, Input, makeStyles, Switch, tokens } from "@fluentui/react-components";
 import { History24Regular, Key24Regular, Sparkle24Regular } from "@fluentui/react-icons";
+import { useCallback, useState } from "react";
+import type { LinkingEventWorkItemPair } from "../models";
+import { autoLinkWithAI } from "../services/ai";
+import type { EventWithOption } from "./EventTable";
+
+const logger = getLogger("AiLinkingSection");
 
 const useStyles = makeStyles({
     section: {
@@ -57,24 +67,114 @@ const useStyles = makeStyles({
 });
 
 export interface AiLinkingSectionProps {
-    token: string;
-    onTokenChange: (token: string) => void;
-    useHistory: boolean;
-    onUseHistoryChange: (useHistory: boolean) => void;
-    onStartLinking: () => void;
+    unlinkedEvents: EventWithOption[];
+    linkedPairs: LinkingEventWorkItemPair[];
+    workItems: WorkItem[];
+    onLinkingChange: (eventId: string, workItemId: string) => void;
 }
 
 /**
  * AI自動紐づけセクション
  */
-export function AiLinkingSection({
-    token,
-    onTokenChange,
-    useHistory,
-    onUseHistoryChange,
-    onStartLinking,
-}: AiLinkingSectionProps) {
+export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onLinkingChange }: AiLinkingSectionProps) {
     const styles = useStyles();
+
+    // ローカルステート
+    const [token, setToken] = useState<string>("");
+    const [useHistory, setUseHistory] = useState<boolean>(false);
+
+    // AI自動紐づけハンドラー
+    const handleAILinking = useCallback(async () => {
+        if (!token || token.trim() === "") {
+            await appMessageDialogRef.showMessageAsync(
+                "APIトークンが必要です",
+                "AI自動紐づけを使用するにはAPIトークンを入力してください。",
+                "ERROR",
+            );
+            return;
+        }
+
+        if (unlinkedEvents.length === 0) {
+            await appMessageDialogRef.showMessageAsync(
+                "未紐づけイベントがありません",
+                "すべてのイベントが既に紐づけられています。",
+                "INFO",
+            );
+            return;
+        }
+
+        try {
+            logger.info(`AI自動紐づけ開始: ${unlinkedEvents.length}件の未紐づけイベント`);
+
+            // AI推論実行
+            const result = await autoLinkWithAI({
+                apiKey: token,
+                linkedPairs: linkedPairs,
+                unlinkedEvents: unlinkedEvents,
+                workItems: workItems,
+                useHistory: useHistory,
+            });
+
+            alert(JSON.stringify(result));
+            if (!result.ok) {
+                await appMessageDialogRef.showMessageAsync(
+                    "AI紐づけ失敗",
+                    result.errorMessage || "不明なエラーが発生しました",
+                    "ERROR",
+                );
+                return;
+            }
+
+            if (!result.suggestions || result.suggestions.length === 0) {
+                await appMessageDialogRef.showMessageAsync(
+                    "紐づけ提案なし",
+                    "AIから紐づけ提案が得られませんでした。",
+                    "WARN",
+                );
+                return;
+            }
+
+            // AI提案を適用
+            let successCount = 0;
+            let failedCount = 0;
+
+            for (const suggestion of result.suggestions) {
+                try {
+                    // WorkItemが存在するか確認
+                    const selectedWorkItem = WorkItemUtils.getMostNestChildren(workItems).find(
+                        (w) => w.id === suggestion.workItemId,
+                    );
+
+                    if (selectedWorkItem) {
+                        onLinkingChange(suggestion.eventUuid, suggestion.workItemId);
+                        successCount++;
+                        logger.info(
+                            `AI紐づけ適用: Event=${suggestion.eventUuid} → WorkItem=${suggestion.workItemId} ` +
+                                `(信頼度:${suggestion.confidence}, 理由:${suggestion.reason})`,
+                        );
+                    } else {
+                        failedCount++;
+                        logger.warn(`AI紐づけ適用失敗: WorkItem not found (${suggestion.workItemId})`);
+                    }
+                } catch (error) {
+                    failedCount++;
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    logger.warn(`AI紐づけ適用失敗: Event=${suggestion.eventUuid}, Error: ${errorMsg}`);
+                }
+            }
+
+            await appMessageDialogRef.showMessageAsync(
+                "AI紐づけ完了",
+                `${successCount}件のイベントを自動紐づけしました。\n` +
+                    (failedCount > 0 ? `${failedCount}件は紐づけに失敗しました。` : ""),
+                successCount > 0 ? "INFO" : "WARN",
+            );
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
+            logger.error("AI紐づけエラー:", errorMessage);
+            await appMessageDialogRef.showMessageAsync("AI紐づけエラー", errorMessage, "ERROR");
+        }
+    }, [token, useHistory, unlinkedEvents, linkedPairs, workItems, onLinkingChange]);
 
     return (
         <div className={styles.section}>
@@ -99,7 +199,7 @@ export function AiLinkingSection({
                         <Input
                             placeholder="トークンを入力"
                             value={token}
-                            onChange={(e) => onTokenChange(e.target.value)}
+                            onChange={(e) => setToken(e.target.value)}
                             className={styles.tokenInput}
                         />
                     </div>
@@ -117,7 +217,7 @@ export function AiLinkingSection({
                         </div>
                     </div>
                     <div className={styles.settingControl}>
-                        <Switch checked={useHistory} onChange={(e) => onUseHistoryChange(e.currentTarget.checked)} />
+                        <Switch checked={useHistory} onChange={(e) => setUseHistory(e.currentTarget.checked)} />
                     </div>
                 </div>
 
@@ -126,8 +226,9 @@ export function AiLinkingSection({
                     <Button
                         appearance="primary"
                         icon={<Sparkle24Regular />}
-                        onClick={onStartLinking}
+                        onClick={handleAILinking}
                         style={{ margin: "12px 0 0 auto" }}
+                        disabled={token === ""}
                     >
                         AI自動紐づけを開始
                     </Button>

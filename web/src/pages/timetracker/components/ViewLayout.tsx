@@ -1,4 +1,4 @@
-import { makeStyles, tokens } from "@fluentui/react-components";
+import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import type { ReactNode } from "react";
 /**
  * ViewヘッダーコンテナのProps
@@ -14,7 +14,7 @@ const useStyles = makeStyles({
         display: "flex",
         justifyContent: "space-between",
         alignItems: "flex-start",
-        gap: tokens.spacingVerticalL,
+        gap: tokens.spacingVerticalS,
     },
     headerLeft: {
         flex: 1,
@@ -29,8 +29,9 @@ const useStyles = makeStyles({
     section: {
         display: "flex",
         flexDirection: "column",
-        gap: tokens.spacingVerticalL,
+        gap: tokens.spacingVerticalM,
     },
+
     sectionTitle: {
         display: "flex",
         alignItems: "center",
@@ -88,7 +89,7 @@ export function ViewHeader({ left, right }: ViewHeaderProps) {
 export function ViewSection({ children, className }: ViewContainerProps) {
     const styles = useStyles();
 
-    return <div className={`${styles.section} ${className || ""}`}>{children}</div>;
+    return <div className={mergeClasses(styles.section, className)}>{children}</div>;
 }
 
 /**
