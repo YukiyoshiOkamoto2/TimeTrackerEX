@@ -1,13 +1,11 @@
 import { Card, InteractiveCard } from "@/components/card";
 import { DataTable } from "@/components/data-table";
 import { appMessageDialogRef } from "@/components/message-dialog";
-import { HistoryManager } from "@/core/history";
 import { parseICS } from "@/core/ics";
 import { parsePDF } from "@/core/pdf";
 import { getLogger } from "@/lib";
 import { formatDateTime } from "@/lib/dateUtil";
-import { useSettings } from "@/store/settings/SettingsProvider";
-import { Event, Schedule, ScheduleUtils, WorkItem } from "@/types";
+import { Event, EventUtils, Schedule, ScheduleUtils } from "@/types";
 import {
     Button,
     createTableColumn,
@@ -27,9 +25,7 @@ import {
     QuestionCircle20Regular,
 } from "@fluentui/react-icons";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ProjectAndWorkItem, useTimeTrackerSession } from "../hooks/useTimeTrackerSession";
-import { ICS, PDF, UploadInfo } from "../models";
-import { validateAndCleanupSettings } from "../services/validate";
+import { UploadInfo } from "../models";
 
 // CheckedTableItemの型定義
 type CheckedTableItem = {
@@ -179,18 +175,15 @@ const useStyles = makeStyles({
     },
 });
 
-export type FileUploadViewProps = {
-    pdf?: PDF;
-    ics?: ICS;
-    onPdfUpdate: (pdf?: PDF) => void;
-    onIcsUpdate: (ics?: ICS) => void;
-    setIsLoading: (isLoading: boolean) => void;
-    onSubmit: (info: UploadInfo) => void;
-};
-
 // ファイルバリデータ
 const isPdfFile = (file: File) => file.type === "application/pdf";
 const isIcsFile = (file: File) => file.name.endsWith(".ics") || file.type === "text/calendar";
+
+// イベントキー生成（メモ化用）
+const getEventKey = (e: Event): string => {
+    const dateTime = formatDateTime(new Date(e.schedule.start), e.schedule.end ? new Date(e.schedule.end) : null);
+    return `${dateTime}　${EventUtils.getKey(e)}`;
+};
 
 const getScheduleAsync = async (file: File) => {
     let result;
@@ -247,24 +240,14 @@ const getEventAsync = async (file: File) => {
     return ev;
 };
 
-// イベントキー生成（メモ化用）
-const getEventKey = (e: Event): string => {
-    const dateTime = formatDateTime(new Date(e.schedule.start), e.schedule.end ? new Date(e.schedule.end) : null);
-    return `${dateTime}　${e.name}`;
-};
-
-// スケジュールステータスを取得
-const getScheduleStatus = (s: Schedule): string => {
-    if (!s.isHoliday) return "";
-    return s.isPaidLeave ? "（有給休暇）" : "（休日）";
-};
-
 // スケジュールをテーブルアイテムに変換（パフォーマンス最適化）
 const scheduleToCheckItem = (schedule: Schedule[]): CheckedTableItem[] => {
     return schedule.map((s) => {
         const dateTime = formatDateTime(new Date(s.start), s.end ? new Date(s.end) : null);
-        const status = getScheduleStatus(s);
-
+        let status = "";
+        if (s.isHoliday) {
+            status = s.isPaidLeave ? "（有給休暇）" : "（休日）";
+        }
         return {
             key: ScheduleUtils.getText(s),
             content: status ? `${dateTime} ${status}` : dateTime,
@@ -275,10 +258,10 @@ const scheduleToCheckItem = (schedule: Schedule[]): CheckedTableItem[] => {
 // イベントをテーブルアイテムに変換（重複計算を削減）
 const eventToCheckItem = (event: Event[]): CheckedTableItem[] => {
     return event.map((e) => {
-        const key = getEventKey(e);
+        const dateTime = formatDateTime(new Date(e.schedule.start), e.schedule.end ? new Date(e.schedule.end) : null);
         return {
-            key,
-            content: key,
+            key: getEventKey(e),
+            content: `${dateTime}　${e.name}`,
         };
     });
 };
@@ -309,6 +292,17 @@ const helpContent = (
         <br />• 有給休暇日のイベント（別途処理）
     </>
 );
+
+type SelectedInfo = {
+    schedules: Schedule[]
+    events: Event[]
+}
+
+export type FileUploadViewProps = {
+    uploadInfo?: UploadInfo,
+    onChangeUploadInfo: (info: UploadInfo) => void;
+    onLinking: (info: SelectedInfo) => void;
+};
 
 /** 情報セクションコンポーネント（メモ化） */
 const InfoSection = memo(function InfoSection({
@@ -364,31 +358,16 @@ const InfoSection = memo(function InfoSection({
  * - 計算値をuseMemoで最適化
  */
 export const FileUploadView = memo(function FileUploadView({
-    pdf,
-    ics,
-    onPdfUpdate,
-    onIcsUpdate,
-    setIsLoading,
-    onSubmit,
+    uploadInfo,
+    onChangeUploadInfo,
+    onLinking,
 }: FileUploadViewProps) {
     const styles = useStyles();
     const pdfInputRef = useRef<HTMLInputElement>(null);
     const icsInputRef = useRef<HTMLInputElement>(null);
 
-    // 設定を取得
-    const { settings, updateSettings } = useSettings();
-    const timeTrackerSettings = settings.timetracker!;
-
-    // セッション管理（メモ化）
-    const sessionConfig = useMemo(
-        () => ({
-            baseUrl: timeTrackerSettings?.baseUrl || "",
-            userName: timeTrackerSettings?.userName || "",
-        }),
-        [timeTrackerSettings?.baseUrl, timeTrackerSettings?.userName],
-    );
-
-    const { Dialog, isAuthenticated, ...sessionHook } = useTimeTrackerSession(sessionConfig);
+    const pdf = uploadInfo?.pdf;
+    const ics = uploadInfo?.ics;
 
     // テーブルデータの状態管理
     const [scheduleTableItems, setScheduleTableItems] = useState<CheckedTableItem[]>([]);
@@ -407,18 +386,24 @@ export const FileUploadView = memo(function FileUploadView({
         (e?: React.MouseEvent) => {
             e?.stopPropagation();
             if (pdfInputRef.current) pdfInputRef.current.value = "";
-            onPdfUpdate(undefined);
+            onChangeUploadInfo({
+                ...uploadInfo,
+                pdf: undefined,
+            });
         },
-        [onPdfUpdate],
+        [uploadInfo, onChangeUploadInfo],
     );
 
     const clearIcsFile = useCallback(
         (e?: React.MouseEvent) => {
             e?.stopPropagation();
             if (icsInputRef.current) icsInputRef.current.value = "";
-            onIcsUpdate(undefined);
+            onChangeUploadInfo({
+                ...uploadInfo,
+                ics: undefined,
+            });
         },
-        [onIcsUpdate],
+        [uploadInfo, onChangeUploadInfo],
     );
 
     // PDFファイルアップロード処理（メモ化）
@@ -426,17 +411,20 @@ export const FileUploadView = memo(function FileUploadView({
         async (file: File) => {
             const schedule = await getScheduleAsync(file);
             if (schedule) {
-                onPdfUpdate({
-                    schedule,
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
+                onChangeUploadInfo({
+                    ...uploadInfo,
+                    pdf: {
+                        schedule,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                    },
                 });
             } else {
                 clearPdfFile();
             }
         },
-        [onPdfUpdate, clearPdfFile],
+        [uploadInfo, onChangeUploadInfo, clearPdfFile],
     );
 
     // ICSファイルアップロード処理（メモ化）
@@ -444,17 +432,20 @@ export const FileUploadView = memo(function FileUploadView({
         async (file: File) => {
             const event = await getEventAsync(file);
             if (event) {
-                onIcsUpdate({
-                    event,
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
+                onChangeUploadInfo({
+                    ...uploadInfo,
+                    ics: {
+                        event,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                    },
                 });
             } else {
                 clearIcsFile();
             }
         },
-        [onIcsUpdate, clearIcsFile],
+        [uploadInfo, onChangeUploadInfo, clearIcsFile],
     );
 
     // ドラッグオーバーハンドラー（メモ化）
@@ -497,138 +488,22 @@ export const FileUploadView = memo(function FileUploadView({
         [uploadIcsFile],
     );
 
-    // プロジェクト情報取得（メモ化）
-    const fetchProjectData = useCallback(
-        async (projectId: string): Promise<ProjectAndWorkItem | undefined> => {
-            const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId, async () => {
-                // プロジェクトID取得失敗時は設定をクリア
-                if (timeTrackerSettings) {
-                    updateSettings({
-                        timetracker: {
-                            ...timeTrackerSettings,
-                            baseProjectId: -1,
-                        },
-                    });
-                }
-                await appMessageDialogRef.showMessageAsync(
-                    "設定エラー",
-                    `プロジェクトID ( ${projectId} ) が無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。`,
-                    "ERROR",
-                );
-            });
-
-            if (result.isError) {
-                await appMessageDialogRef.showMessageAsync("TimeTrackerデータ取得エラー", result.errorMessage, "ERROR");
-                return;
-            }
-
-            return result.content;
-        },
-        [sessionHook, timeTrackerSettings, updateSettings],
-    );
-
-    // 履歴管理の更新（メモ化）
-    const updateHistory = useCallback((workItems: WorkItem[]) => {
-        const historyManager = new HistoryManager();
-        historyManager.load();
-        historyManager.checkWorkItemId(workItems);
-        historyManager.dump();
-    }, []);
-
-    // 選択済みスケジュールのフィルタリング（メモ化）
-    const filterSelectedSchedule = useCallback((): PDF | undefined => {
-        if (!pdf || scheduleTableItems.length === 0) return undefined;
-
-        const enabledSchedule = pdf.schedule.filter((s) => selectedScheduleKeys.has(ScheduleUtils.getText(s)));
-
-        return enabledSchedule.length > 0 ? { ...pdf, schedule: enabledSchedule } : undefined;
-    }, [pdf, scheduleTableItems.length, selectedScheduleKeys]);
-
-    // 選択済みイベントのフィルタリング（メモ化）
-    const filterSelectedEvents = useCallback((): ICS | undefined => {
-        if (!ics || eventTableItems.length === 0) return undefined;
-
-        const enabledEvents = ics.event.filter((e) => selectedEventKeys.has(getEventKey(e)));
-
-        return enabledEvents.length > 0 ? { ...ics, event: enabledEvents } : undefined;
-    }, [ics, eventTableItems.length, selectedEventKeys]);
-
-    // 紐づけ開始処理（メモ化）
     const handleLinkedClick = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            // 認証チェック
-            if (!isAuthenticated) {
-                const authResult = await sessionHook.authenticateAsync();
-                if (authResult.isError) {
-                    await appMessageDialogRef.showMessageAsync(
-                        "認証エラー",
-                        "TimeTrackerの認証に失敗しました。",
-                        "ERROR",
-                    );
-                    return;
-                }
-            }
-
-            // プロジェクト情報取得
-            const itemResult = await fetchProjectData(String(timeTrackerSettings.baseProjectId));
-            if (!itemResult) {
-                return;
-            }
-
-            // 履歴の更新
-            updateHistory(itemResult.workItems);
-
-            // 設定の検証とクリーンアップ
-            const cleanResult = validateAndCleanupSettings(timeTrackerSettings, itemResult.workItems);
-            if (cleanResult.items.length > 0) {
-                await appMessageDialogRef.showMessageAsync(
-                    "設定エラー",
-                    `設定項目に不正なIDが存在します。削除します。（ ${cleanResult.items.length}件 ）\n\n` +
-                        cleanResult.items.map((i) => "・ " + i).join("\n"),
-                    "ERROR",
-                );
-                updateSettings({
-                    timetracker: cleanResult.settings,
-                });
-                return;
-            }
-
-            // 選択済みデータのフィルタリング
-            const filteredPdf = filterSelectedSchedule();
-            const filteredIcs = filterSelectedEvents();
-
-            // データ送信
-            if (filteredPdf || filteredIcs) {
-                onSubmit({
-                    pdf: filteredPdf,
-                    ics: filteredIcs,
-                    project: itemResult.project,
-                    workItems: itemResult.workItems,
-                });
-            }
-        } catch (error) {
-            logger.error("Error in handleLinkedClick:", error);
-            await appMessageDialogRef.showMessageAsync(
-                "処理エラー",
-                error instanceof Error ? error.message : "不明なエラーが発生しました。",
-                "ERROR",
-            );
-        } finally {
-            setIsLoading(false);
+        let enabledSchedule: Schedule[] = [];
+        if (pdf && scheduleTableItems.length > 0) {
+            enabledSchedule = pdf.schedule.filter((s) => selectedScheduleKeys.has(ScheduleUtils.getText(s)));
         }
-    }, [
-        isAuthenticated,
-        sessionHook,
-        timeTrackerSettings,
-        fetchProjectData,
-        updateHistory,
-        updateSettings,
-        filterSelectedSchedule,
-        filterSelectedEvents,
-        onSubmit,
-        setIsLoading,
-    ]);
+
+        let enabledEvents: Event[] = [];
+        if (ics && eventTableItems.length > 0) {
+            enabledEvents = ics.event.filter((e) => selectedEventKeys.has(getEventKey(e)));
+        }
+
+        onLinking({
+            schedules: enabledSchedule,
+            events: enabledEvents,
+        });
+    }, [pdf, ics, onLinking, scheduleTableItems.length, selectedScheduleKeys, eventTableItems.length, selectedEventKeys])
 
     // PDFデータが変更されたらテーブルデータを更新（最適化）
     useEffect(() => {
@@ -800,7 +675,6 @@ export const FileUploadView = memo(function FileUploadView({
                     icon={<Link24Regular />}
                 />
             </div>
-            <Dialog />
         </>
     );
 });

@@ -4,14 +4,22 @@ import { usePageContent } from "@/store/content";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Page } from "../../components/page";
-import { ScheduleItem } from "./components";
 import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
-import type { ICS, PDF, UploadInfo } from "./models";
+import type { LinkingEventWorkItemPair, LinkingInfo, UploadInfo } from "./models";
 import { CompletionView } from "./view/CompletionView";
 import { FileUploadView } from "./view/FileUploadView";
 import { LinkingProcessView } from "./view/LinkingProcessView";
+import { useTimeTrackerSession } from "./hooks";
+import { HistoryManager } from "@/core";
+import { getLogger } from "@/lib";
+import { Schedule, WorkItem, Event } from "@/types";
+import { validateAndCleanupSettings } from "./services/validate";
+import { ProjectAndWorkItem } from "./hooks/useTimeTrackerSession";
 
-// const logger = getLogger("TimeTrackerPage");
+const logger = getLogger("TimeTrackerPage");
+
+const historyManager = new HistoryManager();
+historyManager.load();
 
 const useStyles = makeStyles({
     viewContainer: {
@@ -132,42 +140,27 @@ interface TimeTrackerPageContent {
  */
 export const TimeTrackerPage = memo(function TimeTrackerPage() {
     const styles = useStyles();
-    const { validationErrors } = useSettings();
+    const { settings, validationErrors, updateSettings } = useSettings();
+    const timetracker = settings.timetracker;
+
     const [pageContent, setPageContent] = usePageContent<TimeTrackerPageContent>("TimeTracker");
+    const uploadInfo = pageContent?.uploadInfo;
 
     const [isLoading, setIsLoading] = useState(false);
     const [showErrorDialog, setShowErrorDialog] = useState(false);
+    const { currentView, slideDirection, backTo, nextTo } = useTimeTrackerViewState();
 
-    // 永続化データから状態を取得（ページ遷移時も保持される）
-    const uploadInfo = pageContent?.uploadInfo;
-    const pdf = uploadInfo?.pdf;
-    const ics = uploadInfo?.ics;
+    const [linkingInfo, setLinkingInfo] = useState<LinkingInfo>();
 
-    // PDF更新用のセッター（uploadInfoを更新してContentProviderに保存）
-    const setPdf = useCallback(
-        (pdf: PDF | undefined) => {
-            setPageContent({
-                uploadInfo: {
-                    ...uploadInfo,
-                    pdf,
-                },
-            });
-        },
-        [uploadInfo, setPageContent],
+    // セッション管理（メモ化）
+    const sessionConfig = useMemo(
+        () => ({
+            baseUrl: timetracker?.baseUrl || "",
+            userName: timetracker?.userName || "",
+        }),
+        [timetracker?.baseUrl, timetracker?.userName],
     );
-
-    // ICS更新用のセッター（uploadInfoを更新してContentProviderに保存）
-    const setIcs = useCallback(
-        (ics: ICS | undefined) => {
-            setPageContent({
-                uploadInfo: {
-                    ...uploadInfo,
-                    ics,
-                },
-            });
-        },
-        [uploadInfo, setPageContent],
-    );
+    const { Dialog, isAuthenticated, ...sessionHook } = useTimeTrackerSession(sessionConfig);
 
     // UploadInfo更新用のセッター（ContentProviderに保存）
     const setUploadInfo = useCallback(
@@ -179,15 +172,176 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
         [setPageContent],
     );
 
-    // @ts-expect-error Phase 7: TimeTracker API登録で使用予定
-    const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+    // 履歴管理の更新（メモ化）
+    const updateHistory = useCallback((workItems: WorkItem[]) => {
+        historyManager.load();
+        historyManager.checkWorkItemId(workItems);
+        historyManager.dump();
+    }, []);
 
-    const { currentView, slideDirection, backTo, nextTo } = useTimeTrackerViewState();
+    // プロジェクト情報取得（メモ化）
+    const fetchProjectData = useCallback(
+        async (projectId: string): Promise<ProjectAndWorkItem | undefined> => {
+            const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId, async () => {
+
+                // プロジェクトID取得失敗時は設定をクリア
+                if (timetracker) {
+                    updateSettings({
+                        timetracker: {
+                            ...timetracker,
+                            baseProjectId: -1,
+                        },
+                    });
+                }
+                await appMessageDialogRef.showMessageAsync(
+                    "設定エラー",
+                    `プロジェクトID ( ${projectId} ) が無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。`,
+                    "ERROR",
+                );
+            });
+
+            if (result.isError) {
+                await appMessageDialogRef.showMessageAsync("TimeTrackerデータ取得エラー", result.errorMessage, "ERROR");
+                return;
+            }
+
+            return result.content;
+        },
+        [sessionHook, timetracker, updateSettings],
+    );
+
+    // 紐づけ開始処理（メモ化）
+    const handleLinking = useCallback(async (selectedInfo: {
+        schedules: Schedule[]
+        events: Event[]
+    }) => {
+        if (!timetracker) {
+            logger.error("Nothing. Timetracker settings.");
+            return;
+        }
+
+        if (selectedInfo.schedules.length === 0 || selectedInfo.events.length === 0) {
+            logger.error("Nothing. schedules and events.");
+            return;
+        }
+
+        if (!isAuthenticated) {
+            const authResult = await sessionHook.authenticateAsync();
+            if (authResult.isError) {
+                await appMessageDialogRef.showMessageAsync(
+                    "認証エラー",
+                    "TimeTrackerの認証に失敗しました。",
+                    "ERROR",
+                );
+                return;
+            }
+        }
+
+        try {
+            setIsLoading(true);
+
+            // プロジェクト情報取得
+            const itemResult = await fetchProjectData(String(timetracker?.baseProjectId));
+            if (!itemResult) {
+                return;
+            }
+
+            // 履歴の更新
+            updateHistory(itemResult.workItems);
+
+            // 設定の検証とクリーンアップ
+            const cleanResult = validateAndCleanupSettings(timetracker, itemResult.workItems);
+            if (cleanResult.items.length > 0) {
+                await appMessageDialogRef.showMessageAsync(
+                    "設定エラー",
+                    `設定項目に不正なIDが存在します。削除します。（ ${cleanResult.items.length}件 ）\n\n` +
+                    cleanResult.items.map((i) => "・ " + i).join("\n"),
+                    "ERROR",
+                );
+                updateSettings({
+                    timetracker: cleanResult.settings,
+                });
+                return;
+            }
+
+            // 
+            setLinkingInfo({
+                ...selectedInfo,
+                workItems: itemResult.workItems,
+            })
+            
+            // 成功時のみ次画面へ遷移
+            nextTo();
+        } catch (error) {
+            logger.error("Error in handleLinkedClick:", error);
+            await appMessageDialogRef.showMessageAsync(
+                "処理エラー",
+                error instanceof Error ? error.message : "不明なエラーが発生しました。",
+                "ERROR",
+            );
+            // エラー時は遷移しない
+        } finally {
+            setIsLoading(false);
+        }
+    }, [
+        isAuthenticated,
+        sessionHook,
+        timetracker,
+        fetchProjectData,
+        updateHistory,
+        updateSettings,
+        setIsLoading,
+        nextTo,
+    ]);
 
     /**
-     * TimeTracker設定のバリデーションチェック
-     * エラーがある場合はFileUploadViewに戻り、エラーダイアログを表示
+     * 紐づけ処理完了時のハンドラー
      */
+    const handleRegisterEvents = useCallback(async (linkingEventWorkItemPair: LinkingEventWorkItemPair[]) => {
+        if (!isAuthenticated) {
+            const authResult = await sessionHook.authenticateAsync();
+            if (authResult.isError) {
+                await appMessageDialogRef.showMessageAsync(
+                    "認証エラー",
+                    "TimeTrackerの認証に失敗しました。",
+                    "ERROR",
+                );
+                return;
+            }
+        }
+        try {
+            setIsLoading(true);
+
+            const tasks = linkingEventWorkItemPair.map(l => {
+                return {
+                    workItemId: l.linkingWorkItem.workItem.id,
+                    startTime: l.event.schedule.start,
+                    endTime: l.event.schedule.end!,
+                }
+            })
+            for (const task of tasks) {
+                await sessionHook.registerTaskAsync(task)
+            }
+            
+            // 成功時のみ次画面へ遷移
+            nextTo();
+        } catch (error) {
+            logger.error("Error in handleRegisterEvents:", error);
+            await appMessageDialogRef.showMessageAsync(
+                "処理エラー",
+                error instanceof Error ? error.message : "不明なエラーが発生しました。",
+                "ERROR",
+            );
+            // エラー時は遷移しない
+        } finally {
+            setIsLoading(false);
+        }
+    }, [isAuthenticated, sessionHook, setIsLoading, nextTo]);
+
+    /**
+    * TimeTracker設定のバリデーションチェック
+    * エラーがある場合はFileUploadViewに戻り、エラーダイアログを表示
+    */
     useEffect(() => {
         const hasTimeTrackerErrors = validationErrors.timeTracker.length > 0;
         if (hasTimeTrackerErrors) {
@@ -203,50 +357,14 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
         }
     }, [validationErrors.timeTracker, currentView, backTo]);
 
+
     /**
-     * アニメーションクラスを取得（スライド方向に応じたクラスを返す）
-     */
+    * アニメーションクラスを取得（スライド方向に応じたクラスを返す）
+    */
     const animationClass = useMemo(
         () => (slideDirection === "right" ? styles.slideInRight : slideDirection === "left" ? styles.slideInLeft : ""),
         [slideDirection, styles.slideInLeft, styles.slideInRight],
     );
-
-    /**
-     * ファイルアップロード完了時のハンドラー
-     */
-    const handleFileUploadViewSubmit = useCallback(
-        (uploadInfo: UploadInfo) => {
-            setUploadInfo(uploadInfo);
-            nextTo();
-        },
-        [nextTo],
-    );
-
-    /**
-     * 紐づけ処理完了時のハンドラー
-     * @todo Phase 7で実装予定
-     */
-    const handleLinkingProcessSubmit = useCallback((_tasks: any[]) => {
-        // TODO: Phase 7 - 紐づけ処理の実装
-    }, []);
-
-    /**
-     * CompletionViewの「戻る」ボタン押下時のハンドラー
-     */
-    const handleCompletionBack = useCallback(() => backTo(2), [backTo]);
-
-    /**
-     * CompletionViewの登録成功時のハンドラー
-     */
-    const handleRegisterSuccess = useCallback(() => backTo(2), [backTo]);
-
-    /**
-     * CompletionViewのメッセージ表示ハンドラー
-     */
-    const handleShowMessage = useCallback((type: "success" | "error", title: string, message: string) => {
-        appMessageDialogRef.showMessageAsync(title, message, type === "success" ? "INFO" : "ERROR");
-    }, []);
-
     return (
         <>
             <Page
@@ -258,35 +376,26 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
                 <div className={mergeClasses(styles.viewContainer, animationClass)} key={currentView}>
                     {currentView === "completion" ? (
                         <CompletionView
-                            schedules={scheduleItems}
-                            itemCodes={[]} // TODO: Phase 7 - 必要に応じて実装
-                            itemCodeOptions={[]}
-                            onBack={handleCompletionBack}
-                            onBackToLinking={backTo}
-                            onRegisterSuccess={handleRegisterSuccess}
-                            onShowMessage={handleShowMessage}
+                            onBack={backTo}
                         />
                     ) : currentView === "linking" ? (
                         <LinkingProcessView
-                            uploadInfo={uploadInfo}
-                            setIsLoading={setIsLoading}
+                            linkingInfo={linkingInfo}
                             onBack={backTo}
-                            onSubmit={handleLinkingProcessSubmit}
+                            onRegisterEvents={handleRegisterEvents}
                         />
                     ) : (
                         <FileUploadView
-                            pdf={pdf}
-                            ics={ics}
-                            onPdfUpdate={setPdf}
-                            onIcsUpdate={setIcs}
-                            setIsLoading={setIsLoading}
-                            onSubmit={handleFileUploadViewSubmit}
+                            uploadInfo={uploadInfo}
+                            onChangeUploadInfo={setUploadInfo}
+                            onLinking={handleLinking}
                         />
                     )}
                 </div>
             </Page>
 
             <ValidationErrorDialog open={showErrorDialog} errors={validationErrors.timeTracker} />
+            <Dialog />
         </>
     );
 });

@@ -4,7 +4,5 @@ export { EventTable } from "./EventTable";
 export type { EventTableProps, EventTableRow } from "./EventTable";
 export { HistoryDrawer } from "./HistoryDrawer";
 export type { HistoryDrawerProps } from "./HistoryDrawer";
-export { ScheduleTable } from "./ScheduleTable";
-export type { ItemCodeDisplayMode, ItemCodeOption, ScheduleItem, ScheduleTableProps } from "./ScheduleTable";
 export { StatisticsCards } from "./StatisticsCards";
 export type { StatisticsCardsProps } from "./StatisticsCards";

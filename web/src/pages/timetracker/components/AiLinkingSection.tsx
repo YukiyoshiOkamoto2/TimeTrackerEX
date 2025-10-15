@@ -21,9 +21,9 @@ import {
     tokens,
 } from "@fluentui/react-components";
 import { History24Regular, Key24Regular, Sparkle24Regular } from "@fluentui/react-icons";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { LinkingEventWorkItemPair } from "../models";
-import { autoLinkWithAI, type ChunkProgress } from "../services/ai";
+import { AILinkingRequest, autoLinkWithAI, type ChunkProgress } from "../services/ai";
 
 const logger = getLogger("AiLinkingSection");
 
@@ -130,6 +130,19 @@ const useStyles = makeStyles({
     },
 });
 
+async function autoLinkAsync(request: AILinkingRequest) {
+    try {
+        // AI推論実行
+        return await autoLinkWithAI(request);
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
+        return {
+            ok: false,
+            errorMessage,
+        }
+    }
+}
+
 export interface AiLinkingSectionProps {
     /** 未紐づけイベント */
     unlinkedEvents: Event[];
@@ -150,7 +163,7 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
     // ローカルステート
     const [token, setToken] = useState<string>("");
     const [useHistory, setUseHistory] = useState<boolean>(false);
-    const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.5);
+    const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.8);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [progressInfo, setProgressInfo] = useState<{
         current: number;
@@ -161,151 +174,118 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
         filteredCount: number;
     }>({ current: 0, total: 0, chunkSize: 0, successCount: 0, errorCount: 0, filteredCount: 0 });
 
+    const actionDisabled = useMemo(() => {
+        return !token || token.trim() === "" || unlinkedEvents.length === 0
+    }, [token, unlinkedEvents])
+
     // AI自動紐づけハンドラー
     const handleAILinking = useCallback(async () => {
-        if (!token || token.trim() === "") {
+        logger.info(`AI自動紐づけ開始: ${unlinkedEvents.length}件の未紐づけイベント`);
+        // 進捗ダイアログを表示
+        setIsProcessing(true);
+        setProgressInfo({ current: 0, total: 0, chunkSize: 0, successCount: 0, errorCount: 0, filteredCount: 0 });
+
+        // AI推論実行
+        const result = await autoLinkAsync({
+            apiKey: token,
+            linkedPairs: linkedPairs,
+            unlinkedEvents: unlinkedEvents,
+            workItems: workItems,
+            useHistory: useHistory,
+            onChunkProgress: (progress: ChunkProgress) => {
+                setProgressInfo((prev) => {
+                    const newInfo = {
+                        current: progress.current,
+                        total: progress.total,
+                        chunkSize: progress.chunkSize,
+                        successCount: prev.successCount,
+                        errorCount: prev.errorCount,
+                        filteredCount: prev.filteredCount,
+                    };
+
+                    if (progress.status === "success") {
+                        newInfo.successCount = prev.successCount + (progress.suggestionCount || 0);
+                    } else if (progress.status === "error") {
+                        newInfo.errorCount = prev.errorCount + 1;
+                    }
+                    return newInfo;
+                });
+            },
+        });
+        // 進捗ダイアログを閉じる
+        setIsProcessing(false);
+
+        if (!result.ok) {
             await appMessageDialogRef.showMessageAsync(
-                "APIトークンが必要です",
-                "AI自動紐づけを使用するにはAPIトークンを入力してください。",
+                "AI紐づけ失敗",
+                result.errorMessage || "不明なエラーが発生しました",
                 "ERROR",
             );
             return;
         }
 
-        if (unlinkedEvents.length === 0) {
+        if (!result.suggestions || result.suggestions.length === 0) {
             await appMessageDialogRef.showMessageAsync(
-                "未紐づけイベントがありません",
-                "すべてのイベントが既に紐づけられています。",
-                "INFO",
+                "紐づけ提案なし",
+                "AIから紐づけ提案が得られませんでした。",
+                "WARN",
             );
             return;
         }
 
-        try {
-            logger.info(`AI自動紐づけ開始: ${unlinkedEvents.length}件の未紐づけイベント`);
-
-            // 進捗ダイアログを表示
-            setIsProcessing(true);
-            setProgressInfo({ current: 0, total: 0, chunkSize: 0, successCount: 0, errorCount: 0, filteredCount: 0 });
-
-            // AI推論実行
-            const result = await autoLinkWithAI({
-                apiKey: token,
-                linkedPairs: linkedPairs,
-                unlinkedEvents: unlinkedEvents,
-                workItems: workItems,
-                useHistory: useHistory,
-                onChunkProgress: (progress: ChunkProgress) => {
-                    setProgressInfo((prev) => {
-                        const newInfo = {
-                            current: progress.current,
-                            total: progress.total,
-                            chunkSize: progress.chunkSize,
-                            successCount: prev.successCount,
-                            errorCount: prev.errorCount,
-                            filteredCount: prev.filteredCount,
-                        };
-
-                        if (progress.status === "success") {
-                            newInfo.successCount = prev.successCount + (progress.suggestionCount || 0);
-                        } else if (progress.status === "error") {
-                            newInfo.errorCount = prev.errorCount + 1;
-                        }
-
-                        return newInfo;
-                    });
-                },
-            });
-
-            if (!result.ok) {
-                await appMessageDialogRef.showMessageAsync(
-                    "AI紐づけ失敗",
-                    result.errorMessage || "不明なエラーが発生しました",
-                    "ERROR",
+        // AI提案をフィルタリング（信頼度閾値と存在するWorkItemのみ）
+        const validSuggestions: Array<{ eventId: string; workItemId: string; confidence: number }> = [];
+        let failedCount = 0;
+        let filteredByConfidenceCount = 0;
+        for (const suggestion of result.suggestions) {
+            // 信頼度チェック
+            if (suggestion.confidence < confidenceThreshold) {
+                filteredByConfidenceCount++;
+                logger.info(
+                    `AI紐づけ提案除外（信頼度不足）: Event=${suggestion.eventUuid} → WorkItem=${suggestion.workItemId} ` +
+                    `(信頼度:${suggestion.confidence} < 閾値:${confidenceThreshold})`,
                 );
-                return;
+                continue;
             }
 
-            if (!result.suggestions || result.suggestions.length === 0) {
-                await appMessageDialogRef.showMessageAsync(
-                    "紐づけ提案なし",
-                    "AIから紐づけ提案が得られませんでした。",
-                    "WARN",
-                );
-                return;
-            }
-
-            // AI提案をフィルタリング（信頼度閾値と存在するWorkItemのみ）
-            const validSuggestions: Array<{ eventId: string; workItemId: string; confidence: number }> = [];
-            let failedCount = 0;
-            let filteredByConfidenceCount = 0;
-
-            for (const suggestion of result.suggestions) {
-                // 信頼度チェック
-                if (suggestion.confidence < confidenceThreshold) {
-                    filteredByConfidenceCount++;
-                    logger.info(
-                        `AI紐づけ提案除外（信頼度不足）: Event=${suggestion.eventUuid} → WorkItem=${suggestion.workItemId} ` +
-                            `(信頼度:${suggestion.confidence} < 閾値:${confidenceThreshold})`,
-                    );
-                    continue;
-                }
-
-                // WorkItemが存在するか確認
-                const selectedWorkItem = WorkItemUtils.getMostNestChildren(workItems).find(
-                    (w) => w.id === suggestion.workItemId,
-                );
-
-                if (selectedWorkItem) {
-                    validSuggestions.push({
-                        eventId: suggestion.eventUuid,
-                        workItemId: suggestion.workItemId,
-                        confidence: suggestion.confidence,
-                    });
-                    logger.info(
-                        `AI紐づけ提案: Event=${suggestion.eventUuid} → WorkItem=${suggestion.workItemId} ` +
-                            `(信頼度:${suggestion.confidence}, 理由:${suggestion.reason})`,
-                    );
-                } else {
-                    failedCount++;
-                    logger.warn(`AI紐づけ提案除外: WorkItem not found (${suggestion.workItemId})`);
-                }
-            }
-
-            // 進捗情報を更新（フィルタ件数を反映）
-            setProgressInfo((prev) => ({
-                ...prev,
-                filteredCount: filteredByConfidenceCount,
-            }));
-
-            // すべての有効な提案をまとめて適用
-            if (validSuggestions.length > 0) {
-                onAiLinkingChange(validSuggestions);
-                logger.info(`AI紐づけ適用完了: ${validSuggestions.length}件の紐づけを一括適用`);
-            }
-
-            const successCount = validSuggestions.length;
-
-            // 進捗ダイアログを閉じる
-            setIsProcessing(false);
-
-            await appMessageDialogRef.showMessageAsync(
-                "AI紐づけ完了",
-                `${successCount}件のイベントを自動紐づけしました。\n` +
-                    (filteredByConfidenceCount > 0
-                        ? `${filteredByConfidenceCount}件は信頼度が低くスキップされました。\n`
-                        : "") +
-                    (failedCount > 0 ? `${failedCount}件は紐づけに失敗しました。` : ""),
-                successCount > 0 ? "INFO" : "WARN",
+            // WorkItemが存在するか確認
+            const selectedWorkItem = WorkItemUtils.getMostNestChildren(workItems).find(
+                (w) => w.id === suggestion.workItemId,
             );
-        } catch (error) {
-            // 進捗ダイアログを閉じる
-            setIsProcessing(false);
 
-            const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
-            logger.error("AI紐づけエラー:", errorMessage);
-            await appMessageDialogRef.showMessageAsync("AI紐づけエラー", errorMessage, "ERROR");
+            if (selectedWorkItem) {
+                validSuggestions.push({
+                    eventId: suggestion.eventUuid,
+                    workItemId: suggestion.workItemId,
+                    confidence: suggestion.confidence,
+                });
+                logger.info(
+                    `AI紐づけ提案: Event=${suggestion.eventUuid} → WorkItem=${suggestion.workItemId} ` +
+                    `(信頼度:${suggestion.confidence}, 理由:${suggestion.reason})`,
+                );
+            } else {
+                failedCount++;
+                logger.warn(`AI紐づけ提案除外: WorkItem not found (${suggestion.workItemId})`);
+            }
         }
+
+        const successCount = validSuggestions.length;
+        // すべての有効な提案をまとめて適用
+        if (successCount > 0) {
+            onAiLinkingChange(validSuggestions);
+            logger.info(`AI紐づけ適用完了: ${validSuggestions.length}件の紐づけを一括適用`);
+        }
+
+        await appMessageDialogRef.showMessageAsync(
+            "AI紐づけ完了",
+            `${successCount}件のイベントを自動紐づけしました。\n` +
+            (filteredByConfidenceCount > 0
+                ? `${filteredByConfidenceCount}件は信頼度が低くスキップされました。\n`
+                : "") +
+            (failedCount > 0 ? `${failedCount}件は紐づけに失敗しました。` : ""),
+            successCount > 0 ? "INFO" : "WARN",
+        );
+
     }, [token, useHistory, confidenceThreshold, unlinkedEvents, linkedPairs, workItems, onAiLinkingChange]);
 
     return (
@@ -389,7 +369,7 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
                         icon={<Sparkle24Regular />}
                         onClick={handleAILinking}
                         style={{ margin: "12px 0 0 auto" }}
-                        disabled={token === ""}
+                        disabled={actionDisabled}
                     >
                         AI自動紐づけを開始
                     </Button>
@@ -432,37 +412,37 @@ export function AiLinkingSection({ unlinkedEvents, linkedPairs, workItems, onAiL
                                 {(progressInfo.successCount > 0 ||
                                     progressInfo.errorCount > 0 ||
                                     progressInfo.filteredCount > 0) && (
-                                    <div className={styles.progressStats}>
-                                        <div className={styles.progressStatItem}>
-                                            <div className={styles.progressStatLabel}>成功</div>
-                                            <div className={styles.progressStatValue}>
-                                                {progressInfo.successCount}件
+                                        <div className={styles.progressStats}>
+                                            <div className={styles.progressStatItem}>
+                                                <div className={styles.progressStatLabel}>成功</div>
+                                                <div className={styles.progressStatValue}>
+                                                    {progressInfo.successCount}件
+                                                </div>
                                             </div>
+                                            {progressInfo.filteredCount > 0 && (
+                                                <div className={styles.progressStatItem}>
+                                                    <div className={styles.progressStatLabel}>信頼度不足</div>
+                                                    <div
+                                                        className={styles.progressStatValue}
+                                                        style={{ color: tokens.colorPaletteYellowForeground1 }}
+                                                    >
+                                                        {progressInfo.filteredCount}件
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {progressInfo.errorCount > 0 && (
+                                                <div className={styles.progressStatItem}>
+                                                    <div className={styles.progressStatLabel}>エラー</div>
+                                                    <div
+                                                        className={styles.progressStatValue}
+                                                        style={{ color: tokens.colorPaletteDarkOrangeForeground1 }}
+                                                    >
+                                                        {progressInfo.errorCount}件
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        {progressInfo.filteredCount > 0 && (
-                                            <div className={styles.progressStatItem}>
-                                                <div className={styles.progressStatLabel}>信頼度不足</div>
-                                                <div
-                                                    className={styles.progressStatValue}
-                                                    style={{ color: tokens.colorPaletteYellowForeground1 }}
-                                                >
-                                                    {progressInfo.filteredCount}件
-                                                </div>
-                                            </div>
-                                        )}
-                                        {progressInfo.errorCount > 0 && (
-                                            <div className={styles.progressStatItem}>
-                                                <div className={styles.progressStatLabel}>エラー</div>
-                                                <div
-                                                    className={styles.progressStatValue}
-                                                    style={{ color: tokens.colorPaletteDarkOrangeForeground1 }}
-                                                >
-                                                    {progressInfo.errorCount}件
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                    )}
 
                                 <div className={styles.progressInfo}>AIが未紐づけイベントを解析しています...</div>
                             </div>

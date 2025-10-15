@@ -1,4 +1,4 @@
-import { Event, Project, Schedule, WorkItem } from "@/types";
+import { Event, Schedule, WorkItem } from "@/types";
 
 export type FileData = {
     name: string;
@@ -17,8 +17,12 @@ export type ICS = {
 export type UploadInfo = {
     pdf?: PDF;
     ics?: ICS;
-    project?: Project;
-    workItems?: WorkItem[];
+};
+
+export type LinkingInfo = {
+    schedules: Schedule[];
+    events: Event[];
+    workItems: WorkItem[];
 };
 
 export type ExcludedEventReasonDetail = {

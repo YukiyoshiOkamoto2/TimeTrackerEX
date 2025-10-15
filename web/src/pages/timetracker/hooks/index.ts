@@ -5,4 +5,6 @@
 export { useTimeTrackerSession } from "./useTimeTrackerSession";
 export type { TimeTrackerSessionHook, UseTimeTrackerSessionOptions } from "./useTimeTrackerSession";
 
+export { useLinkingManager, type UseLinkingManagerOptions } from "./useLinkingManager";
+
 export { clearAllSession, clearAuth, loadAuth, saveAuth, type StoredAuth } from "./timeTrackerSessionHelper";
