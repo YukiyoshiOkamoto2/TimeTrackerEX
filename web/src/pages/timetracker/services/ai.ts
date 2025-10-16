@@ -210,15 +210,7 @@ ${historyPattern}
  * ユーザープロンプトを生成
  */
 function generateUserPrompt(unlinkedEvents: Event[]): string {
-    const eventList = unlinkedEvents
-        .map((event, index) => {
-            const name = event.name || "(無題)";
-            const organizer = event.organizer ? `, 主催者:${event.organizer}` : "";
-            const location = event.location ? `, 場所:${event.location}` : "";
-            return `${index + 1}. 件名:"${name}"${organizer}${location}`;
-        })
-        .join("\n");
-
+    const eventList = unlinkedEvents.map((event, index) => `${index + 1}. 件名:"${event.name || "(無題)"}"`).join("\n");
     return `以下のイベントを適切なWorkItemに紐づけてください：
 
 【未紐づけイベント】
@@ -363,10 +355,7 @@ function groupSameEvents(events: Event[]): [Event[], Map<string, string[]>] {
 /**
  * 有効な履歴エントリをフィルタして取得
  */
-function getValidHistoryEntries(
-    workItems: WorkItem[],
-    linkedPairs: Array<{ event: Event; workItem: WorkItem }>,
-): HistoryEntry[] {
+function getValidHistoryEntries(workItems: WorkItem[], linkedPairs: LinkingEventWorkItemPair[]): HistoryEntry[] {
     const historyManager = new HistoryManager();
     historyManager.load();
     const allHistory = historyManager.getAllEntries();
