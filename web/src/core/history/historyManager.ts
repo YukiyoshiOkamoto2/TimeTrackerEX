@@ -89,16 +89,6 @@ export class HistoryManager {
     }
 
     /**
-     * イベント情報からキーを生成する
-     *
-     * @param event - イベント情報
-     * @returns 生成されたキー
-     */
-    private getEventKey(event: Event): string {
-        return EventUtils.getKey(event);
-    }
-
-    /**
      * Storageから履歴を読み込む
      *
      * @remarks
@@ -230,7 +220,7 @@ export class HistoryManager {
      * @returns 作業項目ID、見つからない場合はnull
      */
     getWorkItemId(event: Event): string | null {
-        const key = this.getEventKey(event);
+        const key = EventUtils.getKey(event);
         const entry = this.history.get(key);
 
         if (entry) {
@@ -260,7 +250,7 @@ export class HistoryManager {
             return;
         }
 
-        const key = this.getEventKey(event);
+        const key = EventUtils.getKey(event);
         const existingEntry = this.history.get(key);
         const now = getCurrentDate();
         const itemName = WorkItemUtils.getText(workItem);
@@ -314,15 +304,6 @@ export class HistoryManager {
      */
     getSize(): number {
         return this.history.size;
-    }
-
-    /**
-     * すべての履歴エントリを取得する（デバッグ用）
-     *
-     * @returns 履歴エントリのマップ
-     */
-    getAll(): Map<string, HistoryEntry> {
-        return new Map(this.history);
     }
 
     /**

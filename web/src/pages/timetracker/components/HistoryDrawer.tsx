@@ -171,8 +171,8 @@ const useStyles = makeStyles({
 
 /** テーブル列の幅設定 */
 const columnSizingOptions = {
-    eventName: { minWidth: 250, idealWidth: 350 },
-    itemName: { minWidth: 230, idealWidth: 300 },
+    eventName: { minWidth: 250, idealWidth: 300 },
+    itemName: { minWidth: 250, idealWidth: 400 },
     useCount: { minWidth: 80, idealWidth: 90 },
     lastUsedDate: { minWidth: 140, idealWidth: 170 },
 };

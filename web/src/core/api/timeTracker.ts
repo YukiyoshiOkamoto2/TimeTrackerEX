@@ -240,8 +240,9 @@ export async function getWorkItemsAsync(
     console.debug("Start getWorkItemsAsync.");
 
     // api.pyと同じURLパターンに修正
-    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${userName ? `&assignedUsers=${userName}` : ""
-        }&includeDeleted=false`;
+    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${
+        userName ? `&assignedUsers=${userName}` : ""
+    }&includeDeleted=false`;
     const response = await requestAsync(baseUrl, uri, auth);
 
     if (isErrorResponse(response)) {

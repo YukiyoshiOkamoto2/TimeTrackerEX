@@ -141,7 +141,6 @@ function formatHistoryPatterns(historyEntries: HistoryEntry[], useHistory: boole
     }
 
     const topHistory = historyEntries.sort((a, b) => b.useCount - a.useCount).slice(0, MAX_HISTORY_ENTRIES);
-
     const patterns = topHistory.map((entry) => {
         return `イベント:"${entry.eventName}" → WorkItem:ID=${entry.itemId}, 名前="${entry.itemName}" (使用回数:${entry.useCount})`;
     });
@@ -364,16 +363,22 @@ function groupSameEvents(events: Event[]): [Event[], Map<string, string[]>] {
 /**
  * 有効な履歴エントリをフィルタして取得
  */
-function getValidHistoryEntries(workItems: WorkItem[]): HistoryEntry[] {
+function getValidHistoryEntries(
+    workItems: WorkItem[],
+    linkedPairs: Array<{ event: Event; workItem: WorkItem }>,
+): HistoryEntry[] {
     const historyManager = new HistoryManager();
     historyManager.load();
-    const allHistory = historyManager.getAll();
+    const allHistory = historyManager.getAllEntries();
 
     // WorkItemが存在するものだけをフィルタ
     const validWorkItemIds = new Set(WorkItemUtils.getMostNestChildren(workItems).map((w) => w.id));
 
     // MapからArrayに変換してフィルタ
-    return Array.from(allHistory.values()).filter((entry) => validWorkItemIds.has(entry.itemId));
+    return allHistory.filter(
+        (entry) =>
+            validWorkItemIds.has(entry.itemId) && !linkedPairs.some((p) => EventUtils.getKey(p.event) === entry.key),
+    );
 }
 
 /**
@@ -509,7 +514,7 @@ export async function autoLinkWithAI(request: AILinkingRequest): Promise<AILinki
     }
 
     // 履歴を取得
-    const historyEntries = request.useHistory ? getValidHistoryEntries(request.workItems) : [];
+    const historyEntries = request.useHistory ? getValidHistoryEntries(request.workItems, request.linkedPairs) : [];
     if (request.useHistory) {
         logger.info(`履歴エントリ取得: ${historyEntries.length}件`);
     }

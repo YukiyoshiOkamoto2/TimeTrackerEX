@@ -227,6 +227,7 @@ describe("linking.ts", () => {
                 const workItem2 = workItems.find((w) => w.id === "4001")!;
                 historyManager.setHistory(event1, workItem1);
                 historyManager.setHistory(event2, workItem2);
+                historyManager.dump(); // LocalStorageに保存
 
                 const events: Event[] = [event1, event2];
 
@@ -253,6 +254,7 @@ describe("linking.ts", () => {
                     folderPath: "/テスト",
                 };
                 historyManager.setHistory(event1, nonExistentWorkItem);
+                historyManager.dump(); // LocalStorageに保存
 
                 const events: Event[] = [event1];
 
@@ -272,6 +274,7 @@ describe("linking.ts", () => {
 
                 const workItem1 = workItems.find((w) => w.id === "2001")!;
                 historyManager.setHistory(event1, workItem1);
+                historyManager.dump(); // LocalStorageに保存
 
                 const events: Event[] = [event1];
                 const result = autoLinkEvents(events, workItems, settings, historyManager);
@@ -372,6 +375,7 @@ describe("linking.ts", () => {
                 });
                 const workItem1 = workItems.find((w) => w.id === "2001")!;
                 historyManager.setHistory(normalEvent, workItem1);
+                historyManager.dump(); // LocalStorageに保存
 
                 const events: Event[] = [
                     createEvent("有給休暇", {
@@ -418,6 +422,7 @@ describe("linking.ts", () => {
                 });
                 const workItem1 = workItems.find((w) => w.id === "2001")!;
                 historyManager.setHistory(event, workItem1);
+                historyManager.dump(); // LocalStorageに保存
 
                 const events: Event[] = [event];
 
@@ -471,6 +476,7 @@ describe("linking.ts", () => {
                 );
                 const workItem1 = workItems.find((w) => w.id === "2001")!;
                 historyManager.setHistory(event2, workItem1);
+                historyManager.dump(); // LocalStorageに保存
 
                 const events: Event[] = [event1, event2, event3];
 

@@ -243,9 +243,9 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
         });
 
         it("複数の作業項目を一度にチェックできる", () => {
-            const event2: Event = { ...testEvent, uuid: "uuid-2" };
+            const event2: Event = { ...testEvent, uuid: "uuid-2", name: "イベント2" };
             const workItem2: WorkItem = { ...testWorkItem, id: "work-item-789" };
-            const event3: Event = { ...testEvent, uuid: "uuid-3" };
+            const event3: Event = { ...testEvent, uuid: "uuid-3", name: "イベント3" };
             const workItem3: WorkItem = { ...testWorkItem, id: "work-item-999" };
 
             historyManager.setHistory(testEvent, testWorkItem);
@@ -269,9 +269,9 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             const events: Event[] = [];
             const workItems: WorkItem[] = [];
 
-            // 4つのエントリを追加
+            // 4つのエントリを追加（イベント名を変えて異なるキーにする）
             for (let i = 0; i < 4; i++) {
-                const event: Event = { ...testEvent, uuid: `uuid-${i}` };
+                const event: Event = { ...testEvent, uuid: `uuid-${i}`, name: `イベント${i}` };
                 const workItem: WorkItem = { ...testWorkItem, id: `work-item-${i}` };
                 events.push(event);
                 workItems.push(workItem);
@@ -288,9 +288,9 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
         it("読み込み時に最大サイズを超えるデータは切り捨てられる", () => {
             const smallHistory = new HistoryManager({ maxSize: 2 });
 
-            // 3つのエントリを追加
+            // 3つのエントリを追加（イベント名を変えて異なるキーにする）
             for (let i = 0; i < 3; i++) {
-                const event: Event = { ...testEvent, uuid: `uuid-${i}` };
+                const event: Event = { ...testEvent, uuid: `uuid-${i}`, name: `イベント${i}` };
                 const workItem: WorkItem = { ...testWorkItem, id: `work-item-${i}` };
                 smallHistory.setHistory(event, workItem);
             }
@@ -358,14 +358,14 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
         it("すべてのエントリを取得できる", () => {
             historyManager.setHistory(testEvent, testWorkItem);
 
-            const event2: Event = { ...testEvent, uuid: "uuid-2" };
+            const event2: Event = { ...testEvent, uuid: "uuid-2", name: "イベント2" };
             const workItem2: WorkItem = { ...testWorkItem, id: "work-item-789" };
             historyManager.setHistory(event2, workItem2);
 
-            const all = historyManager.getAll();
-            expect(all.size).toBe(2);
-            expect(all.has(`test-uuid-123|テストイベント|test@example.com`)).toBe(true);
-            expect(all.has(`uuid-2|テストイベント|test@example.com`)).toBe(true);
+            const all = historyManager.getAllEntries();
+            expect(all.length).toBe(2);
+            // キーフォーマット: name_organizer_workingEventType_isPrivate
+            expect(all.some(entry => entry.key === `テストイベント_test@example.com__false`)).toBe(true);
         });
     });
 
@@ -384,17 +384,19 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
 
             const entries = historyManager.getAllEntries();
             expect(entries).toHaveLength(2);
-            expect(entries[0].key).toBe("test-uuid-123|テストイベント|test@example.com");
+            // キーフォーマット: name_organizer_workingEventType_isPrivate
+            expect(entries[0].key).toBe("テストイベント_test@example.com__false");
             expect(entries[0].eventName).toBe("テストイベント");
             expect(entries[0].itemId).toBe("work-item-456");
-            expect(entries[0].itemName).toBe("テスト作業項目");
+            // itemNameは WorkItemUtils.getText() が返す形式: "name ( folderPath )"
+            expect(entries[0].itemName).toBe("テスト作業項目 ( /test )");
             expect(entries[0].useCount).toBe(1);
             expect(entries[0].lastUsedDate).toBeInstanceOf(Date);
 
-            expect(entries[1].key).toBe("uuid-2|イベント2|test@example.com");
+            expect(entries[1].key).toBe("イベント2_test@example.com__false");
             expect(entries[1].eventName).toBe("イベント2");
             expect(entries[1].itemId).toBe("work-item-789");
-            expect(entries[1].itemName).toBe("作業項目2");
+            expect(entries[1].itemName).toBe("作業項目2 ( /test )");
             expect(entries[1].useCount).toBe(1);
             expect(entries[1].lastUsedDate).toBeInstanceOf(Date);
         });
@@ -405,7 +407,8 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             historyManager.setHistory(testEvent, testWorkItem);
             expect(historyManager.getSize()).toBe(1);
 
-            const result = historyManager.deleteByKey("test-uuid-123|テストイベント|test@example.com");
+            // キーフォーマット: name_organizer_workingEventType_isPrivate
+            const result = historyManager.deleteByKey("テストイベント_test@example.com__false");
             expect(result).toBe(true);
             expect(historyManager.getSize()).toBe(0);
             expect(historyManager.getWorkItemId(testEvent)).toBeNull();
@@ -426,8 +429,8 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             historyManager.setHistory(eventWithEquals, testWorkItem);
             expect(historyManager.getSize()).toBe(1);
 
-            // デコード済みのキーで削除
-            const result = historyManager.deleteByKey("test-uuid-123|イベント=テスト|test@example.com");
+            // デコード済みのキーで削除 - キーフォーマット: name_organizer_workingEventType_isPrivate
+            const result = historyManager.deleteByKey("イベント=テスト_test@example.com__false");
             expect(result).toBe(true);
             expect(historyManager.getSize()).toBe(0);
             expect(historyManager.getWorkItemId(eventWithEquals)).toBeNull();
@@ -445,8 +448,8 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             historyManager.setHistory(event3, workItem3);
             expect(historyManager.getSize()).toBe(3);
 
-            // 2番目のエントリを削除
-            const result = historyManager.deleteByKey("uuid-2|イベント2|test@example.com");
+            // 2番目のエントリを削除 - キーフォーマット: name_organizer_workingEventType_isPrivate
+            const result = historyManager.deleteByKey("イベント2_test@example.com__false");
             expect(result).toBe(true);
             expect(historyManager.getSize()).toBe(2);
 
@@ -460,7 +463,8 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             historyManager.setHistory(testEvent, testWorkItem);
             historyManager.dump();
 
-            historyManager.deleteByKey("test-uuid-123|テストイベント|test@example.com");
+            // キーフォーマット: name_organizer_workingEventType_isPrivate
+            historyManager.deleteByKey("テストイベント_test@example.com__false");
 
             // 新しいインスタンスで読み込んで確認
             const newHistory = new HistoryManager();
@@ -478,8 +482,8 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             historyManager.setHistory(eventWithMultipleEquals, testWorkItem);
             expect(historyManager.getSize()).toBe(1);
 
-            // デコード済みのキーで削除
-            const result = historyManager.deleteByKey("test-uuid-123|a=b=c|test=user@example.com");
+            // デコード済みのキーで削除 - キーフォーマット: name_organizer_workingEventType_isPrivate
+            const result = historyManager.deleteByKey("a=b=c_test=user@example.com__false");
             expect(result).toBe(true);
             expect(historyManager.getSize()).toBe(0);
         });
@@ -522,7 +526,8 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
 
             // getAllEntriesで取得したキーはデコード済み
             const entries = historyManager.getAllEntries();
-            expect(entries[0].key).toBe("test-uuid-123|イベント=テスト|test@example.com");
+            // キーフォーマット: name_organizer_workingEventType_isPrivate
+            expect(entries[0].key).toBe("イベント=テスト_test@example.com__false");
 
             // そのキーを使って削除できる
             const result = historyManager.deleteByKey(entries[0].key);
@@ -554,8 +559,9 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             // 残ったエントリを確認
             const remainingEntries = historyManager.getAllEntries();
             expect(remainingEntries).toHaveLength(2);
-            expect(remainingEntries[0].key).toBe("uuid-1|イベント1|test@example.com");
-            expect(remainingEntries[1].key).toBe("uuid-3|イベント3|test@example.com");
+            // キーフォーマット: name_organizer_workingEventType_isPrivate
+            expect(remainingEntries[0].key).toBe("イベント1_test@example.com__false");
+            expect(remainingEntries[1].key).toBe("イベント3_test@example.com__false");
         });
     });
 
@@ -590,8 +596,9 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
                 // CSV形式: key,eventName,WorkItemId,itemName,useCount,lastUsedDate (6カラム)
                 const lines = historyData.split("\n");
                 expect(lines[0]).toBe("key,eventName,WorkItemId,itemName,useCount,lastUsedDate");
+                // キーフォーマット: name_organizer_workingEventType_isPrivate
                 expect(lines[1]).toMatch(
-                    /^test-uuid-123\|テストイベント\|test@example\.com,テストイベント,work-item-456,テスト作業項目,1,\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+                    /^テストイベント_test@example\.com__false,テストイベント,work-item-456,テスト作業項目.+,1,\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
                 );
             }
         });
@@ -608,7 +615,7 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
                 const parsed = JSON.parse(rootData);
                 const historyData = parsed["time-tracker-history"];
                 // 使用回数が3になっている
-                expect(historyData).toMatch(/work-item-456,テスト作業項目,3,/);
+                expect(historyData).toMatch(/work-item-456,.+,3,/);
             }
         });
 
@@ -623,14 +630,15 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
                 const parsed = JSON.parse(rootData);
                 const historyData = parsed["time-tracker-history"];
                 // CSV形式でカンマがエスケープされている
-                expect(historyData).toMatch(/work-item-456,作業項目1\\,作業項目2,1,/);
+                expect(historyData).toMatch(/work-item-456,作業項目1\\,作業項目2.+,1,/);
             }
 
             // 再読み込みしても正しく復元される
             const newManager = new HistoryManager();
             newManager.load();
             const entries = newManager.getAllEntries();
-            expect(entries[0].itemName).toBe("作業項目1,作業項目2");
+            // itemNameは WorkItemUtils.getText() が返す形式: "name ( folderPath )"
+            expect(entries[0].itemName).toBe("作業項目1,作業項目2 ( /test )");
         });
 
         it("CSV形式のデータを正しく保存・読み込みできる", () => {
@@ -644,10 +652,12 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
 
             const entries = newManager.getAllEntries();
             expect(entries).toHaveLength(1);
-            expect(entries[0].key).toBe("test-uuid-123|テストイベント|test@example.com");
+            // キーフォーマット: name_organizer_workingEventType_isPrivate
+            expect(entries[0].key).toBe("テストイベント_test@example.com__false");
             expect(entries[0].eventName).toBe("テストイベント");
             expect(entries[0].itemId).toBe("work-item-456");
-            expect(entries[0].itemName).toBe("テスト作業項目");
+            // itemNameは WorkItemUtils.getText() が返す形式: "name ( folderPath )"
+            expect(entries[0].itemName).toBe("テスト作業項目 ( /test )");
             expect(entries[0].useCount).toBe(1);
             expect(entries[0].lastUsedDate).toBeInstanceOf(Date);
 
@@ -664,9 +674,9 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
         });
 
         it("使用回数の降順でソートされる", () => {
-            const event1: Event = { ...testEvent, uuid: "uuid-1" };
-            const event2: Event = { ...testEvent, uuid: "uuid-2" };
-            const event3: Event = { ...testEvent, uuid: "uuid-3" };
+            const event1: Event = { ...testEvent, uuid: "uuid-1", name: "イベント1" };
+            const event2: Event = { ...testEvent, uuid: "uuid-2", name: "イベント2" };
+            const event3: Event = { ...testEvent, uuid: "uuid-3", name: "イベント3" };
 
             const workItem1: WorkItem = { ...testWorkItem, id: "item-1", name: "項目1" };
             const workItem2: WorkItem = { ...testWorkItem, id: "item-2", name: "項目2" };

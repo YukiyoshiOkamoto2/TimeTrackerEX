@@ -7,7 +7,7 @@
 import { TreeView } from "@/components/tree/Tree";
 import type { TreeItem } from "@/components/tree/TreeItem";
 import { treeViewHelper } from "@/components/tree/TreeViewHelper";
-import type { Event, WorkItem } from "@/types";
+import { WorkItemUtils, type Event, type WorkItem } from "@/types";
 import {
     Button,
     Dialog,
@@ -22,7 +22,7 @@ import {
     TreeItemValue,
 } from "@fluentui/react-components";
 import { Dismiss20Regular, Document20Regular, Folder20Regular } from "@fluentui/react-icons";
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
 /**
  * WorkItemTreeViewDialogのProps
@@ -288,7 +288,7 @@ export function WorkItemTreeViewDialog({
                                         >
                                             <Document20Regular className={styles.historyItemIcon} />
                                             <span className={styles.historyItemText}>
-                                                {workItem.id} - {workItem.name}
+                                                {workItem.id} - {WorkItemUtils.getText(workItem)}
                                             </span>
                                         </div>
                                     ))}
