@@ -123,7 +123,9 @@ function parseWorkItem(workItemDict: Record<string, unknown>, parentFolderPath?:
  * 日時をフォーマット
  */
 function formatDateTime(date: Date): string {
-    return date.toISOString().slice(0, 19); // "2025-10-04T09:30:00"
+    const tzOffset = date.getTimezoneOffset() * 60000; // 分→ミリ秒
+    const localTime = new Date(date.getTime() - tzOffset);
+    return localTime.toISOString().slice(0, 19); // "2025-10-04T09:30:00"
 }
 
 /**
@@ -238,9 +240,8 @@ export async function getWorkItemsAsync(
     console.debug("Start getWorkItemsAsync.");
 
     // api.pyと同じURLパターンに修正
-    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${
-        userName ? `&assignedUsers=${userName}` : ""
-    }&includeDeleted=false`;
+    const uri = `/workitem/workItems/${projectId}/subItems?fields=FolderName,Name${userName ? `&assignedUsers=${userName}` : ""
+        }&includeDeleted=false`;
     const response = await requestAsync(baseUrl, uri, auth);
 
     if (isErrorResponse(response)) {
