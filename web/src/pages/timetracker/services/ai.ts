@@ -173,13 +173,6 @@ WorkItemには大きく2つのカテゴリがあります：
 1. 開発案件：要件定義、設計、実装、テスト、リリース、ミーティング、プロジェクト管理など
 2. 非開発案件：保守、ミーティング、調査、管理業務、システム運用、サービス運用、障害対応など
 
-【利用可能なWorkItemリスト】
-${workItemStructure}
-
-【現在の紐づけ傾向】
-${currentLinkingPatterns || "(まだ紐づけがありません)"}
-${historyPattern}
-
 【紐づけルール】
 1. イベント名とWorkItem名の類似性を重視
 2. 現在の紐づけ傾向を学習して一貫性を保つ
@@ -197,6 +190,14 @@ ${historyPattern}
 例：
 1,1234567,0.9,イベント名とWorkItem名が一致
 2,1234567,0.8,過去の紐づけ履歴から推測
+
+【利用可能なWorkItemリスト】
+${workItemStructure}
+
+【現在の紐づけ傾向】
+${currentLinkingPatterns || "(まだ紐づけがありません)"}
+${historyPattern}
+
 
 注意事項：
 - 各行は「イベントID,WorkItemID,信頼度,理由」の形式
@@ -221,9 +222,87 @@ ${eventList}
 }
 
 /**
+ * AIレスポンスをパース（JSON形式、eventIdからeventUuidに変換）
+ */
+function parseAIResponseJSON(content: string, eventChunk: Event[]): AILinkingResult {
+    try {
+        // JSONブロックを抽出（```json ... ```の可能性を考慮）
+        let jsonStr = content.trim();
+        const jsonMatch = jsonStr.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+            jsonStr = jsonMatch[1].trim();
+        } else {
+            // マークダウンブロックなしの場合、最初の[または{から最後の]または}まで抽出
+            const startIdx = Math.max(jsonStr.indexOf('['), jsonStr.indexOf('{'));
+            const endIdx = Math.max(jsonStr.lastIndexOf(']'), jsonStr.lastIndexOf('}'));
+            if (startIdx >= 0 && endIdx > startIdx) {
+                jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+            }
+        }
+
+        const parsed = JSON.parse(jsonStr);
+        const suggestions = Array.isArray(parsed) ? parsed : parsed.suggestions || [];
+
+        const validSuggestions: Array<{
+            eventUuid: string;
+            workItemId: string;
+            confidence: number;
+            reason: string;
+        }> = [];
+
+        for (const item of suggestions) {
+            const eventId = Number(item.eventId || item.eventID || item.event_id);
+            const workItemId = String(item.workItemId || item.workItemID || item.work_item_id || item.workitem_id);
+            const confidence = Number(item.confidence || 0.5);
+            const reason = String(item.reason || "理由なし");
+
+            // バリデーション
+            if (isNaN(eventId) || !workItemId) {
+                logger.warn(`無効なJSON項目をスキップ:`, item);
+                continue;
+            }
+
+            // eventIdをeventUuidに変換
+            const eventIndex = eventId - 1;
+            if (eventIndex < 0 || eventIndex >= eventChunk.length) {
+                logger.warn(`無効なeventId: ${eventId} (範囲: 1-${eventChunk.length})`);
+                continue;
+            }
+
+            const event = eventChunk[eventIndex];
+            validSuggestions.push({
+                eventUuid: event.uuid,
+                workItemId: workItemId.trim(),
+                confidence: Math.max(0, Math.min(1, confidence)),
+                reason: reason,
+            });
+        }
+
+        if (validSuggestions.length === 0) {
+            return {
+                ok: false,
+                errorMessage: "有効な紐づけ提案が見つかりませんでした",
+            };
+        }
+
+        return {
+            ok: true,
+            suggestions: validSuggestions,
+        };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "JSONパースエラー";
+        logger.warn("JSON形式のパースに失敗:", errorMessage);
+        return {
+            ok: false,
+            errorMessage: errorMessage,
+        };
+    }
+}
+
+/**
  * AIレスポンスをパース（CSV形式、eventIdからeventUuidに変換）
  */
-function parseAIResponse(content: string, eventChunk: Event[]): AILinkingResult {
+function parseAIResponseCSV(content: string, eventChunk: Event[]): AILinkingResult {
     try {
         // CSV行を抽出（空行や説明文を除外）
         const lines = content
@@ -302,6 +381,43 @@ function parseAIResponse(content: string, eventChunk: Event[]): AILinkingResult 
         return {
             ok: true,
             suggestions: validSuggestions,
+        };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "CSVパースエラー";
+        logger.warn("CSV形式のパースに失敗:", errorMessage);
+        return {
+            ok: false,
+            errorMessage: errorMessage,
+        };
+    }
+}
+
+/**
+ * AIレスポンスをパース（CSV形式を優先、失敗時はJSON形式にフォールバック）
+ */
+function parseAIResponse(content: string, eventChunk: Event[]): AILinkingResult {
+    try {
+        // まずCSV形式を試す
+        const csvResult = parseAIResponseCSV(content, eventChunk);
+        if (csvResult.ok) {
+            logger.info("CSV形式でパース成功");
+            return csvResult;
+        }
+
+        // CSV形式が失敗した場合、JSON形式を試す
+        logger.info("CSV形式でパース失敗、JSON形式を試行");
+        const jsonResult = parseAIResponseJSON(content, eventChunk);
+        if (jsonResult.ok) {
+            logger.info("JSON形式でパース成功");
+            return jsonResult;
+        }
+
+        // 両方失敗した場合
+        logger.error("CSV形式、JSON形式の両方でパース失敗");
+        logger.error("レスポンス内容:", content);
+        return {
+            ok: false,
+            errorMessage: `パース失敗 - CSV: ${csvResult.errorMessage}, JSON: ${jsonResult.errorMessage}`,
         };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "パースエラー";
