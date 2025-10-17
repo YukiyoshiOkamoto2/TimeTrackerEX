@@ -67,9 +67,7 @@ const useStyles = makeStyles({
     },
     checkboxHeader: {
         display: "flex",
-        justifyContent: "flex-end",
-        paddingRight: tokens.spacingHorizontalM,
-        fontWeight: tokens.fontWeightSemibold,
+        fontSize: tokens.fontSizeBase200,
     },
     row: {
         // 行のホバーアニメーション
@@ -93,6 +91,8 @@ const useStyles = makeStyles({
         cursor: "pointer",
     },
 });
+
+const selectedColumn = { minWidth: 64, idealWidth: 64 };
 
 /**
  * 汎用DataTableコンポーネント
@@ -162,7 +162,7 @@ export const DataTable = memo(function DataTable<T>({
                 <Checkbox
                     checked={selectionState.someChecked ? "mixed" : selectionState.allChecked}
                     onChange={(_, data) => handleSelectAll(data.checked === true)}
-                    label="全選択"
+                    // label="全選択"
                 />
             </div>
         ),
@@ -193,7 +193,7 @@ export const DataTable = memo(function DataTable<T>({
             // 選択列を追加
             return {
                 ...customColumnSizingOptions,
-                __selection__: { minWidth: 120, idealWidth: 120 },
+                __selection__: selectedColumn,
             };
         }
 
@@ -201,8 +201,7 @@ export const DataTable = memo(function DataTable<T>({
         const options: Record<string, { minWidth: number; idealWidth: number }> = {};
         for (const col of effectiveColumns) {
             const columnId = col.columnId as string;
-            options[columnId] =
-                columnId === "__selection__" ? { minWidth: 80, idealWidth: 80 } : { minWidth: 100, idealWidth: 150 };
+            options[columnId] = columnId === "__selection__" ? selectedColumn : { minWidth: 350, idealWidth: 450 };
         }
         return options;
     }, [effectiveColumns, customColumnSizingOptions, selectable]);

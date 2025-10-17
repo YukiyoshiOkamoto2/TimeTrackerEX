@@ -365,7 +365,7 @@ key3,event3,item3,name3,3,2025-10-08 11:45`;
             const all = historyManager.getAllEntries();
             expect(all.length).toBe(2);
             // キーフォーマット: name_organizer_workingEventType_isPrivate
-            expect(all.some(entry => entry.key === `テストイベント_test@example.com__false`)).toBe(true);
+            expect(all.some((entry) => entry.key === `テストイベント_test@example.com__false`)).toBe(true);
         });
     });
 

@@ -26,6 +26,7 @@ import {
 } from "@fluentui/react-icons";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { UploadInfo } from "../models";
+import { useTableStyles } from "../styles/tableStyles";
 
 // CheckedTableItemの型定義
 type CheckedTableItem = {
@@ -143,11 +144,6 @@ const useStyles = makeStyles({
         flexDirection: "column",
         gap: tokens.spacingVerticalM,
         overflow: "hidden",
-    },
-    tableWrapper: {
-        flex: 1,
-        overflow: "auto",
-        maxHeight: "calc(100vh - 480px)",
     },
     infoSectionHeader: {
         fontSize: tokens.fontSizeBase400,
@@ -394,12 +390,14 @@ const InfoSection = memo(function InfoSection({
     selectedKeys,
     onSelectionChange,
     styles,
+    tableStyles,
 }: {
     title: string;
     items: CheckedTableItem[];
     selectedKeys: Set<string>;
     onSelectionChange: (keys: Set<string>) => void;
     styles: ReturnType<typeof useStyles>;
+    tableStyles: ReturnType<typeof useTableStyles>;
 }) {
     return (
         <div className={styles.infoSection}>
@@ -415,7 +413,7 @@ const InfoSection = memo(function InfoSection({
                 </Popover>
             </div>
             {items.length > 0 && (
-                <div className={styles.tableWrapper}>
+                <div className={tableStyles.tableContainer} style={{ maxHeight: "calc(100vh - 480px)" }}>
                     <DataTable
                         items={items}
                         columns={tableColumns}
@@ -446,6 +444,7 @@ export const FileUploadView = memo(function FileUploadView({
     onLinking,
 }: FileUploadViewProps) {
     const styles = useStyles();
+    const tableStyles = useTableStyles();
     const pdfInputRef = useRef<HTMLInputElement>(null);
     const icsInputRef = useRef<HTMLInputElement>(null);
 
@@ -642,6 +641,7 @@ export const FileUploadView = memo(function FileUploadView({
                         selectedKeys={selectedScheduleKeys}
                         onSelectionChange={setSelectedScheduleKeys}
                         styles={styles}
+                        tableStyles={tableStyles}
                     />
 
                     {/* スケジュール情報 */}
@@ -651,6 +651,7 @@ export const FileUploadView = memo(function FileUploadView({
                         selectedKeys={selectedEventKeys}
                         onSelectionChange={setSelectedEventKeys}
                         styles={styles}
+                        tableStyles={tableStyles}
                     />
                 </div>
                 <InteractiveCard

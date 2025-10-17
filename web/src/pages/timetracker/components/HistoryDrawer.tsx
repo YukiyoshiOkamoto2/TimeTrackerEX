@@ -45,6 +45,7 @@ import {
     MoreVertical24Regular,
 } from "@fluentui/react-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTableStyles } from "../styles/tableStyles";
 import { WorkItemTreeViewDialog } from "./WorkItemTreeViewDialog";
 
 const logger = getLogger("HistoryDrawer");
@@ -102,38 +103,6 @@ const useStyles = makeStyles({
         marginBottom: tokens.spacingVerticalL,
         paddingTop: tokens.spacingVerticalM,
     },
-
-    // ツールバー
-    toolbar: {
-        marginBottom: tokens.spacingVerticalM,
-        padding: "12px",
-        backgroundColor: tokens.colorNeutralBackground2,
-        borderRadius: tokens.borderRadiusMedium,
-        display: "flex",
-        gap: tokens.spacingHorizontalS,
-        flexWrap: "wrap",
-        border: `1px solid ${tokens.colorNeutralStroke2}`,
-    },
-
-    // テーブル
-    tableContainer: {
-        height: "calc(100vh - 450px)",
-        overflowY: "auto",
-        border: `1px solid ${tokens.colorNeutralStroke2}`,
-        borderRadius: tokens.borderRadiusMedium,
-        backgroundColor: tokens.colorNeutralBackground1,
-    },
-    editableCell: {
-        cursor: "pointer",
-        padding: "4px 8px",
-        borderRadius: tokens.borderRadiusSmall,
-        transition: "all 0.15s ease",
-        ":hover": {
-            backgroundColor: tokens.colorNeutralBackground1Hover,
-            color: tokens.colorBrandForeground1,
-        },
-    },
-
     // 空状態
     emptyState: {
         display: "flex",
@@ -206,6 +175,7 @@ const generateExportFileName = (): string => {
 
 export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerProps) {
     const styles = useStyles();
+    const tableStyles = useTableStyles();
     const [historyManager] = useState(() => new HistoryManager());
     const [historyData, setHistoryData] = useState<HistoryRow[]>([]);
     const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
@@ -501,7 +471,7 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                 <Divider className={styles.divider} />
 
                 {/* ツールバー */}
-                <Toolbar className={styles.toolbar}>
+                <Toolbar className={tableStyles.toolbar}>
                     <ToolbarButton
                         appearance="primary"
                         icon={<Delete24Regular />}
@@ -548,18 +518,19 @@ export function HistoryDrawer({ open, onOpenChange, workItems }: HistoryDrawerPr
                         </div>
                     </div>
                 ) : (
-                    <DataTable
-                        items={historyData}
-                        columns={columns}
-                        getRowId={(item) => item.key}
-                        sortable
-                        resizableColumns
-                        selectable
-                        selectedKeys={selectedKeys}
-                        onSelectionChange={setSelectedKeys}
-                        columnSizingOptions={columnSizingOptions}
-                        className={styles.tableContainer}
-                    />
+                    <div className={tableStyles.tableContainer} style={{ maxHeight: "calc(100vh - 350px)" }}>
+                        <DataTable
+                            items={historyData}
+                            columns={columns}
+                            getRowId={(item) => item.key}
+                            sortable
+                            resizableColumns
+                            selectable
+                            selectedKeys={selectedKeys}
+                            onSelectionChange={setSelectedKeys}
+                            columnSizingOptions={columnSizingOptions}
+                        />
+                    </div>
                 )}
             </DrawerBody>
 

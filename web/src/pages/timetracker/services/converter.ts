@@ -264,7 +264,11 @@ export function getAllEvents(timetracker: TimeTrackerSettings, schedules: Schedu
     );
 
     // 有効なスケジュール（休日・エラーを除く）を取得
-    const [enableSchedules, excludedSchedules] = getEnableSchedules(schedules, enableEvents, timetracker.scheduleAutoInputInfo);
+    const [enableSchedules, excludedSchedules] = getEnableSchedules(
+        schedules,
+        enableEvents,
+        timetracker.scheduleAutoInputInfo,
+    );
 
     // 有給休暇の日別イベントを生成
     const paidLeaveDayEvents = createPaidLeaveDayEvent(schedules, timetracker.paidLeaveInputInfo);

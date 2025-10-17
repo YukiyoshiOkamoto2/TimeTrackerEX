@@ -79,8 +79,9 @@ export const LinkingProcessView = memo(function LinkingProcessView({
     });
 
     // 紐づけ管理フック
-    const { linkingEventWorkItemPair, setLinkingEventWorkItemPair, handleManualLinking, handleAiLinking } =
-        useLinkingManager({ historyManager });
+    const { linkingEventWorkItemPair, setLinkingEventWorkItemPair, handleLinking, handleAiLinking } = useLinkingManager(
+        { historyManager },
+    );
 
     // 紐づけ済みイベントUUID（メモ化）
     const linkingEventUUID = useMemo(
@@ -106,12 +107,20 @@ export const LinkingProcessView = memo(function LinkingProcessView({
         });
     }, [linkingEventWorkItemPair, unLinkedEvents]);
 
-    // WorkItemの変更ハンドラー（手動紐づけ）
+    // WorkItemの変更ハンドラー（単一紐づけ）
     const handleWorkItemChange = useCallback(
         (eventId: string, workItemId: string) => {
-            handleManualLinking(eventId, workItemId, linkingInfo?.workItems ?? [], unLinkedEvents);
+            handleLinking({ eventId, workItemId }, linkingInfo?.workItems ?? [], unLinkedEvents);
         },
-        [handleManualLinking, linkingInfo?.workItems, unLinkedEvents],
+        [handleLinking, linkingInfo?.workItems, unLinkedEvents],
+    );
+
+    // 一括紐づけハンドラー
+    const handleBulkWorkItemChange = useCallback(
+        (linkings: Array<{ eventId: string; workItemId: string }>) => {
+            handleLinking(linkings, linkingInfo?.workItems ?? [], unLinkedEvents);
+        },
+        [handleLinking, linkingInfo?.workItems, unLinkedEvents],
     );
 
     // AI紐づけ専用ハンドラー（履歴に保存しない、バッチ処理）
@@ -120,6 +129,28 @@ export const LinkingProcessView = memo(function LinkingProcessView({
             handleAiLinking(suggestions, linkingInfo?.workItems ?? [], unLinkedEvents);
         },
         [handleAiLinking, linkingInfo?.workItems, unLinkedEvents],
+    );
+
+    // イベント削除ハンドラー
+    const handleDeleteEvents = useCallback(
+        (eventIds: string[]) => {
+            logger.info(`イベント削除: ${eventIds.length}件`);
+
+            // 紐づけ済みイベントから削除
+            setLinkingEventWorkItemPair((prev) => prev.filter((pair) => !eventIds.includes(pair.event.uuid)));
+
+            // 状態から未紐づけイベントを削除（すべてのイベント配列から除外）
+            setState((prevState) => ({
+                ...prevState,
+                adjustedEvents: prevState.adjustedEvents.filter((info) => !eventIds.includes(info.event.uuid)),
+                enableEvents: prevState.enableEvents.filter((event) => !eventIds.includes(event.uuid)),
+                scheduleEvents: prevState.scheduleEvents.filter((event) => !eventIds.includes(event.uuid)),
+                paidLeaveDayEvents: prevState.paidLeaveDayEvents.filter((event) => !eventIds.includes(event.uuid)),
+            }));
+
+            logger.info(`削除完了: ${eventIds.length}件のイベントを削除しました`);
+        },
+        [setLinkingEventWorkItemPair],
     );
 
     // 登録実行可能かどうかを判定（メモ化）
@@ -223,6 +254,8 @@ export const LinkingProcessView = memo(function LinkingProcessView({
                     events={allEventTableRow}
                     workItems={linkingInfo?.workItems ?? []}
                     onWorkItemChange={handleWorkItemChange}
+                    onBulkWorkItemChange={handleBulkWorkItemChange}
+                    onDeleteEvents={handleDeleteEvents}
                 />
 
                 {/*操作セクション */}

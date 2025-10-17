@@ -5,12 +5,18 @@
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import type { Event, WorkItem } from "@/types";
-import { EventUtils, WorkItemUtils } from "@/types/utils";
+import { WorkItemUtils } from "@/types/utils";
 import { useCallback, useState } from "react";
 import type { EventWithOption } from "../components/EventTable";
 import type { LinkingEventWorkItemPair, LinkingWorkItem } from "../models";
 
 const logger = getLogger("useLinkingManager");
+
+/** 紐づけ情報の型 */
+export type LinkingInfo = {
+    eventId: string;
+    workItemId: string;
+};
 
 export interface UseLinkingManagerOptions {
     /** 履歴マネージャーインスタンス */
@@ -38,21 +44,6 @@ export function useLinkingManager({ historyManager, initialPairs = [] }: UseLink
     );
 
     /**
-     * 紐づけを削除する
-     */
-    const removeLinking = useCallback(
-        (eventId: string, linkingEventWorkItemPair: LinkingEventWorkItemPair[]): LinkingEventWorkItemPair[] | null => {
-            const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
-            if (linkedEventIndex >= 0) {
-                logger.info(`イベント (${eventId}) の紐づけを削除しました`);
-                return linkingEventWorkItemPair.filter((pair) => pair.event.uuid !== eventId);
-            }
-            return null;
-        },
-        [],
-    );
-
-    /**
      * WorkItemを検索して、LinkingWorkItemを作成する
      */
     const findAndCreateLinkingWorkItem = useCallback(
@@ -73,103 +64,59 @@ export function useLinkingManager({ historyManager, initialPairs = [] }: UseLink
     );
 
     /**
-     * 既存の紐づけを更新する
+     * 紐づけ処理：単一または複数のイベントをWorkItemに紐づける（手動紐づけ）
      */
-    const updateExistingLinking = useCallback(
-        (
-            eventId: string,
-            linkingWorkItem: LinkingWorkItem,
-            linkingEventWorkItemPair: LinkingEventWorkItemPair[],
-        ): LinkingEventWorkItemPair[] | null => {
-            const linkedEventIndex = linkingEventWorkItemPair.findIndex((pair) => pair.event.uuid === eventId);
-            if (linkedEventIndex < 0) {
-                return null;
-            }
+    const handleLinking = useCallback(
+        (linkings: LinkingInfo | LinkingInfo[], workItems: WorkItem[], unLinkedEvents: EventWithOption[]) => {
+            // 単一の場合は配列に変換
+            const linkingArray = Array.isArray(linkings) ? linkings : [linkings];
 
             const updatedPairs = [...linkingEventWorkItemPair];
-            updatedPairs[linkedEventIndex] = {
-                ...updatedPairs[linkedEventIndex],
-                linkingWorkItem,
-            };
+            const newLinkings: LinkingEventWorkItemPair[] = [];
 
-            saveToHistory(updatedPairs[linkedEventIndex].event, linkingWorkItem.workItem);
-            return updatedPairs;
-        },
-        [saveToHistory],
-    );
-
-    /**
-     * 新規に紐づけを作成する（同名イベントも一括紐づけ）
-     */
-    const createNewLinking = useCallback(
-        (
-            eventId: string,
-            linkingWorkItem: LinkingWorkItem,
-            unLinkedEvents: EventWithOption[],
-            linkingEventWorkItemPair: LinkingEventWorkItemPair[],
-        ): LinkingEventWorkItemPair[] | null => {
-            const selectedEvent = unLinkedEvents.find((event) => event.uuid === eventId);
-            if (!selectedEvent) {
-                logger.error(`Event not found: ${eventId}`);
-                return null;
-            }
-
-            // 同名のイベントも一括で紐づける
-            const sameNameEvents = unLinkedEvents.filter(
-                (e) => e.uuid !== selectedEvent.uuid && EventUtils.isSame(e, selectedEvent),
-            );
-
-            const newLinkings: LinkingEventWorkItemPair[] = [
-                { event: selectedEvent, linkingWorkItem },
-                ...sameNameEvents.map((e) => ({ event: e, linkingWorkItem })),
-            ];
-
-            saveToHistory(selectedEvent, linkingWorkItem.workItem);
-            return [...linkingEventWorkItemPair, ...newLinkings];
-        },
-        [saveToHistory],
-    );
-
-    /**
-     * 紐づけの変更・追加・削除を処理する（手動紐づけ）
-     */
-    const handleManualLinking = useCallback(
-        (eventId: string, workItemId: string, workItems: WorkItem[], unLinkedEvents: EventWithOption[]) => {
-            // WorkItemIdが空の場合は紐づけを削除
-            if (!workItemId) {
-                const result = removeLinking(eventId, linkingEventWorkItemPair);
-                if (result) {
-                    setLinkingEventWorkItemPair(result);
+            for (const { eventId, workItemId } of linkingArray) {
+                // WorkItemIdが空の場合は紐づけを削除
+                if (!workItemId) {
+                    const index = updatedPairs.findIndex((pair) => pair.event.uuid === eventId);
+                    if (index >= 0) {
+                        updatedPairs.splice(index, 1);
+                        logger.info(`イベント (${eventId}) の紐づけを削除しました`);
+                    }
+                    continue;
                 }
-                return;
+
+                // WorkItemを検索してLinkingWorkItemを作成
+                const linkingWorkItem = findAndCreateLinkingWorkItem(workItemId, workItems);
+                if (!linkingWorkItem) {
+                    continue;
+                }
+
+                // 既存の紐づけを更新
+                const linkedEventIndex = updatedPairs.findIndex((pair) => pair.event.uuid === eventId);
+                if (linkedEventIndex >= 0) {
+                    updatedPairs[linkedEventIndex] = {
+                        ...updatedPairs[linkedEventIndex],
+                        linkingWorkItem,
+                    };
+                    saveToHistory(updatedPairs[linkedEventIndex].event, linkingWorkItem.workItem);
+                    continue;
+                }
+
+                // 新規に紐づけを作成
+                const selectedEvent = unLinkedEvents.find((event) => event.uuid === eventId);
+                if (!selectedEvent) {
+                    logger.error(`Event not found: ${eventId}`);
+                    continue;
+                }
+
+                newLinkings.push({ event: selectedEvent, linkingWorkItem });
+                saveToHistory(selectedEvent, linkingWorkItem.workItem);
             }
 
-            // WorkItemを検索してLinkingWorkItemを作成
-            const linkingWorkItem = findAndCreateLinkingWorkItem(workItemId, workItems);
-            if (!linkingWorkItem) {
-                return;
-            }
-
-            // 既存の紐づけを更新
-            const updatedPairs = updateExistingLinking(eventId, linkingWorkItem, linkingEventWorkItemPair);
-            if (updatedPairs) {
-                setLinkingEventWorkItemPair(updatedPairs);
-                return;
-            }
-
-            // 新規に紐づけを作成
-            const newPairs = createNewLinking(eventId, linkingWorkItem, unLinkedEvents, linkingEventWorkItemPair);
-            if (newPairs) {
-                setLinkingEventWorkItemPair(newPairs);
-            }
+            // 一括で状態を更新
+            setLinkingEventWorkItemPair([...updatedPairs, ...newLinkings]);
         },
-        [
-            linkingEventWorkItemPair,
-            removeLinking,
-            findAndCreateLinkingWorkItem,
-            updateExistingLinking,
-            createNewLinking,
-        ],
+        [linkingEventWorkItemPair, findAndCreateLinkingWorkItem, saveToHistory],
     );
 
     /**
@@ -237,7 +184,7 @@ export function useLinkingManager({ historyManager, initialPairs = [] }: UseLink
         linkingEventWorkItemPair,
         setLinkingEventWorkItemPair,
         // ハンドラー
-        handleManualLinking,
+        handleLinking,
         handleAiLinking,
     };
 }

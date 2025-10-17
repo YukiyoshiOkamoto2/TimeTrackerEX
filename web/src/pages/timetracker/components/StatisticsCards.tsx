@@ -45,6 +45,7 @@ import {
 import { memo, useCallback, useMemo, useState } from "react";
 import type { ExcludedEventInfo, LinkingEventWorkItemPair } from "../models";
 import { EventState, pickEvents } from "../services/pick";
+import { useTableStyles } from "../styles/tableStyles";
 
 /** ダイアログの種類 */
 type DetailDialogType = "targetDays" | "targetEvents";
@@ -248,17 +249,6 @@ const useStyles = makeStyles({
         flexDirection: "column",
         overflow: "hidden",
         padding: "0",
-    },
-    searchContainer: {
-        padding: tokens.spacingVerticalM,
-    },
-    searchInput: {
-        width: "100%",
-    },
-    tableContainer: {
-        flex: 1,
-        overflow: "auto",
-        padding: tokens.spacingVerticalM,
     },
 
     // テーブルセル
@@ -591,6 +581,7 @@ export interface StatisticsCardsProps {
  */
 export const StatisticsCards = memo(function StatisticsCards({ data, linkingEventWorkItemPair }: StatisticsCardsProps) {
     const styles = useStyles();
+    const tableStyles = useTableStyles();
     const statistics = useMemo(
         () => calcStatisticsData(data, linkingEventWorkItemPair),
         [data, linkingEventWorkItemPair],
@@ -842,9 +833,9 @@ export const StatisticsCards = memo(function StatisticsCards({ data, linkingEven
 
                         {/* 検索ボックス（有給休暇日ダイアログでは非表示） */}
                         {dialogType !== "targetDays" && (
-                            <div className={styles.searchContainer}>
+                            <div style={{ padding: tokens.spacingVerticalM }}>
                                 <Input
-                                    className={styles.searchInput}
+                                    style={{ width: "100%" }}
                                     placeholder="イベント名、主催者、場所で検索..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -854,7 +845,7 @@ export const StatisticsCards = memo(function StatisticsCards({ data, linkingEven
                         )}
 
                         {/* データテーブル */}
-                        <DialogContent className={styles.tableContainer}>
+                        <DialogContent className={tableStyles.tableContainer}>
                             {dialogType === "targetDays" ? (
                                 // 日別イベント数一覧
                                 dailyEventCountData.length === 0 ? (

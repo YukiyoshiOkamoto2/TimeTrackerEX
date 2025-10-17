@@ -126,7 +126,7 @@ function formatCurrentLinkingPatterns(linkedPairs: LinkingEventWorkItemPair[]): 
         const workItemId = firstPair.linkingWorkItem.workItem.id;
         const count = pairs.length > 1 ? ` (${pairs.length}件)` : "";
 
-        patterns.push(`イベント:"${eventName}"${count} → WorkItem:ID=${workItemId}, 名前="${workItemName}"`);
+        patterns.push(`- イベント:"${eventName}"${count} → WorkItem:ID=${workItemId}, 名前="${workItemName}"`);
     }
 
     return patterns.join("\n");
@@ -142,10 +142,10 @@ function formatHistoryPatterns(historyEntries: HistoryEntry[], useHistory: boole
 
     const topHistory = historyEntries.sort((a, b) => b.useCount - a.useCount).slice(0, MAX_HISTORY_ENTRIES);
     const patterns = topHistory.map((entry) => {
-        return `イベント:"${entry.eventName}" → WorkItem:ID=${entry.itemId}, 名前="${entry.itemName}" (使用回数:${entry.useCount})`;
+        return `- イベント:"${entry.eventName}" → WorkItem:ID=${entry.itemId}, 名前="${entry.itemName}" (使用回数:${entry.useCount})`;
     });
 
-    return "\n\n【過去の紐づけ履歴（頻度順）】\n" + patterns.join("\n");
+    return "\n\n## 過去の紐づけ履歴（頻度順）\n" + patterns.join("\n");
 }
 
 /**
@@ -168,12 +168,12 @@ function generateSystemPrompt(
 
     return `あなたは勤務管理システムのAIアシスタントです。カレンダーイベントを適切なWorkItem（作業項目）に自動紐づけする専門家です。
 
-【WorkItem構造】
+## WorkItem構造
 WorkItemには大きく2つのカテゴリがあります：
 1. 開発案件：要件定義、設計、実装、テスト、リリース、ミーティング、プロジェクト管理など
 2. 非開発案件：保守、ミーティング、調査、管理業務、システム運用、サービス運用、障害対応など
 
-【紐づけルール】
+## 紐づけルール
 1. イベント名とWorkItem名の類似性を重視
 2. 現在の紐づけ傾向を学習して一貫性を保つ
 3. 履歴データから頻度の高いパターンを優先
@@ -183,23 +183,28 @@ WorkItemには大きく2つのカテゴリがあります：
 7. 保守、障害 → 非開発案件の該当項目
 8. 曖昧な場合は紐づけ不要（返却不要）
 
-【出力形式】
+## 出力形式
 以下のCSV形式で必ず回答してください（ヘッダーなし）：
+\`\`\`
 イベントID,WorkItemID,信頼度,理由
+\`\`\`
 
 例：
+\`\`\`
 1,1234567,0.9,イベント名とWorkItem名が一致
 2,1234567,0.8,過去の紐づけ履歴から推測
+\`\`\`
 
-【利用可能なWorkItemリスト】
+## 利用可能なWorkItemリスト
 ${workItemStructure}
 
-【現在の紐づけ傾向】
+## 現在の紐づけ傾向
 ${currentLinkingPatterns || "(まだ紐づけがありません)"}
+
+## 履歴データ
 ${historyPattern}
 
-
-注意事項：
+## 注意事項
 - 各行は「イベントID,WorkItemID,信頼度,理由」の形式
 - イベントIDは1から始まる番号
 - 信頼度は0.0～1.0の小数
@@ -214,10 +219,10 @@ function generateUserPrompt(unlinkedEvents: Event[]): string {
     const eventList = unlinkedEvents.map((event, index) => `${index + 1}. 件名:"${event.name || "(無題)"}"`).join("\n");
     return `以下のイベントを適切なWorkItemに紐づけてください：
 
-【未紐づけイベント】
+## 未紐づけイベント
 ${eventList}
 
-上記のイベントそれぞれに対して、最適なWorkItemを推論してJSON形式で回答してください。
+上記のイベントそれぞれに対して、最適なWorkItemを推論してCSV形式で回答してください。
 回答時は各イベントをID（1から${unlinkedEvents.length}までの番号）で指定してください。`;
 }
 
@@ -226,18 +231,14 @@ ${eventList}
  */
 function parseAIResponseJSON(content: string, eventChunk: Event[]): AILinkingResult {
     try {
-        // JSONブロックを抽出（```json ... ```の可能性を考慮）
+        // JSONブロックを抽出（{または[で始まるものを取得）
         let jsonStr = content.trim();
-        const jsonMatch = jsonStr.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
-            jsonStr = jsonMatch[1].trim();
-        } else {
-            // マークダウンブロックなしの場合、最初の[または{から最後の]または}まで抽出
-            const startIdx = Math.max(jsonStr.indexOf('['), jsonStr.indexOf('{'));
-            const endIdx = Math.max(jsonStr.lastIndexOf(']'), jsonStr.lastIndexOf('}'));
-            if (startIdx >= 0 && endIdx > startIdx) {
-                jsonStr = jsonStr.substring(startIdx, endIdx + 1);
-            }
+
+        // 最初の{または[から最後の}または]まで抽出
+        const startIdx = Math.max(jsonStr.indexOf("["), jsonStr.indexOf("{"));
+        const endIdx = Math.max(jsonStr.lastIndexOf("]"), jsonStr.lastIndexOf("}"));
+        if (startIdx >= 0 && endIdx > startIdx) {
+            jsonStr = jsonStr.substring(startIdx, endIdx + 1);
         }
 
         const parsed = JSON.parse(jsonStr);
@@ -479,11 +480,24 @@ function getValidHistoryEntries(workItems: WorkItem[], linkedPairs: LinkingEvent
     // WorkItemが存在するものだけをフィルタ
     const validWorkItemIds = new Set(WorkItemUtils.getMostNestChildren(workItems).map((w) => w.id));
 
-    // MapからArrayに変換してフィルタ
-    return allHistory.filter(
-        (entry) =>
-            validWorkItemIds.has(entry.itemId) && !linkedPairs.some((p) => EventUtils.getKey(p.event) === entry.key),
-    );
+    // 紐づけ済みイベントのキーセットを作成
+    const linkedEventKeys = new Set(linkedPairs.map((p) => EventUtils.getKey(p.event)));
+
+    // WorkItemが存在し、かつ紐づけ済みでないエントリのみをフィルタ
+    const validEntries = allHistory.filter((entry) => {
+        // WorkItemが有効かチェック
+        if (!validWorkItemIds.has(entry.itemId)) {
+            return false;
+        }
+        // 既に紐づけ済みのイベントキーは除外
+        if (linkedEventKeys.has(entry.key)) {
+            return false;
+        }
+        return true;
+    });
+
+    // 使用回数順にソートして最大30件まで返す
+    return validEntries.sort((a, b) => b.useCount - a.useCount).slice(0, 30);
 }
 
 /**

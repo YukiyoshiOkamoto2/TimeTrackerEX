@@ -13,7 +13,7 @@ import { useTimeTrackerSession, type TimeTrackerAPIResult } from "./hooks";
 import { ProjectAndWorkItem } from "./hooks/useTimeTrackerSession";
 import type { LinkingEventWorkItemPair, LinkingInfo, UploadInfo } from "./models";
 import { validateAndCleanupSettings } from "./services/validate";
-import { CompletionView } from "./view/CompletionView";
+import { CompletionView, type RegisterResult } from "./view/CompletionView";
 import { FileUploadView } from "./view/FileUploadView";
 import { LinkingProcessView } from "./view/LinkingProcessView";
 
@@ -287,6 +287,7 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     // 登録進捗ダイアログの状態
     const [showProgressDialog, setShowProgressDialog] = useState(false);
     const [taskProgress, setTaskProgress] = useState<TaskProgress[]>([]);
+    const [registerResults, setRegisterResults] = useState<RegisterResult[]>([]);
 
     // セッション管理（メモ化）
     const sessionConfig = useMemo(
@@ -322,28 +323,11 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     // プロジェクト情報取得（メモ化）
     const fetchProjectData = useCallback(
         async (projectId: string): Promise<ProjectAndWorkItem | undefined> => {
-            const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId, async () => {
-                // プロジェクトID取得失敗時は設定をクリア
-                if (timetracker) {
-                    updateSettings({
-                        timetracker: {
-                            ...timetracker,
-                            baseProjectId: -1,
-                        },
-                    });
-                }
-                await appMessageDialogRef.showMessageAsync(
-                    "設定エラー",
-                    `プロジェクトID ( ${projectId} ) が無効なため設定をクリアしました。\n設定画面で正しいプロジェクトIDを設定してください。`,
-                    "ERROR",
-                );
-            });
-
+            const result = await sessionHook.fetchProjectAndWorkItemsAsync(projectId);
             if (result.isError) {
                 await appMessageDialogRef.showMessageAsync("TimeTrackerデータ取得エラー", result.errorMessage, "ERROR");
                 return;
             }
-
             return result.content;
         },
         [sessionHook, timetracker, updateSettings],
@@ -424,15 +408,33 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
                 setTaskProgress(initialProgress);
                 setShowProgressDialog(true);
 
+                // 登録結果を初期化
+                const results: RegisterResult[] = [];
+
                 // 各タスクを順次処理
                 for (let i = 0; i < linkingEventWorkItemPair.length; i++) {
-                    await registerSingleTask(
-                        linkingEventWorkItemPair[i],
-                        i,
-                        setTaskProgress,
-                        sessionHook.registerTaskAsync,
-                    );
+                    const pair = linkingEventWorkItemPair[i];
+                    await registerSingleTask(pair, i, setTaskProgress, sessionHook.registerTaskAsync);
+
+                    // 結果を収集
+                    const taskStatus = await new Promise<TaskProgress>((resolve) => {
+                        setTaskProgress((prev) => {
+                            const current = prev[i];
+                            resolve(current);
+                            return prev;
+                        });
+                    });
+
+                    results.push({
+                        event: pair.event,
+                        workItem: pair.linkingWorkItem.workItem,
+                        status: taskStatus.status === "success" ? "success" : "error",
+                        errorMessage: taskStatus.errorMessage,
+                    });
                 }
+
+                // 登録結果を保存
+                setRegisterResults(results);
 
                 // すべての処理が完了
                 // 少し待ってから次画面へ（ユーザーが結果を確認できるように）
@@ -500,7 +502,7 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
             >
                 <div className={mergeClasses(styles.viewContainer, animationClass)} key={currentView}>
                     {currentView === "completion" ? (
-                        <CompletionView onBack={backTo} />
+                        <CompletionView results={registerResults} onBack={backTo} />
                     ) : currentView === "linking" ? (
                         <LinkingProcessView
                             linkingInfo={linkingInfo}

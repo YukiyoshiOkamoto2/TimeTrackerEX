@@ -73,10 +73,7 @@ export interface TimeTrackerSessionHook {
     /** ログアウト */
     logout: () => void;
     /** プロジェクトと作業項目を取得 */
-    fetchProjectAndWorkItemsAsync: (
-        projectId: string,
-        onInvalidProjectId?: () => void | Promise<void>,
-    ) => Promise<TimeTrackerAPIResult<ProjectAndWorkItem>>;
+    fetchProjectAndWorkItemsAsync: (projectId: string) => Promise<TimeTrackerAPIResult<ProjectAndWorkItem>>;
     /** タスクを登録 */
     registerTaskAsync: (task: TimeTrackerTask) => Promise<TimeTrackerAPIResult>;
 }
@@ -224,10 +221,7 @@ export function useTimeTrackerSession({
      * @param onInvalidProjectId プロジェクトID取得失敗時に実行されるコールバック（設定のクリアなど）
      */
     const fetchProjectAndWorkItemsAsync = useCallback(
-        async (
-            projectId: string,
-            onInvalidProjectId?: () => void | Promise<void>,
-        ): Promise<TimeTrackerAPIResult<ProjectAndWorkItem>> => {
+        async (projectId: string): Promise<TimeTrackerAPIResult<ProjectAndWorkItem>> => {
             logger.info(`プロジェクトと作業項目を取得します: projectId=${projectId}`);
 
             setIsLoading(true);
@@ -254,10 +248,6 @@ export function useTimeTrackerSession({
                 const errorMessage = err instanceof Error ? err.message : "エラーが発生しました";
                 logger.warn(`プロジェクトと作業項目の取得に失敗しました: ${errorMessage}`);
 
-                // プロジェクトIDが無効な場合は設定をクリア
-                if (onInvalidProjectId) {
-                    await onInvalidProjectId();
-                }
                 return {
                     isError: true,
                     errorMessage,
