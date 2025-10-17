@@ -495,8 +495,8 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     return (
         <>
             <Page
-                title="TimeTracker"
-                subtitle="勤怠情報とスケジュールの紐づけ管理"
+                title="TimeTracker EX"
+                subtitle="勤怠情報とスケジュールからの自動紐づけツール"
                 loading={isLoading}
                 loadingText="処理中..."
             >

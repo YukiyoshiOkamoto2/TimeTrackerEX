@@ -79,9 +79,9 @@ export const LinkingProcessView = memo(function LinkingProcessView({
     });
 
     // 紐づけ管理フック
-    const { linkingEventWorkItemPair, setLinkingEventWorkItemPair, handleLinking, handleAiLinking } = useLinkingManager(
-        { historyManager },
-    );
+    const { linkingEventWorkItemPair, setLinkingEventWorkItemPair, handleLinking } = useLinkingManager({
+        historyManager,
+    });
 
     // 紐づけ済みイベントUUID（メモ化）
     const linkingEventUUID = useMemo(
@@ -126,9 +126,17 @@ export const LinkingProcessView = memo(function LinkingProcessView({
     // AI紐づけ専用ハンドラー（履歴に保存しない、バッチ処理）
     const handleAiLinkingChange = useCallback(
         (suggestions: Array<{ eventId: string; workItemId: string; confidence: number }>) => {
-            handleAiLinking(suggestions, linkingInfo?.workItems ?? [], unLinkedEvents);
+            // type=auto, autoMethod=aiで紐づけ（履歴に保存しない）
+            const linkings = suggestions.map((s) => ({
+                eventId: s.eventId,
+                workItemId: s.workItemId,
+                type: "auto" as const,
+                autoMethod: "ai" as const,
+                confidence: s.confidence,
+            }));
+            handleLinking(linkings, linkingInfo?.workItems ?? [], unLinkedEvents);
         },
-        [handleAiLinking, linkingInfo?.workItems, unLinkedEvents],
+        [handleLinking, linkingInfo?.workItems, unLinkedEvents],
     );
 
     // イベント削除ハンドラー

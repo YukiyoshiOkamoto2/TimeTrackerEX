@@ -78,15 +78,15 @@ const App = memo(function App() {
             <aside className={styles.sidebar}>
                 <div className={styles.userSection}>
                     <Persona
-                        name="Oliver"
-                        secondaryText="Local Account"
+                        name=""
+                        secondaryText=""
                         avatar={{ color: "colorful", "aria-hidden": true }}
                         size="large"
                     />
                 </div>
 
                 <div className={styles.searchBox}>
-                    <SearchBox placeholder="Find a setting" contentBefore={<Search20Regular />} />
+                    <SearchBox placeholder="開発中・・・" contentBefore={<Search20Regular />} />
                 </div>
 
                 <nav className={styles.navList}>
