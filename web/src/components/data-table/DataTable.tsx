@@ -68,14 +68,6 @@ const useStyles = makeStyles({
         display: "flex",
         fontSize: tokens.fontSizeBase200,
     },
-    row: {
-        // 行のホバーアニメーション
-        transition: `background-color ${tokens.durationFast} ${tokens.curveEasyEase}, transform ${tokens.durationFast} ${tokens.curveEasyEase}`,
-        "&:hover": {
-            backgroundColor: tokens.colorNeutralBackground1Hover,
-            transform: "scale(1.001)",
-        },
-    },
     cell: {
         // セルのアニメーション
         transition: `background-color ${tokens.durationFaster} ${tokens.curveEasyEase}`,
@@ -271,7 +263,7 @@ export const DataTable = memo(function DataTable<T>({
                         const isSelected = selectable ? selectedKeys.has(key) : false;
 
                         return (
-                            <DataGridRow<T> key={rowId} className={styles.row}>
+                            <DataGridRow<T> key={rowId}>
                                 {({ renderCell, columnId }) => {
                                     // セル内容の判定を最適化
                                     const isSelectionCell = selectable && columnId === "__selection__";

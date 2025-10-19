@@ -61,6 +61,7 @@ const useStyles = makeStyles({
     },
     cardActions: {
         display: "flex",
+        justifyContent: "flex-end",
         gap: tokens.spacingHorizontalS,
         marginTop: tokens.spacingVerticalM,
     },
@@ -89,7 +90,7 @@ export const HomePage = memo(function HomePage() {
                             <div className={styles.cardIcon}>
                                 <Calendar24Regular />
                             </div>
-                            <div className={styles.cardTitle}>TimeTracker</div>
+                            <div className={styles.cardTitle}>TimeTracker EX</div>
                         </div>
                         <div className={styles.cardDescription}>
                             カレンダーイベントから勤務時間を自動計算し、効率的に実績入力を行えます。
@@ -110,7 +111,7 @@ export const HomePage = memo(function HomePage() {
                         </div>
                         <div className={styles.cardActions}>
                             <Button appearance="primary" size="large" onClick={handleNavigateToTimeTracker}>
-                                TimeTrackerを開く
+                                開く
                             </Button>
                         </div>
                     </div>

@@ -55,7 +55,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
     { id: "Home", label: "Home", icon: <Home24Regular /> },
-    { id: "TimeTracker", label: "TimeTracker", icon: <Clock24Regular /> },
+    { id: "TimeTracker", label: "TimeTracker EX", icon: <Clock24Regular /> },
 ];
 
 /**

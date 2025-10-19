@@ -263,8 +263,35 @@ const eventToCheckItem = (event: Event[]): CheckedTableItem[] => {
     });
 };
 
-// ヘルプコンテンツ（共通）
-const helpContent = (
+// ヘルプコンテンツ（勤務時間）
+const scheduleHelpContent = (
+    <>
+        <strong>📋 処理対象日時について</strong>
+        <br />
+        <br />
+        PDFファイルから読み取った勤務実績の日時情報です。
+        <br />
+        <br />
+        <strong>処理方法:</strong>
+        <br />
+        • チェックを外した項目は紐づけ処理から除外されます
+        <br />
+        • 休日や有給休暇の日付も表示されます
+        <br />
+        • スケジュール情報との照合に使用されます
+        <br />
+        <br />
+        <strong>表示される情報:</strong>
+        <br />
+        • 勤務日：通常の出勤日
+        <br />
+        • （休日）：休日の日付
+        <br />• （有給休暇）：有給休暇取得日
+    </>
+);
+
+// ヘルプコンテンツ（スケジュール）
+const eventHelpContent = (
     <>
         <strong>📅 スケジュール情報について</strong>
         <br />
@@ -389,6 +416,7 @@ const InfoSection = memo(function InfoSection({
     items,
     selectedKeys,
     onSelectionChange,
+    helpContent,
     styles,
     tableStyles,
 }: {
@@ -396,6 +424,7 @@ const InfoSection = memo(function InfoSection({
     items: CheckedTableItem[];
     selectedKeys: Set<string>;
     onSelectionChange: (keys: Set<string>) => void;
+    helpContent: React.ReactNode;
     styles: ReturnType<typeof useStyles>;
     tableStyles: ReturnType<typeof useTableStyles>;
 }) {
@@ -640,6 +669,7 @@ export const FileUploadView = memo(function FileUploadView({
                         items={scheduleTableItems}
                         selectedKeys={selectedScheduleKeys}
                         onSelectionChange={setSelectedScheduleKeys}
+                        helpContent={scheduleHelpContent}
                         styles={styles}
                         tableStyles={tableStyles}
                     />
@@ -650,6 +680,7 @@ export const FileUploadView = memo(function FileUploadView({
                         items={eventTableItems}
                         selectedKeys={selectedEventKeys}
                         onSelectionChange={setSelectedEventKeys}
+                        helpContent={eventHelpContent}
                         styles={styles}
                         tableStyles={tableStyles}
                     />

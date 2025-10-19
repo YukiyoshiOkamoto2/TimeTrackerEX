@@ -25,8 +25,8 @@ const useStyles = makeStyles({
     },
     headerActions: {
         position: "absolute",
-        top: "32px",
-        right: "32px",
+        top: tokens.spacingVerticalXL,
+        right: tokens.spacingHorizontalL,
     },
     contentContainer: {
         display: "flex",
@@ -143,14 +143,14 @@ export const SettingPage = memo(function SettingPage() {
 
     return (
         <Page title="設定" subtitle="アプリケーションの設定をカスタマイズ">
+            {!showJsonEditor && (
+                <div className={styles.headerActions}>
+                    <Button appearance="subtle" icon={<CodeRegular />} onClick={() => setShowJsonEditor(true)}>
+                        設定のJSON表示
+                    </Button>
+                </div>
+            )}
             <div className={styles.pageContainer}>
-                {!showJsonEditor && (
-                    <div className={styles.headerActions}>
-                        <Button appearance="secondary" icon={<CodeRegular />} onClick={() => setShowJsonEditor(true)}>
-                            設定のJSON表示
-                        </Button>
-                    </div>
-                )}
                 {!showJsonEditor && (
                     <div className={styles.contentContainer}>
                         <div className={styles.sidebar}>
@@ -163,7 +163,7 @@ export const SettingPage = memo(function SettingPage() {
                                 >
                                     <Tab value="general">一般</Tab>
                                     <Tab value="appearance">外観設定</Tab>
-                                    <Tab value="timetracker">TimeTracker</Tab>
+                                    <Tab value="timetracker">TimeTracker EX</Tab>
                                 </TabList>
                             </nav>
                         </div>

@@ -191,13 +191,12 @@ const useStyles = makeStyles({
     // 重複リストポップアップ
     duplicationPopover: {
         width: "520px",
-        padding: tokens.spacingVerticalXXL,
+        padding: tokens.spacingVerticalL,
     },
     duplicationListTitle: {
         display: "flex",
         alignItems: "center",
         gap: tokens.spacingHorizontalS,
-        marginBottom: tokens.spacingVerticalM,
         fontSize: tokens.fontSizeBase400,
         fontWeight: tokens.fontWeightSemibold,
     },
@@ -392,6 +391,15 @@ const DateTimeCell = memo(function DateTimeCell({
                                 <PopoverSurface className={styles.duplicationPopover}>
                                     <div className={styles.duplicationListTitle}>
                                         重複しているイベント ({duplicationCount}件)
+                                    </div>
+                                    <div
+                                        style={{
+                                            fontSize: tokens.fontSizeBase200,
+                                            color: tokens.colorNeutralForeground3,
+                                            marginBottom: tokens.spacingVerticalS,
+                                        }}
+                                    >
+                                        ※勤務開始イベントの場合、重複先が紐づけされると自動的に削除されます
                                     </div>
                                     <div className={styles.duplicationList}>{duplicateCards}</div>
                                 </PopoverSurface>
@@ -779,7 +787,6 @@ export const EventTable = memo(function EventTable({
                         </MenuTrigger>
                         <MenuPopover>
                             <MenuList>
-                                <MenuItem onClick={() => setSelectedKeys(new Set())}>選択解除</MenuItem>
                                 <MenuItem onClick={handleAddToIgnoreList} disabled={!onAddToIgnoreList}>
                                     無視リストへ追加
                                 </MenuItem>
