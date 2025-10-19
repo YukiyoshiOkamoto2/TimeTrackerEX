@@ -14,20 +14,19 @@ const logger = getLogger("PDFParser");
 try {
     // グローバルに __VITEST__ が無い場合のみワーカー設定（テスト環境ではスキップ）
     if (!isVitestEnv(globalThis)) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+        const workerPath = (import.meta as { env?: { PROD?: boolean } }).env?.PROD
+            ? "/okamoto/pdf.worker.min.js"
+            : "/pdf.worker.min.js";
+        pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
     }
 } catch {
     // globalが見つからない場合はフォールバック
-    try {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "/okamoto/pdf.worker.min.js";
-    } catch {
-        // 開発環境では相対パス、本番環境では絶対パスにフォールバック
-        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-            /* @vite-ignore */
-            "/okamoto/pdfjs-dist/build/pdf.worker.min.js",
-            import.meta.url,
-        ).toString();
-    }
+    // 開発環境では相対パス、本番環境では絶対パスにフォールバック
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        /* @vite-ignore */
+        "/okamoto/pdfjs-dist/build/pdf.worker.min.js",
+        import.meta.url,
+    ).toString();
 }
 
 /**
