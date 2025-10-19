@@ -50,9 +50,131 @@ export function useLinkingManager({ historyManager, initialPairs = [] }: UseLink
     );
 
     /**
-     * 紐づけ処理：単一または複数のイベントをWorkItemに紐づける（統合版）
-     * - 手動紐づけ（type=manual, デフォルト）: 履歴に保存し、同じイベント（EventUtils.getKey）も紐づけ
-     * - 自動紐づけ（type=auto）: 履歴に保存せず、指定されたイベントのみ紐づけ
+     * 対象イベントを収集する
+     * @param eventId 起点となるイベントID
+     * @param type 紐づけタイプ
+     * @param unLinkedEvents 未紐づけイベント一覧
+     * @param linkedPairs 紐づけ済みペア一覧
+     * @returns 紐づけ対象のイベント配列
+     */
+    const collectTargetEvents = useCallback(
+        (
+            eventId: string,
+            type: "manual" | "auto",
+            unLinkedEvents: EventWithOption[],
+            linkedPairs: LinkingEventWorkItemPair[],
+        ): EventWithOption[] => {
+            const targetEventIds = new Set<string>();
+            const targetEvents: EventWithOption[] = [];
+
+            // 未紐づけイベントから検索
+            const unLinkedEvent = unLinkedEvents.find((event) => event.uuid === eventId);
+            if (unLinkedEvent) {
+                if (type === "manual") {
+                    // 手動紐づけ: 同じキーのイベントをすべて収集
+                    const eventKey = EventUtils.getKey(unLinkedEvent);
+                    for (const event of unLinkedEvents) {
+                        if (EventUtils.getKey(event) === eventKey && !targetEventIds.has(event.uuid)) {
+                            targetEvents.push(event);
+                            targetEventIds.add(event.uuid);
+                        }
+                    }
+                    logger.info(`手動紐づけ: ${targetEvents.length}件の同じイベントを紐づけます（キー: ${eventKey}）`);
+                } else {
+                    // 自動紐づけ: 指定されたイベントのみ
+                    targetEvents.push(unLinkedEvent);
+                    targetEventIds.add(unLinkedEvent.uuid);
+                }
+                return targetEvents;
+            }
+
+            // 紐づけ済みイベントから検索（そのイベントのみ更新）
+            const linkedPair = linkedPairs.find((pair) => pair.event.uuid === eventId);
+            if (linkedPair) {
+                targetEvents.push(linkedPair.event);
+                targetEventIds.add(linkedPair.event.uuid);
+                return targetEvents;
+            }
+
+            // イベントが見つからない場合は空配列を返す
+            return [];
+        },
+        [],
+    );
+
+    /**
+     * 紐づけを削除する
+     * @param eventId 削除対象のイベントID
+     * @param linkedPairs 紐づけ済みペア一覧（更新される）
+     */
+    const removeLinking = useCallback((eventId: string, linkedPairs: LinkingEventWorkItemPair[]): void => {
+        const index = linkedPairs.findIndex((pair) => pair.event.uuid === eventId);
+        if (index >= 0) {
+            linkedPairs.splice(index, 1);
+            logger.info(`イベント (${eventId}) の紐づけを削除しました`);
+        } else {
+            logger.warn(`紐づけが見つかりません: ${eventId}`);
+        }
+    }, []);
+
+    /**
+     * イベントに紐づけを適用する
+     * @param event 対象イベント
+     * @param linkingWorkItem 紐づける作業項目
+     * @param linkedPairs 紐づけ済みペア一覧（更新される）
+     * @param newLinkings 新規紐づけ一覧（更新される）
+     * @param processedEventIds 処理済みイベントID（更新される）
+     * @param shouldSaveHistory 履歴に保存するかどうか
+     */
+    const applyLinking = useCallback(
+        (
+            event: EventWithOption,
+            linkingWorkItem: LinkingWorkItem,
+            linkedPairs: LinkingEventWorkItemPair[],
+            newLinkings: LinkingEventWorkItemPair[],
+            processedEventIds: Set<string>,
+            shouldSaveHistory: boolean,
+        ): void => {
+            // 既に処理済みのイベントはスキップ
+            if (processedEventIds.has(event.uuid)) {
+                return;
+            }
+
+            // 既存の紐づけを更新
+            const linkedEventIndex = linkedPairs.findIndex((pair) => pair.event.uuid === event.uuid);
+            if (linkedEventIndex >= 0) {
+                linkedPairs[linkedEventIndex] = {
+                    ...linkedPairs[linkedEventIndex],
+                    linkingWorkItem,
+                };
+                if (shouldSaveHistory) {
+                    saveToHistory(linkedPairs[linkedEventIndex].event, linkingWorkItem.workItem);
+                }
+            } else {
+                // 新規に紐づけを作成
+                newLinkings.push({ event, linkingWorkItem });
+                if (shouldSaveHistory) {
+                    saveToHistory(event, linkingWorkItem.workItem);
+                }
+            }
+
+            // 処理済みとしてマーク
+            processedEventIds.add(event.uuid);
+        },
+        [saveToHistory],
+    );
+
+    /**
+     * 紐づけ処理：単一または複数のイベントをWorkItemに紐づける
+     *
+     * 【動作仕様】
+     * 1. 紐づけ削除（workItemIdが空）: 指定されたイベントの紐づけを削除
+     * 2. 未紐づけイベントの場合:
+     *    - 手動紐づけ: 同じキー（EventUtils.getKey）のイベントをすべて紐づけ、履歴に保存
+     *    - 自動紐づけ: 指定されたイベントのみ紐づけ、履歴には保存しない
+     * 3. 紐づけ済みイベントの場合:
+     *    - そのイベントのみ紐づけを更新（同じキーのイベントは検索しない）
+     *    - 手動紐づけの場合のみ履歴に保存
      */
     const handleLinking = useCallback(
         (linkings: LinkingInfo | LinkingInfo[], workItems: WorkItem[], unLinkedEvents: EventWithOption[]) => {
@@ -66,94 +188,56 @@ export function useLinkingManager({ historyManager, initialPairs = [] }: UseLink
             for (const linking of linkingArray) {
                 const { eventId, workItemId, type = "manual", autoMethod = "none" } = linking;
 
-                // 既に処理済みのイベントはスキップ（同名イベントで重複する可能性がある）
+                // 既に処理済みのイベントはスキップ
                 if (processedEventIds.has(eventId)) {
                     continue;
                 }
 
-                // WorkItemIdが空の場合は紐づけを削除
+                // 1. 紐づけ削除処理
                 if (!workItemId) {
-                    const index = updatedPairs.findIndex((pair) => pair.event.uuid === eventId);
-                    if (index >= 0) {
-                        updatedPairs.splice(index, 1);
-                        logger.info(`イベント (${eventId}) の紐づけを削除しました`);
-                    }
+                    removeLinking(eventId, updatedPairs);
                     continue;
                 }
 
-                // WorkItemを検索
+                // 2. WorkItem検証
                 const selectedWorkItem = WorkItemUtils.getMostNestChildren(workItems).find((w) => w.id === workItemId);
                 if (!selectedWorkItem) {
                     logger.error(`Unknown WorkItem ID: ${workItemId}`);
                     continue;
                 }
 
-                // LinkingWorkItemを作成
+                // 3. LinkingWorkItemを作成
                 const linkingWorkItem: LinkingWorkItem = {
                     workItem: selectedWorkItem,
                     type,
                     autoMethod,
                 };
 
-                // 対象イベントを取得
-                const targetEvent = unLinkedEvents.find((event) => event.uuid === eventId);
-                if (!targetEvent) {
+                // 4. 対象イベントを収集
+                const targetEvents = collectTargetEvents(eventId, type, unLinkedEvents, updatedPairs);
+                if (targetEvents.length === 0) {
                     logger.error(`Event not found: ${eventId}`);
                     continue;
                 }
 
-                // 手動紐づけの場合、同じイベント（EventUtils.getKey）も紐づけ
-                const targetEvents: EventWithOption[] = [];
-                if (type === "manual") {
-                    const eventKey = EventUtils.getKey(targetEvent);
-                    // 同じキーを持つすべてのイベントを取得
-                    for (const event of unLinkedEvents) {
-                        if (EventUtils.getKey(event) === eventKey) {
-                            targetEvents.push(event);
-                        }
-                    }
-                    logger.info(`手動紐づけ: ${targetEvents.length}件の同じイベントを紐づけます（キー: ${eventKey}）`);
-                } else {
-                    // 自動紐づけの場合は指定されたイベントのみ
-                    targetEvents.push(targetEvent);
-                }
-
-                // 各イベントを紐づけ
+                // 5. 各イベントに紐づけを適用
+                const shouldSaveHistory = type === "manual";
                 for (const event of targetEvents) {
-                    // 既に処理済みのイベントはスキップ
-                    if (processedEventIds.has(event.uuid)) {
-                        continue;
-                    }
-
-                    // 既存の紐づけを更新
-                    const linkedEventIndex = updatedPairs.findIndex((pair) => pair.event.uuid === event.uuid);
-                    if (linkedEventIndex >= 0) {
-                        updatedPairs[linkedEventIndex] = {
-                            ...updatedPairs[linkedEventIndex],
-                            linkingWorkItem,
-                        };
-                        // 手動紐づけの場合のみ履歴に保存
-                        if (type === "manual") {
-                            saveToHistory(updatedPairs[linkedEventIndex].event, linkingWorkItem.workItem);
-                        }
-                    } else {
-                        // 新規に紐づけを作成
-                        newLinkings.push({ event, linkingWorkItem });
-                        // 手動紐づけの場合のみ履歴に保存
-                        if (type === "manual") {
-                            saveToHistory(event, linkingWorkItem.workItem);
-                        }
-                    }
-
-                    // 処理済みとしてマーク
-                    processedEventIds.add(event.uuid);
+                    applyLinking(
+                        event,
+                        linkingWorkItem,
+                        updatedPairs,
+                        newLinkings,
+                        processedEventIds,
+                        shouldSaveHistory,
+                    );
                 }
             }
 
-            // 一括で状態を更新
+            // 6. 状態を一括更新
             setLinkingEventWorkItemPair([...updatedPairs, ...newLinkings]);
         },
-        [linkingEventWorkItemPair, saveToHistory],
+        [linkingEventWorkItemPair, collectTargetEvents, removeLinking, applyLinking],
     );
 
     return {

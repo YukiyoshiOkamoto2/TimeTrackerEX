@@ -62,14 +62,22 @@ export const PageHeader = memo(function PageHeader({ onBack, breadcrumbs, onBrea
             return null;
         }
 
-        return breadcrumbs.map((crumb, index) => (
-            <BreadcrumbItem key={index}>
-                <BreadcrumbButton current={index === breadcrumbs.length - 1} onClick={() => handleClick(index)}>
-                    {crumb}
-                </BreadcrumbButton>
-                {index < breadcrumbs.length - 1 && <BreadcrumbDivider />}
-            </BreadcrumbItem>
-        ));
+        const items = [];
+        for (let index = 0; index < breadcrumbs.length; index++) {
+            const crumb = breadcrumbs[index];
+            items.push(
+                <BreadcrumbItem key={index}>
+                    <BreadcrumbButton current={index === breadcrumbs.length - 1} onClick={() => handleClick(index)}>
+                        {crumb}
+                    </BreadcrumbButton>
+                </BreadcrumbItem>,
+            );
+            // 最後の要素以外にDividerを追加
+            if (index < breadcrumbs.length - 1) {
+                items.push(<BreadcrumbDivider key={`divider-${index}`} />);
+            }
+        }
+        return items;
     }, [breadcrumbs, handleClick]);
 
     if (!breadcrumbItems) {
