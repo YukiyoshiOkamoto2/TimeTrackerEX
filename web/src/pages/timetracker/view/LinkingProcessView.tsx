@@ -5,6 +5,7 @@ import { TimeTrackerAlgorithmEvent } from "@/core/algorithm/TimeTrackerAlgorithm
 import { HistoryManager } from "@/core/history";
 import { getLogger } from "@/lib/logger";
 import { useSettings } from "@/store";
+import type { IgnorableEventPattern } from "@/types";
 import { Button, makeStyles } from "@fluentui/react-components";
 import { CheckmarkCircle24Regular } from "@fluentui/react-icons";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
@@ -61,7 +62,7 @@ export const LinkingProcessView = memo(function LinkingProcessView({
     onRegisterEvents,
 }: LinkingProcessViewProps) {
     const styles = useStyles();
-    const { settings } = useSettings();
+    const { settings, updateSettings } = useSettings();
     const timetracker = settings.timetracker;
 
     // 履歴
@@ -159,6 +160,76 @@ export const LinkingProcessView = memo(function LinkingProcessView({
             logger.info(`削除完了: ${eventIds.length}件のイベントを削除しました`);
         },
         [setLinkingEventWorkItemPair],
+    );
+
+    // 無視リスト追加ハンドラー
+    const handleAddToIgnoreList = useCallback(
+        async (eventIds: string[]) => {
+            logger.info(`無視リストへ追加: ${eventIds.length}件`);
+
+            // イベントIDからイベント名を取得
+            const eventNames = eventIds
+                .map((id) => {
+                    const row = allEventTableRow.find((row) => {
+                        const event = "event" in row.item ? row.item.event : row.item;
+                        return event.uuid === id;
+                    });
+                    if (!row) return null;
+                    const event = "event" in row.item ? row.item.event : row.item;
+                    return event.name;
+                })
+                .filter((name): name is string => name !== null);
+
+            if (eventNames.length === 0) {
+                logger.warn("無視リストに追加するイベントが見つかりません");
+                return;
+            }
+
+            // 完全一致の無視パターンを作成
+            const newPatterns: IgnorableEventPattern[] = eventNames.map((name) => ({
+                pattern: name,
+                matchMode: "partial" as const, // 完全一致として部分一致を使用（名前全体が一致）
+            }));
+
+            // 既存の無視パターンを取得
+            const existingPatterns = settings.timetracker?.ignorableEvents ?? [];
+
+            // 重複を除いて新しいパターンを追加
+            const existingPatternStrings = existingPatterns.map((p) => p.pattern);
+            const uniqueNewPatterns = newPatterns.filter((p) => !existingPatternStrings.includes(p.pattern));
+
+            if (uniqueNewPatterns.length === 0) {
+                await appMessageDialogRef.showMessageAsync(
+                    "無視リスト追加",
+                    "選択したイベントはすでに無視リストに登録されています",
+                    "INFO",
+                );
+                return;
+            }
+
+            // 設定を更新
+            const updatedPatterns = [...existingPatterns, ...uniqueNewPatterns];
+            if (settings.timetracker) {
+                updateSettings({
+                    timetracker: {
+                        ...settings.timetracker,
+                        ignorableEvents: updatedPatterns,
+                    },
+                });
+            }
+
+            logger.info(`無視リスト追加完了: ${uniqueNewPatterns.length}件の新規パターンを追加`);
+
+            // イベントを削除（無視リストに追加されたイベントは表示から除外）
+            handleDeleteEvents(eventIds);
+
+            await appMessageDialogRef.showMessageAsync(
+                "無視リスト追加完了",
+                `${uniqueNewPatterns.length}件のイベントパターンを無視リストに追加しました`,
+                "INFO",
+            );
+        },
+        [allEventTableRow, settings.timetracker, handleDeleteEvents],
     );
 
     // 登録実行可能かどうかを判定（メモ化）
@@ -264,6 +335,7 @@ export const LinkingProcessView = memo(function LinkingProcessView({
                     onWorkItemChange={handleWorkItemChange}
                     onBulkWorkItemChange={handleBulkWorkItemChange}
                     onDeleteEvents={handleDeleteEvents}
+                    onAddToIgnoreList={handleAddToIgnoreList}
                 />
 
                 {/*操作セクション */}

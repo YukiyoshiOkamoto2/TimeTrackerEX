@@ -112,6 +112,7 @@ export type EventTableProps = {
     onWorkItemChange: (eventId: string, workItemId: string) => void;
     onBulkWorkItemChange?: (linkings: LinkingInfo[]) => void;
     onDeleteEvents: (eventIds: string[]) => void;
+    onAddToIgnoreList: (eventIds: string[]) => void;
 };
 
 const useStyles = makeStyles({
@@ -568,6 +569,7 @@ export const EventTable = memo(function EventTable({
     onWorkItemChange,
     onBulkWorkItemChange,
     onDeleteEvents,
+    onAddToIgnoreList,
 }: EventTableProps) {
     const styles = useStyles();
     const tableStyles = useTableStyles();
@@ -719,6 +721,27 @@ export const EventTable = memo(function EventTable({
         );
     }, [selectedKeys, onDeleteEvents]);
 
+    /** 選択されたイベントを無視リストに追加 */
+    const handleAddToIgnoreList = useCallback(async () => {
+        if (selectedKeys.size === 0 || !onAddToIgnoreList) return;
+
+        const confirmed = await appMessageDialogRef.showConfirmAsync(
+            "無視リストへ追加",
+            `選択した${selectedKeys.size}件のイベントを無視リストに追加しますか？`,
+            "INFO",
+        );
+
+        if (!confirmed) return;
+
+        onAddToIgnoreList(Array.from(selectedKeys));
+        setSelectedKeys(new Set());
+        await appMessageDialogRef.showMessageAsync(
+            "追加完了",
+            `${selectedKeys.size}件のイベントを無視リストに追加しました`,
+            "INFO",
+        );
+    }, [selectedKeys, onAddToIgnoreList]);
+
     /** 一括紐づけダイアログを開く */
     const handleOpenBulkLinkDialog = useCallback(() => {
         if (selectedKeys.size === 0) return;
@@ -757,6 +780,9 @@ export const EventTable = memo(function EventTable({
                         <MenuPopover>
                             <MenuList>
                                 <MenuItem onClick={() => setSelectedKeys(new Set())}>選択解除</MenuItem>
+                                <MenuItem onClick={handleAddToIgnoreList} disabled={!onAddToIgnoreList}>
+                                    無視リストへ追加
+                                </MenuItem>
                             </MenuList>
                         </MenuPopover>
                     </Menu>

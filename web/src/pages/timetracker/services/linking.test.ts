@@ -39,6 +39,7 @@ describe("linking.ts", () => {
 
         // HistoryManager
         historyManager = new HistoryManager();
+        historyManager.clear(); // 各テスト前に履歴をクリア
 
         // デフォルト設定
         settings = {
@@ -213,6 +214,9 @@ describe("linking.ts", () => {
 
         describe("履歴からの自動紐付け", () => {
             it("LINK08: 履歴にあるイベントを紐付ける", () => {
+                // 履歴をクリアしてから開始
+                historyManager.clear();
+
                 const event1 = createEvent("ミーティング", {
                     start: new Date(2025, 0, 15, 10, 0),
                     end: new Date(2025, 0, 15, 11, 0),
@@ -238,9 +242,16 @@ describe("linking.ts", () => {
                 expect(historyLinked[0].linkingWorkItem.workItem.id).toBe("2001");
                 expect(historyLinked[1].linkingWorkItem.workItem.id).toBe("4001");
                 expect(result.unlinked).toHaveLength(0);
+
+                // テスト後に履歴をクリア
+                historyManager.clear();
+                historyManager.dump();
             });
 
             it("LINK09: 履歴にあるが、WorkItemが削除されている場合は紐付けない", () => {
+                // 履歴をクリアしてから開始
+                historyManager.clear();
+
                 const event1 = createEvent("ミーティング", {
                     start: new Date(2025, 0, 15, 10, 0),
                     end: new Date(2025, 0, 15, 11, 0),
@@ -262,9 +273,16 @@ describe("linking.ts", () => {
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "history")).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);
+
+                // テスト後に履歴をクリア
+                historyManager.clear();
+                historyManager.dump();
             });
 
             it("LINK10: 履歴自動入力が無効の場合は履歴から紐付けない", () => {
+                // 履歴をクリアしてから開始
+                historyManager.clear();
+
                 settings.isHistoryAutoInput = false;
 
                 const event1 = createEvent("ミーティング", {
@@ -281,9 +299,17 @@ describe("linking.ts", () => {
 
                 expect(result.linked.filter((l) => l.linkingWorkItem.autoMethod === "history")).toHaveLength(0);
                 expect(result.unlinked).toHaveLength(1);
+
+                // テスト後に履歴をクリア
+                historyManager.clear();
+                historyManager.dump();
             });
 
             it("LINK11: 履歴がない場合は紐付けない", () => {
+                // 履歴を明示的にクリア
+                historyManager.clear();
+                historyManager.dump(); // LocalStorageにも保存
+
                 const event1 = createEvent("ミーティング", {
                     start: new Date(2025, 0, 15, 10, 0),
                     end: new Date(2025, 0, 15, 11, 0),

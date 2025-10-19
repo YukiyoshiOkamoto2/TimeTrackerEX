@@ -37,7 +37,6 @@ export interface DataTableProps<T> {
 
 const useStyles = makeStyles({
     tableContainer: {
-        overflow: "hidden",
         backgroundColor: tokens.colorNeutralBackground1,
         // フェードインアニメーション
         animationName: {

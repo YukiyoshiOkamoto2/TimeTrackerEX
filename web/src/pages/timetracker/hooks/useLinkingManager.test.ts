@@ -78,7 +78,7 @@ describe("useLinkingManager", () => {
         });
     });
 
-    describe("handleManualLinking", () => {
+    describe("handleLinking - manual", () => {
         it("新規イベントをWorkItemに紐づけできる", () => {
             const { result } = renderHook(() =>
                 useLinkingManager({
@@ -91,7 +91,11 @@ describe("useLinkingManager", () => {
             const unLinkedEvents: EventWithOption[] = [event];
 
             act(() => {
-                result.current.handleManualLinking("event-1", "work-1", [workItem], unLinkedEvents);
+                result.current.handleLinking(
+                    { eventId: "event-1", workItemId: "work-1", type: "manual" },
+                    [workItem],
+                    unLinkedEvents,
+                );
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(1);
@@ -108,7 +112,7 @@ describe("useLinkingManager", () => {
                 }),
             );
 
-            // EventUtils.isSameはnameで比較するため、nameを同じにする
+            // EventUtils.getKeyで比較するため、同じKeyを持つイベントを作成
             const event1 = createMockEvent("event-1", "共通のname");
             const event2 = createMockEvent("event-2", "共通のname"); // 同じname
             const event3 = createMockEvent("event-3", "異なるname"); // 異なるname
@@ -116,13 +120,17 @@ describe("useLinkingManager", () => {
             const unLinkedEvents: EventWithOption[] = [event1, event2, event3];
 
             act(() => {
-                result.current.handleManualLinking("event-1", "work-1", [workItem], unLinkedEvents);
+                result.current.handleLinking(
+                    { eventId: "event-1", workItemId: "work-1", type: "manual" },
+                    [workItem],
+                    unLinkedEvents,
+                );
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(2);
             expect(result.current.linkingEventWorkItemPair[0].event.uuid).toBe("event-1");
             expect(result.current.linkingEventWorkItemPair[1].event.uuid).toBe("event-2");
-            expect(mockHistoryManager.setHistory).toHaveBeenCalledTimes(1); // 履歴は1回のみ
+            expect(mockHistoryManager.setHistory).toHaveBeenCalledTimes(2); // 2つのイベントについて履歴保存
         });
 
         it("既存の紐づけを更新できる", () => {
@@ -148,7 +156,11 @@ describe("useLinkingManager", () => {
             const unLinkedEvents: EventWithOption[] = [];
 
             act(() => {
-                result.current.handleManualLinking("event-1", "work-2", [newWorkItem], unLinkedEvents);
+                result.current.handleLinking(
+                    { eventId: "event-1", workItemId: "work-2", type: "manual" },
+                    [newWorkItem],
+                    unLinkedEvents,
+                );
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(1);
@@ -176,7 +188,7 @@ describe("useLinkingManager", () => {
             );
 
             act(() => {
-                result.current.handleManualLinking("event-1", "", [], []);
+                result.current.handleLinking({ eventId: "event-1", workItemId: "", type: "manual" }, [], []);
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(0);
@@ -193,7 +205,11 @@ describe("useLinkingManager", () => {
             const unLinkedEvents: EventWithOption[] = [event];
 
             act(() => {
-                result.current.handleManualLinking("event-1", "invalid-work-id", [], unLinkedEvents);
+                result.current.handleLinking(
+                    { eventId: "event-1", workItemId: "invalid-work-id", type: "manual" },
+                    [],
+                    unLinkedEvents,
+                );
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(0);
@@ -210,14 +226,18 @@ describe("useLinkingManager", () => {
             const unLinkedEvents: EventWithOption[] = [];
 
             act(() => {
-                result.current.handleManualLinking("invalid-event-id", "work-1", [workItem], unLinkedEvents);
+                result.current.handleLinking(
+                    { eventId: "invalid-event-id", workItemId: "work-1", type: "manual" },
+                    [workItem],
+                    unLinkedEvents,
+                );
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(0);
         });
     });
 
-    describe("handleAiLinking", () => {
+    describe("handleLinking - auto", () => {
         it("AI提案から複数の紐づけを一括作成できる", () => {
             const { result } = renderHook(() =>
                 useLinkingManager({
@@ -231,13 +251,13 @@ describe("useLinkingManager", () => {
             const workItem2 = createMockWorkItem("work-2", "作業2");
 
             const unLinkedEvents: EventWithOption[] = [event1, event2];
-            const suggestions = [
-                { eventId: "event-1", workItemId: "work-1", confidence: 0.9 },
-                { eventId: "event-2", workItemId: "work-2", confidence: 0.8 },
+            const linkings = [
+                { eventId: "event-1", workItemId: "work-1", type: "auto" as const, autoMethod: "ai" as const },
+                { eventId: "event-2", workItemId: "work-2", type: "auto" as const, autoMethod: "ai" as const },
             ];
 
             act(() => {
-                result.current.handleAiLinking(suggestions, [workItem1, workItem2], unLinkedEvents);
+                result.current.handleLinking(linkings, [workItem1, workItem2], unLinkedEvents);
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(2);
@@ -259,13 +279,13 @@ describe("useLinkingManager", () => {
             const workItem1 = createMockWorkItem("work-1", "作業1");
 
             const unLinkedEvents: EventWithOption[] = [event1];
-            const suggestions = [
-                { eventId: "event-1", workItemId: "work-1", confidence: 0.9 },
-                { eventId: "event-1", workItemId: "work-1", confidence: 0.8 }, // 重複
+            const linkings = [
+                { eventId: "event-1", workItemId: "work-1", type: "auto" as const, autoMethod: "ai" as const },
+                { eventId: "event-1", workItemId: "work-1", type: "auto" as const, autoMethod: "ai" as const }, // 重複
             ];
 
             act(() => {
-                result.current.handleAiLinking(suggestions, [workItem1], unLinkedEvents);
+                result.current.handleLinking(linkings, [workItem1], unLinkedEvents);
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(1);
@@ -283,13 +303,13 @@ describe("useLinkingManager", () => {
             const workItem1 = createMockWorkItem("work-1", "作業1");
 
             const unLinkedEvents: EventWithOption[] = [event1, event2];
-            const suggestions = [
-                { eventId: "event-1", workItemId: "work-1", confidence: 0.9 },
-                { eventId: "event-2", workItemId: "invalid-work-id", confidence: 0.8 }, // 存在しない
+            const linkings = [
+                { eventId: "event-1", workItemId: "work-1", type: "auto" as const, autoMethod: "ai" as const },
+                { eventId: "event-2", workItemId: "invalid-work-id", type: "auto" as const, autoMethod: "ai" as const }, // 存在しない
             ];
 
             act(() => {
-                result.current.handleAiLinking(suggestions, [workItem1], unLinkedEvents);
+                result.current.handleLinking(linkings, [workItem1], unLinkedEvents);
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(1);
@@ -308,13 +328,13 @@ describe("useLinkingManager", () => {
             const workItem2 = createMockWorkItem("work-2", "作業2");
 
             const unLinkedEvents: EventWithOption[] = [event1];
-            const suggestions = [
-                { eventId: "event-1", workItemId: "work-1", confidence: 0.9 },
-                { eventId: "invalid-event-id", workItemId: "work-2", confidence: 0.8 }, // 存在しない
+            const linkings = [
+                { eventId: "event-1", workItemId: "work-1", type: "auto" as const, autoMethod: "ai" as const },
+                { eventId: "invalid-event-id", workItemId: "work-2", type: "auto" as const, autoMethod: "ai" as const }, // 存在しない
             ];
 
             act(() => {
-                result.current.handleAiLinking(suggestions, [workItem1, workItem2], unLinkedEvents);
+                result.current.handleLinking(linkings, [workItem1, workItem2], unLinkedEvents);
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(1);
@@ -328,10 +348,17 @@ describe("useLinkingManager", () => {
                 }),
             );
 
-            const suggestions = [{ eventId: "invalid-event-id", workItemId: "invalid-work-id", confidence: 0.9 }];
+            const linkings = [
+                {
+                    eventId: "invalid-event-id",
+                    workItemId: "invalid-work-id",
+                    type: "auto" as const,
+                    autoMethod: "ai" as const,
+                },
+            ];
 
             act(() => {
-                result.current.handleAiLinking(suggestions, [], []);
+                result.current.handleLinking(linkings, [], []);
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(0);
@@ -360,10 +387,12 @@ describe("useLinkingManager", () => {
             const workItem2 = createMockWorkItem("work-2", "作業2");
 
             const unLinkedEvents: EventWithOption[] = [event2];
-            const suggestions = [{ eventId: "event-2", workItemId: "work-2", confidence: 0.9 }];
+            const linkings = [
+                { eventId: "event-2", workItemId: "work-2", type: "auto" as const, autoMethod: "ai" as const },
+            ];
 
             act(() => {
-                result.current.handleAiLinking(suggestions, [workItem2], unLinkedEvents);
+                result.current.handleLinking(linkings, [workItem2], unLinkedEvents);
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(2);
@@ -414,7 +443,11 @@ describe("useLinkingManager", () => {
 
             // 手動紐づけ
             act(() => {
-                result.current.handleManualLinking("event-1", "work-1", [workItem1], [event1]);
+                result.current.handleLinking(
+                    { eventId: "event-1", workItemId: "work-1", type: "manual" },
+                    [workItem1],
+                    [event1],
+                );
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(1);
@@ -422,8 +455,8 @@ describe("useLinkingManager", () => {
 
             // AI紐づけを追加
             act(() => {
-                result.current.handleAiLinking(
-                    [{ eventId: "event-2", workItemId: "work-2", confidence: 0.9 }],
+                result.current.handleLinking(
+                    { eventId: "event-2", workItemId: "work-2", type: "auto", autoMethod: "ai" },
                     [workItem2],
                     [event2],
                 );
@@ -447,8 +480,8 @@ describe("useLinkingManager", () => {
 
             // AI紐づけ
             act(() => {
-                result.current.handleAiLinking(
-                    [{ eventId: "event-1", workItemId: "work-1", confidence: 0.9 }],
+                result.current.handleLinking(
+                    { eventId: "event-1", workItemId: "work-1", type: "auto", autoMethod: "ai" },
                     [workItem1],
                     [event1],
                 );
@@ -458,7 +491,11 @@ describe("useLinkingManager", () => {
 
             // 手動で上書き
             act(() => {
-                result.current.handleManualLinking("event-1", "work-2", [workItem2], []);
+                result.current.handleLinking(
+                    { eventId: "event-1", workItemId: "work-2", type: "manual" },
+                    [workItem2],
+                    [],
+                );
             });
 
             expect(result.current.linkingEventWorkItemPair).toHaveLength(1);
