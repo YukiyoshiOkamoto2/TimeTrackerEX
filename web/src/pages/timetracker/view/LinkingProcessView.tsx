@@ -242,18 +242,20 @@ export const LinkingProcessView = memo(function LinkingProcessView({
 
         logger.info(`登録実行: ${linkedCount}件の紐づけを処理`);
 
-        // 未紐づけイベント確認ダイアログ
-        if (unlinkedCount > 0) {
-            const proceed = await appMessageDialogRef.showConfirmAsync(
-                "未紐づけイベントがあります",
-                `${unlinkedCount}件のイベントがまだ紐づけられていません。\n\n` +
-                    `未紐づけのイベントは登録されませんが、このまま進みますか？\n\n` +
-                    `✅ 紐づけ済み: ${linkedCount}件\n` +
-                    `❌ 未紐づけ: ${unlinkedCount}件`,
-                "WARN",
-            );
-            if (!proceed) return;
-        }
+        const message =
+            unlinkedCount > 0
+                ? `${unlinkedCount}件のイベントがまだ紐づけられていません。\n\n` +
+                  `未紐づけのイベントは登録されませんが、このまま進みますか？\n\n` +
+                  `✅ 紐づけ済み: ${linkedCount}件\n` +
+                  `❌ 未紐づけ: ${unlinkedCount}件`
+                : `${linkedCount}件のイベントを登録します。`;
+        // 実行確認ダイアログ
+        const proceed = await appMessageDialogRef.showConfirmAsync(
+            "登録処理を実行します。",
+            message,
+            unlinkedCount > 0 ? "WARN" : "INFO",
+        );
+        if (!proceed) return;
 
         try {
             // イベント重複解消

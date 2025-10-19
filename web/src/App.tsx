@@ -1,7 +1,8 @@
 import type { SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Button, makeStyles, Persona, SearchBox, Tab, TabList, tokens } from "@fluentui/react-components";
 import { Clock24Regular, Home24Regular, Search20Regular, SettingsRegular } from "@fluentui/react-icons";
-import { memo } from "react";
+import { memo, Suspense } from "react";
+import { ErrorBoundary, SuspenseFallback } from "./components/error-boundary";
 import { MessageDialog } from "./components/message-dialog";
 import { HomePage } from "./pages/home";
 import { SettingPage } from "./pages/setting";
@@ -113,9 +114,13 @@ const App = memo(function App() {
 
             {/* Main Content */}
             <main className={styles.mainContent}>
-                {currentPageName === "Home" && <HomePage />}
-                {currentPageName === "TimeTracker" && <TimeTrackerPage />}
-                {currentPageName === "Settings" && <SettingPage />}
+                <ErrorBoundary>
+                    <Suspense fallback={<SuspenseFallback />}>
+                        {currentPageName === "Home" && <HomePage />}
+                        {currentPageName === "TimeTracker" && <TimeTrackerPage />}
+                        {currentPageName === "Settings" && <SettingPage />}
+                    </Suspense>
+                </ErrorBoundary>
             </main>
 
             {/* Global Message Dialog */}

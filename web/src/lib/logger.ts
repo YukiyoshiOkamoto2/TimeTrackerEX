@@ -42,6 +42,25 @@ const DEFAULT_CONFIG: Required<LoggerConfig> = {
     showSource: true,
 };
 
+const MAX_LOG_HISTORY = 2000;
+
+export type LogEntry = {
+    timestamp: Date;
+    level: LogLevel;
+    message: string;
+    source: string;
+    args: unknown[];
+};
+
+const logHistory: LogEntry[] = [];
+
+function addLogEntry(entry: LogEntry): void {
+    logHistory.push(entry);
+    if (logHistory.length > MAX_LOG_HISTORY) {
+        logHistory.splice(0, logHistory.length - MAX_LOG_HISTORY);
+    }
+}
+
 /**
  * カスタムロガークラス
  *
@@ -100,8 +119,19 @@ export class Logger {
             return;
         }
 
+        const timestamp = new Date();
+        const messageStr = this.truncateMessage(message);
+
         // メッセージのフォーマット
-        const formattedMessage = this.formatMessage(level, message);
+        const formattedMessage = this.formatMessage(level, messageStr, timestamp);
+
+        addLogEntry({
+            timestamp,
+            level,
+            message: messageStr,
+            source: this.name,
+            args,
+        });
 
         // コンソール出力
         switch (level) {
@@ -123,13 +153,12 @@ export class Logger {
     /**
      * メッセージをフォーマット
      */
-    private formatMessage(level: LogLevel, message: unknown): string {
+    private formatMessage(level: LogLevel, message: string, timestamp: Date): string {
         const parts: string[] = [];
 
         // タイムスタンプ
         if (this.config.showTimestamp) {
-            const now = new Date();
-            const timestamp = now.toLocaleString("ja-JP", {
+            const timestampString = timestamp.toLocaleString("ja-JP", {
                 year: "numeric",
                 month: "2-digit",
                 day: "2-digit",
@@ -137,7 +166,7 @@ export class Logger {
                 minute: "2-digit",
                 second: "2-digit",
             });
-            parts.push(timestamp);
+            parts.push(timestampString);
         }
 
         // ログレベル
@@ -146,8 +175,7 @@ export class Logger {
         }
 
         // メッセージ本体
-        const messageStr = this.truncateMessage(message);
-        parts.push(messageStr);
+        parts.push(message);
 
         // ソース情報
         if (this.config.showSource) {
@@ -225,4 +253,15 @@ export function configureLogger(config: LoggerConfig): void {
     } else {
         globalLogger.updateConfig(config);
     }
+}
+
+/**
+ * 直近のログ履歴を取得
+ */
+export function getLogHistory(limit?: number): LogEntry[] {
+    if (limit && limit > 0) {
+        return logHistory.slice(-limit).map((entry) => ({ ...entry, timestamp: new Date(entry.timestamp.getTime()) }));
+    }
+
+    return logHistory.map((entry) => ({ ...entry, timestamp: new Date(entry.timestamp.getTime()) }));
 }

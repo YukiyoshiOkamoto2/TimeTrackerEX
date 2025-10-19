@@ -5,7 +5,7 @@ import { useSettings } from "@/store";
 import { usePageContent } from "@/store/content";
 import { Event, Schedule, WorkItem } from "@/types";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Page } from "../../components/page";
 import { RegistrationProgressDialog, type TaskProgress } from "./components/RegistrationProgressDialog";
 import { ValidationErrorDialog } from "./components/ValidationErrorDialog";
@@ -288,6 +288,7 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     const [showProgressDialog, setShowProgressDialog] = useState(false);
     const [taskProgress, setTaskProgress] = useState<TaskProgress[]>([]);
     const [registerResults, setRegisterResults] = useState<RegisterResult[]>([]);
+    const cancelRequestedRef = useRef(false);
 
     // セッション管理（メモ化）
     const sessionConfig = useMemo(
@@ -403,6 +404,8 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
             if (!authenticated) return;
 
             try {
+                cancelRequestedRef.current = false;
+
                 // タスク進捗を初期化
                 const initialProgress = initializeTaskProgress(linkingEventWorkItemPair);
                 setTaskProgress(initialProgress);
@@ -413,11 +416,18 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
 
                 // 各タスクを順次処理
                 for (let i = 0; i < linkingEventWorkItemPair.length; i++) {
+                    if (cancelRequestedRef.current) {
+                        break;
+                    }
                     const pair = linkingEventWorkItemPair[i];
                     await registerSingleTask(pair, i, setTaskProgress, sessionHook.registerTaskAsync);
 
+                    if (cancelRequestedRef.current) {
+                        break;
+                    }
+
                     // 結果を収集
-                    const taskStatus = await new Promise<TaskProgress>((resolve) => {
+                    const taskStatus = await new Promise<TaskProgress | undefined>((resolve) => {
                         setTaskProgress((prev) => {
                             const current = prev[i];
                             resolve(current);
@@ -428,9 +438,23 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
                     results.push({
                         event: pair.event,
                         workItem: pair.linkingWorkItem.workItem,
-                        status: taskStatus.status === "success" ? "success" : "error",
-                        errorMessage: taskStatus.errorMessage,
+                        status: taskStatus?.status === "success" ? "success" : "error",
+                        errorMessage: taskStatus?.errorMessage ?? "登録に失敗しました。",
                     });
+                }
+
+                if (cancelRequestedRef.current) {
+                    logger.info("TimeTracker registration was cancelled by user.");
+                    cancelRequestedRef.current = false;
+                    setShowProgressDialog(false);
+                    setTaskProgress([]);
+                    setRegisterResults([]);
+                    await appMessageDialogRef.showMessageAsync(
+                        "登録処理をキャンセル",
+                        "登録処理をキャンセルしました。",
+                        "INFO",
+                    );
+                    return;
                 }
 
                 // 登録結果を保存
@@ -440,7 +464,7 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
                 // 少し待ってから次画面へ（ユーザーが結果を確認できるように）
                 setTimeout(() => {
                     nextTo();
-                }, 1500);
+                }, 1000);
             } catch (error) {
                 await handleError(error, "handleRegisterEvents");
                 setShowProgressDialog(false);
@@ -452,7 +476,14 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
     /**
      * 進捗ダイアログを閉じる
      */
+    const handleCancelProgressDialog = useCallback(() => {
+        cancelRequestedRef.current = true;
+        setShowProgressDialog(false);
+        setTaskProgress([]);
+    }, []);
+
     const handleCloseProgressDialog = useCallback(() => {
+        cancelRequestedRef.current = false;
         setShowProgressDialog(false);
         setTaskProgress([]);
     }, []);
@@ -524,7 +555,7 @@ export const TimeTrackerPage = memo(function TimeTrackerPage() {
                 open={showProgressDialog}
                 tasks={taskProgress}
                 onClose={handleCloseProgressDialog}
-                onCancel={handleCloseProgressDialog}
+                onCancel={handleCancelProgressDialog}
             />
             <Dialog />
         </>

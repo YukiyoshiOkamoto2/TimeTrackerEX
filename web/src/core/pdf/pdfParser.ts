@@ -19,12 +19,12 @@ try {
 } catch {
     // globalが見つからない場合はフォールバック
     try {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "/okamoto/pdf.worker.min.js";
     } catch {
         // 開発環境では相対パス、本番環境では絶対パスにフォールバック
         pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
             /* @vite-ignore */
-            "pdfjs-dist/build/pdf.worker.min.js",
+            "/okamoto/pdfjs-dist/build/pdf.worker.min.js",
             import.meta.url,
         ).toString();
     }
